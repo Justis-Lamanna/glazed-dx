@@ -1,30 +1,58 @@
-use actix::{Actor, Arbiter, Context, Handler};
+use game_loop::game_loop;
 
-use crate::core::{Core, RegisterTickHook, TickEvent};
+use game_loop::winit::event::{Event, WindowEvent};
+use game_loop::winit::event_loop::EventLoop;
+use game_loop::winit::window::{Window, WindowBuilder};
 
-mod core;
+fn main() {
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new().build(&event_loop).unwrap();
 
-#[actix_rt::main]
-async fn main() {
-    let core_arbiter = Arbiter::new();
-    let core = Actor::start_in_arbiter(&core_arbiter, |_| Core::default());
-    let test = Actor::start_in_arbiter(&core_arbiter, |_| TestPingActor::default());
-
-    core.do_send(RegisterTickHook(String::from("tickprint"), test.recipient()));
-
-    loop {}
+    game_loop(event_loop, window, GlazedDX::default(), 240, 0.1, |g| {
+        g.game.update();
+    }, |g| {
+        g.game.render(&g.window);
+    }, |g, event| {
+        g.game.window(event);
+    });
 }
 
-#[derive(Default)]
-struct TestPingActor;
-
-impl Actor for TestPingActor {
-    type Context = Context<Self>;
+struct GlazedDX {
+    scene: Box<dyn Scene>
 }
-impl Handler<TickEvent> for TestPingActor {
-    type Result = ();
 
-    fn handle(&mut self, msg: TickEvent, _: &mut Self::Context) -> Self::Result {
-        println!("{}", msg.0);
+impl GlazedDX {
+    pub fn update(&mut self) {
+        self.scene.on_update();
     }
+
+    pub fn render(&self, window: &Window) {
+        self.scene.on_render(window);
+    }
+
+    // A very simple handler that returns false when CloseRequested is detected.
+    pub fn window(&self, event: Event<()>) -> bool {
+        self.scene.on_window_event(event)
+    }
+}
+
+impl Default for GlazedDX {
+    fn default() -> Self {
+        GlazedDX {
+            scene: Box::new(EmptyScene)
+        }
+    }
+}
+
+trait Scene {
+    fn on_update(&mut self);
+    fn on_render(&self, window: &Window);
+    fn on_window_event(&self, event: Event<()>) -> bool;
+}
+
+struct EmptyScene;
+impl Scene for EmptyScene {
+    fn on_update(&mut self) { }
+    fn on_render(&self, window: &Window) { }
+    fn on_window_event(&self, event: Event<()>) -> bool { true }
 }
