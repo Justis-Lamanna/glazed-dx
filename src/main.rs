@@ -1,20 +1,27 @@
+mod types;
+
 use game_loop::game_loop;
 
 use game_loop::winit::event::{Event, WindowEvent};
 use game_loop::winit::event_loop::EventLoop;
 use game_loop::winit::window::{Window, WindowBuilder};
+use crate::types::{PokemonType, Type};
 
 fn main() {
-    let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let eff = PokemonType::Double(Type::Normal, Type::Psychic)
+        .get_effectiveness(&Type::Fighting);
+    println!("Effectiveness: {:?}", eff);
 
-    game_loop(event_loop, window, GlazedDX::default(), 240, 0.1, |g| {
-        g.game.update();
-    }, |g| {
-        g.game.render(&g.window);
-    }, |g, event| {
-        g.game.window(event);
-    });
+    // let event_loop = EventLoop::new();
+    // let window = WindowBuilder::new().build(&event_loop).unwrap();
+    //
+    // game_loop(event_loop, window, GlazedDX::default(), 240, 0.1, |g| {
+    //     g.game.update();
+    // }, |g| {
+    //     g.game.render(&g.window);
+    // }, |g, event| {
+    //     g.game.window(event);
+    // });
 }
 
 struct GlazedDX {
