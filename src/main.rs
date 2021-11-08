@@ -1,16 +1,18 @@
-mod types;
+mod data;
 
+use std::any::Any;
 use game_loop::game_loop;
 
 use game_loop::winit::event::{Event, WindowEvent};
 use game_loop::winit::event_loop::EventLoop;
 use game_loop::winit::window::{Window, WindowBuilder};
-use crate::types::{Effectiveness, PokemonType, Type};
+
+use crate::data::pokemon::Species;
 
 fn main() {
     // let eff = PokemonType::Double(Type::Normal, Type::Psychic)
     //     .get_effectiveness(&Type::Fighting);
-    println!("Effectiveness: {:?}", PokemonType::Double(Type::Normal, Type::Steel).defending_against(&Type::Fighting));
+    println!("Pokemon {:?}", Species::Bulbasaur.type_id());
 
     // let event_loop = EventLoop::new();
     // let window = WindowBuilder::new().build(&event_loop).unwrap();
