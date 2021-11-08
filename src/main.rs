@@ -5,12 +5,12 @@ use game_loop::game_loop;
 use game_loop::winit::event::{Event, WindowEvent};
 use game_loop::winit::event_loop::EventLoop;
 use game_loop::winit::window::{Window, WindowBuilder};
-use crate::types::{PokemonType, Type};
+use crate::types::{Effectiveness, PokemonType, Type};
 
 fn main() {
-    let eff = PokemonType::Double(Type::Normal, Type::Psychic)
-        .get_effectiveness(&Type::Fighting);
-    println!("Effectiveness: {:?}", eff);
+    // let eff = PokemonType::Double(Type::Normal, Type::Psychic)
+    //     .get_effectiveness(&Type::Fighting);
+    println!("Effectiveness: {:?}", PokemonType::Double(Type::Normal, Type::Steel).defending_against(&Type::Fighting));
 
     // let event_loop = EventLoop::new();
     // let window = WindowBuilder::new().build(&event_loop).unwrap();

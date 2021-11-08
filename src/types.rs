@@ -24,10 +24,40 @@ pub enum Type {
     Fairy
 }
 
+type TypePair = (Type, Type);
+
+impl Type {
+    pub fn attacking(&self, defending_type: &Type) -> Effectiveness {
+        match self {
+            Type::Normal => match defending_type {
+                Type::Rock => Effectiveness::HALF,
+                Type::Ghost => Effectiveness::Immune,
+                Type::Steel => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Fighting => match defending_type {
+                Type::Normal => Effectiveness::DOUBLE,
+                Type::Flying => Effectiveness::HALF,
+                Type::Poison => Effectiveness::HALF,
+                Type::Rock => Effectiveness::DOUBLE,
+                Type::Bug => Effectiveness::HALF,
+                Type::Ghost => Effectiveness::Immune,
+                Type::Steel => Effectiveness::DOUBLE,
+                Type::Psychic => Effectiveness::HALF,
+                Type::Ice => Effectiveness::DOUBLE,
+                Type::Dark => Effectiveness::DOUBLE,
+                Type::Fairy => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            }
+            _ => Effectiveness::NORMAL
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum Effectiveness {
     Immune,
-    Effect(u8)
+    Effect(i8)
 }
 
 impl Effectiveness {
@@ -48,27 +78,6 @@ impl Mul for Effectiveness {
     }
 }
 
-struct TypePair<'a>(&'a Type, &'a Type);
-
-const MATCHUP_TABLE: HashMap<TypePair, Effectiveness> = HashMap::from([
-    (TypePair(&Type::Normal, &Type::Rock), Effectiveness::HALF),
-    (TypePair(&Type::Normal, &Type::Ghost), Effectiveness::Immune),
-    (TypePair(&Type::Normal, &Type::Steel), Effectiveness::HALF),
-
-    (TypePair(&Type::Fighting, &Type::Normal), Effectiveness::DOUBLE),
-    (TypePair(&Type::Fighting, &Type::Flying), Effectiveness::HALF),
-    (TypePair(&Type::Fighting, &Type::Poison), Effectiveness::HALF),
-    (TypePair(&Type::Fighting, &Type::Rock), Effectiveness::DOUBLE),
-    (TypePair(&Type::Fighting, &Type::Bug), Effectiveness::HALF),
-    (TypePair(&Type::Fighting, &Type::Ghost), Effectiveness::Immune),
-    (TypePair(&Type::Fighting, &Type::Steel), Effectiveness::DOUBLE),
-    (TypePair(&Type::Fighting, &Type::Psychic), Effectiveness::HALF),
-    (TypePair(&Type::Fighting, &Type::Ice), Effectiveness::DOUBLE),
-    (TypePair(&Type::Fighting, &Type::Dark), Effectiveness::DOUBLE),
-    (TypePair(&Type::Fighting, &Type::Fairy), Effectiveness::HALF)
-    //More...
-]);
-
 #[derive(Debug)]
 pub enum PokemonType {
     Single(Type),
@@ -76,26 +85,10 @@ pub enum PokemonType {
 }
 
 impl PokemonType {
-    pub fn get_effectiveness(&self, attack_type: &Type) -> Effectiveness {
+    pub fn defending_against(&self, attack_type: &Type) -> Effectiveness {
         match self {
-            PokemonType::Single(t) => {
-                let m = TypePair(attack_type, t);
-                match MATCHUP_TABLE.get(&m) {
-                    None => Effectiveness::NORMAL,
-                    Some(e) => e
-                }
-            },
-            PokemonType::Double(t1, t2) => {
-                let m1 = match MATCHUP_TABLE.get(&TypePair(attack_type, t1)) {
-                    None => Effectiveness::NORMAL,
-                    Some(e) => e
-                };
-                let m2 = match MATCHUP_TABLE.get(&TypePair(attack_type, t2)) {
-                    None => Effectiveness::NORMAL,
-                    Some(e) => e
-                };
-                m1 * m2
-            }
+            PokemonType::Single(t) => attack_type.attacking(t),
+            PokemonType::Double(t1, t2) => attack_type.attacking(t1) * attack_type.attacking(t2)
         }
     }
 }
