@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Ability {
     AirLock,
     ArenaTrap,
@@ -164,4 +165,9 @@ pub enum Ability {
     WeakArmor,
     WonderSkin,
     ZenMode
+}
+
+pub enum PokemonAbility {
+    One(Ability),
+    Two(Ability)
 }

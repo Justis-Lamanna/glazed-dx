@@ -1,4 +1,8 @@
-use crate::types::Type;
+use std::collections::HashMap;
+use crate::data::abilities::PokemonAbility;
+use crate::data::attack::Move;
+use crate::data::core::Season;
+use crate::data::types::{PokemonType, Type};
 
 //region Pokemon Species Enums
 #[derive(Debug)]
@@ -712,11 +716,6 @@ pub enum DarmanitanForm {
 }
 
 #[derive(Debug)]
-pub enum Season {
-    Spring, Summer, Autumn, Winter
-}
-
-#[derive(Debug)]
 pub enum ForcesOfNatureForm {
     Incarnate, Therian
 }
@@ -742,3 +741,65 @@ pub enum GenesectForm {
 }
 //endregion
 
+pub enum GenderRatio {
+    None,
+    Proportion(u8, u8)
+}
+
+pub enum EggGroup {
+    Monster,
+    Water1,
+    Water2,
+    Water3,
+    Humanlike,
+    Bug,
+    Mineral,
+    Flying,
+    Amorphous,
+    Field,
+    Fairy,
+    Ditto,
+    Grass,
+    Dragon
+}
+
+pub enum PokemonEggGroup {
+    None,
+    One(EggGroup),
+    Two(EggGroup, EggGroup)
+}
+
+pub enum LevelRate {
+    Erratic, Fast, MediumFast, MediumSlow, Slow, Fluctuating
+}
+
+pub enum Color {
+    Red, Blue, Yellow, Green, Black, Brown, Purple, Gray, White, Pink
+}
+
+pub struct ByStat<T> {
+    hp: T,
+    attack: T,
+    defense: T,
+    special_attack: T,
+    special_defense: T,
+    speed: T
+}
+
+pub struct PokemonData {
+    species: Species,
+    _type: PokemonType,
+    ability: PokemonAbility,
+    hidden_ability: Option<PokemonAbility>,
+    gender_ratio: GenderRatio,
+    catch_rate: u8,
+    egg_group: PokemonEggGroup,
+    egg_cycles: u8,
+    height: u8,
+    weight: u16,
+    base_exp_yield: u8,
+    level_rate: LevelRate,
+    ev_yield: ByStat<u8>,
+    base_friendship: u8,
+    base_stats: ByStat<u16>
+}

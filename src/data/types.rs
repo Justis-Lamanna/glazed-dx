@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 use std::ops::Mul;
-use crate::types::Effectiveness::Effect;
 
 #[derive(Debug)]
 pub enum Type {
@@ -224,7 +223,7 @@ impl Mul for Effectiveness {
         return match (self, rhs) {
             (_, Effectiveness::Immune) => Effectiveness::Immune,
             (Effectiveness::Immune, _) => Effectiveness::Immune,
-            (Effect(left_pow), Effect(right_pow)) => Effectiveness::Effect(left_pow + right_pow)
+            (Effectiveness::Effect(left_pow), Effectiveness::Effect(right_pow)) => Effectiveness::Effect(left_pow + right_pow)
         }
     }
 }
