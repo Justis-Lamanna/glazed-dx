@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ops::Mul;
 use crate::types::Effectiveness::Effect;
 
@@ -24,8 +24,6 @@ pub enum Type {
     Fairy
 }
 
-type TypePair = (Type, Type);
-
 impl Type {
     pub fn attacking(&self, defending_type: &Type) -> Effectiveness {
         match self {
@@ -48,8 +46,161 @@ impl Type {
                 Type::Dark => Effectiveness::DOUBLE,
                 Type::Fairy => Effectiveness::HALF,
                 _ => Effectiveness::NORMAL
+            },
+            Type::Flying => match defending_type {
+                Type::Fighting => Effectiveness::DOUBLE,
+                Type::Rock => Effectiveness::HALF,
+                Type::Bug => Effectiveness::DOUBLE,
+                Type::Steel => Effectiveness::HALF,
+                Type::Grass => Effectiveness::DOUBLE,
+                Type::Electric => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Poison => match defending_type {
+                Type::Poison => Effectiveness::HALF,
+                Type::Ground => Effectiveness::HALF,
+                Type::Rock => Effectiveness::HALF,
+                Type::Ghost => Effectiveness::HALF,
+                Type::Steel => Effectiveness::Immune,
+                Type::Grass => Effectiveness::DOUBLE,
+                Type::Fairy => Effectiveness::DOUBLE,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Ground => match defending_type {
+                Type::Flying => Effectiveness::Immune,
+                Type::Poison => Effectiveness::DOUBLE,
+                Type::Rock => Effectiveness::DOUBLE,
+                Type::Bug => Effectiveness::HALF,
+                Type::Steel => Effectiveness::DOUBLE,
+                Type::Fire => Effectiveness::DOUBLE,
+                Type::Grass => Effectiveness::HALF,
+                Type::Electric => Effectiveness::DOUBLE,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Rock => match defending_type {
+                Type::Fighting => Effectiveness::HALF,
+                Type::Flying => Effectiveness::DOUBLE,
+                Type::Ground => Effectiveness::HALF,
+                Type::Bug => Effectiveness::DOUBLE,
+                Type::Steel => Effectiveness::HALF,
+                Type::Fire => Effectiveness::DOUBLE,
+                Type::Ice => Effectiveness::DOUBLE,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Bug => match defending_type {
+                Type::Fighting => Effectiveness::HALF,
+                Type::Flying => Effectiveness::HALF,
+                Type::Poison => Effectiveness::HALF,
+                Type::Ghost => Effectiveness::HALF,
+                Type::Steel => Effectiveness::HALF,
+                Type::Fire => Effectiveness::HALF,
+                Type::Grass => Effectiveness::DOUBLE,
+                Type::Psychic => Effectiveness::DOUBLE,
+                Type::Dark => Effectiveness::DOUBLE,
+                Type::Fairy => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Ghost => match defending_type {
+                Type::Normal => Effectiveness::Immune,
+                Type::Ghost => Effectiveness::DOUBLE,
+                Type::Psychic => Effectiveness::DOUBLE,
+                Type::Dark => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Steel => match defending_type {
+                Type::Rock => Effectiveness::DOUBLE,
+                Type::Steel => Effectiveness::HALF,
+                Type::Fire => Effectiveness::HALF,
+                Type::Water => Effectiveness::HALF,
+                Type::Electric => Effectiveness::HALF,
+                Type::Ice => Effectiveness::DOUBLE,
+                Type::Fairy => Effectiveness::DOUBLE,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Fire => match defending_type {
+                Type::Rock => Effectiveness::HALF,
+                Type::Bug => Effectiveness::DOUBLE,
+                Type::Steel => Effectiveness::DOUBLE,
+                Type::Fire => Effectiveness::HALF,
+                Type::Water => Effectiveness::HALF,
+                Type::Grass => Effectiveness::DOUBLE,
+                Type::Ice => Effectiveness::DOUBLE,
+                Type::Dragon => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Water => match defending_type {
+                Type::Ground => Effectiveness::DOUBLE,
+                Type::Rock => Effectiveness::DOUBLE,
+                Type::Fire => Effectiveness::DOUBLE,
+                Type::Water => Effectiveness::HALF,
+                Type::Grass => Effectiveness::HALF,
+                Type::Dragon => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Grass => match defending_type {
+                Type::Flying => Effectiveness::HALF,
+                Type::Poison => Effectiveness::HALF,
+                Type::Ground => Effectiveness::DOUBLE,
+                Type::Rock => Effectiveness::DOUBLE,
+                Type::Bug => Effectiveness::HALF,
+                Type::Steel => Effectiveness::HALF,
+                Type::Fire => Effectiveness::HALF,
+                Type::Water => Effectiveness::DOUBLE,
+                Type::Grass => Effectiveness::HALF,
+                Type::Dragon => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Electric => match defending_type {
+                Type::Flying => Effectiveness::DOUBLE,
+                Type::Ground => Effectiveness::Immune,
+                Type::Water => Effectiveness::DOUBLE,
+                Type::Grass => Effectiveness::HALF,
+                Type::Electric => Effectiveness::HALF,
+                Type::Dragon => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Psychic => match defending_type {
+                Type::Fighting => Effectiveness::DOUBLE,
+                Type::Poison => Effectiveness::DOUBLE,
+                Type::Steel => Effectiveness::HALF,
+                Type::Psychic => Effectiveness::HALF,
+                Type::Dark => Effectiveness::Immune,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Ice => match defending_type {
+                Type::Flying => Effectiveness::DOUBLE,
+                Type::Ground => Effectiveness::DOUBLE,
+                Type::Steel => Effectiveness::HALF,
+                Type::Fire => Effectiveness::HALF,
+                Type::Water => Effectiveness::HALF,
+                Type::Grass => Effectiveness::DOUBLE,
+                Type::Ice => Effectiveness::HALF,
+                Type::Dragon => Effectiveness::DOUBLE,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Dragon => match defending_type {
+                Type::Steel => Effectiveness::HALF,
+                Type::Dragon => Effectiveness::DOUBLE,
+                Type::Fairy => Effectiveness::Immune,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Dark => match defending_type {
+                Type::Fighting => Effectiveness::HALF,
+                Type::Ghost => Effectiveness::DOUBLE,
+                Type::Psychic => Effectiveness::DOUBLE,
+                Type::Dark => Effectiveness::HALF,
+                Type::Fairy => Effectiveness::HALF,
+                _ => Effectiveness::NORMAL
+            },
+            Type::Fairy => match defending_type {
+                Type::Fighting => Effectiveness::DOUBLE,
+                Type::Poison => Effectiveness::HALF,
+                Type::Steel => Effectiveness::HALF,
+                Type::Fire => Effectiveness::HALF,
+                Type::Dragon => Effectiveness::DOUBLE,
+                Type::Dark => Effectiveness::DOUBLE,
+                _ => Effectiveness::NORMAL
             }
-            _ => Effectiveness::NORMAL
         }
     }
 }
