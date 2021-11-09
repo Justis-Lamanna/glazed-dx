@@ -351,6 +351,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
+name = "enum-map"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e893a7ba6116821058dec84a6fb14fb2a97cd8ce5fd0f85d5a4e760ecd7329d9"
+dependencies = [
+ "enum-map-derive",
+]
+
+[[package]]
+name = "enum-map-derive"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84278eae0af6e34ff6c1db44c11634a694aafac559ff3080e4db4e4ac35907aa"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -397,6 +417,7 @@ dependencies = [
 name = "glazed-dx"
 version = "0.1.0"
 dependencies = [
+ "enum-map",
  "game-loop",
  "rand",
 ]

@@ -167,6 +167,7 @@ pub enum Ability {
     ZenMode
 }
 
+#[derive(Debug)]
 pub enum PokemonAbility {
     One(Ability),
     Two(Ability)

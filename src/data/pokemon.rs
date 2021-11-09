@@ -1,5 +1,5 @@
-use std::collections::HashMap;
-use crate::data::abilities::PokemonAbility;
+use enum_map::{enum_map, EnumMap, Enum};
+use crate::data::abilities::{Ability, PokemonAbility};
 use crate::data::attack::Move;
 use crate::data::core::Season;
 use crate::data::types::{PokemonType, Type};
@@ -741,11 +741,13 @@ pub enum GenesectForm {
 }
 //endregion
 
+#[derive(Debug)]
 pub enum GenderRatio {
     None,
     Proportion(u8, u8)
 }
 
+#[derive(Debug)]
 pub enum EggGroup {
     Monster,
     Water1,
@@ -763,34 +765,32 @@ pub enum EggGroup {
     Dragon
 }
 
+#[derive(Debug)]
 pub enum PokemonEggGroup {
     None,
     One(EggGroup),
     Two(EggGroup, EggGroup)
 }
 
+#[derive(Debug)]
 pub enum LevelRate {
     Erratic, Fast, MediumFast, MediumSlow, Slow, Fluctuating
 }
 
+#[derive(Debug)]
 pub enum Color {
     Red, Blue, Yellow, Green, Black, Brown, Purple, Gray, White, Pink
 }
 
-pub struct ByStat<T> {
-    hp: T,
-    attack: T,
-    defense: T,
-    special_attack: T,
-    special_defense: T,
-    speed: T
-}
+#[derive(Debug)]
+pub struct ByStat<T> (T, T, T, T, T, T);
 
+#[derive(Debug)]
 pub struct PokemonData {
     species: Species,
     _type: PokemonType,
     ability: PokemonAbility,
-    hidden_ability: Option<PokemonAbility>,
+    hidden_ability: Option<Ability>,
     gender_ratio: GenderRatio,
     catch_rate: u8,
     egg_group: PokemonEggGroup,
@@ -802,4 +802,24 @@ pub struct PokemonData {
     ev_yield: ByStat<u8>,
     base_friendship: u8,
     base_stats: ByStat<u16>
+}
+
+impl PokemonData {
+    pub const BULBASAUR: PokemonData = PokemonData {
+        species: Species::Bulbasaur,
+        _type: PokemonType::Double(Type::Grass, Type::Poison),
+        ability: PokemonAbility::One(Ability::Overgrow),
+        hidden_ability: Some(Ability::Chlorophyll),
+        gender_ratio: GenderRatio::Proportion(7, 1),
+        catch_rate: 45,
+        egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Grass),
+        egg_cycles: 20,
+        height: 7,
+        weight: 69,
+        base_exp_yield: 64,
+        level_rate: LevelRate::MediumSlow,
+        ev_yield: ByStat(0, 0, 0, 1, 0, 0),
+        base_friendship: 70,
+        base_stats: ByStat(45, 49, 49, 65, 65, 45)
+    };
 }
