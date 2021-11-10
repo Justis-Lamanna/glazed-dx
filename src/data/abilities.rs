@@ -170,5 +170,5 @@ pub enum Ability {
 #[derive(Debug)]
 pub enum PokemonAbility {
     One(Ability),
-    Two(Ability)
+    Two(Ability, Ability)
 }
