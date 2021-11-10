@@ -164,7 +164,10 @@ pub enum Ability {
     VictoryStar,
     WeakArmor,
     WonderSkin,
-    ZenMode
+    ZenMode,
+    Competitive,
+    SlushRush,
+    Protean
 }
 
 #[derive(Debug)]

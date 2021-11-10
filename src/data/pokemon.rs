@@ -748,6 +748,15 @@ pub enum GenderRatio {
     None,
     Proportion(u8, u8)
 }
+impl GenderRatio {
+    const MALE_ONLY: GenderRatio = GenderRatio::Proportion(1, 0);
+    const FEMALE_ONLY: GenderRatio = GenderRatio::Proportion(0, 1);
+    const ONE_TO_ONE: GenderRatio = GenderRatio::Proportion(1, 1);
+    const ONE_TO_THREE: GenderRatio = GenderRatio::Proportion(1, 3);
+    const ONE_TO_SEVEN: GenderRatio = GenderRatio::Proportion(1, 7);
+    const THREE_TO_ONE: GenderRatio = GenderRatio::Proportion(3, 1);
+    const SEVEN_TO_ONE: GenderRatio = GenderRatio::Proportion(7, 1);
+}
 
 #[derive(Debug)]
 pub enum EggGroup {
@@ -816,7 +825,8 @@ pub struct PokemonData {
     level_rate: LevelRate,
     stats: Stats,
     base_friendship: u8,
-    level_up_moves: &'static[(u8, Move)]
+    level_up_moves: &'static[(u8, Move)],
+    egg_moves: Option<&'static[Move]>
 }
 
 //region Pokemon Constants Data
@@ -1471,7 +1481,7 @@ impl Species {
             Species::Kyurem(_) => PokemonData::Kyurem,
             Species::Keldeo(_) => PokemonData::KeldeoOrdinary,
             Species::Meloetta(_) => PokemonData::MeloettaAria,
-            Species::Genesect(_) => PokemonData::Genesect
+            Species::Genesect(_) => PokemonData::Genesect,
         }
     }
 }
@@ -1493,12 +1503,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (3, Move::Growl),
@@ -1514,7 +1524,23 @@ impl PokemonData {
             (31, Move::WorrySeed),
             (33, Move::Synthesis),
             (37, Move::SeedBomb),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::PetalDance,
+            Move::Sludge,
+            Move::SkullBash,
+            Move::Amnesia,
+            Move::Curse,
+            Move::GigaDrain,
+            Move::Endure,
+            Move::Charm,
+            Move::NaturePower,
+            Move::Ingrain,
+            Move::GrassWhistle,
+            Move::MagicalLeaf,
+            Move::LeafStorm,
+            Move::PowerWhip,
+        ])
     };
     pub const Ivysaur: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -1531,12 +1557,12 @@ impl PokemonData {
             Stat::new(80, 1),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -1552,7 +1578,8 @@ impl PokemonData {
             (36, Move::WorrySeed),
             (39, Move::Synthesis),
             (44, Move::SolarBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Venusaur: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -1569,12 +1596,12 @@ impl PokemonData {
             Stat::new(100, 1),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::VineWhip),
             (1, Move::Tackle),
@@ -1591,7 +1618,8 @@ impl PokemonData {
             (39, Move::WorrySeed),
             (45, Move::Synthesis),
             (53, Move::SolarBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Charmander: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -1608,12 +1636,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(65, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Growl),
@@ -1627,7 +1655,22 @@ impl PokemonData {
             (37, Move::Flamethrower),
             (43, Move::FireSpin),
             (46, Move::Inferno),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Bite,
+            Move::Counter,
+            Move::BellyDrum,
+            Move::Outrage,
+            Move::MetalClaw,
+            Move::Crunch,
+            Move::AncientPower,
+            Move::BeatUp,
+            Move::FocusPunch,
+            Move::DragonDance,
+            Move::FlareBlitz,
+            Move::DragonPulse,
+            Move::DragonRush,
+        ])
     };
     pub const Charmeleon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -1644,12 +1687,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(80, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Growl),
@@ -1663,7 +1706,8 @@ impl PokemonData {
             (43, Move::Flamethrower),
             (50, Move::FireSpin),
             (54, Move::Inferno),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Charizard: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Flying),
@@ -1680,12 +1724,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Growl),
@@ -1705,7 +1749,8 @@ impl PokemonData {
             (62, Move::Inferno),
             (71, Move::HeatWave),
             (77, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Squirtle: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -1722,12 +1767,12 @@ impl PokemonData {
             Stat::new(64, 0),
             Stat::new(43, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::TailWhip),
@@ -1743,7 +1788,23 @@ impl PokemonData {
             (34, Move::IronDefense),
             (37, Move::RainDance),
             (40, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mist,
+            Move::Haze,
+            Move::Flail,
+            Move::Foresight,
+            Move::MirrorCoat,
+            Move::FakeOut,
+            Move::Yawn,
+            Move::Refresh,
+            Move::MudSport,
+            Move::WaterSpout,
+            Move::MuddyWater,
+            Move::Brine,
+            Move::AquaRing,
+            Move::AquaJet,
+        ])
     };
     pub const Wartortle: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -1760,12 +1821,12 @@ impl PokemonData {
             Stat::new(80, 1),
             Stat::new(58, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -1781,7 +1842,8 @@ impl PokemonData {
             (40, Move::IronDefense),
             (44, Move::RainDance),
             (48, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Blastoise: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -1798,12 +1860,12 @@ impl PokemonData {
             Stat::new(105, 3),
             Stat::new(78, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -1820,7 +1882,8 @@ impl PokemonData {
             (46, Move::IronDefense),
             (53, Move::RainDance),
             (60, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Caterpie: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -1837,17 +1900,18 @@ impl PokemonData {
             Stat::new(20, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::StringShot),
             (15, Move::BugBite),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Metapod: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -1864,15 +1928,16 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Harden),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Butterfree: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -1889,12 +1954,12 @@ impl PokemonData {
             Stat::new(80, 1),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Confusion),
             (12, Move::PoisonPowder),
@@ -1911,7 +1976,8 @@ impl PokemonData {
             (40, Move::Captivate),
             (42, Move::BugBuzz),
             (46, Move::QuiverDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Weedle: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -1928,17 +1994,18 @@ impl PokemonData {
             Stat::new(20, 0),
             Stat::new(50, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::StringShot),
             (15, Move::BugBite),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Kakuna: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -1955,15 +2022,16 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Harden),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Beedrill: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -1980,12 +2048,12 @@ impl PokemonData {
             Stat::new(80, 1),
             Stat::new(75, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::FuryAttack),
             (13, Move::FocusEnergy),
@@ -1998,7 +2066,8 @@ impl PokemonData {
             (34, Move::Assurance),
             (37, Move::PoisonJab),
             (40, Move::Endeavor),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pidgey: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -2015,12 +2084,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(56, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (5, Move::SandAttack),
@@ -2036,7 +2105,18 @@ impl PokemonData {
             (45, Move::MirrorMove),
             (49, Move::AirSlash),
             (53, Move::Hurricane),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FeintAttack,
+            Move::Foresight,
+            Move::SteelWing,
+            Move::Pursuit,
+            Move::Uproar,
+            Move::AirCutter,
+            Move::AirSlash,
+            Move::BraveBird,
+            Move::Defog,
+        ])
     };
     pub const Pidgeotto: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -2053,12 +2133,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(71, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::SandAttack),
@@ -2074,7 +2154,8 @@ impl PokemonData {
             (52, Move::MirrorMove),
             (57, Move::AirSlash),
             (62, Move::Hurricane),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pidgeot: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -2091,12 +2172,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(101, 3)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::SandAttack),
@@ -2112,7 +2193,8 @@ impl PokemonData {
             (56, Move::MirrorMove),
             (62, Move::AirSlash),
             (68, Move::Hurricane),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Rattata: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -2129,12 +2211,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(72, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -2149,7 +2231,20 @@ impl PokemonData {
             (28, Move::SuperFang),
             (31, Move::DoubleEdge),
             (34, Move::Endeavor),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Bite,
+            Move::Counter,
+            Move::Screech,
+            Move::FurySwipes,
+            Move::FlameWheel,
+            Move::Reversal,
+            Move::Uproar,
+            Move::Revenge,
+            Move::MeFirst,
+            Move::LastResort,
+            Move::FinalGambit,
+        ])
     };
     pub const Raticate: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -2166,12 +2261,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(97, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 127,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::SwordsDance),
             (1, Move::Tackle),
@@ -2188,7 +2283,8 @@ impl PokemonData {
             (34, Move::SuperFang),
             (39, Move::DoubleEdge),
             (44, Move::Endeavor),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Spearow: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -2205,12 +2301,12 @@ impl PokemonData {
             Stat::new(31, 0),
             Stat::new(70, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Peck),
@@ -2223,7 +2319,20 @@ impl PokemonData {
             (29, Move::Assurance),
             (33, Move::Roost),
             (37, Move::DrillPeck),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::Whirlwind,
+            Move::QuickAttack,
+            Move::SkyAttack,
+            Move::TriAttack,
+            Move::ScaryFace,
+            Move::FeintAttack,
+            Move::SteelWing,
+            Move::Uproar,
+            Move::FeatherDance,
+            Move::Astonish,
+        ])
     };
     pub const Fearow: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -2240,12 +2349,12 @@ impl PokemonData {
             Stat::new(61, 0),
             Stat::new(100, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::FuryAttack),
             (1, Move::Leer),
@@ -2260,7 +2369,8 @@ impl PokemonData {
             (41, Move::Roost),
             (47, Move::DrillPeck),
             (53, Move::DrillRun),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Ekans: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -2277,12 +2387,12 @@ impl PokemonData {
             Stat::new(54, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Wrap),
             (1, Move::Leer),
@@ -2300,7 +2410,21 @@ impl PokemonData {
             (41, Move::Haze),
             (44, Move::Coil),
             (49, Move::GunkShot),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::Disable,
+            Move::Spite,
+            Move::ScaryFace,
+            Move::Pursuit,
+            Move::IronTail,
+            Move::BeatUp,
+            Move::Snatch,
+            Move::PoisonFang,
+            Move::PoisonTail,
+            Move::SuckerPunch,
+            Move::Switcheroo,
+        ])
     };
     pub const Arbok: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -2317,12 +2441,12 @@ impl PokemonData {
             Stat::new(79, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Wrap),
             (1, Move::PoisonSting),
@@ -2344,7 +2468,8 @@ impl PokemonData {
             (51, Move::Haze),
             (56, Move::Coil),
             (63, Move::GunkShot),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pikachu: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -2361,12 +2486,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(90, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::ThunderShock),
@@ -2382,7 +2507,8 @@ impl PokemonData {
             (42, Move::Discharge),
             (45, Move::LightScreen),
             (50, Move::Thunder),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Raichu: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -2399,18 +2525,19 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(110, 3)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::TailWhip),
             (1, Move::ThunderShock),
             (1, Move::Thunderbolt),
             (1, Move::QuickAttack),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Sandshrew: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -2427,12 +2554,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::DefenseCurl),
@@ -2451,7 +2578,19 @@ impl PokemonData {
             (38, Move::SwordsDance),
             (42, Move::Sandstorm),
             (46, Move::Earthquake),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::Flail,
+            Move::Endure,
+            Move::RapidSpin,
+            Move::MetalClaw,
+            Move::CrushClaw,
+            Move::MudShot,
+            Move::NightSlash,
+            Move::RockClimb,
+            Move::ChipAway,
+        ])
     };
     pub const Sandslash: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -2468,12 +2607,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::SandAttack),
@@ -2493,7 +2632,8 @@ impl PokemonData {
             (38, Move::SwordsDance),
             (42, Move::Sandstorm),
             (46, Move::Earthquake),
-        ]
+        ],
+        egg_moves: None
     };
     pub const NidoranF: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -2510,12 +2650,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(41, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 235,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Growl),
@@ -2530,7 +2670,22 @@ impl PokemonData {
             (37, Move::Crunch),
             (43, Move::Captivate),
             (45, Move::PoisonFang),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TakeDown,
+            Move::Supersonic,
+            Move::Disable,
+            Move::Counter,
+            Move::FocusEnergy,
+            Move::SkullBash,
+            Move::Endure,
+            Move::Charm,
+            Move::Pursuit,
+            Move::IronTail,
+            Move::BeatUp,
+            Move::PoisonTail,
+            Move::ChipAway,
+        ])
     };
     pub const Nidorina: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -2547,12 +2702,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(56, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Growl),
@@ -2567,7 +2722,8 @@ impl PokemonData {
             (43, Move::Crunch),
             (50, Move::Captivate),
             (58, Move::PoisonFang),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Nidoqueen: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Ground),
@@ -2584,12 +2740,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(76, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::DoubleKick),
@@ -2599,7 +2755,8 @@ impl PokemonData {
             (35, Move::BodySlam),
             (43, Move::EarthPower),
             (58, Move::Superpower),
-        ]
+        ],
+        egg_moves: None
     };
     pub const NidoranM: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -2616,12 +2773,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 235,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Peck),
@@ -2636,7 +2793,22 @@ impl PokemonData {
             (37, Move::PoisonJab),
             (43, Move::Captivate),
             (45, Move::HornDrill),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TakeDown,
+            Move::Supersonic,
+            Move::Disable,
+            Move::Counter,
+            Move::Confusion,
+            Move::Amnesia,
+            Move::Endure,
+            Move::IronTail,
+            Move::BeatUp,
+            Move::PoisonTail,
+            Move::SuckerPunch,
+            Move::HeadSmash,
+            Move::ChipAway,
+        ])
     };
     pub const Nidorino: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -2653,12 +2825,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Peck),
@@ -2673,7 +2845,8 @@ impl PokemonData {
             (43, Move::PoisonJab),
             (50, Move::Captivate),
             (58, Move::HornDrill),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Nidoking: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Ground),
@@ -2690,12 +2863,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::DoubleKick),
             (1, Move::PoisonSting),
@@ -2705,7 +2878,8 @@ impl PokemonData {
             (35, Move::Thrash),
             (43, Move::EarthPower),
             (58, Move::Megahorn),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Clefairy: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fairy),
@@ -2722,12 +2896,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 150,
         egg_group: PokemonEggGroup::One(EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 140,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Growl),
@@ -2750,7 +2924,8 @@ impl PokemonData {
             (52, Move::MeteorMash),
             (55, Move::HealingWish),
             (58, Move::AfterYou),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Clefable: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fairy),
@@ -2767,18 +2942,19 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 25,
         egg_group: PokemonEggGroup::One(EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 140,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::DoubleSlap),
             (1, Move::Sing),
             (1, Move::Minimize),
             (1, Move::Metronome),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Vulpix: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -2795,12 +2971,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(65, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Ember),
             (4, Move::TailWhip),
@@ -2821,7 +2997,22 @@ impl PokemonData {
             (44, Move::Grudge),
             (47, Move::Captivate),
             (50, Move::Inferno),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::Hypnosis,
+            Move::Flail,
+            Move::Spite,
+            Move::FeintAttack,
+            Move::HeatWave,
+            Move::SecretPower,
+            Move::Extrasensory,
+            Move::Howl,
+            Move::PowerSwap,
+            Move::FlareBlitz,
+            Move::Hex,
+            Move::TailSlap,
+        ])
     };
     pub const Ninetales: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -2838,23 +3029,24 @@ impl PokemonData {
             Stat::new(100, 1),
             Stat::new(100, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Ember),
             (1, Move::QuickAttack),
             (1, Move::ConfuseRay),
             (1, Move::Safeguard),
             (1, Move::NastyPlot),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Jigglypuff: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Fairy),
-        ability: PokemonAbility::One(Ability::CuteCharm),
+        ability: PokemonAbility::Two(Ability::CuteCharm, Ability::Competitive),
         hidden_ability: Some(Ability::FriendGuard),
         height: 5,
         weight: 55,
@@ -2867,12 +3059,12 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 170,
         egg_group: PokemonEggGroup::One(EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Sing),
             (5, Move::DefenseCurl),
@@ -2888,11 +3080,12 @@ impl PokemonData {
             (45, Move::Mimic),
             (49, Move::HyperVoice),
             (53, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Wigglytuff: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Fairy),
-        ability: PokemonAbility::One(Ability::CuteCharm),
+        ability: PokemonAbility::Two(Ability::CuteCharm, Ability::Competitive),
         hidden_ability: Some(Ability::Frisk),
         height: 10,
         weight: 120,
@@ -2905,18 +3098,19 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 50,
         egg_group: PokemonEggGroup::One(EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::DoubleSlap),
             (1, Move::Sing),
             (1, Move::Disable),
             (1, Move::DefenseCurl),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Zubat: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Flying),
@@ -2933,12 +3127,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(55, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::LeechLife),
             (4, Move::Supersonic),
@@ -2953,7 +3147,22 @@ impl PokemonData {
             (37, Move::PoisonFang),
             (41, Move::Haze),
             (45, Move::AirSlash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Gust,
+            Move::Whirlwind,
+            Move::Hypnosis,
+            Move::QuickAttack,
+            Move::Curse,
+            Move::FeintAttack,
+            Move::GigaDrain,
+            Move::SteelWing,
+            Move::Pursuit,
+            Move::BraveBird,
+            Move::NastyPlot,
+            Move::ZenHeadbutt,
+            Move::Defog,
+        ])
     };
     pub const Golbat: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Flying),
@@ -2970,12 +3179,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(90, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Supersonic),
             (1, Move::Screech),
@@ -2991,7 +3200,8 @@ impl PokemonData {
             (42, Move::PoisonFang),
             (47, Move::Haze),
             (52, Move::AirSlash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Oddish: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -3008,12 +3218,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Absorb),
             (5, Move::SweetScent),
@@ -3027,7 +3237,19 @@ impl PokemonData {
             (33, Move::Moonlight),
             (37, Move::GigaDrain),
             (41, Move::PetalDance),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorLeaf,
+            Move::Flail,
+            Move::Charm,
+            Move::Synthesis,
+            Move::NaturePower,
+            Move::Ingrain,
+            Move::SecretPower,
+            Move::TeeterDance,
+            Move::Tickle,
+            Move::AfterYou,
+        ])
     };
     pub const Gloom: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -3044,12 +3266,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Acid),
             (1, Move::Absorb),
@@ -3063,7 +3285,8 @@ impl PokemonData {
             (41, Move::Moonlight),
             (47, Move::GigaDrain),
             (53, Move::PetalDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Vileplume: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -3080,12 +3303,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::MegaDrain),
             (1, Move::PoisonPowder),
@@ -3093,7 +3316,8 @@ impl PokemonData {
             (1, Move::Aromatherapy),
             (53, Move::PetalDance),
             (65, Move::SolarBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Paras: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Grass),
@@ -3110,12 +3334,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Bug, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (6, Move::PoisonPowder),
@@ -3129,7 +3353,22 @@ impl PokemonData {
             (43, Move::Aromatherapy),
             (49, Move::RagePowder),
             (54, Move::XScissor),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Psybeam,
+            Move::Counter,
+            Move::LeechSeed,
+            Move::Agility,
+            Move::Screech,
+            Move::Flail,
+            Move::Endure,
+            Move::Pursuit,
+            Move::SweetScent,
+            Move::MetalClaw,
+            Move::NaturalGift,
+            Move::CrossPoison,
+            Move::BugBite,
+        ])
     };
     pub const Parasect: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Grass),
@@ -3146,12 +3385,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Bug, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::PoisonPowder),
@@ -3166,7 +3405,8 @@ impl PokemonData {
             (51, Move::Aromatherapy),
             (59, Move::RagePowder),
             (66, Move::XScissor),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Venonat: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -3183,12 +3423,12 @@ impl PokemonData {
             Stat::new(55, 1),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Disable),
@@ -3204,7 +3444,20 @@ impl PokemonData {
             (37, Move::ZenHeadbutt),
             (41, Move::PoisonFang),
             (47, Move::Psychic),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Agility,
+            Move::Screech,
+            Move::GigaDrain,
+            Move::BatonPass,
+            Move::MorningSun,
+            Move::SkillSwap,
+            Move::SecretPower,
+            Move::SignalBeam,
+            Move::ToxicSpikes,
+            Move::BugBite,
+            Move::RagePowder,
+        ])
     };
     pub const Venomoth: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -3221,12 +3474,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(90, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Supersonic),
@@ -3246,7 +3499,8 @@ impl PokemonData {
             (55, Move::Psychic),
             (59, Move::BugBuzz),
             (63, Move::QuiverDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Diglett: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -3263,12 +3517,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(95, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::SandAttack),
@@ -3284,7 +3538,22 @@ impl PokemonData {
             (37, Move::Slash),
             (40, Move::Earthquake),
             (45, Move::Fissure),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Headbutt,
+            Move::Screech,
+            Move::Reversal,
+            Move::FeintAttack,
+            Move::Endure,
+            Move::Pursuit,
+            Move::AncientPower,
+            Move::BeatUp,
+            Move::Uproar,
+            Move::Memento,
+            Move::Astonish,
+            Move::MudBomb,
+            Move::FinalGambit,
+        ])
     };
     pub const Dugtrio: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -3301,12 +3570,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(120, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 50,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::SandAttack),
@@ -3325,7 +3594,8 @@ impl PokemonData {
             (45, Move::Slash),
             (50, Move::Earthquake),
             (57, Move::Fissure),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Meowth: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -3342,12 +3612,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(90, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Growl),
@@ -3364,7 +3634,22 @@ impl PokemonData {
             (46, Move::Captivate),
             (49, Move::NightSlash),
             (54, Move::Feint),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TailWhip,
+            Move::Hypnosis,
+            Move::Amnesia,
+            Move::Flail,
+            Move::Spite,
+            Move::Charm,
+            Move::IronTail,
+            Move::Assist,
+            Move::Snatch,
+            Move::OdorSleuth,
+            Move::Punishment,
+            Move::LastResort,
+            Move::FoulPlay,
+        ])
     };
     pub const Persian: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -3381,12 +3666,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(115, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Bite),
@@ -3405,7 +3690,8 @@ impl PokemonData {
             (56, Move::Captivate),
             (61, Move::NightSlash),
             (68, Move::Feint),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Psyduck: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -3422,12 +3708,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::WaterSport),
@@ -3445,7 +3731,22 @@ impl PokemonData {
             (43, Move::Amnesia),
             (46, Move::HydroPump),
             (50, Move::WonderRoom),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Psybeam,
+            Move::Hypnosis,
+            Move::ConfuseRay,
+            Move::Foresight,
+            Move::SleepTalk,
+            Move::Encore,
+            Move::CrossChop,
+            Move::FutureSight,
+            Move::Yawn,
+            Move::Refresh,
+            Move::SecretPower,
+            Move::MudBomb,
+            Move::Synchronoise,
+        ])
     };
     pub const Golduck: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -3462,12 +3763,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::TailWhip),
@@ -3486,7 +3787,8 @@ impl PokemonData {
             (49, Move::Amnesia),
             (54, Move::HydroPump),
             (60, Move::WonderRoom),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mankey: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -3503,12 +3805,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -3526,7 +3828,20 @@ impl PokemonData {
             (45, Move::Punishment),
             (49, Move::CloseCombat),
             (53, Move::FinalGambit),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::Meditate,
+            Move::Reversal,
+            Move::Foresight,
+            Move::SleepTalk,
+            Move::Encore,
+            Move::BeatUp,
+            Move::FocusPunch,
+            Move::SmellingSalts,
+            Move::Revenge,
+            Move::CloseCombat,
+        ])
     };
     pub const Primeape: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -3543,12 +3858,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -3567,7 +3882,8 @@ impl PokemonData {
             (53, Move::Punishment),
             (59, Move::CloseCombat),
             (63, Move::FinalGambit),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Growlithe: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -3584,12 +3900,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Bite),
             (1, Move::Roar),
@@ -3609,7 +3925,22 @@ impl PokemonData {
             (41, Move::HeatWave),
             (43, Move::Outrage),
             (45, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleKick,
+            Move::BodySlam,
+            Move::Thrash,
+            Move::DoubleEdge,
+            Move::FireSpin,
+            Move::IronTail,
+            Move::MorningSun,
+            Move::Crunch,
+            Move::HeatWave,
+            Move::Howl,
+            Move::Covet,
+            Move::CloseCombat,
+            Move::FlareBlitz,
+        ])
     };
     pub const Arcanine: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -3626,12 +3957,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Bite),
             (1, Move::Roar),
@@ -3639,7 +3970,8 @@ impl PokemonData {
             (1, Move::ThunderFang),
             (1, Move::FireFang),
             (34, Move::ExtremeSpeed),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Poliwag: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -3656,12 +3988,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(90, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::WaterSport),
             (5, Move::Bubble),
@@ -3676,7 +4008,22 @@ impl PokemonData {
             (35, Move::WakeUpSlap),
             (38, Move::HydroPump),
             (41, Move::MudBomb),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mist,
+            Move::BubbleBeam,
+            Move::Haze,
+            Move::Splash,
+            Move::MindReader,
+            Move::Endure,
+            Move::Encore,
+            Move::Endeavor,
+            Move::Refresh,
+            Move::IceBall,
+            Move::MudShot,
+            Move::WaterSport,
+            Move::WaterPulse,
+        ])
     };
     pub const Poliwhirl: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -3693,12 +4040,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(90, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Hypnosis),
             (1, Move::Bubble),
@@ -3713,7 +4060,8 @@ impl PokemonData {
             (43, Move::WakeUpSlap),
             (48, Move::HydroPump),
             (53, Move::MudBomb),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Poliwrath: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Fighting),
@@ -3730,12 +4078,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::DoubleSlap),
             (1, Move::BubbleBeam),
@@ -3744,7 +4092,8 @@ impl PokemonData {
             (32, Move::DynamicPunch),
             (43, Move::MindReader),
             (53, Move::CircleThrow),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Abra: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -3761,15 +4110,27 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Teleport),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FirePunch,
+            Move::IcePunch,
+            Move::ThunderPunch,
+            Move::Barrier,
+            Move::Encore,
+            Move::KnockOff,
+            Move::SkillSwap,
+            Move::PowerTrick,
+            Move::GuardSwap,
+            Move::GuardSplit,
+        ])
     };
     pub const Kadabra: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -3786,12 +4147,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(105, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 100,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Teleport),
@@ -3808,7 +4169,8 @@ impl PokemonData {
             (46, Move::Psychic),
             (48, Move::FutureSight),
             (52, Move::Trick),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Alakazam: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -3825,12 +4187,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(120, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 50,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Teleport),
@@ -3847,7 +4209,8 @@ impl PokemonData {
             (46, Move::Psychic),
             (48, Move::FutureSight),
             (52, Move::Trick),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Machop: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -3864,12 +4227,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 180,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::LowKick),
@@ -3885,7 +4248,23 @@ impl PokemonData {
             (43, Move::CrossChop),
             (46, Move::ScaryFace),
             (49, Move::DynamicPunch),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FirePunch,
+            Move::IcePunch,
+            Move::ThunderPunch,
+            Move::RollingKick,
+            Move::Counter,
+            Move::Meditate,
+            Move::Encore,
+            Move::SmellingSalts,
+            Move::KnockOff,
+            Move::Tickle,
+            Move::CloseCombat,
+            Move::PowerTrick,
+            Move::BulletPunch,
+            Move::HeavySlam,
+        ])
     };
     pub const Machoke: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -3902,12 +4281,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::KarateChop),
             (1, Move::Leer),
@@ -3923,7 +4302,8 @@ impl PokemonData {
             (44, Move::CrossChop),
             (51, Move::ScaryFace),
             (55, Move::DynamicPunch),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Machamp: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -3940,12 +4320,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::KarateChop),
             (1, Move::Leer),
@@ -3962,7 +4342,8 @@ impl PokemonData {
             (44, Move::CrossChop),
             (51, Move::ScaryFace),
             (55, Move::DynamicPunch),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Bellsprout: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -3979,12 +4360,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::VineWhip),
             (7, Move::Growth),
@@ -3999,7 +4380,22 @@ impl PokemonData {
             (39, Move::RazorLeaf),
             (41, Move::Slam),
             (47, Move::WringOut),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::LeechLife,
+            Move::GigaDrain,
+            Move::Encore,
+            Move::Synthesis,
+            Move::Ingrain,
+            Move::WeatherBall,
+            Move::Tickle,
+            Move::BulletSeed,
+            Move::MagicalLeaf,
+            Move::NaturalGift,
+            Move::WorrySeed,
+            Move::PowerWhip,
+            Move::ClearSmog,
+        ])
     };
     pub const Weepinbell: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -4016,12 +4412,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::VineWhip),
             (1, Move::Wrap),
@@ -4036,7 +4432,8 @@ impl PokemonData {
             (39, Move::RazorLeaf),
             (41, Move::Slam),
             (47, Move::WringOut),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Victreebel: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -4053,12 +4450,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::VineWhip),
             (1, Move::RazorLeaf),
@@ -4070,7 +4467,8 @@ impl PokemonData {
             (27, Move::LeafTornado),
             (47, Move::LeafBlade),
             (47, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Tentacool: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Poison),
@@ -4087,12 +4485,12 @@ impl PokemonData {
             Stat::new(100, 1),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (5, Move::Supersonic),
@@ -4110,7 +4508,20 @@ impl PokemonData {
             (47, Move::HydroPump),
             (50, Move::SludgeWave),
             (54, Move::WringOut),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::AuroraBeam,
+            Move::ConfuseRay,
+            Move::Haze,
+            Move::Bubble,
+            Move::RapidSpin,
+            Move::MirrorCoat,
+            Move::KnockOff,
+            Move::Tickle,
+            Move::MuddyWater,
+            Move::Acupressure,
+            Move::AquaRing,
+        ])
     };
     pub const Tentacruel: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Poison),
@@ -4127,12 +4538,12 @@ impl PokemonData {
             Stat::new(120, 2),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::Supersonic),
@@ -4150,7 +4561,8 @@ impl PokemonData {
             (52, Move::HydroPump),
             (56, Move::SludgeWave),
             (61, Move::WringOut),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Geodude: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Ground),
@@ -4167,12 +4579,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::DefenseCurl),
@@ -4190,7 +4602,18 @@ impl PokemonData {
             (43, Move::Explosion),
             (46, Move::DoubleEdge),
             (50, Move::StoneEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::MegaPunch,
+            Move::Curse,
+            Move::Flail,
+            Move::Endure,
+            Move::FocusPunch,
+            Move::Block,
+            Move::HammerArm,
+            Move::RockClimb,
+            Move::Autotomize,
+        ])
     };
     pub const Graveler: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Ground),
@@ -4207,12 +4630,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::DefenseCurl),
@@ -4230,7 +4653,8 @@ impl PokemonData {
             (53, Move::Explosion),
             (58, Move::DoubleEdge),
             (64, Move::StoneEdge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Golem: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Ground),
@@ -4247,12 +4671,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::DefenseCurl),
@@ -4271,7 +4695,8 @@ impl PokemonData {
             (58, Move::DoubleEdge),
             (64, Move::StoneEdge),
             (69, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Ponyta: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -4288,12 +4713,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(90, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -4309,7 +4734,19 @@ impl PokemonData {
             (41, Move::FireBlast),
             (45, Move::Bounce),
             (49, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleKick,
+            Move::HornDrill,
+            Move::Thrash,
+            Move::DoubleEdge,
+            Move::LowKick,
+            Move::Hypnosis,
+            Move::FlameWheel,
+            Move::Charm,
+            Move::MorningSun,
+            Move::Captivate,
+        ])
     };
     pub const Rapidash: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -4326,12 +4763,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(105, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::TailWhip),
             (1, Move::Growl),
@@ -4350,7 +4787,8 @@ impl PokemonData {
             (41, Move::FireBlast),
             (45, Move::Bounce),
             (49, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Slowpoke: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Psychic),
@@ -4367,12 +4805,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(15, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Curse),
@@ -4390,7 +4828,19 @@ impl PokemonData {
             (49, Move::RainDance),
             (54, Move::PsychUp),
             (58, Move::HealPulse),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Stomp,
+            Move::Snore,
+            Move::BellyDrum,
+            Move::SleepTalk,
+            Move::FutureSight,
+            Move::MudSport,
+            Move::Block,
+            Move::MeFirst,
+            Move::ZenHeadbutt,
+            Move::WonderRoom,
+        ])
     };
     pub const Slowbro: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Psychic),
@@ -4407,12 +4857,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -4431,7 +4881,8 @@ impl PokemonData {
             (55, Move::RainDance),
             (62, Move::PsychUp),
             (68, Move::HealPulse),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Magnemite: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Electric, Type::Steel),
@@ -4448,12 +4899,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::Supersonic),
@@ -4472,7 +4923,8 @@ impl PokemonData {
             (49, Move::MagnetRise),
             (53, Move::GyroBall),
             (57, Move::ZapCannon),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Magneton: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Electric, Type::Steel),
@@ -4489,12 +4941,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Supersonic),
@@ -4514,7 +4966,8 @@ impl PokemonData {
             (62, Move::MagnetRise),
             (67, Move::GyroBall),
             (73, Move::ZapCannon),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Farfetchd: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -4531,12 +4984,12 @@ impl PokemonData {
             Stat::new(62, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Flying, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Leer),
@@ -4556,7 +5009,24 @@ impl PokemonData {
             (45, Move::FalseSwipe),
             (49, Move::AirSlash),
             (55, Move::BraveBird),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Gust,
+            Move::QuickAttack,
+            Move::MirrorMove,
+            Move::Curse,
+            Move::Flail,
+            Move::MudSlap,
+            Move::Foresight,
+            Move::SteelWing,
+            Move::Revenge,
+            Move::FeatherDance,
+            Move::Covet,
+            Move::LeafBlade,
+            Move::Roost,
+            Move::TrumpCard,
+            Move::NightSlash,
+        ])
     };
     pub const Doduo: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -4573,12 +5043,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(75, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Peck),
@@ -4593,7 +5063,19 @@ impl PokemonData {
             (41, Move::DrillPeck),
             (46, Move::Endeavor),
             (50, Move::Thrash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Supersonic,
+            Move::QuickAttack,
+            Move::Haze,
+            Move::MirrorMove,
+            Move::Flail,
+            Move::FeintAttack,
+            Move::Endeavor,
+            Move::NaturalGift,
+            Move::Assurance,
+            Move::BraveBird,
+        ])
     };
     pub const Dodrio: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -4610,12 +5092,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(110, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Peck),
@@ -4631,7 +5113,8 @@ impl PokemonData {
             (47, Move::DrillPeck),
             (54, Move::Endeavor),
             (60, Move::Thrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Seel: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -4648,12 +5131,12 @@ impl PokemonData {
             Stat::new(70, 1),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Headbutt),
             (3, Move::Growl),
@@ -4672,7 +5155,24 @@ impl PokemonData {
             (47, Move::IceBeam),
             (51, Move::Safeguard),
             (53, Move::Hail),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::HornDrill,
+            Move::Disable,
+            Move::Lick,
+            Move::PerishSong,
+            Move::SleepTalk,
+            Move::Encore,
+            Move::IronTail,
+            Move::FakeOut,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::SignalBeam,
+            Move::IcicleSpear,
+            Move::WaterPulse,
+        ])
     };
     pub const Dewgong: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ice),
@@ -4689,12 +5189,12 @@ impl PokemonData {
             Stat::new(95, 2),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::Growl),
@@ -4714,7 +5214,8 @@ impl PokemonData {
             (55, Move::IceBeam),
             (61, Move::Safeguard),
             (65, Move::Hail),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Grimer: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -4731,12 +5232,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::PoisonGas),
@@ -4753,7 +5254,21 @@ impl PokemonData {
             (40, Move::AcidArmor),
             (43, Move::GunkShot),
             (48, Move::Memento),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Haze,
+            Move::Lick,
+            Move::Curse,
+            Move::ScaryFace,
+            Move::MeanLook,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::Imprison,
+            Move::ShadowPunch,
+            Move::ShadowSneak,
+            Move::AcidSpray,
+        ])
     };
     pub const Muk: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -4770,12 +5285,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Harden),
@@ -4792,7 +5307,8 @@ impl PokemonData {
             (43, Move::AcidArmor),
             (49, Move::GunkShot),
             (57, Move::Memento),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Shellder: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -4809,12 +5325,12 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::Withdraw),
@@ -4832,7 +5348,21 @@ impl PokemonData {
             (52, Move::IceBeam),
             (56, Move::ShellSmash),
             (61, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TakeDown,
+            Move::Twineedle,
+            Move::BubbleBeam,
+            Move::Screech,
+            Move::Barrier,
+            Move::RapidSpin,
+            Move::IcicleSpear,
+            Move::MudShot,
+            Move::RockBlast,
+            Move::WaterPulse,
+            Move::AquaRing,
+            Move::Avalanche,
+        ])
     };
     pub const Cloyster: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ice),
@@ -4849,12 +5379,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Supersonic),
             (1, Move::AuroraBeam),
@@ -4864,7 +5394,8 @@ impl PokemonData {
             (13, Move::SpikeCannon),
             (28, Move::Spikes),
             (52, Move::IcicleCrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gastly: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Poison),
@@ -4881,12 +5412,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Hypnosis),
             (1, Move::Lick),
@@ -4903,7 +5434,21 @@ impl PokemonData {
             (40, Move::DestinyBond),
             (43, Move::Hex),
             (47, Move::Nightmare),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FirePunch,
+            Move::IcePunch,
+            Move::ThunderPunch,
+            Move::Disable,
+            Move::Haze,
+            Move::Smog,
+            Move::Psywave,
+            Move::ScaryFace,
+            Move::PerishSong,
+            Move::Grudge,
+            Move::Astonish,
+            Move::ClearSmog,
+        ])
     };
     pub const Haunter: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Poison),
@@ -4920,12 +5465,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Hypnosis),
             (1, Move::Lick),
@@ -4943,7 +5488,8 @@ impl PokemonData {
             (50, Move::DestinyBond),
             (55, Move::Hex),
             (61, Move::Nightmare),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gengar: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Poison),
@@ -4960,12 +5506,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(110, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Hypnosis),
             (1, Move::Lick),
@@ -4983,7 +5529,8 @@ impl PokemonData {
             (50, Move::DestinyBond),
             (55, Move::Hex),
             (61, Move::Nightmare),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Onix: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Ground),
@@ -5000,12 +5547,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bind),
             (1, Move::Tackle),
@@ -5028,7 +5575,17 @@ impl PokemonData {
             (46, Move::StoneEdge),
             (49, Move::DoubleEdge),
             (52, Move::Sandstorm),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DefenseCurl,
+            Move::Flail,
+            Move::Rollout,
+            Move::Block,
+            Move::RockBlast,
+            Move::RockClimb,
+            Move::StealthRock,
+            Move::HeavySlam,
+        ])
     };
     pub const Drowzee: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -5045,12 +5602,12 @@ impl PokemonData {
             Stat::new(90, 1),
             Stat::new(42, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Hypnosis),
@@ -5068,7 +5625,21 @@ impl PokemonData {
             (53, Move::NastyPlot),
             (57, Move::Psyshock),
             (61, Move::FutureSight),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FirePunch,
+            Move::IcePunch,
+            Move::ThunderPunch,
+            Move::Barrier,
+            Move::Flatter,
+            Move::RolePlay,
+            Move::Assist,
+            Move::SkillSwap,
+            Move::SecretPower,
+            Move::GuardSwap,
+            Move::NastyPlot,
+            Move::PsychoCut,
+        ])
     };
     pub const Hypno: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -5085,12 +5656,12 @@ impl PokemonData {
             Stat::new(115, 2),
             Stat::new(67, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Disable),
@@ -5110,7 +5681,8 @@ impl PokemonData {
             (53, Move::NastyPlot),
             (57, Move::Psyshock),
             (61, Move::FutureSight),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Krabby: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -5127,12 +5699,12 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bubble),
             (1, Move::MudSport),
@@ -5149,7 +5721,20 @@ impl PokemonData {
             (39, Move::Brine),
             (41, Move::Crabhammer),
             (45, Move::Flail),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::Agility,
+            Move::Haze,
+            Move::Bide,
+            Move::Amnesia,
+            Move::Flail,
+            Move::Endure,
+            Move::AncientPower,
+            Move::KnockOff,
+            Move::Tickle,
+            Move::ChipAway,
+        ])
     };
     pub const Kingler: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -5166,12 +5751,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(75, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::ViseGrip),
             (1, Move::Leer),
@@ -5189,7 +5774,8 @@ impl PokemonData {
             (51, Move::Brine),
             (56, Move::Crabhammer),
             (63, Move::Flail),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Voltorb: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -5206,12 +5792,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(100, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Charge),
             (5, Move::Tackle),
@@ -5228,7 +5814,8 @@ impl PokemonData {
             (43, Move::GyroBall),
             (47, Move::Explosion),
             (50, Move::MirrorCoat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Electrode: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -5245,12 +5832,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(150, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::SonicBoom),
@@ -5267,7 +5854,8 @@ impl PokemonData {
             (51, Move::GyroBall),
             (57, Move::Explosion),
             (62, Move::MirrorCoat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Exeggcute: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Psychic),
@@ -5284,12 +5872,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Hypnosis),
             (1, Move::Barrage),
@@ -5306,7 +5894,22 @@ impl PokemonData {
             (43, Move::SolarBeam),
             (47, Move::Extrasensory),
             (53, Move::Bestow),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Curse,
+            Move::GigaDrain,
+            Move::Synthesis,
+            Move::Moonlight,
+            Move::AncientPower,
+            Move::NaturePower,
+            Move::Ingrain,
+            Move::SkillSwap,
+            Move::Block,
+            Move::NaturalGift,
+            Move::LuckyChant,
+            Move::PowerSwap,
+            Move::LeafStorm,
+        ])
     };
     pub const Exeggutor: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Psychic),
@@ -5323,12 +5926,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Stomp),
             (1, Move::Confusion),
@@ -5339,7 +5942,8 @@ impl PokemonData {
             (27, Move::EggBomb),
             (37, Move::WoodHammer),
             (47, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cubone: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -5356,12 +5960,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (3, Move::TailWhip),
@@ -5378,7 +5982,19 @@ impl PokemonData {
             (41, Move::Endeavor),
             (43, Move::DoubleEdge),
             (47, Move::Retaliate),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleKick,
+            Move::Screech,
+            Move::SkullBash,
+            Move::BellyDrum,
+            Move::PerishSong,
+            Move::Detect,
+            Move::Endure,
+            Move::AncientPower,
+            Move::IronHead,
+            Move::ChipAway,
+        ])
     };
     pub const Marowak: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -5395,12 +6011,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::TailWhip),
@@ -5417,7 +6033,8 @@ impl PokemonData {
             (49, Move::Endeavor),
             (53, Move::DoubleEdge),
             (59, Move::Retaliate),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Hitmonlee: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -5434,12 +6051,12 @@ impl PokemonData {
             Stat::new(110, 0),
             Stat::new(87, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::DoubleKick),
             (1, Move::Revenge),
@@ -5458,7 +6075,8 @@ impl PokemonData {
             (53, Move::MegaKick),
             (57, Move::CloseCombat),
             (61, Move::Reversal),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Hitmonchan: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -5475,12 +6093,12 @@ impl PokemonData {
             Stat::new(110, 2),
             Stat::new(76, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::CometPunch),
             (1, Move::Revenge),
@@ -5500,7 +6118,8 @@ impl PokemonData {
             (56, Move::FocusPunch),
             (61, Move::Counter),
             (66, Move::CloseCombat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Lickitung: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -5517,12 +6136,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Lick),
             (5, Move::Supersonic),
@@ -5539,7 +6158,20 @@ impl PokemonData {
             (49, Move::Screech),
             (53, Move::PowerWhip),
             (57, Move::WringOut),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Amnesia,
+            Move::Snore,
+            Move::Curse,
+            Move::BellyDrum,
+            Move::SleepTalk,
+            Move::Magnitude,
+            Move::SmellingSalts,
+            Move::MuddyWater,
+            Move::HammerArm,
+            Move::ZenHeadbutt,
+        ])
     };
     pub const Koffing: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -5556,12 +6188,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::PoisonGas),
@@ -5577,7 +6209,20 @@ impl PokemonData {
             (37, Move::Explosion),
             (40, Move::DestinyBond),
             (45, Move::Memento),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Psybeam,
+            Move::Screech,
+            Move::Psywave,
+            Move::Curse,
+            Move::Spite,
+            Move::DestinyBond,
+            Move::PainSplit,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::Grudge,
+        ])
     };
     pub const Weezing: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -5594,12 +6239,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Smokescreen),
@@ -5615,7 +6260,8 @@ impl PokemonData {
             (40, Move::Explosion),
             (46, Move::DestinyBond),
             (54, Move::Memento),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Rhyhorn: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Rock),
@@ -5632,12 +6278,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::HornAttack),
             (1, Move::TailWhip),
@@ -5653,7 +6299,22 @@ impl PokemonData {
             (56, Move::Earthquake),
             (63, Move::HornDrill),
             (67, Move::Megahorn),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::SkullBash,
+            Move::Curse,
+            Move::Reversal,
+            Move::Magnitude,
+            Move::IronTail,
+            Move::Crunch,
+            Move::CrushClaw,
+            Move::DragonRush,
+            Move::ThunderFang,
+            Move::IceFang,
+            Move::FireFang,
+            Move::RockClimb,
+        ])
     };
     pub const Rhydon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Rock),
@@ -5670,12 +6331,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Stomp),
             (1, Move::HornAttack),
@@ -5692,7 +6353,8 @@ impl PokemonData {
             (62, Move::Earthquake),
             (71, Move::HornDrill),
             (77, Move::Megahorn),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Chansey: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -5709,12 +6371,12 @@ impl PokemonData {
             Stat::new(105, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 140,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Growl),
@@ -5733,7 +6395,19 @@ impl PokemonData {
             (46, Move::LightScreen),
             (50, Move::HealingWish),
             (54, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::Metronome,
+            Move::Endure,
+            Move::HealBell,
+            Move::Present,
+            Move::HelpingHand,
+            Move::Aromatherapy,
+            Move::Gravity,
+            Move::NaturalGift,
+            Move::MudBomb,
+        ])
     };
     pub const Tangela: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -5750,12 +6424,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Constrict),
             (1, Move::Ingrain),
@@ -5775,7 +6449,21 @@ impl PokemonData {
             (46, Move::Tickle),
             (49, Move::WringOut),
             (53, Move::PowerWhip),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::MegaDrain,
+            Move::LeechSeed,
+            Move::Confusion,
+            Move::Amnesia,
+            Move::Flail,
+            Move::GigaDrain,
+            Move::NaturePower,
+            Move::Endeavor,
+            Move::NaturalGift,
+            Move::PowerSwap,
+            Move::LeafStorm,
+            Move::RagePowder,
+        ])
     };
     pub const Kangaskhan: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -5792,12 +6480,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::CometPunch),
             (1, Move::Leer),
@@ -5814,7 +6502,22 @@ impl PokemonData {
             (46, Move::Outrage),
             (49, Move::SuckerPunch),
             (55, Move::Reversal),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Stomp,
+            Move::DoubleEdge,
+            Move::Disable,
+            Move::Counter,
+            Move::FocusEnergy,
+            Move::Foresight,
+            Move::Uproar,
+            Move::FocusPunch,
+            Move::Endeavor,
+            Move::CrushClaw,
+            Move::HammerArm,
+            Move::TrumpCard,
+            Move::CircleThrow,
+        ])
     };
     pub const Horsea: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -5831,12 +6534,12 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bubble),
             (4, Move::Smokescreen),
@@ -5850,7 +6553,22 @@ impl PokemonData {
             (35, Move::HydroPump),
             (38, Move::DragonDance),
             (42, Move::DragonPulse),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::Disable,
+            Move::AuroraBeam,
+            Move::DragonRage,
+            Move::Splash,
+            Move::Flail,
+            Move::Octazooka,
+            Move::Outrage,
+            Move::DragonBreath,
+            Move::SignalBeam,
+            Move::MuddyWater,
+            Move::WaterPulse,
+            Move::ClearSmog,
+        ])
     };
     pub const Seadra: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -5867,12 +6585,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::WaterGun),
@@ -5886,7 +6604,8 @@ impl PokemonData {
             (40, Move::HydroPump),
             (48, Move::DragonDance),
             (57, Move::DragonPulse),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Goldeen: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -5903,12 +6622,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(63, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::TailWhip),
             (1, Move::Peck),
@@ -5924,7 +6643,20 @@ impl PokemonData {
             (47, Move::Agility),
             (51, Move::Soak),
             (57, Move::Megahorn),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::HydroPump,
+            Move::Psybeam,
+            Move::Haze,
+            Move::SkullBash,
+            Move::MudSlap,
+            Move::SleepTalk,
+            Move::MudSport,
+            Move::SignalBeam,
+            Move::MudShot,
+            Move::AquaTail,
+        ])
     };
     pub const Seaking: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -5941,12 +6673,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(68, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::TailWhip),
             (1, Move::Supersonic),
@@ -5963,7 +6695,8 @@ impl PokemonData {
             (56, Move::Agility),
             (63, Move::Soak),
             (72, Move::Megahorn),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Staryu: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -5980,12 +6713,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(85, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Harden),
@@ -6003,7 +6736,8 @@ impl PokemonData {
             (43, Move::PowerGem),
             (48, Move::CosmicPower),
             (52, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Starmie: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Psychic),
@@ -6020,19 +6754,20 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(115, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::WaterGun),
             (1, Move::Recover),
             (1, Move::Swift),
             (1, Move::RapidSpin),
             (22, Move::ConfuseRay),
-        ]
+        ],
+        egg_moves: None
     };
     pub const MrMime: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Fairy),
@@ -6049,12 +6784,12 @@ impl PokemonData {
             Stat::new(120, 2),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Barrier),
@@ -6079,7 +6814,21 @@ impl PokemonData {
             (43, Move::RolePlay),
             (46, Move::BatonPass),
             (50, Move::Safeguard),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Hypnosis,
+            Move::Mimic,
+            Move::ConfuseRay,
+            Move::IcyWind,
+            Move::FutureSight,
+            Move::FakeOut,
+            Move::Trick,
+            Move::TeeterDance,
+            Move::WakeUpSlap,
+            Move::NastyPlot,
+            Move::PowerSplit,
+            Move::MagicRoom,
+        ])
     };
     pub const Scyther: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -6096,12 +6845,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(105, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::QuickAttack),
@@ -6121,7 +6870,19 @@ impl PokemonData {
             (53, Move::AirSlash),
             (57, Move::SwordsDance),
             (61, Move::Feint),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::Counter,
+            Move::Reversal,
+            Move::Endure,
+            Move::SteelWing,
+            Move::BatonPass,
+            Move::SilverWind,
+            Move::NightSlash,
+            Move::BugBuzz,
+            Move::Defog,
+        ])
     };
     pub const Jynx: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Psychic),
@@ -6138,12 +6899,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Lick),
@@ -6160,7 +6921,8 @@ impl PokemonData {
             (49, Move::WringOut),
             (55, Move::PerishSong),
             (60, Move::Blizzard),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Electabuzz: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -6177,12 +6939,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(105, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::ThunderShock),
@@ -6198,7 +6960,8 @@ impl PokemonData {
             (42, Move::Screech),
             (49, Move::Thunderbolt),
             (55, Move::Thunder),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Magmar: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -6215,12 +6978,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(93, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Ember),
@@ -6236,7 +6999,8 @@ impl PokemonData {
             (42, Move::SunnyDay),
             (49, Move::Flamethrower),
             (55, Move::FireBlast),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pinsir: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -6253,12 +7017,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::ViseGrip),
             (1, Move::FocusEnergy),
@@ -6275,7 +7039,18 @@ impl PokemonData {
             (40, Move::SwordsDance),
             (43, Move::Superpower),
             (47, Move::Guillotine),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FuryAttack,
+            Move::QuickAttack,
+            Move::Flail,
+            Move::FeintAttack,
+            Move::Superpower,
+            Move::Feint,
+            Move::CloseCombat,
+            Move::MeFirst,
+            Move::BugBite,
+        ])
     };
     pub const Tauros: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -6292,12 +7067,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(110, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (3, Move::TailWhip),
@@ -6313,7 +7088,8 @@ impl PokemonData {
             (48, Move::Swagger),
             (55, Move::Thrash),
             (63, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Magikarp: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -6330,17 +7106,18 @@ impl PokemonData {
             Stat::new(20, 0),
             Stat::new(80, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Water2, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 5,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Splash),
             (15, Move::Tackle),
             (30, Move::Flail),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gyarados: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Flying),
@@ -6357,12 +7134,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(81, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water2, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 5,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Thrash),
             (20, Move::Bite),
@@ -6375,7 +7152,8 @@ impl PokemonData {
             (41, Move::HydroPump),
             (44, Move::DragonDance),
             (47, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Lapras: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ice),
@@ -6392,12 +7170,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Sing),
@@ -6414,7 +7192,22 @@ impl PokemonData {
             (43, Move::Safeguard),
             (49, Move::HydroPump),
             (55, Move::SheerCold),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::HornDrill,
+            Move::Fissure,
+            Move::Curse,
+            Move::Foresight,
+            Move::SleepTalk,
+            Move::AncientPower,
+            Move::FutureSight,
+            Move::Whirlpool,
+            Move::Refresh,
+            Move::Tickle,
+            Move::DragonDance,
+            Move::DragonPulse,
+            Move::Avalanche,
+        ])
     };
     pub const Ditto: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -6431,15 +7224,16 @@ impl PokemonData {
             Stat::new(48, 0),
             Stat::new(48, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 35,
         egg_group: PokemonEggGroup::One(EggGroup::Ditto),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Transform),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Eevee: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -6456,12 +7250,12 @@ impl PokemonData {
             Stat::new(65, 1),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -6477,7 +7271,22 @@ impl PokemonData {
             (37, Move::DoubleEdge),
             (41, Move::LastResort),
             (45, Move::TrumpCard),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Curse,
+            Move::Flail,
+            Move::Detect,
+            Move::Endure,
+            Move::Charm,
+            Move::Wish,
+            Move::Yawn,
+            Move::FakeTears,
+            Move::Tickle,
+            Move::Covet,
+            Move::NaturalGift,
+            Move::Synchronoise,
+            Move::StoredPower,
+        ])
     };
     pub const Vaporeon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -6494,12 +7303,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -6515,7 +7324,8 @@ impl PokemonData {
             (37, Move::MuddyWater),
             (41, Move::LastResort),
             (45, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Jolteon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -6532,12 +7342,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(130, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -6553,7 +7363,8 @@ impl PokemonData {
             (37, Move::Discharge),
             (41, Move::LastResort),
             (45, Move::Thunder),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Flareon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -6570,12 +7381,12 @@ impl PokemonData {
             Stat::new(110, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -6591,7 +7402,8 @@ impl PokemonData {
             (37, Move::LavaPlume),
             (41, Move::LastResort),
             (45, Move::FireBlast),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Porygon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -6608,12 +7420,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Sharpen),
@@ -6630,7 +7442,8 @@ impl PokemonData {
             (51, Move::TriAttack),
             (56, Move::MagicCoat),
             (62, Move::ZapCannon),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Omanyte: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Water),
@@ -6647,12 +7460,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Withdraw),
             (1, Move::Constrict),
@@ -6668,7 +7481,22 @@ impl PokemonData {
             (46, Move::RockBlast),
             (52, Move::ShellSmash),
             (55, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::Supersonic,
+            Move::BubbleBeam,
+            Move::AuroraBeam,
+            Move::Haze,
+            Move::Bide,
+            Move::Spikes,
+            Move::Whirlpool,
+            Move::KnockOff,
+            Move::MuddyWater,
+            Move::WaterPulse,
+            Move::WringOut,
+            Move::ToxicSpikes,
+        ])
     };
     pub const Omastar: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Water),
@@ -6685,12 +7513,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bite),
             (1, Move::Withdraw),
@@ -6707,7 +7535,8 @@ impl PokemonData {
             (56, Move::RockBlast),
             (67, Move::ShellSmash),
             (75, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Kabuto: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Water),
@@ -6724,12 +7553,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Harden),
@@ -6743,7 +7572,20 @@ impl PokemonData {
             (41, Move::MetalSound),
             (46, Move::AncientPower),
             (51, Move::WringOut),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BubbleBeam,
+            Move::AuroraBeam,
+            Move::Screech,
+            Move::ConfuseRay,
+            Move::Flail,
+            Move::Foresight,
+            Move::IcyWind,
+            Move::GigaDrain,
+            Move::RapidSpin,
+            Move::KnockOff,
+            Move::MudShot,
+        ])
     };
     pub const Kabutops: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Water),
@@ -6760,12 +7602,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -6782,7 +7624,8 @@ impl PokemonData {
             (54, Move::AncientPower),
             (63, Move::WringOut),
             (72, Move::NightSlash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Aerodactyl: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Flying),
@@ -6799,12 +7642,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(130, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::WingAttack),
             (1, Move::Bite),
@@ -6823,7 +7666,18 @@ impl PokemonData {
             (65, Move::HyperBeam),
             (73, Move::RockSlide),
             (81, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::Curse,
+            Move::Foresight,
+            Move::SteelWing,
+            Move::DragonBreath,
+            Move::Pursuit,
+            Move::Roost,
+            Move::Tailwind,
+            Move::Assurance,
+        ])
     };
     pub const Snorlax: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -6840,12 +7694,12 @@ impl PokemonData {
             Stat::new(110, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 25,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::DefenseCurl),
@@ -6863,7 +7717,19 @@ impl PokemonData {
             (49, Move::Crunch),
             (52, Move::HeavySlam),
             (57, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::DoubleEdge,
+            Move::Counter,
+            Move::Fissure,
+            Move::Lick,
+            Move::Curse,
+            Move::Charm,
+            Move::Pursuit,
+            Move::NaturalGift,
+            Move::AfterYou,
+        ])
     };
     pub const Articuno: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Flying),
@@ -6880,12 +7746,12 @@ impl PokemonData {
             Stat::new(125, 3),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::PowderSnow),
@@ -6902,7 +7768,8 @@ impl PokemonData {
             (78, Move::SheerCold),
             (85, Move::Hail),
             (92, Move::Hurricane),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Zapdos: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Electric, Type::Flying),
@@ -6919,12 +7786,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Peck),
             (1, Move::ThunderShock),
@@ -6941,7 +7808,8 @@ impl PokemonData {
             (78, Move::Thunder),
             (85, Move::RainDance),
             (92, Move::ZapCannon),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Moltres: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Flying),
@@ -6958,12 +7826,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::WingAttack),
             (1, Move::Ember),
@@ -6980,7 +7848,8 @@ impl PokemonData {
             (78, Move::SkyAttack),
             (85, Move::SunnyDay),
             (92, Move::Hurricane),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Dratini: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dragon),
@@ -6997,12 +7866,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Wrap),
             (1, Move::Leer),
@@ -7018,7 +7887,20 @@ impl PokemonData {
             (51, Move::DragonDance),
             (55, Move::Outrage),
             (61, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Supersonic,
+            Move::Mist,
+            Move::Haze,
+            Move::DragonBreath,
+            Move::IronTail,
+            Move::ExtremeSpeed,
+            Move::DragonDance,
+            Move::WaterPulse,
+            Move::DragonPulse,
+            Move::DragonRush,
+            Move::AquaJet,
+        ])
     };
     pub const Dragonair: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dragon),
@@ -7035,12 +7917,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Wrap),
             (1, Move::Leer),
@@ -7056,7 +7938,8 @@ impl PokemonData {
             (61, Move::DragonDance),
             (67, Move::Outrage),
             (75, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Dragonite: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Flying),
@@ -7073,12 +7956,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::FirePunch),
             (1, Move::ThunderPunch),
@@ -7099,7 +7982,8 @@ impl PokemonData {
             (67, Move::Outrage),
             (75, Move::HyperBeam),
             (81, Move::Hurricane),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mewtwo: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -7116,12 +8000,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(130, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Disable),
             (1, Move::Confusion),
@@ -7141,7 +8025,8 @@ impl PokemonData {
             (86, Move::Safeguard),
             (93, Move::AuraSphere),
             (100, Move::Psystrike),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mew: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -7158,12 +8043,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 100,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Transform),
@@ -7178,7 +8063,8 @@ impl PokemonData {
             (80, Move::BatonPass),
             (90, Move::NastyPlot),
             (100, Move::AuraSphere),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Chikorita: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -7195,12 +8081,12 @@ impl PokemonData {
             Stat::new(65, 1),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -7216,7 +8102,23 @@ impl PokemonData {
             (39, Move::Safeguard),
             (42, Move::Aromatherapy),
             (45, Move::SolarBeam),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::VineWhip,
+            Move::BodySlam,
+            Move::Counter,
+            Move::LeechSeed,
+            Move::Flail,
+            Move::AncientPower,
+            Move::NaturePower,
+            Move::Ingrain,
+            Move::Refresh,
+            Move::Aromatherapy,
+            Move::GrassWhistle,
+            Move::WringOut,
+            Move::LeafStorm,
+            Move::HealPulse,
+        ])
     };
     pub const Bayleef: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -7233,12 +8135,12 @@ impl PokemonData {
             Stat::new(80, 1),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -7254,7 +8156,8 @@ impl PokemonData {
             (46, Move::Safeguard),
             (50, Move::Aromatherapy),
             (54, Move::SolarBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Meganium: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -7271,12 +8174,12 @@ impl PokemonData {
             Stat::new(100, 2),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -7293,7 +8196,8 @@ impl PokemonData {
             (54, Move::Safeguard),
             (60, Move::Aromatherapy),
             (66, Move::SolarBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cyndaquil: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -7310,12 +8214,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(65, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -7332,7 +8236,23 @@ impl PokemonData {
             (49, Move::Rollout),
             (55, Move::DoubleEdge),
             (58, Move::Eruption),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleKick,
+            Move::Thrash,
+            Move::DoubleEdge,
+            Move::QuickAttack,
+            Move::FurySwipes,
+            Move::Reversal,
+            Move::Foresight,
+            Move::NaturePower,
+            Move::CrushClaw,
+            Move::Extrasensory,
+            Move::Howl,
+            Move::Covet,
+            Move::FlareBlitz,
+            Move::FlameBurst,
+        ])
     };
     pub const Quilava: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -7349,12 +8269,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(80, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -7371,7 +8291,8 @@ impl PokemonData {
             (57, Move::Rollout),
             (64, Move::DoubleEdge),
             (68, Move::Eruption),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Typhlosion: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -7388,12 +8309,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -7411,7 +8332,8 @@ impl PokemonData {
             (61, Move::Rollout),
             (69, Move::DoubleEdge),
             (74, Move::Eruption),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Totodile: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -7428,12 +8350,12 @@ impl PokemonData {
             Stat::new(48, 0),
             Stat::new(43, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -7451,7 +8373,22 @@ impl PokemonData {
             (43, Move::AquaTail),
             (48, Move::Superpower),
             (50, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::IcePunch,
+            Move::Thrash,
+            Move::HydroPump,
+            Move::MetalClaw,
+            Move::Crunch,
+            Move::AncientPower,
+            Move::MudSport,
+            Move::FakeTears,
+            Move::Block,
+            Move::WaterSport,
+            Move::DragonDance,
+            Move::WaterPulse,
+            Move::AquaJet,
+        ])
     };
     pub const Croconaw: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -7468,12 +8405,12 @@ impl PokemonData {
             Stat::new(63, 0),
             Stat::new(58, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -7491,7 +8428,8 @@ impl PokemonData {
             (51, Move::AquaTail),
             (57, Move::Superpower),
             (60, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Feraligatr: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -7508,12 +8446,12 @@ impl PokemonData {
             Stat::new(83, 0),
             Stat::new(78, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -7532,7 +8470,8 @@ impl PokemonData {
             (63, Move::AquaTail),
             (71, Move::Superpower),
             (76, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Sentret: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -7549,12 +8488,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Foresight),
@@ -7570,7 +8509,21 @@ impl PokemonData {
             (39, Move::BatonPass),
             (42, Move::MeFirst),
             (47, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::FocusEnergy,
+            Move::Slash,
+            Move::Reversal,
+            Move::Charm,
+            Move::Pursuit,
+            Move::IronTail,
+            Move::Trick,
+            Move::Assist,
+            Move::Covet,
+            Move::NaturalGift,
+            Move::LastResort,
+        ])
     };
     pub const Furret: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -7587,12 +8540,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(90, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::QuickAttack),
@@ -7608,7 +8561,8 @@ impl PokemonData {
             (46, Move::BatonPass),
             (50, Move::MeFirst),
             (56, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Hoothoot: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -7625,12 +8579,12 @@ impl PokemonData {
             Stat::new(56, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -7649,7 +8603,19 @@ impl PokemonData {
             (49, Move::PsychoShift),
             (53, Move::Roost),
             (57, Move::DreamEater),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::WingAttack,
+            Move::Whirlwind,
+            Move::Supersonic,
+            Move::Agility,
+            Move::NightShade,
+            Move::MirrorMove,
+            Move::SkyAttack,
+            Move::FeintAttack,
+            Move::FeatherDance,
+            Move::Defog,
+        ])
     };
     pub const Noctowl: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -7666,12 +8632,12 @@ impl PokemonData {
             Stat::new(96, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -7691,7 +8657,8 @@ impl PokemonData {
             (57, Move::PsychoShift),
             (62, Move::Roost),
             (67, Move::DreamEater),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Ledyba: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -7708,12 +8675,12 @@ impl PokemonData {
             Stat::new(80, 1),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (6, Move::Supersonic),
@@ -7728,7 +8695,20 @@ impl PokemonData {
             (33, Move::Swift),
             (38, Move::DoubleEdge),
             (41, Move::BugBuzz),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Psybeam,
+            Move::Screech,
+            Move::Bide,
+            Move::DizzyPunch,
+            Move::Encore,
+            Move::FocusPunch,
+            Move::KnockOff,
+            Move::SilverWind,
+            Move::BugBuzz,
+            Move::DrainPunch,
+            Move::BugBite,
+        ])
     };
     pub const Ledian: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -7745,12 +8725,12 @@ impl PokemonData {
             Stat::new(110, 2),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::CometPunch),
             (1, Move::Tackle),
@@ -7765,7 +8745,8 @@ impl PokemonData {
             (41, Move::Swift),
             (48, Move::DoubleEdge),
             (53, Move::BugBuzz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Spinarak: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -7782,12 +8763,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::StringShot),
@@ -7804,7 +8785,20 @@ impl PokemonData {
             (40, Move::Psychic),
             (43, Move::PoisonJab),
             (47, Move::CrossPoison),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Twineedle,
+            Move::SonicBoom,
+            Move::Disable,
+            Move::Psybeam,
+            Move::BatonPass,
+            Move::Pursuit,
+            Move::SignalBeam,
+            Move::ToxicSpikes,
+            Move::NightSlash,
+            Move::RagePowder,
+            Move::Electroweb,
+        ])
     };
     pub const Ariados: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -7821,12 +8815,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::StringShot),
@@ -7844,7 +8838,8 @@ impl PokemonData {
             (46, Move::Psychic),
             (50, Move::PoisonJab),
             (55, Move::CrossPoison),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Crobat: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Flying),
@@ -7861,12 +8856,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(130, 3)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Supersonic),
             (1, Move::Screech),
@@ -7883,7 +8878,8 @@ impl PokemonData {
             (42, Move::PoisonFang),
             (47, Move::Haze),
             (52, Move::AirSlash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Chinchou: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Electric),
@@ -7900,12 +8896,12 @@ impl PokemonData {
             Stat::new(56, 0),
             Stat::new(67, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Supersonic),
             (1, Move::Bubble),
@@ -7922,7 +8918,19 @@ impl PokemonData {
             (42, Move::AquaRing),
             (45, Move::HydroPump),
             (50, Move::Charge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mist,
+            Move::Psybeam,
+            Move::Agility,
+            Move::Screech,
+            Move::Amnesia,
+            Move::Flail,
+            Move::Whirlpool,
+            Move::ShockWave,
+            Move::WaterPulse,
+            Move::Brine,
+        ])
     };
     pub const Lanturn: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Electric),
@@ -7939,12 +8947,12 @@ impl PokemonData {
             Stat::new(76, 0),
             Stat::new(67, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Supersonic),
             (1, Move::ThunderWave),
@@ -7964,7 +8972,8 @@ impl PokemonData {
             (52, Move::AquaRing),
             (57, Move::HydroPump),
             (64, Move::Charge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pichu: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -7981,12 +8990,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(60, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::ThunderShock),
             (1, Move::Charm),
@@ -7994,7 +9003,23 @@ impl PokemonData {
             (10, Move::ThunderWave),
             (13, Move::SweetKiss),
             (18, Move::NastyPlot),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleSlap,
+            Move::ThunderPunch,
+            Move::Bide,
+            Move::Flail,
+            Move::Reversal,
+            Move::Endure,
+            Move::Present,
+            Move::Encore,
+            Move::FakeOut,
+            Move::Charge,
+            Move::Wish,
+            Move::Tickle,
+            Move::LuckyChant,
+            Move::Bestow,
+        ])
     };
     pub const Cleffa: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fairy),
@@ -8011,12 +9036,12 @@ impl PokemonData {
             Stat::new(55, 1),
             Stat::new(15, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 150,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 140,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Charm),
@@ -8025,11 +9050,25 @@ impl PokemonData {
             (10, Move::SweetKiss),
             (13, Move::Copycat),
             (16, Move::MagicalLeaf),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mimic,
+            Move::Metronome,
+            Move::Amnesia,
+            Move::Splash,
+            Move::BellyDrum,
+            Move::Present,
+            Move::Wish,
+            Move::Aromatherapy,
+            Move::FakeTears,
+            Move::Tickle,
+            Move::Covet,
+            Move::StoredPower,
+        ])
     };
     pub const Igglybuff: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Fairy),
-        ability: PokemonAbility::One(Ability::CuteCharm),
+        ability: PokemonAbility::Two(Ability::CuteCharm, Ability::Competitive),
         hidden_ability: Some(Ability::FriendGuard),
         height: 3,
         weight: 10,
@@ -8042,12 +9081,12 @@ impl PokemonData {
             Stat::new(20, 0),
             Stat::new(15, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 170,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Sing),
             (1, Move::Charm),
@@ -8055,7 +9094,20 @@ impl PokemonData {
             (9, Move::Pound),
             (13, Move::SweetKiss),
             (17, Move::Copycat),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FeintAttack,
+            Move::PerishSong,
+            Move::SleepTalk,
+            Move::Present,
+            Move::Wish,
+            Move::FakeTears,
+            Move::Covet,
+            Move::Gravity,
+            Move::Punishment,
+            Move::LastResort,
+            Move::Captivate,
+        ])
     };
     pub const Togepi: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fairy),
@@ -8072,12 +9124,12 @@ impl PokemonData {
             Stat::new(65, 1),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Charm),
@@ -8094,7 +9146,21 @@ impl PokemonData {
             (45, Move::DoubleEdge),
             (49, Move::LastResort),
             (53, Move::AfterYou),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Peck,
+            Move::MirrorMove,
+            Move::Foresight,
+            Move::Present,
+            Move::MorningSun,
+            Move::FutureSight,
+            Move::SecretPower,
+            Move::Extrasensory,
+            Move::PsychoShift,
+            Move::LuckyChant,
+            Move::NastyPlot,
+            Move::StoredPower,
+        ])
     };
     pub const Togetic: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fairy, Type::Flying),
@@ -8111,12 +9177,12 @@ impl PokemonData {
             Stat::new(105, 2),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Flying, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Metronome),
@@ -8134,7 +9200,8 @@ impl PokemonData {
             (45, Move::DoubleEdge),
             (49, Move::LastResort),
             (53, Move::AfterYou),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Natu: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Flying),
@@ -8151,12 +9218,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Peck),
@@ -8174,7 +9241,21 @@ impl PokemonData {
             (47, Move::PowerSwap),
             (47, Move::GuardSwap),
             (50, Move::Psychic),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DrillPeck,
+            Move::QuickAttack,
+            Move::Haze,
+            Move::FeintAttack,
+            Move::SteelWing,
+            Move::SkillSwap,
+            Move::Refresh,
+            Move::FeatherDance,
+            Move::Roost,
+            Move::SuckerPunch,
+            Move::ZenHeadbutt,
+            Move::Synchronoise,
+        ])
     };
     pub const Xatu: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Flying),
@@ -8191,12 +9272,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(95, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Peck),
@@ -8215,7 +9296,8 @@ impl PokemonData {
             (54, Move::OminousWind),
             (59, Move::GuardSwap),
             (66, Move::Psychic),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mareep: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -8232,12 +9314,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 235,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -8254,7 +9336,19 @@ impl PokemonData {
             (39, Move::SignalBeam),
             (43, Move::LightScreen),
             (46, Move::Thunder),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SandAttack,
+            Move::BodySlam,
+            Move::TakeDown,
+            Move::Agility,
+            Move::Screech,
+            Move::IronTail,
+            Move::Flatter,
+            Move::Charge,
+            Move::OdorSleuth,
+            Move::AfterYou,
+        ])
     };
     pub const Flaaffy: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -8271,12 +9365,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -8293,7 +9387,8 @@ impl PokemonData {
             (47, Move::SignalBeam),
             (52, Move::LightScreen),
             (56, Move::Thunder),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Ampharos: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -8310,12 +9405,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::FirePunch),
             (1, Move::Tackle),
@@ -8334,7 +9429,8 @@ impl PokemonData {
             (51, Move::SignalBeam),
             (57, Move::LightScreen),
             (62, Move::Thunder),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Bellossom: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -8351,12 +9447,12 @@ impl PokemonData {
             Stat::new(100, 3),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::MegaDrain),
             (1, Move::StunSpore),
@@ -8365,7 +9461,8 @@ impl PokemonData {
             (1, Move::LeafBlade),
             (23, Move::MagicalLeaf),
             (53, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Marill: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Fairy),
@@ -8382,12 +9479,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Bubble),
@@ -8404,7 +9501,21 @@ impl PokemonData {
             (31, Move::RainDance),
             (37, Move::Superpower),
             (40, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Supersonic,
+            Move::Amnesia,
+            Move::BellyDrum,
+            Move::PerishSong,
+            Move::Present,
+            Move::FutureSight,
+            Move::Superpower,
+            Move::Refresh,
+            Move::MuddyWater,
+            Move::WaterSport,
+            Move::AquaJet,
+        ])
     };
     pub const Azumarill: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Fairy),
@@ -8421,12 +9532,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -8443,7 +9554,8 @@ impl PokemonData {
             (35, Move::RainDance),
             (42, Move::Superpower),
             (46, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Sudowoodo: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Rock),
@@ -8460,12 +9572,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 65,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::LowKick),
             (1, Move::RockThrow),
@@ -8483,7 +9595,18 @@ impl PokemonData {
             (40, Move::DoubleEdge),
             (43, Move::StoneEdge),
             (47, Move::HammerArm),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Headbutt,
+            Move::Harden,
+            Move::DefenseCurl,
+            Move::SelfDestruct,
+            Move::Curse,
+            Move::Endure,
+            Move::Rollout,
+            Move::SandTomb,
+            Move::StealthRock,
+        ])
     };
     pub const Politoed: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -8500,12 +9623,12 @@ impl PokemonData {
             Stat::new(100, 3),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::DoubleSlap),
             (1, Move::BubbleBeam),
@@ -8514,7 +9637,8 @@ impl PokemonData {
             (27, Move::Swagger),
             (37, Move::Bounce),
             (48, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Hoppip: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Flying),
@@ -8531,12 +9655,12 @@ impl PokemonData {
             Stat::new(55, 1),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Splash),
             (4, Move::Synthesis),
@@ -8556,7 +9680,19 @@ impl PokemonData {
             (43, Move::GigaDrain),
             (46, Move::Bounce),
             (49, Move::Memento),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::Confusion,
+            Move::Amnesia,
+            Move::Endure,
+            Move::Encore,
+            Move::HelpingHand,
+            Move::Aromatherapy,
+            Move::WorrySeed,
+            Move::SeedBomb,
+            Move::CottonGuard,
+        ])
     };
     pub const Skiploom: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Flying),
@@ -8573,12 +9709,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(80, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -8598,7 +9734,8 @@ impl PokemonData {
             (52, Move::GigaDrain),
             (56, Move::Bounce),
             (60, Move::Memento),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Jumpluff: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Flying),
@@ -8615,12 +9752,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(110, 3)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -8640,7 +9777,8 @@ impl PokemonData {
             (59, Move::GigaDrain),
             (64, Move::Bounce),
             (69, Move::Memento),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Aipom: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -8657,12 +9795,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(85, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::TailWhip),
@@ -8678,7 +9816,22 @@ impl PokemonData {
             (36, Move::Fling),
             (39, Move::NastyPlot),
             (43, Move::LastResort),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleSlap,
+            Move::Slam,
+            Move::Counter,
+            Move::Agility,
+            Move::Screech,
+            Move::Spite,
+            Move::Pursuit,
+            Move::BeatUp,
+            Move::FakeOut,
+            Move::Revenge,
+            Move::Bounce,
+            Move::Covet,
+            Move::Switcheroo,
+        ])
     };
     pub const Sunkern: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -8695,12 +9848,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 235,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Absorb),
             (1, Move::Growth),
@@ -8718,7 +9871,21 @@ impl PokemonData {
             (37, Move::DoubleEdge),
             (40, Move::SunnyDay),
             (43, Move::SeedBomb),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::LeechSeed,
+            Move::Bide,
+            Move::Curse,
+            Move::Endure,
+            Move::Encore,
+            Move::SweetScent,
+            Move::MorningSun,
+            Move::NaturePower,
+            Move::HelpingHand,
+            Move::Ingrain,
+            Move::GrassWhistle,
+            Move::NaturalGift,
+        ])
     };
     pub const Sunflora: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -8735,12 +9902,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Absorb),
@@ -8759,7 +9926,8 @@ impl PokemonData {
             (37, Move::DoubleEdge),
             (40, Move::SunnyDay),
             (43, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Yanma: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -8776,12 +9944,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(95, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Foresight),
@@ -8799,7 +9967,19 @@ impl PokemonData {
             (49, Move::UTurn),
             (54, Move::AirSlash),
             (57, Move::BugBuzz),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::DoubleEdge,
+            Move::LeechLife,
+            Move::Reversal,
+            Move::FeintAttack,
+            Move::Pursuit,
+            Move::SecretPower,
+            Move::SilverWind,
+            Move::SignalBeam,
+            Move::Feint,
+        ])
     };
     pub const Wooper: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ground),
@@ -8816,12 +9996,12 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(15, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::TailWhip),
             (1, Move::WaterGun),
@@ -8836,7 +10016,23 @@ impl PokemonData {
             (43, Move::Mist),
             (43, Move::Haze),
             (47, Move::MuddyWater),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleKick,
+            Move::BodySlam,
+            Move::Counter,
+            Move::Recover,
+            Move::Curse,
+            Move::SleepTalk,
+            Move::Encore,
+            Move::AncientPower,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::MudSport,
+            Move::AcidSpray,
+            Move::AfterYou,
+        ])
     };
     pub const Quagsire: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ground),
@@ -8853,12 +10049,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::TailWhip),
             (1, Move::WaterGun),
@@ -8873,7 +10069,8 @@ impl PokemonData {
             (48, Move::Mist),
             (48, Move::Haze),
             (53, Move::MuddyWater),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Espeon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -8890,12 +10087,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(110, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -8911,7 +10108,8 @@ impl PokemonData {
             (37, Move::Psychic),
             (41, Move::LastResort),
             (45, Move::PowerSwap),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Umbreon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dark),
@@ -8928,12 +10126,12 @@ impl PokemonData {
             Stat::new(130, 2),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -8949,7 +10147,8 @@ impl PokemonData {
             (37, Move::MeanLook),
             (41, Move::LastResort),
             (45, Move::GuardSwap),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Murkrow: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Flying),
@@ -8966,12 +10165,12 @@ impl PokemonData {
             Stat::new(42, 0),
             Stat::new(91, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Peck),
             (1, Move::Astonish),
@@ -8988,7 +10187,23 @@ impl PokemonData {
             (55, Move::SuckerPunch),
             (61, Move::Torment),
             (65, Move::Quash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::WingAttack,
+            Move::Whirlwind,
+            Move::DrillPeck,
+            Move::Screech,
+            Move::ConfuseRay,
+            Move::MirrorMove,
+            Move::SkyAttack,
+            Move::FeintAttack,
+            Move::PerishSong,
+            Move::FeatherDance,
+            Move::Roost,
+            Move::Assurance,
+            Move::PsychoShift,
+            Move::BraveBird,
+        ])
     };
     pub const Slowking: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Psychic),
@@ -9005,12 +10220,12 @@ impl PokemonData {
             Stat::new(110, 3),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 70,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Curse),
@@ -9030,7 +10245,8 @@ impl PokemonData {
             (49, Move::TrumpCard),
             (54, Move::PsychUp),
             (58, Move::HealPulse),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Misdreavus: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ghost),
@@ -9047,12 +10263,12 @@ impl PokemonData {
             Stat::new(85, 1),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 35,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Psywave),
@@ -9068,7 +10284,21 @@ impl PokemonData {
             (46, Move::PerishSong),
             (50, Move::Grudge),
             (55, Move::PowerGem),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Screech,
+            Move::Curse,
+            Move::Spite,
+            Move::DestinyBond,
+            Move::Memento,
+            Move::SkillSwap,
+            Move::Imprison,
+            Move::SuckerPunch,
+            Move::NastyPlot,
+            Move::ShadowSneak,
+            Move::OminousWind,
+            Move::WonderRoom,
+        ])
     };
     pub const Unown: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -9085,15 +10315,16 @@ impl PokemonData {
             Stat::new(48, 0),
             Stat::new(48, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::HiddenPower),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Wobbuffet: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -9110,18 +10341,19 @@ impl PokemonData {
             Stat::new(58, 0),
             Stat::new(33, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Counter),
             (1, Move::DestinyBond),
             (1, Move::Safeguard),
             (1, Move::MirrorCoat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Girafarig: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Psychic),
@@ -9138,12 +10370,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -9161,7 +10393,22 @@ impl PokemonData {
             (37, Move::Psychic),
             (41, Move::ZenHeadbutt),
             (46, Move::Crunch),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::DoubleKick,
+            Move::TakeDown,
+            Move::Amnesia,
+            Move::Foresight,
+            Move::MeanLook,
+            Move::MirrorCoat,
+            Move::FutureSight,
+            Move::BeatUp,
+            Move::Wish,
+            Move::MagicCoat,
+            Move::SkillSwap,
+            Move::SecretPower,
+        ])
     };
     pub const Pineco: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -9178,12 +10425,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(15, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Protect),
@@ -9199,7 +10446,20 @@ impl PokemonData {
             (39, Move::IronDefense),
             (42, Move::GyroBall),
             (45, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::PinMissile,
+            Move::Counter,
+            Move::Swift,
+            Move::Flail,
+            Move::Endure,
+            Move::Revenge,
+            Move::SandTomb,
+            Move::PowerTrick,
+            Move::ToxicSpikes,
+            Move::StealthRock,
+        ])
     };
     pub const Forretress: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Steel),
@@ -9216,12 +10476,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::SelfDestruct),
@@ -9243,7 +10503,8 @@ impl PokemonData {
             (60, Move::MagnetRise),
             (64, Move::ZapCannon),
             (70, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Dunsparce: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -9260,12 +10521,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Rage),
             (1, Move::DefenseCurl),
@@ -9285,7 +10546,22 @@ impl PokemonData {
             (43, Move::DrillRun),
             (46, Move::Endeavor),
             (49, Move::Flail),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Headbutt,
+            Move::Bite,
+            Move::Agility,
+            Move::Bide,
+            Move::Snore,
+            Move::Curse,
+            Move::SleepTalk,
+            Move::AncientPower,
+            Move::MagicCoat,
+            Move::SecretPower,
+            Move::Astonish,
+            Move::TrumpCard,
+            Move::Hex,
+        ])
     };
     pub const Gligar: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Flying),
@@ -9302,12 +10578,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (4, Move::SandAttack),
@@ -9324,7 +10600,23 @@ impl PokemonData {
             (45, Move::SkyUppercut),
             (50, Move::SwordsDance),
             (55, Move::Guillotine),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::WingAttack,
+            Move::DoubleEdge,
+            Move::Counter,
+            Move::Agility,
+            Move::BatonPass,
+            Move::MetalClaw,
+            Move::SandTomb,
+            Move::PoisonTail,
+            Move::Feint,
+            Move::PowerTrick,
+            Move::NightSlash,
+            Move::RockClimb,
+            Move::CrossPoison,
+        ])
     };
     pub const Steelix: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Ground),
@@ -9341,12 +10633,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 25,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bind),
             (1, Move::Tackle),
@@ -9372,7 +10664,8 @@ impl PokemonData {
             (46, Move::StoneEdge),
             (49, Move::DoubleEdge),
             (52, Move::Sandstorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Snubbull: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fairy),
@@ -9389,12 +10682,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -9411,7 +10704,23 @@ impl PokemonData {
             (37, Move::TakeDown),
             (43, Move::Payback),
             (49, Move::Crunch),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::Mimic,
+            Move::Metronome,
+            Move::Snore,
+            Move::FeintAttack,
+            Move::HealBell,
+            Move::Present,
+            Move::Crunch,
+            Move::FocusPunch,
+            Move::SmellingSalts,
+            Move::CloseCombat,
+            Move::ThunderFang,
+            Move::IceFang,
+            Move::FireFang,
+        ])
     };
     pub const Granbull: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fairy),
@@ -9428,12 +10737,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -9451,7 +10760,8 @@ impl PokemonData {
             (51, Move::Payback),
             (59, Move::Crunch),
             (67, Move::Outrage),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Qwilfish: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Poison),
@@ -9468,12 +10778,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::PoisonSting),
@@ -9493,7 +10803,19 @@ impl PokemonData {
             (49, Move::PoisonJab),
             (53, Move::DestinyBond),
             (57, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Supersonic,
+            Move::BubbleBeam,
+            Move::Haze,
+            Move::Flail,
+            Move::Astonish,
+            Move::SignalBeam,
+            Move::WaterPulse,
+            Move::Brine,
+            Move::AquaJet,
+            Move::AcidSpray,
+        ])
     };
     pub const Scizor: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Steel),
@@ -9510,12 +10832,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 25,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::QuickAttack),
@@ -9535,7 +10857,8 @@ impl PokemonData {
             (53, Move::IronHead),
             (57, Move::SwordsDance),
             (61, Move::Feint),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Shuckle: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Rock),
@@ -9552,12 +10875,12 @@ impl PokemonData {
             Stat::new(230, 1),
             Stat::new(5, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Withdraw),
             (1, Move::Bide),
@@ -9577,7 +10900,18 @@ impl PokemonData {
             (45, Move::GuardSplit),
             (45, Move::PowerSplit),
             (49, Move::StoneEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Acid,
+            Move::MudSlap,
+            Move::SweetScent,
+            Move::HelpingHand,
+            Move::KnockOff,
+            Move::SandTomb,
+            Move::RockBlast,
+            Move::Acupressure,
+            Move::FinalGambit,
+        ])
     };
     pub const Heracross: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Fighting),
@@ -9594,12 +10928,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::HornAttack),
             (1, Move::Tackle),
@@ -9616,7 +10950,18 @@ impl PokemonData {
             (37, Move::Feint),
             (43, Move::Reversal),
             (46, Move::Megahorn),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::SeismicToss,
+            Move::Harden,
+            Move::Bide,
+            Move::Flail,
+            Move::Megahorn,
+            Move::Pursuit,
+            Move::FocusPunch,
+            Move::Revenge,
+        ])
     };
     pub const Sneasel: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Ice),
@@ -9633,12 +10978,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(115, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -9656,7 +11001,23 @@ impl PokemonData {
             (40, Move::Snatch),
             (44, Move::Punishment),
             (47, Move::IceShard),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::IcePunch,
+            Move::Bite,
+            Move::Counter,
+            Move::Spite,
+            Move::Foresight,
+            Move::Pursuit,
+            Move::FakeOut,
+            Move::Assist,
+            Move::CrushClaw,
+            Move::Feint,
+            Move::Punishment,
+            Move::Avalanche,
+            Move::IceShard,
+            Move::DoubleHit,
+        ])
     };
     pub const Teddiursa: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -9673,12 +11034,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -9694,7 +11055,23 @@ impl PokemonData {
             (43, Move::Snore),
             (50, Move::Thrash),
             (57, Move::Fling),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TakeDown,
+            Move::DoubleEdge,
+            Move::Counter,
+            Move::SeismicToss,
+            Move::BellyDrum,
+            Move::SleepTalk,
+            Move::MetalClaw,
+            Move::CrossChop,
+            Move::Crunch,
+            Move::Yawn,
+            Move::FakeTears,
+            Move::CloseCombat,
+            Move::NightSlash,
+            Move::ChipAway,
+        ])
     };
     pub const Ursaring: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -9711,12 +11088,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -9732,7 +11109,8 @@ impl PokemonData {
             (49, Move::Snore),
             (58, Move::Thrash),
             (67, Move::HammerArm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Slugma: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -9749,12 +11127,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Smog),
             (1, Move::Yawn),
@@ -9770,7 +11148,20 @@ impl PokemonData {
             (46, Move::BodySlam),
             (50, Move::Flamethrower),
             (55, Move::EarthPower),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Smokescreen,
+            Move::AcidArmor,
+            Move::Curse,
+            Move::Rollout,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::HeatWave,
+            Move::Memento,
+            Move::EarthPower,
+            Move::Inferno,
+        ])
     };
     pub const Magcargo: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Rock),
@@ -9787,12 +11178,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Ember),
             (1, Move::RockThrow),
@@ -9809,7 +11200,8 @@ impl PokemonData {
             (52, Move::BodySlam),
             (59, Move::Flamethrower),
             (67, Move::EarthPower),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Swinub: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Ground),
@@ -9826,12 +11218,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::OdorSleuth),
@@ -9848,7 +11240,21 @@ impl PokemonData {
             (40, Move::Flail),
             (44, Move::Blizzard),
             (48, Move::Amnesia),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::TakeDown,
+            Move::DoubleEdge,
+            Move::Bite,
+            Move::Fissure,
+            Move::Curse,
+            Move::AncientPower,
+            Move::IcicleSpear,
+            Move::MudShot,
+            Move::Avalanche,
+            Move::StealthRock,
+            Move::IcicleCrash,
+        ])
     };
     pub const Piloswine: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Ground),
@@ -9865,12 +11271,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Peck),
             (1, Move::PowderSnow),
@@ -9889,7 +11295,8 @@ impl PokemonData {
             (46, Move::Earthquake),
             (52, Move::Blizzard),
             (58, Move::Amnesia),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Corsola: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Rock),
@@ -9906,12 +11313,12 @@ impl PokemonData {
             Stat::new(95, 1),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::Harden),
@@ -9930,7 +11337,22 @@ impl PokemonData {
             (45, Move::MirrorCoat),
             (47, Move::EarthPower),
             (52, Move::Flail),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mist,
+            Move::Screech,
+            Move::ConfuseRay,
+            Move::Barrier,
+            Move::Bide,
+            Move::Amnesia,
+            Move::Curse,
+            Move::NaturePower,
+            Move::Ingrain,
+            Move::IcicleSpear,
+            Move::WaterPulse,
+            Move::AquaRing,
+            Move::HeadSmash,
+        ])
     };
     pub const Remoraid: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -9947,12 +11369,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::WaterGun),
             (6, Move::LockOn),
@@ -9967,7 +11389,22 @@ impl PokemonData {
             (42, Move::HydroPump),
             (46, Move::HyperBeam),
             (50, Move::Soak),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Supersonic,
+            Move::AuroraBeam,
+            Move::Screech,
+            Move::Haze,
+            Move::Swift,
+            Move::Snore,
+            Move::Flail,
+            Move::Octazooka,
+            Move::WaterSpout,
+            Move::MudShot,
+            Move::RockBlast,
+            Move::WaterPulse,
+            Move::AcidSpray,
+        ])
     };
     pub const Octillery: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -9984,12 +11421,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::WaterGun),
             (1, Move::Psybeam),
@@ -10007,7 +11444,8 @@ impl PokemonData {
             (52, Move::HydroPump),
             (58, Move::HyperBeam),
             (64, Move::Soak),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Delibird: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Flying),
@@ -10024,15 +11462,28 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(75, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Present),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::IcePunch,
+            Move::AuroraBeam,
+            Move::QuickAttack,
+            Move::Splash,
+            Move::IcyWind,
+            Move::RapidSpin,
+            Move::FutureSight,
+            Move::FakeOut,
+            Move::IceBall,
+            Move::IceShard,
+            Move::Bestow,
+        ])
     };
     pub const Mantine: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Flying),
@@ -10049,12 +11500,12 @@ impl PokemonData {
             Stat::new(140, 2),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 25,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Supersonic),
@@ -10074,7 +11525,19 @@ impl PokemonData {
             (39, Move::AquaRing),
             (46, Move::Bounce),
             (49, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::HydroPump,
+            Move::Haze,
+            Move::Amnesia,
+            Move::Splash,
+            Move::Twister,
+            Move::MirrorCoat,
+            Move::MudSport,
+            Move::WaterSport,
+            Move::WideGuard,
+        ])
     };
     pub const Skarmory: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Flying),
@@ -10091,12 +11554,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 25,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Peck),
@@ -10113,7 +11576,19 @@ impl PokemonData {
             (42, Move::AirSlash),
             (45, Move::Slash),
             (50, Move::NightSlash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::DrillPeck,
+            Move::SkyAttack,
+            Move::Curse,
+            Move::Endure,
+            Move::Pursuit,
+            Move::Assurance,
+            Move::GuardSwap,
+            Move::BraveBird,
+            Move::StealthRock,
+        ])
     };
     pub const Houndour: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Fire),
@@ -10130,12 +11605,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Ember),
@@ -10153,7 +11628,22 @@ impl PokemonData {
             (49, Move::Crunch),
             (52, Move::NastyPlot),
             (56, Move::Inferno),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::FireSpin,
+            Move::Rage,
+            Move::Reversal,
+            Move::Spite,
+            Move::Pursuit,
+            Move::BeatUp,
+            Move::Feint,
+            Move::Punishment,
+            Move::SuckerPunch,
+            Move::NastyPlot,
+            Move::ThunderFang,
+            Move::FireFang,
+        ])
     };
     pub const Houndoom: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Fire),
@@ -10170,12 +11660,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Ember),
@@ -10194,7 +11684,8 @@ impl PokemonData {
             (56, Move::Crunch),
             (60, Move::NastyPlot),
             (65, Move::Inferno),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Kingdra: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Dragon),
@@ -10211,12 +11702,12 @@ impl PokemonData {
             Stat::new(95, 1),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::WaterGun),
@@ -10231,7 +11722,8 @@ impl PokemonData {
             (40, Move::HydroPump),
             (48, Move::DragonDance),
             (57, Move::DragonPulse),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Phanpy: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -10248,12 +11740,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -10268,7 +11760,20 @@ impl PokemonData {
             (33, Move::Charm),
             (37, Move::LastResort),
             (42, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Counter,
+            Move::Fissure,
+            Move::FocusEnergy,
+            Move::Snore,
+            Move::MudSlap,
+            Move::AncientPower,
+            Move::Endeavor,
+            Move::IceShard,
+            Move::HeadSmash,
+            Move::HeavySlam,
+        ])
     };
     pub const Donphan: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -10285,12 +11790,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::HornAttack),
             (1, Move::Growl),
@@ -10308,7 +11813,8 @@ impl PokemonData {
             (39, Move::ScaryFace),
             (46, Move::Earthquake),
             (54, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Porygon2: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -10325,12 +11831,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::DefenseCurl),
@@ -10348,7 +11854,8 @@ impl PokemonData {
             (56, Move::MagicCoat),
             (62, Move::ZapCannon),
             (67, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Stantler: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -10365,12 +11872,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (3, Move::Leer),
@@ -10387,7 +11894,20 @@ impl PokemonData {
             (49, Move::Imprison),
             (53, Move::Captivate),
             (55, Move::MeFirst),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleKick,
+            Move::Thrash,
+            Move::Bite,
+            Move::Disable,
+            Move::Rage,
+            Move::Spite,
+            Move::Megahorn,
+            Move::MudSport,
+            Move::Extrasensory,
+            Move::MeFirst,
+            Move::ZenHeadbutt,
+        ])
     };
     pub const Smeargle: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -10404,15 +11924,16 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(75, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Sketch),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Tyrogue: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -10429,18 +11950,31 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Foresight),
             (1, Move::FakeOut),
             (1, Move::HelpingHand),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::HighJumpKick,
+            Move::MindReader,
+            Move::MachPunch,
+            Move::Endure,
+            Move::Pursuit,
+            Move::RapidSpin,
+            Move::HelpingHand,
+            Move::Feint,
+            Move::VacuumWave,
+            Move::BulletPunch,
+        ])
     };
     pub const Hitmontop: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -10457,12 +11991,12 @@ impl PokemonData {
             Stat::new(110, 2),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::RollingKick),
             (1, Move::Revenge),
@@ -10480,7 +12014,8 @@ impl PokemonData {
             (51, Move::Detect),
             (55, Move::CloseCombat),
             (60, Move::Endeavor),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Smoochum: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Psychic),
@@ -10497,12 +12032,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (5, Move::Lick),
@@ -10519,7 +12054,17 @@ impl PokemonData {
             (41, Move::Copycat),
             (45, Move::PerishSong),
             (48, Move::Blizzard),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::IcePunch,
+            Move::Meditate,
+            Move::FakeOut,
+            Move::Wish,
+            Move::MiracleEye,
+            Move::WakeUpSlap,
+            Move::NastyPlot,
+            Move::Captivate,
+        ])
     };
     pub const Elekid: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -10536,12 +12081,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(95, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::QuickAttack),
@@ -10557,7 +12102,20 @@ impl PokemonData {
             (36, Move::Screech),
             (40, Move::Thunderbolt),
             (43, Move::Thunder),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::KarateChop,
+            Move::FirePunch,
+            Move::IcePunch,
+            Move::RollingKick,
+            Move::Meditate,
+            Move::Barrier,
+            Move::DynamicPunch,
+            Move::CrossChop,
+            Move::FocusPunch,
+            Move::HammerArm,
+            Move::Feint,
+        ])
     };
     pub const Magby: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -10574,12 +12132,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(83, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Smog),
@@ -10595,7 +12153,21 @@ impl PokemonData {
             (36, Move::SunnyDay),
             (40, Move::Flamethrower),
             (43, Move::FireBlast),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::KarateChop,
+            Move::MegaPunch,
+            Move::ThunderPunch,
+            Move::Screech,
+            Move::Barrier,
+            Move::FocusEnergy,
+            Move::MachPunch,
+            Move::BellyDrum,
+            Move::DynamicPunch,
+            Move::IronTail,
+            Move::CrossChop,
+            Move::FlareBlitz,
+        ])
     };
     pub const Miltank: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -10612,12 +12184,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (3, Move::Growl),
@@ -10632,7 +12204,22 @@ impl PokemonData {
             (41, Move::GyroBall),
             (48, Move::HealBell),
             (55, Move::WakeUpSlap),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::SeismicToss,
+            Move::DizzyPunch,
+            Move::Curse,
+            Move::Reversal,
+            Move::Endure,
+            Move::SleepTalk,
+            Move::Present,
+            Move::HelpingHand,
+            Move::HammerArm,
+            Move::NaturalGift,
+            Move::Punishment,
+            Move::HeartStamp,
+        ])
     };
     pub const Blissey: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -10649,12 +12236,12 @@ impl PokemonData {
             Stat::new(135, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 140,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Growl),
@@ -10673,7 +12260,8 @@ impl PokemonData {
             (46, Move::LightScreen),
             (50, Move::HealingWish),
             (54, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Raikou: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -10690,12 +12278,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(115, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Bite),
@@ -10711,7 +12299,8 @@ impl PokemonData {
             (71, Move::RainDance),
             (78, Move::CalmMind),
             (85, Move::Thunder),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Entei: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -10728,12 +12317,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Bite),
@@ -10749,7 +12338,8 @@ impl PokemonData {
             (71, Move::FireBlast),
             (78, Move::CalmMind),
             (85, Move::Eruption),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Suicune: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -10766,12 +12356,12 @@ impl PokemonData {
             Stat::new(115, 2),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Bite),
@@ -10787,7 +12377,8 @@ impl PokemonData {
             (71, Move::HydroPump),
             (78, Move::CalmMind),
             (85, Move::Blizzard),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Larvitar: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Ground),
@@ -10804,12 +12395,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(41, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Bite),
@@ -10825,7 +12416,21 @@ impl PokemonData {
             (46, Move::Earthquake),
             (50, Move::StoneEdge),
             (55, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Stomp,
+            Move::FocusEnergy,
+            Move::Curse,
+            Move::Outrage,
+            Move::Pursuit,
+            Move::IronTail,
+            Move::AncientPower,
+            Move::IronDefense,
+            Move::DragonDance,
+            Move::Assurance,
+            Move::IronHead,
+            Move::StealthRock,
+        ])
     };
     pub const Pupitar: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Ground),
@@ -10842,12 +12447,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(51, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Bite),
@@ -10863,7 +12468,8 @@ impl PokemonData {
             (54, Move::Earthquake),
             (60, Move::StoneEdge),
             (67, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Tyranitar: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Dark),
@@ -10880,12 +12486,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(61, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Bite),
@@ -10905,7 +12511,8 @@ impl PokemonData {
             (63, Move::StoneEdge),
             (73, Move::HyperBeam),
             (82, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Lugia: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Flying),
@@ -10922,12 +12529,12 @@ impl PokemonData {
             Stat::new(154, 3),
             Stat::new(110, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Whirlwind),
             (1, Move::WeatherBall),
@@ -10945,7 +12552,8 @@ impl PokemonData {
             (85, Move::NaturalGift),
             (93, Move::CalmMind),
             (99, Move::SkyAttack),
-        ]
+        ],
+        egg_moves: None
     };
     pub const HoOh: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Flying),
@@ -10962,12 +12570,12 @@ impl PokemonData {
             Stat::new(154, 3),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Whirlwind),
             (1, Move::WeatherBall),
@@ -10985,7 +12593,8 @@ impl PokemonData {
             (85, Move::NaturalGift),
             (93, Move::CalmMind),
             (99, Move::SkyAttack),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Celebi: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Grass),
@@ -11002,12 +12611,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 100,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::LeechSeed),
             (1, Move::Confusion),
@@ -11023,7 +12632,8 @@ impl PokemonData {
             (73, Move::HealingWish),
             (82, Move::LeafStorm),
             (91, Move::PerishSong),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Treecko: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -11040,12 +12650,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(70, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Leer),
@@ -11059,7 +12669,24 @@ impl PokemonData {
             (41, Move::Detect),
             (46, Move::GigaDrain),
             (51, Move::EnergyBall),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::DoubleKick,
+            Move::LeechSeed,
+            Move::DragonBreath,
+            Move::Synthesis,
+            Move::Crunch,
+            Move::Endeavor,
+            Move::MudSport,
+            Move::CrushClaw,
+            Move::GrassWhistle,
+            Move::BulletSeed,
+            Move::MagicalLeaf,
+            Move::NaturalGift,
+            Move::WorrySeed,
+            Move::LeafStorm,
+        ])
     };
     pub const Grovyle: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -11076,12 +12703,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(95, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Leer),
@@ -11096,7 +12723,8 @@ impl PokemonData {
             (47, Move::Detect),
             (53, Move::FalseSwipe),
             (59, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Sceptile: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -11113,12 +12741,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(120, 3)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Leer),
@@ -11134,7 +12762,8 @@ impl PokemonData {
             (51, Move::Detect),
             (59, Move::FalseSwipe),
             (67, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Torchic: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -11151,12 +12780,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Growl),
@@ -11169,7 +12798,23 @@ impl PokemonData {
             (34, Move::Slash),
             (37, Move::MirrorMove),
             (43, Move::Flamethrower),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::LowKick,
+            Move::Counter,
+            Move::Agility,
+            Move::Curse,
+            Move::Reversal,
+            Move::Endure,
+            Move::BatonPass,
+            Move::SmellingSalts,
+            Move::FeatherDance,
+            Move::CrushClaw,
+            Move::Feint,
+            Move::LastResort,
+            Move::NightSlash,
+            Move::FlameBurst,
+        ])
     };
     pub const Combusken: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Fighting),
@@ -11186,12 +12831,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Growl),
@@ -11206,7 +12851,8 @@ impl PokemonData {
             (43, Move::MirrorMove),
             (50, Move::SkyUppercut),
             (54, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Blaziken: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Fighting),
@@ -11223,12 +12869,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::FirePunch),
             (1, Move::Scratch),
@@ -11246,7 +12892,8 @@ impl PokemonData {
             (49, Move::BraveBird),
             (59, Move::SkyUppercut),
             (66, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mudkip: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -11263,12 +12910,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -11282,7 +12929,25 @@ impl PokemonData {
             (37, Move::Protect),
             (42, Move::HydroPump),
             (46, Move::Endeavor),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Stomp,
+            Move::DoubleEdge,
+            Move::Bite,
+            Move::Counter,
+            Move::Sludge,
+            Move::Curse,
+            Move::MirrorCoat,
+            Move::AncientPower,
+            Move::Whirlpool,
+            Move::Uproar,
+            Move::Yawn,
+            Move::Refresh,
+            Move::IceBall,
+            Move::Avalanche,
+            Move::MudBomb,
+            Move::WideGuard,
+        ])
     };
     pub const Marshtomp: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ground),
@@ -11299,12 +12964,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -11319,7 +12984,8 @@ impl PokemonData {
             (42, Move::Protect),
             (46, Move::Earthquake),
             (53, Move::Endeavor),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Swampert: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ground),
@@ -11336,12 +13002,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -11357,7 +13023,8 @@ impl PokemonData {
             (52, Move::Earthquake),
             (61, Move::Endeavor),
             (69, Move::HammerArm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Poochyena: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dark),
@@ -11374,12 +13041,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (5, Move::Howl),
@@ -11395,7 +13062,21 @@ impl PokemonData {
             (45, Move::TakeDown),
             (49, Move::SuckerPunch),
             (53, Move::Crunch),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Leer,
+            Move::SleepTalk,
+            Move::Yawn,
+            Move::Snatch,
+            Move::PoisonFang,
+            Move::Astonish,
+            Move::Covet,
+            Move::MeFirst,
+            Move::SuckerPunch,
+            Move::ThunderFang,
+            Move::IceFang,
+            Move::FireFang,
+        ])
     };
     pub const Mightyena: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dark),
@@ -11412,12 +13093,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 127,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Tackle),
@@ -11433,7 +13114,8 @@ impl PokemonData {
             (52, Move::TakeDown),
             (57, Move::Thief),
             (62, Move::SuckerPunch),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Zigzagoon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -11450,12 +13132,12 @@ impl PokemonData {
             Stat::new(41, 0),
             Stat::new(60, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -11471,7 +13153,18 @@ impl PokemonData {
             (41, Move::Rest),
             (45, Move::BellyDrum),
             (49, Move::Fling),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::MudSlap,
+            Move::Charm,
+            Move::SleepTalk,
+            Move::Pursuit,
+            Move::HelpingHand,
+            Move::Trick,
+            Move::Tickle,
+            Move::RockClimb,
+            Move::SimpleBeam,
+        ])
     };
     pub const Linoone: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -11488,12 +13181,12 @@ impl PokemonData {
             Stat::new(61, 0),
             Stat::new(100, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::Tackle),
@@ -11510,7 +13203,8 @@ impl PokemonData {
             (53, Move::Rest),
             (59, Move::BellyDrum),
             (65, Move::Fling),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Wurmple: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -11527,18 +13221,19 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::StringShot),
             (5, Move::PoisonSting),
             (15, Move::BugBite),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Silcoon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -11555,15 +13250,16 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(15, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Harden),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Beautifly: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -11580,12 +13276,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Absorb),
             (13, Move::Gust),
@@ -11598,7 +13294,8 @@ impl PokemonData {
             (38, Move::GigaDrain),
             (41, Move::BugBuzz),
             (45, Move::QuiverDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cascoon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -11615,15 +13312,16 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(15, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Harden),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Dustox: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -11640,12 +13338,12 @@ impl PokemonData {
             Stat::new(90, 3),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Confusion),
             (13, Move::Gust),
@@ -11658,7 +13356,8 @@ impl PokemonData {
             (38, Move::Toxic),
             (41, Move::BugBuzz),
             (45, Move::QuiverDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Lotad: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Grass),
@@ -11675,12 +13374,12 @@ impl PokemonData {
             Stat::new(50, 1),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Astonish),
             (3, Move::Growl),
@@ -11693,7 +13392,19 @@ impl PokemonData {
             (31, Move::ZenHeadbutt),
             (37, Move::RainDance),
             (45, Move::EnergyBall),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::WaterGun,
+            Move::Counter,
+            Move::LeechSeed,
+            Move::RazorLeaf,
+            Move::Flail,
+            Move::GigaDrain,
+            Move::SweetScent,
+            Move::Synthesis,
+            Move::TeeterDance,
+            Move::Tickle,
+        ])
     };
     pub const Lombre: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Grass),
@@ -11710,12 +13421,12 @@ impl PokemonData {
             Stat::new(70, 2),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Astonish),
             (3, Move::Growl),
@@ -11728,7 +13439,8 @@ impl PokemonData {
             (31, Move::ZenHeadbutt),
             (37, Move::Uproar),
             (45, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Ludicolo: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Grass),
@@ -11745,18 +13457,19 @@ impl PokemonData {
             Stat::new(100, 3),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::MegaDrain),
             (1, Move::NaturePower),
             (1, Move::Astonish),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Seedot: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -11773,12 +13486,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Bide),
             (3, Move::Harden),
@@ -11787,7 +13500,21 @@ impl PokemonData {
             (21, Move::Synthesis),
             (31, Move::SunnyDay),
             (43, Move::Explosion),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::TakeDown,
+            Move::LeechSeed,
+            Move::QuickAttack,
+            Move::Amnesia,
+            Move::BeatUp,
+            Move::BulletSeed,
+            Move::PowerSwap,
+            Move::WorrySeed,
+            Move::NastyPlot,
+            Move::Defog,
+            Move::FoulPlay,
+        ])
     };
     pub const Nuzleaf: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Dark),
@@ -11804,12 +13531,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::RazorLeaf),
@@ -11822,7 +13549,8 @@ impl PokemonData {
             (37, Move::RazorWind),
             (43, Move::Swagger),
             (49, Move::Extrasensory),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Shiftry: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Dark),
@@ -11839,12 +13567,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Whirlwind),
             (1, Move::RazorLeaf),
@@ -11852,7 +13580,8 @@ impl PokemonData {
             (1, Move::NastyPlot),
             (19, Move::LeafTornado),
             (49, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Taillow: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -11869,12 +13598,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(85, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Peck),
@@ -11886,7 +13615,20 @@ impl PokemonData {
             (34, Move::AerialAce),
             (43, Move::Agility),
             (53, Move::AirSlash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::Supersonic,
+            Move::Rage,
+            Move::MirrorMove,
+            Move::SkyAttack,
+            Move::SteelWing,
+            Move::Pursuit,
+            Move::Refresh,
+            Move::Roost,
+            Move::BraveBird,
+            Move::Defog,
+        ])
     };
     pub const Swellow: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -11903,12 +13645,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(125, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Peck),
@@ -11921,7 +13663,8 @@ impl PokemonData {
             (38, Move::AerialAce),
             (49, Move::Agility),
             (61, Move::AirSlash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Wingull: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Flying),
@@ -11938,12 +13681,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(85, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::WaterGun),
@@ -11959,7 +13702,18 @@ impl PokemonData {
             (42, Move::AerialAce),
             (46, Move::AirSlash),
             (49, Move::Hurricane),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Gust,
+            Move::Mist,
+            Move::Agility,
+            Move::Twister,
+            Move::KnockOff,
+            Move::WaterSport,
+            Move::Roost,
+            Move::Brine,
+            Move::AquaRing,
+        ])
     };
     pub const Pelipper: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Flying),
@@ -11976,12 +13730,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::WingAttack),
             (1, Move::Growl),
@@ -12002,7 +13756,8 @@ impl PokemonData {
             (52, Move::Tailwind),
             (58, Move::HydroPump),
             (63, Move::Hurricane),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Ralts: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Fairy),
@@ -12019,12 +13774,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 235,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Growl),
             (6, Move::Confusion),
@@ -12041,7 +13796,19 @@ impl PokemonData {
             (45, Move::Hypnosis),
             (50, Move::DreamEater),
             (54, Move::StoredPower),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::ConfuseRay,
+            Move::DestinyBond,
+            Move::MeanLook,
+            Move::Encore,
+            Move::Memento,
+            Move::SkillSwap,
+            Move::Grudge,
+            Move::ShadowSneak,
+            Move::Synchronoise,
+        ])
     };
     pub const Kirlia: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Fairy),
@@ -12058,12 +13825,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Confusion),
@@ -12080,7 +13847,8 @@ impl PokemonData {
             (53, Move::Hypnosis),
             (59, Move::DreamEater),
             (64, Move::StoredPower),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gardevoir: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Fairy),
@@ -12097,12 +13865,12 @@ impl PokemonData {
             Stat::new(115, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Confusion),
@@ -12120,7 +13888,8 @@ impl PokemonData {
             (65, Move::Hypnosis),
             (73, Move::DreamEater),
             (80, Move::StoredPower),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Surskit: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Water),
@@ -12137,12 +13906,12 @@ impl PokemonData {
             Stat::new(52, 0),
             Stat::new(65, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bubble),
             (7, Move::QuickAttack),
@@ -12153,7 +13922,18 @@ impl PokemonData {
             (37, Move::Mist),
             (37, Move::Haze),
             (43, Move::BatonPass),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::HydroPump,
+            Move::Psybeam,
+            Move::MindReader,
+            Move::Foresight,
+            Move::Endure,
+            Move::SignalBeam,
+            Move::MudShot,
+            Move::BugBite,
+            Move::AquaJet,
+        ])
     };
     pub const Masquerain: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -12170,12 +13950,12 @@ impl PokemonData {
             Stat::new(82, 1),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::QuickAttack),
             (1, Move::Bubble),
@@ -12190,7 +13970,8 @@ impl PokemonData {
             (54, Move::Whirlwind),
             (61, Move::BugBuzz),
             (68, Move::QuiverDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Shroomish: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -12207,12 +13988,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Absorb),
             (5, Move::Tackle),
@@ -12226,7 +14007,19 @@ impl PokemonData {
             (37, Move::GigaDrain),
             (41, Move::SeedBomb),
             (45, Move::Spore),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Charm,
+            Move::FocusPunch,
+            Move::HelpingHand,
+            Move::FakeTears,
+            Move::BulletSeed,
+            Move::WakeUpSlap,
+            Move::NaturalGift,
+            Move::WorrySeed,
+            Move::SeedBomb,
+            Move::DrainPunch,
+        ])
     };
     pub const Breloom: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Fighting),
@@ -12243,12 +14036,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Absorb),
@@ -12263,7 +14056,8 @@ impl PokemonData {
             (37, Move::MindReader),
             (41, Move::SeedBomb),
             (45, Move::DynamicPunch),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Slakoth: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -12280,12 +14074,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Yawn),
@@ -12297,7 +14091,20 @@ impl PokemonData {
             (37, Move::ChipAway),
             (43, Move::Counter),
             (49, Move::Flail),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Slash,
+            Move::Snore,
+            Move::Curse,
+            Move::SleepTalk,
+            Move::Pursuit,
+            Move::CrushClaw,
+            Move::Tickle,
+            Move::HammerArm,
+            Move::NightSlash,
+            Move::AfterYou,
+        ])
     };
     pub const Vigoroth: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -12314,12 +14121,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(90, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::FocusEnergy),
@@ -12332,7 +14139,8 @@ impl PokemonData {
             (43, Move::ChipAway),
             (49, Move::FocusPunch),
             (55, Move::Reversal),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Slaking: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -12349,12 +14157,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Encore),
@@ -12370,7 +14178,8 @@ impl PokemonData {
             (55, Move::Fling),
             (61, Move::Punishment),
             (67, Move::HammerArm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Nincada: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Ground),
@@ -12387,12 +14196,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Harden),
@@ -12404,7 +14213,17 @@ impl PokemonData {
             (31, Move::MudSlap),
             (38, Move::MetalClaw),
             (45, Move::Dig),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Gust,
+            Move::FeintAttack,
+            Move::Endure,
+            Move::SilverWind,
+            Move::NightSlash,
+            Move::BugBuzz,
+            Move::BugBite,
+            Move::FinalGambit,
+        ])
     };
     pub const Ninjask: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -12421,12 +14240,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(160, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::SandAttack),
@@ -12443,7 +14262,8 @@ impl PokemonData {
             (38, Move::Agility),
             (45, Move::BatonPass),
             (52, Move::XScissor),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Shedinja: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Ghost),
@@ -12460,12 +14280,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Harden),
@@ -12479,7 +14299,8 @@ impl PokemonData {
             (45, Move::Grudge),
             (52, Move::HealBlock),
             (59, Move::ShadowBall),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Whismur: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -12496,12 +14317,12 @@ impl PokemonData {
             Stat::new(23, 0),
             Stat::new(28, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (5, Move::Uproar),
@@ -12515,7 +14336,18 @@ impl PokemonData {
             (45, Move::Rest),
             (45, Move::SleepTalk),
             (51, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TakeDown,
+            Move::Smokescreen,
+            Move::Snore,
+            Move::SmellingSalts,
+            Move::Endeavor,
+            Move::FakeTears,
+            Move::Extrasensory,
+            Move::HammerArm,
+            Move::CircleThrow,
+        ])
     };
     pub const Loudred: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -12532,12 +14364,12 @@ impl PokemonData {
             Stat::new(43, 0),
             Stat::new(48, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Uproar),
@@ -12552,7 +14384,8 @@ impl PokemonData {
             (57, Move::Rest),
             (57, Move::SleepTalk),
             (65, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Exploud: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -12569,12 +14402,12 @@ impl PokemonData {
             Stat::new(73, 0),
             Stat::new(68, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Uproar),
@@ -12594,7 +14427,8 @@ impl PokemonData {
             (63, Move::SleepTalk),
             (71, Move::HyperVoice),
             (79, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Makuhita: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -12611,12 +14445,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 180,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::FocusEnergy),
@@ -12635,7 +14469,23 @@ impl PokemonData {
             (40, Move::CloseCombat),
             (43, Move::Reversal),
             (46, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::FeintAttack,
+            Move::Foresight,
+            Move::Detect,
+            Move::DynamicPunch,
+            Move::CrossChop,
+            Move::FocusPunch,
+            Move::HelpingHand,
+            Move::Revenge,
+            Move::WakeUpSlap,
+            Move::Feint,
+            Move::BulletPunch,
+            Move::WideGuard,
+            Move::ChipAway,
+        ])
     };
     pub const Hariyama: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -12652,12 +14502,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Tackle),
@@ -12677,7 +14527,8 @@ impl PokemonData {
             (52, Move::CloseCombat),
             (57, Move::Reversal),
             (62, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Azurill: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Fairy),
@@ -12694,12 +14545,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 150,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Bubble),
             (1, Move::Splash),
@@ -12711,7 +14562,19 @@ impl PokemonData {
             (16, Move::HelpingHand),
             (20, Move::Slam),
             (23, Move::Bounce),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::BodySlam,
+            Move::Sing,
+            Move::Encore,
+            Move::Refresh,
+            Move::FakeTears,
+            Move::Tickle,
+            Move::MuddyWater,
+            Move::WaterSport,
+            Move::Soak,
+        ])
     };
     pub const Nosepass: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Rock),
@@ -12728,12 +14591,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::Harden),
@@ -12751,7 +14614,15 @@ impl PokemonData {
             (46, Move::StoneEdge),
             (50, Move::ZapCannon),
             (50, Move::LockOn),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::Endure,
+            Move::Rollout,
+            Move::Magnitude,
+            Move::Block,
+            Move::StealthRock,
+        ])
     };
     pub const Skitty: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -12768,12 +14639,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(50, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -12792,7 +14663,22 @@ impl PokemonData {
             (39, Move::HealBell),
             (42, Move::DoubleEdge),
             (46, Move::Captivate),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BatonPass,
+            Move::FakeOut,
+            Move::Uproar,
+            Move::HelpingHand,
+            Move::Wish,
+            Move::FakeTears,
+            Move::Tickle,
+            Move::LastResort,
+            Move::SuckerPunch,
+            Move::MudBomb,
+            Move::ZenHeadbutt,
+            Move::Captivate,
+            Move::SimpleBeam,
+        ])
     };
     pub const Delcatty: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -12809,18 +14695,19 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(90, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::DoubleSlap),
             (1, Move::Sing),
             (1, Move::Attract),
             (1, Move::FakeOut),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Sableye: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Ghost),
@@ -12837,12 +14724,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -12863,7 +14750,19 @@ impl PokemonData {
             (53, Move::ZenHeadbutt),
             (57, Move::ShadowBall),
             (60, Move::MeanLook),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Recover,
+            Move::MeanLook,
+            Move::Moonlight,
+            Move::Flatter,
+            Move::Trick,
+            Move::Feint,
+            Move::MetalBurst,
+            Move::SuckerPunch,
+            Move::NastyPlot,
+            Move::Captivate,
+        ])
     };
     pub const Mawile: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Fairy),
@@ -12880,12 +14779,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Astonish),
             (6, Move::FakeTears),
@@ -12901,7 +14800,21 @@ impl PokemonData {
             (51, Move::SpitUp),
             (51, Move::Swallow),
             (56, Move::IronHead),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::AncientPower,
+            Move::PoisonFang,
+            Move::Tickle,
+            Move::MetalBurst,
+            Move::GuardSwap,
+            Move::Punishment,
+            Move::SuckerPunch,
+            Move::ThunderFang,
+            Move::IceFang,
+            Move::FireFang,
+            Move::Captivate,
+        ])
     };
     pub const Aron: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Rock),
@@ -12918,12 +14831,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 180,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Harden),
@@ -12941,7 +14854,20 @@ impl PokemonData {
             (43, Move::HeavySlam),
             (46, Move::DoubleEdge),
             (50, Move::MetalBurst),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Stomp,
+            Move::BodySlam,
+            Move::Screech,
+            Move::Curse,
+            Move::SmellingSalts,
+            Move::Superpower,
+            Move::Endeavor,
+            Move::DragonRush,
+            Move::IronHead,
+            Move::StealthRock,
+            Move::HeadSmash,
+        ])
     };
     pub const Lairon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Rock),
@@ -12958,12 +14884,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::Tackle),
@@ -12981,7 +14907,8 @@ impl PokemonData {
             (51, Move::HeavySlam),
             (56, Move::DoubleEdge),
             (62, Move::MetalBurst),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Aggron: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Rock),
@@ -12998,12 +14925,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::Tackle),
@@ -13021,7 +14948,8 @@ impl PokemonData {
             (57, Move::HeavySlam),
             (65, Move::DoubleEdge),
             (74, Move::MetalBurst),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Meditite: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fighting, Type::Psychic),
@@ -13038,12 +14966,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(60, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 180,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bide),
             (4, Move::Meditate),
@@ -13060,7 +14988,22 @@ impl PokemonData {
             (43, Move::PowerTrick),
             (46, Move::Reversal),
             (50, Move::Recover),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FirePunch,
+            Move::IcePunch,
+            Move::ThunderPunch,
+            Move::Foresight,
+            Move::DynamicPunch,
+            Move::BatonPass,
+            Move::FakeOut,
+            Move::SecretPower,
+            Move::PowerSwap,
+            Move::GuardSwap,
+            Move::DrainPunch,
+            Move::BulletPunch,
+            Move::PsychoCut,
+        ])
     };
     pub const Medicham: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fighting, Type::Psychic),
@@ -13077,12 +15020,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(80, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::FirePunch),
             (1, Move::IcePunch),
@@ -13102,7 +15045,8 @@ impl PokemonData {
             (49, Move::PowerTrick),
             (55, Move::Reversal),
             (62, Move::Recover),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Electrike: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -13119,12 +15063,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(65, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::ThunderWave),
@@ -13140,7 +15084,22 @@ impl PokemonData {
             (44, Move::Charge),
             (49, Move::WildCharge),
             (52, Move::Thunder),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Headbutt,
+            Move::Swift,
+            Move::Curse,
+            Move::Crunch,
+            Move::Uproar,
+            Move::ShockWave,
+            Move::Switcheroo,
+            Move::ThunderFang,
+            Move::IceFang,
+            Move::FireFang,
+            Move::Discharge,
+            Move::FlameBurst,
+            Move::ElectroBall,
+        ])
     };
     pub const Manectric: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -13157,12 +15116,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(105, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -13179,7 +15138,8 @@ impl PokemonData {
             (54, Move::Charge),
             (61, Move::WildCharge),
             (66, Move::Thunder),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Plusle: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -13196,12 +15156,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(95, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (3, Move::ThunderWave),
@@ -13220,7 +15180,14 @@ impl PokemonData {
             (51, Move::LastResort),
             (56, Move::NastyPlot),
             (63, Move::Entrainment),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Sing,
+            Move::SweetKiss,
+            Move::Wish,
+            Move::LuckyChant,
+            Move::Discharge,
+        ])
     };
     pub const Minun: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -13237,12 +15204,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(95, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (3, Move::ThunderWave),
@@ -13262,7 +15229,14 @@ impl PokemonData {
             (51, Move::TrumpCard),
             (56, Move::NastyPlot),
             (63, Move::Entrainment),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Sing,
+            Move::SweetKiss,
+            Move::Wish,
+            Move::LuckyChant,
+            Move::Discharge,
+        ])
     };
     pub const Volbeat: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -13279,12 +15253,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(85, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 150,
         egg_group: PokemonEggGroup::Two(EggGroup::Bug, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Flash),
@@ -13299,7 +15273,16 @@ impl PokemonData {
             (37, Move::ZenHeadbutt),
             (41, Move::BugBuzz),
             (45, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SeismicToss,
+            Move::DizzyPunch,
+            Move::BatonPass,
+            Move::Encore,
+            Move::Trick,
+            Move::SilverWind,
+            Move::BugBuzz,
+        ])
     };
     pub const Illumise: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -13316,12 +15299,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(85, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 150,
         egg_group: PokemonEggGroup::Two(EggGroup::Bug, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Tackle),
             (5, Move::SweetScent),
@@ -13335,7 +15318,17 @@ impl PokemonData {
             (37, Move::ZenHeadbutt),
             (41, Move::BugBuzz),
             (45, Move::Covet),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Growth,
+            Move::ConfuseRay,
+            Move::BatonPass,
+            Move::Encore,
+            Move::FakeTears,
+            Move::SilverWind,
+            Move::BugBuzz,
+            Move::Captivate,
+        ])
     };
     pub const Roselia: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -13352,12 +15345,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 150,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Absorb),
             (4, Move::Growth),
@@ -13375,7 +15368,21 @@ impl PokemonData {
             (40, Move::Toxic),
             (43, Move::Aromatherapy),
             (46, Move::Synthesis),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::PinMissile,
+            Move::RazorLeaf,
+            Move::SleepPowder,
+            Move::MindReader,
+            Move::CottonSpore,
+            Move::Spikes,
+            Move::GigaDrain,
+            Move::Synthesis,
+            Move::GrassWhistle,
+            Move::NaturalGift,
+            Move::SeedBomb,
+            Move::LeafStorm,
+        ])
     };
     pub const Gulpin: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -13392,12 +15399,12 @@ impl PokemonData {
             Stat::new(53, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Pound),
             (6, Move::Yawn),
@@ -13414,7 +15421,16 @@ impl PokemonData {
             (49, Move::GastroAcid),
             (54, Move::WringOut),
             (59, Move::GunkShot),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Smog,
+            Move::AcidArmor,
+            Move::Curse,
+            Move::MudSlap,
+            Move::DestinyBond,
+            Move::PainSplit,
+            Move::GunkShot,
+        ])
     };
     pub const Swalot: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -13431,12 +15447,12 @@ impl PokemonData {
             Stat::new(83, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Sludge),
@@ -13454,7 +15470,8 @@ impl PokemonData {
             (59, Move::GastroAcid),
             (66, Move::WringOut),
             (73, Move::GunkShot),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Carvanha: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Dark),
@@ -13471,12 +15488,12 @@ impl PokemonData {
             Stat::new(20, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Bite),
@@ -13491,7 +15508,15 @@ impl PokemonData {
             (31, Move::AquaJet),
             (36, Move::Agility),
             (38, Move::TakeDown),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Thrash,
+            Move::DoubleEdge,
+            Move::HydroPump,
+            Move::Swift,
+            Move::AncientPower,
+            Move::Brine,
+        ])
     };
     pub const Sharpedo: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Dark),
@@ -13508,12 +15533,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Bite),
@@ -13532,7 +15557,8 @@ impl PokemonData {
             (45, Move::Agility),
             (50, Move::SkullBash),
             (56, Move::NightSlash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Wailmer: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -13549,12 +15575,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 125,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Splash),
             (4, Move::Growl),
@@ -13572,7 +15598,21 @@ impl PokemonData {
             (44, Move::Bounce),
             (47, Move::HydroPump),
             (50, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Thrash,
+            Move::DoubleEdge,
+            Move::Fissure,
+            Move::DefenseCurl,
+            Move::Snore,
+            Move::Curse,
+            Move::SleepTalk,
+            Move::Tickle,
+            Move::AquaRing,
+            Move::ZenHeadbutt,
+            Move::Soak,
+        ])
     };
     pub const Wailord: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -13589,12 +15629,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::WaterGun),
@@ -13612,7 +15652,8 @@ impl PokemonData {
             (54, Move::Bounce),
             (62, Move::HydroPump),
             (70, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Numel: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Ground),
@@ -13629,12 +15670,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -13651,7 +15692,24 @@ impl PokemonData {
             (40, Move::Earthquake),
             (43, Move::Flamethrower),
             (47, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Stomp,
+            Move::BodySlam,
+            Move::DefenseCurl,
+            Move::ScaryFace,
+            Move::Endure,
+            Move::Rollout,
+            Move::AncientPower,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::HeatWave,
+            Move::Yawn,
+            Move::Howl,
+            Move::MudBomb,
+            Move::IronHead,
+        ])
     };
     pub const Camerupt: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Ground),
@@ -13668,12 +15726,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 150,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -13691,7 +15749,8 @@ impl PokemonData {
             (46, Move::Earthquake),
             (52, Move::Eruption),
             (59, Move::Fissure),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Torkoal: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -13708,12 +15767,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Ember),
             (4, Move::Smog),
@@ -13732,7 +15791,17 @@ impl PokemonData {
             (55, Move::HeatWave),
             (60, Move::Inferno),
             (65, Move::ShellSmash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Fissure,
+            Move::SkullBash,
+            Move::Endure,
+            Move::SleepTalk,
+            Move::Yawn,
+            Move::Eruption,
+            Move::FlameBurst,
+            Move::ClearSmog,
+        ])
     };
     pub const Spoink: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -13749,12 +15818,12 @@ impl PokemonData {
             Stat::new(80, 1),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Splash),
             (7, Move::Psywave),
@@ -13771,7 +15840,19 @@ impl PokemonData {
             (40, Move::Payback),
             (44, Move::Psychic),
             (50, Move::Bounce),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::Amnesia,
+            Move::Endure,
+            Move::MirrorCoat,
+            Move::FutureSight,
+            Move::Trick,
+            Move::SkillSwap,
+            Move::Extrasensory,
+            Move::LuckyChant,
+            Move::ZenHeadbutt,
+        ])
     };
     pub const Grumpig: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -13788,12 +15869,12 @@ impl PokemonData {
             Stat::new(110, 2),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Psybeam),
             (1, Move::Psywave),
@@ -13810,7 +15891,8 @@ impl PokemonData {
             (46, Move::Payback),
             (52, Move::Psychic),
             (60, Move::Bounce),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Spinda: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -13827,12 +15909,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (5, Move::Uproar),
@@ -13847,7 +15929,23 @@ impl PokemonData {
             (46, Move::DoubleEdge),
             (50, Move::Flail),
             (55, Move::Thrash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::IcyWind,
+            Move::BatonPass,
+            Move::Encore,
+            Move::RapidSpin,
+            Move::FakeOut,
+            Move::SmellingSalts,
+            Move::Trick,
+            Move::RolePlay,
+            Move::Wish,
+            Move::Assist,
+            Move::FakeTears,
+            Move::WaterPulse,
+            Move::PsychoCut,
+        ])
     };
     pub const Trapinch: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -13864,12 +15962,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(10, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Bite),
             (4, Move::SandAttack),
@@ -13888,7 +15986,19 @@ impl PokemonData {
             (61, Move::Feint),
             (67, Move::Superpower),
             (73, Move::Fissure),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Gust,
+            Move::QuickAttack,
+            Move::FocusEnergy,
+            Move::Flail,
+            Move::Endure,
+            Move::FuryCutter,
+            Move::SignalBeam,
+            Move::MudShot,
+            Move::EarthPower,
+            Move::BugBite,
+        ])
     };
     pub const Vibrava: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Dragon),
@@ -13905,12 +16015,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(70, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::SonicBoom),
@@ -13926,7 +16036,8 @@ impl PokemonData {
             (39, Move::EarthPower),
             (44, Move::Sandstorm),
             (49, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Flygon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Dragon),
@@ -13943,12 +16054,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(100, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::SonicBoom),
@@ -13966,7 +16077,8 @@ impl PokemonData {
             (45, Move::DragonTail),
             (49, Move::HyperBeam),
             (55, Move::DragonClaw),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cacnea: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -13983,12 +16095,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Plant, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::Leer),
@@ -14006,7 +16118,23 @@ impl PokemonData {
             (49, Move::CottonSpore),
             (53, Move::Sandstorm),
             (57, Move::DestinyBond),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::Acid,
+            Move::LowKick,
+            Move::Counter,
+            Move::DynamicPunch,
+            Move::SmellingSalts,
+            Move::TeeterDance,
+            Move::GrassWhistle,
+            Move::Block,
+            Move::MagicalLeaf,
+            Move::WorrySeed,
+            Move::SeedBomb,
+            Move::Switcheroo,
+            Move::NastyPlot,
+        ])
     };
     pub const Cacturne: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Dark),
@@ -14023,12 +16151,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::Two(EggGroup::Plant, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::Leer),
@@ -14047,7 +16175,8 @@ impl PokemonData {
             (59, Move::CottonSpore),
             (65, Move::Sandstorm),
             (71, Move::DestinyBond),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Swablu: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -14064,12 +16193,12 @@ impl PokemonData {
             Stat::new(75, 1),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Flying, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Peck),
@@ -14086,7 +16215,19 @@ impl PokemonData {
             (39, Move::CottonGuard),
             (42, Move::DragonPulse),
             (48, Move::PerishSong),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Agility,
+            Move::Rage,
+            Move::Haze,
+            Move::SteelWing,
+            Move::Pursuit,
+            Move::FeatherDance,
+            Move::HyperVoice,
+            Move::Roost,
+            Move::PowerSwap,
+            Move::DragonRush,
+        ])
     };
     pub const Altaria: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Flying),
@@ -14103,12 +16244,12 @@ impl PokemonData {
             Stat::new(105, 2),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Flying, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Sing),
@@ -14128,7 +16269,8 @@ impl PokemonData {
             (48, Move::DragonPulse),
             (57, Move::PerishSong),
             (64, Move::SkyAttack),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Zangoose: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -14145,12 +16287,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -14167,7 +16309,22 @@ impl PokemonData {
             (40, Move::Taunt),
             (43, Move::SwordsDance),
             (47, Move::CloseCombat),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::DoubleKick,
+            Move::Disable,
+            Move::Counter,
+            Move::FurySwipes,
+            Move::Curse,
+            Move::Flail,
+            Move::IronTail,
+            Move::MetalClaw,
+            Move::Feint,
+            Move::NightSlash,
+            Move::DoubleHit,
+            Move::FinalGambit,
+        ])
     };
     pub const Seviper: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -14184,12 +16341,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Wrap),
             (1, Move::Lick),
@@ -14207,7 +16364,21 @@ impl PokemonData {
             (45, Move::Crunch),
             (49, Move::Coil),
             (53, Move::WringOut),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::ScaryFace,
+            Move::IronTail,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::Assurance,
+            Move::WringOut,
+            Move::Punishment,
+            Move::NightSlash,
+            Move::Switcheroo,
+            Move::FinalGambit,
+        ])
     };
     pub const Lunatone: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Psychic),
@@ -14224,12 +16395,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Confusion),
@@ -14247,7 +16418,8 @@ impl PokemonData {
             (45, Move::FutureSight),
             (49, Move::Explosion),
             (53, Move::MagicRoom),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Solrock: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Psychic),
@@ -14264,12 +16436,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Confusion),
@@ -14287,7 +16459,8 @@ impl PokemonData {
             (45, Move::SolarBeam),
             (49, Move::Explosion),
             (53, Move::WonderRoom),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Barboach: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ground),
@@ -14304,12 +16477,12 @@ impl PokemonData {
             Stat::new(41, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::MudSlap),
             (6, Move::MudSport),
@@ -14325,7 +16498,19 @@ impl PokemonData {
             (39, Move::Earthquake),
             (43, Move::FutureSight),
             (47, Move::Fissure),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TakeDown,
+            Move::Thrash,
+            Move::HydroPump,
+            Move::Flail,
+            Move::Spark,
+            Move::Whirlpool,
+            Move::MuddyWater,
+            Move::MudShot,
+            Move::DragonDance,
+            Move::EarthPower,
+        ])
     };
     pub const Whiscash: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ground),
@@ -14342,12 +16527,12 @@ impl PokemonData {
             Stat::new(71, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::MudSlap),
             (1, Move::MudSport),
@@ -14365,7 +16550,8 @@ impl PokemonData {
             (45, Move::Earthquake),
             (51, Move::FutureSight),
             (57, Move::Fissure),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Corphish: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -14382,12 +16568,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 205,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Bubble),
             (7, Move::Harden),
@@ -14402,7 +16588,20 @@ impl PokemonData {
             (44, Move::SwordsDance),
             (47, Move::Crunch),
             (53, Move::Guillotine),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::DoubleEdge,
+            Move::MetalClaw,
+            Move::AncientPower,
+            Move::Superpower,
+            Move::KnockOff,
+            Move::Endeavor,
+            Move::MudSport,
+            Move::DragonDance,
+            Move::TrumpCard,
+            Move::ChipAway,
+        ])
     };
     pub const Crawdaunt: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Dark),
@@ -14419,12 +16618,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 155,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::ViseGrip),
             (1, Move::Leer),
@@ -14440,7 +16639,8 @@ impl PokemonData {
             (52, Move::SwordsDance),
             (57, Move::Crunch),
             (65, Move::Guillotine),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Baltoy: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Psychic),
@@ -14457,12 +16657,12 @@ impl PokemonData {
             Stat::new(70, 1),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Harden),
@@ -14481,7 +16681,8 @@ impl PokemonData {
             (41, Move::Sandstorm),
             (45, Move::HealBlock),
             (49, Move::Explosion),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Claydol: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Psychic),
@@ -14498,12 +16699,12 @@ impl PokemonData {
             Stat::new(120, 2),
             Stat::new(75, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Teleport),
@@ -14524,7 +16725,8 @@ impl PokemonData {
             (47, Move::Sandstorm),
             (54, Move::HealBlock),
             (61, Move::Explosion),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Lileep: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Grass),
@@ -14541,12 +16743,12 @@ impl PokemonData {
             Stat::new(87, 1),
             Stat::new(23, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Constrict),
             (1, Move::Astonish),
@@ -14561,7 +16763,18 @@ impl PokemonData {
             (57, Move::SpitUp),
             (57, Move::Swallow),
             (64, Move::WringOut),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::MegaDrain,
+            Move::Recover,
+            Move::Barrier,
+            Move::Curse,
+            Move::Endure,
+            Move::MirrorCoat,
+            Move::Tickle,
+            Move::WringOut,
+            Move::StealthRock,
+        ])
     };
     pub const Cradily: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Grass),
@@ -14578,12 +16791,12 @@ impl PokemonData {
             Stat::new(107, 2),
             Stat::new(43, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Acid),
             (1, Move::Constrict),
@@ -14598,7 +16811,8 @@ impl PokemonData {
             (66, Move::SpitUp),
             (66, Move::Swallow),
             (76, Move::WringOut),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Anorith: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Bug),
@@ -14615,12 +16829,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(75, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Harden),
@@ -14634,7 +16848,17 @@ impl PokemonData {
             (49, Move::RockBlast),
             (55, Move::CrushClaw),
             (61, Move::XScissor),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SandAttack,
+            Move::Screech,
+            Move::Curse,
+            Move::RapidSpin,
+            Move::KnockOff,
+            Move::IronDefense,
+            Move::WaterPulse,
+            Move::CrossPoison,
+        ])
     };
     pub const Armaldo: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Bug),
@@ -14651,12 +16875,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::WaterGun),
@@ -14670,7 +16894,8 @@ impl PokemonData {
             (55, Move::RockBlast),
             (67, Move::CrushClaw),
             (73, Move::XScissor),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Feebas: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -14687,21 +16912,35 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(80, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Splash),
             (15, Move::Tackle),
             (30, Move::Flail),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mist,
+            Move::Hypnosis,
+            Move::ConfuseRay,
+            Move::Haze,
+            Move::DragonBreath,
+            Move::IronTail,
+            Move::MirrorCoat,
+            Move::MudSport,
+            Move::Tickle,
+            Move::Brine,
+            Move::DragonPulse,
+            Move::Captivate,
+        ])
     };
     pub const Milotic: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
-        ability: PokemonAbility::One(Ability::MarvelScale),
+        ability: PokemonAbility::Two(Ability::MarvelScale, Ability::Competitive),
         hidden_ability: Some(Ability::CuteCharm),
         height: 62,
         weight: 1620,
@@ -14714,12 +16953,12 @@ impl PokemonData {
             Stat::new(125, 2),
             Stat::new(81, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Wrap),
             (1, Move::WaterGun),
@@ -14735,7 +16974,8 @@ impl PokemonData {
             (41, Move::Attract),
             (45, Move::Safeguard),
             (49, Move::AquaRing),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Castform: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -14752,12 +16992,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (10, Move::Ember),
@@ -14771,12 +17011,21 @@ impl PokemonData {
             (40, Move::HydroPump),
             (40, Move::Blizzard),
             (40, Move::FireBlast),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::Amnesia,
+            Move::FutureSight,
+            Move::LuckyChant,
+            Move::OminousWind,
+            Move::ClearSmog,
+            Move::Hex,
+        ])
     };
     pub const Kecleon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
         ability: PokemonAbility::One(Ability::ColorChange),
-        hidden_ability: None,
+        hidden_ability: Some(Ability::Protean),
         height: 10,
         weight: 220,
         base_exp_yield: 154,
@@ -14788,12 +17037,12 @@ impl PokemonData {
             Stat::new(120, 1),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::TailWhip),
@@ -14813,7 +17062,19 @@ impl PokemonData {
             (49, Move::ShadowClaw),
             (55, Move::AncientPower),
             (58, Move::Synchronoise),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::Recover,
+            Move::DizzyPunch,
+            Move::FakeOut,
+            Move::Trick,
+            Move::MagicCoat,
+            Move::SkillSwap,
+            Move::Snatch,
+            Move::NastyPlot,
+            Move::FoulPlay,
+        ])
     };
     pub const Shuppet: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ghost),
@@ -14830,12 +17091,12 @@ impl PokemonData {
             Stat::new(33, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 35,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::KnockOff),
             (4, Move::Screech),
@@ -14852,7 +17113,19 @@ impl PokemonData {
             (42, Move::Snatch),
             (46, Move::Grudge),
             (50, Move::Trick),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::ConfuseRay,
+            Move::Foresight,
+            Move::DestinyBond,
+            Move::Pursuit,
+            Move::Imprison,
+            Move::Astonish,
+            Move::ShadowSneak,
+            Move::GunkShot,
+            Move::OminousWind,
+        ])
     };
     pub const Banette: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ghost),
@@ -14869,12 +17142,12 @@ impl PokemonData {
             Stat::new(63, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 35,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::NightShade),
             (1, Move::Screech),
@@ -14891,7 +17164,8 @@ impl PokemonData {
             (46, Move::Snatch),
             (52, Move::Grudge),
             (58, Move::Trick),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Duskull: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ghost),
@@ -14908,12 +17182,12 @@ impl PokemonData {
             Stat::new(90, 1),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 35,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::NightShade),
@@ -14929,7 +17203,18 @@ impl PokemonData {
             (41, Move::MeanLook),
             (46, Move::Payback),
             (49, Move::FutureSight),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FeintAttack,
+            Move::DestinyBond,
+            Move::PainSplit,
+            Move::Memento,
+            Move::SkillSwap,
+            Move::Imprison,
+            Move::Grudge,
+            Move::DarkPulse,
+            Move::OminousWind,
+        ])
     };
     pub const Dusclops: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ghost),
@@ -14946,12 +17231,12 @@ impl PokemonData {
             Stat::new(130, 1),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 35,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::FirePunch),
             (1, Move::IcePunch),
@@ -14973,7 +17258,8 @@ impl PokemonData {
             (49, Move::MeanLook),
             (58, Move::Payback),
             (61, Move::FutureSight),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Tropius: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Flying),
@@ -14990,12 +17276,12 @@ impl PokemonData {
             Stat::new(87, 0),
             Stat::new(51, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::Leer),
@@ -15013,7 +17299,21 @@ impl PokemonData {
             (61, Move::SolarBeam),
             (67, Move::NaturalGift),
             (71, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::Slam,
+            Move::Headbutt,
+            Move::LeechSeed,
+            Move::Curse,
+            Move::Synthesis,
+            Move::NaturePower,
+            Move::BulletSeed,
+            Move::LeafBlade,
+            Move::DragonDance,
+            Move::NaturalGift,
+            Move::LeafStorm,
+        ])
     };
     pub const Chimecho: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -15030,12 +17330,12 @@ impl PokemonData {
             Stat::new(90, 1),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Wrap),
             (6, Move::Growl),
@@ -15052,7 +17352,16 @@ impl PokemonData {
             (49, Move::HealPulse),
             (54, Move::Synchronoise),
             (57, Move::HealingWish),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::Hypnosis,
+            Move::Curse,
+            Move::FutureSight,
+            Move::Wish,
+            Move::SkillSwap,
+            Move::StoredPower,
+        ])
     };
     pub const Absol: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dark),
@@ -15069,12 +17378,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(75, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Feint),
@@ -15094,7 +17403,23 @@ impl PokemonData {
             (57, Move::RazorWind),
             (60, Move::MeFirst),
             (65, Move::PerishSong),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::Curse,
+            Move::FeintAttack,
+            Move::PerishSong,
+            Move::MeanLook,
+            Move::Megahorn,
+            Move::BatonPass,
+            Move::MagicCoat,
+            Move::Assurance,
+            Move::MeFirst,
+            Move::Punishment,
+            Move::SuckerPunch,
+            Move::ZenHeadbutt,
+            Move::Hex,
+        ])
     };
     pub const Wynaut: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -15111,12 +17436,12 @@ impl PokemonData {
             Stat::new(48, 0),
             Stat::new(23, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 125,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Splash),
             (1, Move::Charm),
@@ -15125,7 +17450,8 @@ impl PokemonData {
             (15, Move::DestinyBond),
             (15, Move::Safeguard),
             (15, Move::MirrorCoat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Snorunt: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
@@ -15142,12 +17468,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::PowderSnow),
@@ -15161,7 +17487,18 @@ impl PokemonData {
             (37, Move::IceShard),
             (40, Move::Hail),
             (46, Move::Blizzard),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::Bide,
+            Move::Spikes,
+            Move::Rollout,
+            Move::WeatherBall,
+            Move::FakeTears,
+            Move::Block,
+            Move::Avalanche,
+            Move::Hex,
+        ])
     };
     pub const Glalie: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
@@ -15178,12 +17515,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Bite),
@@ -15198,7 +17535,8 @@ impl PokemonData {
             (40, Move::Hail),
             (51, Move::Blizzard),
             (59, Move::SheerCold),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Spheal: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Water),
@@ -15215,12 +17553,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::WaterGun),
@@ -15235,7 +17573,21 @@ impl PokemonData {
             (37, Move::Snore),
             (43, Move::Blizzard),
             (49, Move::SheerCold),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Fissure,
+            Move::Curse,
+            Move::Rollout,
+            Move::SleepTalk,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::Yawn,
+            Move::SignalBeam,
+            Move::WaterSport,
+            Move::WaterPulse,
+            Move::AquaRing,
+        ])
     };
     pub const Sealeo: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Water),
@@ -15252,12 +17604,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::WaterGun),
@@ -15272,7 +17624,8 @@ impl PokemonData {
             (39, Move::Snore),
             (47, Move::Blizzard),
             (55, Move::SheerCold),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Walrein: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Water),
@@ -15289,12 +17642,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::WaterGun),
@@ -15311,7 +17664,8 @@ impl PokemonData {
             (44, Move::IceFang),
             (52, Move::Blizzard),
             (65, Move::SheerCold),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Clamperl: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -15328,19 +17682,32 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(32, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::WaterGun),
             (1, Move::Clamp),
             (1, Move::Whirlpool),
             (1, Move::IronDefense),
             (51, Move::ShellSmash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Supersonic,
+            Move::ConfuseRay,
+            Move::Barrier,
+            Move::Endure,
+            Move::Refresh,
+            Move::MudSport,
+            Move::MuddyWater,
+            Move::WaterPulse,
+            Move::Brine,
+            Move::AquaRing,
+        ])
     };
     pub const Huntail: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -15357,12 +17724,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(52, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Whirlpool),
             (6, Move::Bite),
@@ -15376,7 +17743,8 @@ impl PokemonData {
             (42, Move::Crunch),
             (46, Move::AquaTail),
             (51, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gorebyss: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -15393,12 +17761,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(52, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Whirlpool),
             (6, Move::Confusion),
@@ -15412,7 +17780,8 @@ impl PokemonData {
             (42, Move::Psychic),
             (46, Move::AquaTail),
             (51, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Relicanth: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Rock),
@@ -15429,12 +17798,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 25,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Harden),
@@ -15449,7 +17818,21 @@ impl PokemonData {
             (64, Move::Rest),
             (71, Move::HydroPump),
             (78, Move::HeadSmash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SkullBash,
+            Move::Amnesia,
+            Move::Snore,
+            Move::MudSlap,
+            Move::SleepTalk,
+            Move::Magnitude,
+            Move::MuddyWater,
+            Move::MudShot,
+            Move::WaterSport,
+            Move::Brine,
+            Move::AquaTail,
+            Move::ZenHeadbutt,
+        ])
     };
     pub const Luvdisc: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -15466,12 +17849,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(97, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::Charm),
@@ -15487,7 +17870,18 @@ impl PokemonData {
             (46, Move::AquaRing),
             (51, Move::Captivate),
             (55, Move::Safeguard),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Supersonic,
+            Move::Splash,
+            Move::MudSport,
+            Move::WaterSport,
+            Move::Brine,
+            Move::AquaRing,
+            Move::Captivate,
+            Move::AquaJet,
+            Move::HealPulse,
+        ])
     };
     pub const Bagon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dragon),
@@ -15504,12 +17898,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Rage),
             (5, Move::Bite),
@@ -15523,7 +17917,19 @@ impl PokemonData {
             (46, Move::Crunch),
             (50, Move::DragonClaw),
             (55, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Thrash,
+            Move::HydroPump,
+            Move::DragonRage,
+            Move::DefenseCurl,
+            Move::Endure,
+            Move::Twister,
+            Move::DragonDance,
+            Move::DragonPulse,
+            Move::DragonRush,
+            Move::FireFang,
+        ])
     };
     pub const Shelgon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dragon),
@@ -15540,12 +17946,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::Leer),
@@ -15560,7 +17966,8 @@ impl PokemonData {
             (50, Move::Crunch),
             (55, Move::DragonClaw),
             (61, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Salamence: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Flying),
@@ -15577,12 +17984,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::Leer),
@@ -15601,7 +18008,8 @@ impl PokemonData {
             (61, Move::DragonClaw),
             (70, Move::DoubleEdge),
             (80, Move::DragonTail),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Beldum: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Psychic),
@@ -15618,15 +18026,16 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::TakeDown),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Metang: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Psychic),
@@ -15643,12 +18052,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::TakeDown),
             (1, Move::Confusion),
@@ -15664,7 +18073,8 @@ impl PokemonData {
             (44, Move::MeteorMash),
             (47, Move::IronDefense),
             (50, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Metagross: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Psychic),
@@ -15681,12 +18091,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::TakeDown),
             (1, Move::Confusion),
@@ -15703,7 +18113,8 @@ impl PokemonData {
             (45, Move::HammerArm),
             (53, Move::IronDefense),
             (62, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Regirock: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Rock),
@@ -15720,12 +18131,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Stomp),
             (1, Move::Explosion),
@@ -15740,7 +18151,8 @@ impl PokemonData {
             (73, Move::StoneEdge),
             (81, Move::HammerArm),
             (89, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Regice: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
@@ -15757,12 +18169,12 @@ impl PokemonData {
             Stat::new(200, 3),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Stomp),
             (1, Move::Explosion),
@@ -15777,7 +18189,8 @@ impl PokemonData {
             (73, Move::IceBeam),
             (81, Move::HammerArm),
             (89, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Registeel: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Steel),
@@ -15794,12 +18207,12 @@ impl PokemonData {
             Stat::new(150, 1),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Stomp),
             (1, Move::Explosion),
@@ -15816,7 +18229,8 @@ impl PokemonData {
             (73, Move::IronHead),
             (81, Move::HammerArm),
             (89, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Latias: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Psychic),
@@ -15833,12 +18247,12 @@ impl PokemonData {
             Stat::new(130, 3),
             Stat::new(110, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 90,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Psywave),
             (5, Move::Wish),
@@ -15858,7 +18272,8 @@ impl PokemonData {
             (75, Move::GuardSplit),
             (80, Move::DragonPulse),
             (85, Move::HealingWish),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Latios: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Psychic),
@@ -15875,12 +18290,12 @@ impl PokemonData {
             Stat::new(110, 0),
             Stat::new(110, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 90,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Psywave),
             (5, Move::HealBlock),
@@ -15900,7 +18315,8 @@ impl PokemonData {
             (75, Move::PowerSplit),
             (80, Move::DragonPulse),
             (85, Move::Memento),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Kyogre: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -15917,12 +18333,12 @@ impl PokemonData {
             Stat::new(140, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::WaterPulse),
             (5, Move::ScaryFace),
@@ -15937,7 +18353,8 @@ impl PokemonData {
             (75, Move::SheerCold),
             (80, Move::DoubleEdge),
             (90, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Groudon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -15954,12 +18371,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::MudShot),
             (5, Move::ScaryFace),
@@ -15974,7 +18391,8 @@ impl PokemonData {
             (75, Move::Fissure),
             (80, Move::SolarBeam),
             (90, Move::FireBlast),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Rayquaza: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Flying),
@@ -15991,12 +18409,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Twister),
             (5, Move::ScaryFace),
@@ -16011,7 +18429,8 @@ impl PokemonData {
             (75, Move::ExtremeSpeed),
             (80, Move::HyperBeam),
             (90, Move::DragonPulse),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Jirachi: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Psychic),
@@ -16028,12 +18447,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 100,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Wish),
@@ -16050,7 +18469,8 @@ impl PokemonData {
             (60, Move::CosmicPower),
             (65, Move::LastResort),
             (70, Move::DoomDesire),
-        ]
+        ],
+        egg_moves: None
     };
     pub const DeoxysNormal: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -16067,12 +18487,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(150, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Wrap),
             (1, Move::Leer),
@@ -16088,7 +18508,8 @@ impl PokemonData {
             (81, Move::Recover),
             (89, Move::PsychoBoost),
             (97, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Turtwig: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -16105,12 +18526,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(31, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (5, Move::Withdraw),
@@ -16124,7 +18545,24 @@ impl PokemonData {
             (37, Move::Crunch),
             (41, Move::GigaDrain),
             (45, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Thrash,
+            Move::DoubleEdge,
+            Move::Growth,
+            Move::Amnesia,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::Superpower,
+            Move::Tickle,
+            Move::SandTomb,
+            Move::WorrySeed,
+            Move::SeedBomb,
+            Move::EarthPower,
+            Move::WideGuard,
+        ])
     };
     pub const Grotle: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -16141,12 +18579,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(36, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Withdraw),
@@ -16160,7 +18598,8 @@ impl PokemonData {
             (42, Move::Crunch),
             (47, Move::GigaDrain),
             (52, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Torterra: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Ground),
@@ -16177,12 +18616,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(56, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Absorb),
@@ -16198,7 +18637,8 @@ impl PokemonData {
             (45, Move::Crunch),
             (51, Move::GigaDrain),
             (57, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Chimchar: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -16215,12 +18655,12 @@ impl PokemonData {
             Stat::new(44, 0),
             Stat::new(61, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -16235,7 +18675,23 @@ impl PokemonData {
             (39, Move::Acrobatics),
             (41, Move::SlackOff),
             (47, Move::Flamethrower),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FirePunch,
+            Move::ThunderPunch,
+            Move::DoubleKick,
+            Move::Submission,
+            Move::Counter,
+            Move::FocusEnergy,
+            Move::Encore,
+            Move::FakeOut,
+            Move::HeatWave,
+            Move::FocusPunch,
+            Move::HelpingHand,
+            Move::Assist,
+            Move::BlazeKick,
+            Move::QuickGuard,
+        ])
     };
     pub const Monferno: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Fighting),
@@ -16252,12 +18708,12 @@ impl PokemonData {
             Stat::new(52, 0),
             Stat::new(81, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -16273,7 +18729,8 @@ impl PokemonData {
             (46, Move::Acrobatics),
             (49, Move::SlackOff),
             (56, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Infernape: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Fighting),
@@ -16290,12 +18747,12 @@ impl PokemonData {
             Stat::new(71, 0),
             Stat::new(108, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -16311,7 +18768,8 @@ impl PokemonData {
             (52, Move::Acrobatics),
             (58, Move::CalmMind),
             (68, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Piplup: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -16328,12 +18786,12 @@ impl PokemonData {
             Stat::new(56, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (4, Move::Growl),
@@ -16348,7 +18806,22 @@ impl PokemonData {
             (36, Move::Mist),
             (39, Move::DrillPeck),
             (43, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Supersonic,
+            Move::HydroPump,
+            Move::Agility,
+            Move::Bide,
+            Move::Snore,
+            Move::Flail,
+            Move::MudSlap,
+            Move::IcyWind,
+            Move::Yawn,
+            Move::FeatherDance,
+            Move::MudSport,
+            Move::AquaRing,
+            Move::DoubleHit,
+        ])
     };
     pub const Prinplup: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -16365,12 +18838,12 @@ impl PokemonData {
             Stat::new(76, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -16386,7 +18859,8 @@ impl PokemonData {
             (42, Move::Mist),
             (46, Move::DrillPeck),
             (51, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Empoleon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Steel),
@@ -16403,12 +18877,12 @@ impl PokemonData {
             Stat::new(101, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -16425,7 +18899,8 @@ impl PokemonData {
             (46, Move::Mist),
             (52, Move::DrillPeck),
             (59, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Starly: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -16442,12 +18917,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(60, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -16461,7 +18936,21 @@ impl PokemonData {
             (33, Move::Agility),
             (37, Move::BraveBird),
             (41, Move::FinalGambit),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SandAttack,
+            Move::FuryAttack,
+            Move::DoubleEdge,
+            Move::Foresight,
+            Move::Detect,
+            Move::SteelWing,
+            Move::Pursuit,
+            Move::Uproar,
+            Move::Revenge,
+            Move::FeatherDance,
+            Move::Astonish,
+            Move::Roost,
+        ])
     };
     pub const Staravia: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -16478,12 +18967,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(80, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -16497,7 +18986,8 @@ impl PokemonData {
             (38, Move::Agility),
             (43, Move::BraveBird),
             (48, Move::FinalGambit),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Staraptor: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -16514,12 +19004,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::WingAttack),
             (1, Move::Tackle),
@@ -16534,7 +19024,8 @@ impl PokemonData {
             (41, Move::Agility),
             (49, Move::BraveBird),
             (57, Move::FinalGambit),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Bidoof: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -16551,12 +19042,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(31, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (5, Move::Growl),
@@ -16570,7 +19061,21 @@ impl PokemonData {
             (37, Move::SuperFang),
             (41, Move::Superpower),
             (45, Move::Curse),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::QuickAttack,
+            Move::DefenseCurl,
+            Move::SkullBash,
+            Move::FurySwipes,
+            Move::Endure,
+            Move::Rollout,
+            Move::SleepTalk,
+            Move::OdorSleuth,
+            Move::WaterSport,
+            Move::AquaTail,
+            Move::RockClimb,
+        ])
     };
     pub const Bibarel: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Water),
@@ -16587,12 +19092,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(71, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 127,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growl),
@@ -16607,7 +19112,8 @@ impl PokemonData {
             (43, Move::SuperFang),
             (48, Move::Superpower),
             (53, Move::Curse),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Kricketot: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -16624,18 +19130,19 @@ impl PokemonData {
             Stat::new(41, 0),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Bide),
             (6, Move::StruggleBug),
             (16, Move::BugBite),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Kricketune: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -16652,12 +19159,12 @@ impl PokemonData {
             Stat::new(51, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Bide),
@@ -16672,7 +19179,8 @@ impl PokemonData {
             (42, Move::NightSlash),
             (46, Move::BugBuzz),
             (50, Move::PerishSong),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Shinx: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -16689,12 +19197,12 @@ impl PokemonData {
             Stat::new(34, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 235,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (5, Move::Leer),
@@ -16708,7 +19216,21 @@ impl PokemonData {
             (37, Move::ScaryFace),
             (41, Move::Discharge),
             (45, Move::WildCharge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleKick,
+            Move::TakeDown,
+            Move::QuickAttack,
+            Move::Swift,
+            Move::HelpingHand,
+            Move::SignalBeam,
+            Move::Howl,
+            Move::ShockWave,
+            Move::NightSlash,
+            Move::ThunderFang,
+            Move::IceFang,
+            Move::FireFang,
+        ])
     };
     pub const Luxio: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -16725,12 +19247,12 @@ impl PokemonData {
             Stat::new(49, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 100,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -16744,7 +19266,8 @@ impl PokemonData {
             (43, Move::ScaryFace),
             (48, Move::Discharge),
             (53, Move::WildCharge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Luxray: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -16761,12 +19284,12 @@ impl PokemonData {
             Stat::new(79, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -16780,7 +19303,8 @@ impl PokemonData {
             (49, Move::ScaryFace),
             (56, Move::Discharge),
             (63, Move::WildCharge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Budew: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -16797,12 +19321,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Absorb),
             (4, Move::Growth),
@@ -16810,7 +19334,22 @@ impl PokemonData {
             (10, Move::StunSpore),
             (13, Move::MegaDrain),
             (16, Move::WorrySeed),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::PinMissile,
+            Move::RazorLeaf,
+            Move::SleepPowder,
+            Move::MindReader,
+            Move::CottonSpore,
+            Move::Spikes,
+            Move::GigaDrain,
+            Move::Synthesis,
+            Move::GrassWhistle,
+            Move::Extrasensory,
+            Move::NaturalGift,
+            Move::SeedBomb,
+            Move::LeafStorm,
+        ])
     };
     pub const Roserade: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -16827,19 +19366,20 @@ impl PokemonData {
             Stat::new(105, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::MegaDrain),
             (1, Move::SweetScent),
             (1, Move::WeatherBall),
             (1, Move::MagicalLeaf),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cranidos: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Rock),
@@ -16856,12 +19396,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(58, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::Leer),
@@ -16875,7 +19415,20 @@ impl PokemonData {
             (37, Move::ZenHeadbutt),
             (42, Move::Screech),
             (46, Move::HeadSmash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::Slam,
+            Move::Stomp,
+            Move::Thrash,
+            Move::DoubleEdge,
+            Move::Leer,
+            Move::Curse,
+            Move::IronTail,
+            Move::Crunch,
+            Move::HammerArm,
+            Move::IronHead,
+        ])
     };
     pub const Rampardos: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Rock),
@@ -16892,12 +19445,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(58, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::Leer),
@@ -16912,7 +19465,8 @@ impl PokemonData {
             (43, Move::ZenHeadbutt),
             (51, Move::Screech),
             (58, Move::HeadSmash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Shieldon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Steel),
@@ -16929,12 +19483,12 @@ impl PokemonData {
             Stat::new(88, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Protect),
@@ -16948,7 +19502,21 @@ impl PokemonData {
             (37, Move::MetalBurst),
             (42, Move::IronHead),
             (46, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Headbutt,
+            Move::BodySlam,
+            Move::DoubleEdge,
+            Move::Counter,
+            Move::Fissure,
+            Move::Screech,
+            Move::FocusEnergy,
+            Move::Curse,
+            Move::ScaryFace,
+            Move::RockBlast,
+            Move::StealthRock,
+            Move::WideGuard,
+        ])
     };
     pub const Bastiodon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Steel),
@@ -16965,12 +19533,12 @@ impl PokemonData {
             Stat::new(138, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Protect),
@@ -16985,7 +19553,8 @@ impl PokemonData {
             (43, Move::MetalBurst),
             (51, Move::IronHead),
             (58, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Burmy: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -17002,18 +19571,19 @@ impl PokemonData {
             Stat::new(45, 1),
             Stat::new(36, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Protect),
             (10, Move::Tackle),
             (15, Move::BugBite),
             (20, Move::HiddenPower),
-        ]
+        ],
+        egg_moves: None
     };
     pub const WormadamPlant: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Grass),
@@ -17030,12 +19600,12 @@ impl PokemonData {
             Stat::new(105, 2),
             Stat::new(36, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
-        egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 45,
+        egg_group: PokemonEggGroup::One(EggGroup::Bug),
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (10, Move::Protect),
@@ -17050,7 +19620,8 @@ impl PokemonData {
             (41, Move::Attract),
             (44, Move::Psychic),
             (47, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mothim: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -17067,12 +19638,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(66, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (10, Move::Protect),
@@ -17088,7 +19659,8 @@ impl PokemonData {
             (44, Move::Psychic),
             (47, Move::BugBuzz),
             (50, Move::QuiverDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Combee: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -17105,18 +19677,19 @@ impl PokemonData {
             Stat::new(42, 0),
             Stat::new(70, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::SweetScent),
             (13, Move::BugBite),
             (29, Move::BugBuzz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Vespiquen: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -17133,12 +19706,12 @@ impl PokemonData {
             Stat::new(102, 1),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::PoisonSting),
@@ -17157,7 +19730,8 @@ impl PokemonData {
             (45, Move::AttackOrder),
             (49, Move::Swagger),
             (53, Move::DestinyBond),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pachirisu: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -17174,12 +19748,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(95, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 100,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Bide),
@@ -17195,7 +19769,21 @@ impl PokemonData {
             (41, Move::Discharge),
             (45, Move::LastResort),
             (49, Move::HyperFang),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TailWhip,
+            Move::Bite,
+            Move::DefenseCurl,
+            Move::Flail,
+            Move::Rollout,
+            Move::IronTail,
+            Move::Flatter,
+            Move::FollowMe,
+            Move::Charge,
+            Move::FakeTears,
+            Move::Covet,
+            Move::Bestow,
+        ])
     };
     pub const Buizel: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -17212,12 +19800,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(85, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::SonicBoom),
             (4, Move::Growl),
@@ -17233,7 +19821,22 @@ impl PokemonData {
             (38, Move::AquaTail),
             (41, Move::Agility),
             (45, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleSlap,
+            Move::Headbutt,
+            Move::FurySwipes,
+            Move::Slash,
+            Move::MudSlap,
+            Move::FuryCutter,
+            Move::BatonPass,
+            Move::OdorSleuth,
+            Move::MeFirst,
+            Move::AquaRing,
+            Move::AquaTail,
+            Move::Switcheroo,
+            Move::TailSlap,
+        ])
     };
     pub const Floatzel: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -17250,12 +19853,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(115, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::SonicBoom),
@@ -17273,7 +19876,8 @@ impl PokemonData {
             (46, Move::AquaTail),
             (51, Move::Agility),
             (57, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cherubi: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -17290,12 +19894,12 @@ impl PokemonData {
             Stat::new(53, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::MorningSun),
@@ -17308,7 +19912,22 @@ impl PokemonData {
             (31, Move::TakeDown),
             (37, Move::SolarBeam),
             (40, Move::LuckyChant),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorLeaf,
+            Move::DefenseCurl,
+            Move::Rollout,
+            Move::SweetScent,
+            Move::NaturePower,
+            Move::WeatherBall,
+            Move::Aromatherapy,
+            Move::GrassWhistle,
+            Move::Tickle,
+            Move::HealingWish,
+            Move::NaturalGift,
+            Move::SeedBomb,
+            Move::HealPulse,
+        ])
     };
     pub const Cherrim: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -17325,12 +19944,12 @@ impl PokemonData {
             Stat::new(78, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Growth),
@@ -17344,7 +19963,8 @@ impl PokemonData {
             (35, Move::TakeDown),
             (43, Move::SolarBeam),
             (48, Move::LuckyChant),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Shellos: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -17361,12 +19981,12 @@ impl PokemonData {
             Stat::new(62, 0),
             Stat::new(34, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::MudSlap),
             (2, Move::MudSport),
@@ -17378,7 +19998,24 @@ impl PokemonData {
             (29, Move::BodySlam),
             (37, Move::MuddyWater),
             (46, Move::Recover),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mist,
+            Move::Counter,
+            Move::Fissure,
+            Move::Sludge,
+            Move::Amnesia,
+            Move::Curse,
+            Move::MirrorCoat,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::Memento,
+            Move::Yawn,
+            Move::Brine,
+            Move::TrumpCard,
+            Move::ClearSmog,
+        ])
     };
     pub const Gastrodon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ground),
@@ -17395,12 +20032,12 @@ impl PokemonData {
             Stat::new(82, 0),
             Stat::new(39, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Harden),
             (1, Move::MudSlap),
@@ -17412,7 +20049,8 @@ impl PokemonData {
             (29, Move::BodySlam),
             (41, Move::MuddyWater),
             (54, Move::Recover),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Ambipom: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -17429,12 +20067,12 @@ impl PokemonData {
             Stat::new(66, 0),
             Stat::new(115, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 100,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::SandAttack),
@@ -17450,7 +20088,8 @@ impl PokemonData {
             (36, Move::Fling),
             (39, Move::NastyPlot),
             (43, Move::LastResort),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Drifloon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Flying),
@@ -17467,12 +20106,12 @@ impl PokemonData {
             Stat::new(44, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 125,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Minimize),
             (1, Move::Constrict),
@@ -17489,7 +20128,18 @@ impl PokemonData {
             (40, Move::Amnesia),
             (44, Move::BatonPass),
             (50, Move::Explosion),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Disable,
+            Move::Hypnosis,
+            Move::Haze,
+            Move::DestinyBond,
+            Move::Memento,
+            Move::WeatherBall,
+            Move::Defog,
+            Move::ClearSmog,
+        ])
     };
     pub const Drifblim: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Flying),
@@ -17506,12 +20156,12 @@ impl PokemonData {
             Stat::new(54, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Fluctuating,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::Minimize),
@@ -17528,7 +20178,8 @@ impl PokemonData {
             (46, Move::Amnesia),
             (52, Move::BatonPass),
             (60, Move::Explosion),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Buneary: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -17545,12 +20196,12 @@ impl PokemonData {
             Stat::new(56, 0),
             Stat::new(85, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 0,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::DefenseCurl),
@@ -17568,7 +20219,24 @@ impl PokemonData {
             (53, Move::Entrainment),
             (56, Move::Bounce),
             (63, Move::HealingWish),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FirePunch,
+            Move::IcePunch,
+            Move::ThunderPunch,
+            Move::LowKick,
+            Move::Flail,
+            Move::SweetKiss,
+            Move::Encore,
+            Move::FakeOut,
+            Move::FocusPunch,
+            Move::FakeTears,
+            Move::SkyUppercut,
+            Move::Copycat,
+            Move::Switcheroo,
+            Move::DoubleHit,
+            Move::CircleThrow,
+        ])
     };
     pub const Lopunny: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -17585,12 +20253,12 @@ impl PokemonData {
             Stat::new(96, 0),
             Stat::new(105, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 140,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::DefenseCurl),
@@ -17610,7 +20278,8 @@ impl PokemonData {
             (53, Move::Entrainment),
             (56, Move::Bounce),
             (63, Move::HealingWish),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mismagius: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ghost),
@@ -17627,12 +20296,12 @@ impl PokemonData {
             Stat::new(105, 1),
             Stat::new(105, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 35,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Psywave),
@@ -17640,7 +20309,8 @@ impl PokemonData {
             (1, Move::Astonish),
             (1, Move::MagicalLeaf),
             (1, Move::LuckyChant),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Honchkrow: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Flying),
@@ -17657,12 +20327,12 @@ impl PokemonData {
             Stat::new(52, 0),
             Stat::new(71, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::WingAttack),
             (1, Move::Haze),
@@ -17674,7 +20344,8 @@ impl PokemonData {
             (55, Move::NightSlash),
             (65, Move::Quash),
             (75, Move::DarkPulse),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Glameow: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -17691,12 +20362,12 @@ impl PokemonData {
             Stat::new(37, 0),
             Stat::new(85, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::FakeOut),
             (5, Move::Scratch),
@@ -17711,7 +20382,19 @@ impl PokemonData {
             (41, Move::SuckerPunch),
             (44, Move::Attract),
             (48, Move::HoneClaws),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SandAttack,
+            Move::TailWhip,
+            Move::Bite,
+            Move::QuickAttack,
+            Move::Flail,
+            Move::Snatch,
+            Move::FakeTears,
+            Move::WakeUpSlap,
+            Move::Assurance,
+            Move::LastResort,
+        ])
     };
     pub const Purugly: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -17728,12 +20411,12 @@ impl PokemonData {
             Stat::new(59, 0),
             Stat::new(112, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Growl),
@@ -17749,7 +20432,8 @@ impl PokemonData {
             (45, Move::BodySlam),
             (52, Move::Attract),
             (60, Move::HoneClaws),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Chingling: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -17766,12 +20450,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Wrap),
             (6, Move::Growl),
@@ -17780,7 +20464,17 @@ impl PokemonData {
             (17, Move::Uproar),
             (22, Move::LastResort),
             (25, Move::Entrainment),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::Hypnosis,
+            Move::Recover,
+            Move::Curse,
+            Move::FutureSight,
+            Move::Wish,
+            Move::SkillSwap,
+            Move::StoredPower,
+        ])
     };
     pub const Stunky: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Dark),
@@ -17797,12 +20491,12 @@ impl PokemonData {
             Stat::new(41, 0),
             Stat::new(74, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 225,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::FocusEnergy),
@@ -17817,7 +20511,21 @@ impl PokemonData {
             (37, Move::NightSlash),
             (43, Move::Memento),
             (49, Move::Explosion),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::Leer,
+            Move::Haze,
+            Move::Smog,
+            Move::ScaryFace,
+            Move::Pursuit,
+            Move::IronTail,
+            Move::Crunch,
+            Move::Astonish,
+            Move::Punishment,
+            Move::FlameBurst,
+            Move::FoulPlay,
+        ])
     };
     pub const Skuntank: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Dark),
@@ -17834,12 +20542,12 @@ impl PokemonData {
             Stat::new(61, 0),
             Stat::new(84, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::FocusEnergy),
@@ -17855,7 +20563,8 @@ impl PokemonData {
             (41, Move::NightSlash),
             (51, Move::Memento),
             (61, Move::Explosion),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Bronzor: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Psychic),
@@ -17872,12 +20581,12 @@ impl PokemonData {
             Stat::new(86, 0),
             Stat::new(23, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Confusion),
@@ -17895,7 +20604,8 @@ impl PokemonData {
             (41, Move::Payback),
             (45, Move::HealBlock),
             (49, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Bronzong: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Psychic),
@@ -17912,12 +20622,12 @@ impl PokemonData {
             Stat::new(116, 1),
             Stat::new(33, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Confusion),
@@ -17938,7 +20648,8 @@ impl PokemonData {
             (46, Move::Payback),
             (52, Move::HealBlock),
             (58, Move::HeavySlam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Bonsly: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Rock),
@@ -17955,12 +20666,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(10, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::FakeTears),
             (1, Move::Copycat),
@@ -17975,7 +20686,18 @@ impl PokemonData {
             (33, Move::Mimic),
             (36, Move::SuckerPunch),
             (40, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Headbutt,
+            Move::Harden,
+            Move::DefenseCurl,
+            Move::SelfDestruct,
+            Move::Curse,
+            Move::Endure,
+            Move::Rollout,
+            Move::SandTomb,
+            Move::StealthRock,
+        ])
     };
     pub const MimeJr: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Fairy),
@@ -17992,12 +20714,12 @@ impl PokemonData {
             Stat::new(90, 1),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 145,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Barrier),
@@ -18017,7 +20739,23 @@ impl PokemonData {
             (43, Move::RolePlay),
             (46, Move::BatonPass),
             (50, Move::Safeguard),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Hypnosis,
+            Move::Mimic,
+            Move::ConfuseRay,
+            Move::IcyWind,
+            Move::Charm,
+            Move::FutureSight,
+            Move::FakeOut,
+            Move::Trick,
+            Move::TeeterDance,
+            Move::WakeUpSlap,
+            Move::HealingWish,
+            Move::NastyPlot,
+            Move::PowerSplit,
+            Move::MagicRoom,
+        ])
     };
     pub const Happiny: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -18034,19 +20772,32 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 130,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 140,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Charm),
             (5, Move::Copycat),
             (9, Move::Refresh),
             (12, Move::SweetKiss),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::Metronome,
+            Move::Endure,
+            Move::HealBell,
+            Move::Present,
+            Move::HelpingHand,
+            Move::Aromatherapy,
+            Move::Gravity,
+            Move::NaturalGift,
+            Move::LastResort,
+            Move::MudBomb,
+        ])
     };
     pub const Chatot: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -18063,12 +20814,12 @@ impl PokemonData {
             Stat::new(42, 0),
             Stat::new(91, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Peck),
             (5, Move::Growl),
@@ -18085,7 +20836,18 @@ impl PokemonData {
             (49, Move::Synchronoise),
             (53, Move::FeatherDance),
             (57, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Supersonic,
+            Move::Agility,
+            Move::NightShade,
+            Move::SteelWing,
+            Move::SleepTalk,
+            Move::Encore,
+            Move::AirCutter,
+            Move::NastyPlot,
+            Move::Defog,
+        ])
     };
     pub const Spiritomb: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Dark),
@@ -18102,12 +20864,12 @@ impl PokemonData {
             Stat::new(108, 1),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 100,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::ConfuseRay),
             (1, Move::Curse),
@@ -18122,7 +20884,17 @@ impl PokemonData {
             (37, Move::NastyPlot),
             (43, Move::Memento),
             (49, Move::DarkPulse),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Smokescreen,
+            Move::Nightmare,
+            Move::DestinyBond,
+            Move::PainSplit,
+            Move::Imprison,
+            Move::Grudge,
+            Move::ShadowSneak,
+            Move::Captivate,
+        ])
     };
     pub const Gible: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Ground),
@@ -18139,12 +20911,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(42, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (3, Move::SandAttack),
@@ -18156,7 +20928,22 @@ impl PokemonData {
             (27, Move::DragonClaw),
             (31, Move::Dig),
             (37, Move::DragonRush),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Thrash,
+            Move::DoubleEdge,
+            Move::ScaryFace,
+            Move::Outrage,
+            Move::DragonBreath,
+            Move::IronTail,
+            Move::MetalClaw,
+            Move::Twister,
+            Move::SandTomb,
+            Move::MudShot,
+            Move::RockClimb,
+            Move::IronHead,
+        ])
     };
     pub const Gabite: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Ground),
@@ -18173,12 +20960,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(82, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Tackle),
@@ -18191,7 +20978,8 @@ impl PokemonData {
             (33, Move::DragonClaw),
             (40, Move::Dig),
             (49, Move::DragonRush),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Garchomp: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Ground),
@@ -18208,12 +20996,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(102, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Tackle),
@@ -18228,7 +21016,8 @@ impl PokemonData {
             (40, Move::Dig),
             (48, Move::Crunch),
             (55, Move::DragonRush),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Munchlax: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -18245,12 +21034,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(5, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 50,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Metronome),
@@ -18269,7 +21058,20 @@ impl PokemonData {
             (49, Move::NaturalGift),
             (52, Move::Snatch),
             (57, Move::LastResort),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::DoubleEdge,
+            Move::Counter,
+            Move::SelfDestruct,
+            Move::Lick,
+            Move::Curse,
+            Move::Charm,
+            Move::Pursuit,
+            Move::NaturalGift,
+            Move::ZenHeadbutt,
+            Move::AfterYou,
+        ])
     };
     pub const Riolu: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -18286,12 +21088,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::QuickAttack),
             (1, Move::Foresight),
@@ -18304,7 +21106,24 @@ impl PokemonData {
             (29, Move::Reversal),
             (47, Move::NastyPlot),
             (55, Move::FinalGambit),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Bite,
+            Move::LowKick,
+            Move::Agility,
+            Move::HighJumpKick,
+            Move::MindReader,
+            Move::Detect,
+            Move::CrossChop,
+            Move::Crunch,
+            Move::FollowMe,
+            Move::BlazeKick,
+            Move::SkyUppercut,
+            Move::IronDefense,
+            Move::VacuumWave,
+            Move::BulletPunch,
+            Move::CircleThrow,
+        ])
     };
     pub const Lucario: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fighting, Type::Steel),
@@ -18321,12 +21140,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::QuickAttack),
             (1, Move::Foresight),
@@ -18347,7 +21166,8 @@ impl PokemonData {
             (55, Move::CloseCombat),
             (60, Move::DragonPulse),
             (65, Move::ExtremeSpeed),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Hippopotas: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -18364,12 +21184,12 @@ impl PokemonData {
             Stat::new(42, 0),
             Stat::new(32, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 140,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Tackle),
@@ -18382,7 +21202,19 @@ impl PokemonData {
             (37, Move::Earthquake),
             (44, Move::DoubleEdge),
             (50, Move::Fissure),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::BodySlam,
+            Move::Curse,
+            Move::SleepTalk,
+            Move::Stockpile,
+            Move::SpitUp,
+            Move::Swallow,
+            Move::Revenge,
+            Move::SlackOff,
+            Move::SandTomb,
+        ])
     };
     pub const Hippowdon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -18399,12 +21231,12 @@ impl PokemonData {
             Stat::new(72, 0),
             Stat::new(47, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Tackle),
@@ -18420,7 +21252,8 @@ impl PokemonData {
             (40, Move::Earthquake),
             (50, Move::DoubleEdge),
             (60, Move::Fissure),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Skorupi: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Bug),
@@ -18437,12 +21270,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Bug, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::Leer),
@@ -18460,7 +21293,21 @@ impl PokemonData {
             (41, Move::ScaryFace),
             (45, Move::Crunch),
             (49, Move::CrossPoison),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Whirlwind,
+            Move::SandAttack,
+            Move::Twineedle,
+            Move::Agility,
+            Move::Screech,
+            Move::ConfuseRay,
+            Move::Slash,
+            Move::FeintAttack,
+            Move::Pursuit,
+            Move::IronTail,
+            Move::PoisonTail,
+            Move::NightSlash,
+        ])
     };
     pub const Drapion: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Dark),
@@ -18477,12 +21324,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Bug, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::Leer),
@@ -18503,7 +21350,8 @@ impl PokemonData {
             (43, Move::ScaryFace),
             (49, Move::Crunch),
             (57, Move::CrossPoison),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Croagunk: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Fighting),
@@ -18520,12 +21368,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 140,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 100,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Astonish),
             (3, Move::MudSlap),
@@ -18542,7 +21390,23 @@ impl PokemonData {
             (43, Move::PoisonJab),
             (45, Move::SludgeBomb),
             (50, Move::Flatter),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Headbutt,
+            Move::Counter,
+            Move::Meditate,
+            Move::DynamicPunch,
+            Move::CrossChop,
+            Move::FakeOut,
+            Move::SmellingSalts,
+            Move::WakeUpSlap,
+            Move::Feint,
+            Move::Acupressure,
+            Move::MeFirst,
+            Move::DrainPunch,
+            Move::VacuumWave,
+            Move::BulletPunch,
+        ])
     };
     pub const Toxicroak: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Poison, Type::Fighting),
@@ -18559,12 +21423,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::MudSlap),
@@ -18581,7 +21445,8 @@ impl PokemonData {
             (49, Move::PoisonJab),
             (54, Move::SludgeBomb),
             (62, Move::Flatter),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Carnivine: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -18598,12 +21463,12 @@ impl PokemonData {
             Stat::new(72, 0),
             Stat::new(46, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Bind),
             (1, Move::Growth),
@@ -18619,7 +21484,20 @@ impl PokemonData {
             (41, Move::Crunch),
             (47, Move::WringOut),
             (51, Move::PowerWhip),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::LeechSeed,
+            Move::RazorLeaf,
+            Move::StunSpore,
+            Move::SleepPowder,
+            Move::GigaDrain,
+            Move::Synthesis,
+            Move::GrassWhistle,
+            Move::MagicalLeaf,
+            Move::WorrySeed,
+            Move::RagePowder,
+        ])
     };
     pub const Finneon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -18636,12 +21514,12 @@ impl PokemonData {
             Stat::new(61, 0),
             Stat::new(66, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Pound),
             (6, Move::WaterGun),
@@ -18657,7 +21535,20 @@ impl PokemonData {
             (45, Move::Bounce),
             (49, Move::SilverWind),
             (54, Move::Soak),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Psybeam,
+            Move::AuroraBeam,
+            Move::Agility,
+            Move::Splash,
+            Move::Flail,
+            Move::SweetKiss,
+            Move::Charm,
+            Move::Tickle,
+            Move::SignalBeam,
+            Move::Brine,
+            Move::AquaTail,
+        ])
     };
     pub const Lumineon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -18674,12 +21565,12 @@ impl PokemonData {
             Stat::new(86, 0),
             Stat::new(91, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Erratic,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::WaterGun),
@@ -18695,7 +21586,8 @@ impl PokemonData {
             (53, Move::Bounce),
             (59, Move::SilverWind),
             (66, Move::Soak),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mantyke: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Flying),
@@ -18712,12 +21604,12 @@ impl PokemonData {
             Stat::new(120, 1),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 25,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Bubble),
@@ -18734,7 +21626,20 @@ impl PokemonData {
             (39, Move::AquaRing),
             (46, Move::Bounce),
             (49, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::HydroPump,
+            Move::Haze,
+            Move::Amnesia,
+            Move::Splash,
+            Move::Twister,
+            Move::MirrorCoat,
+            Move::MudSport,
+            Move::SignalBeam,
+            Move::WaterSport,
+            Move::WideGuard,
+        ])
     };
     pub const Snover: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Ice),
@@ -18751,12 +21656,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::PowderSnow),
@@ -18770,7 +21675,20 @@ impl PokemonData {
             (36, Move::WoodHammer),
             (41, Move::Blizzard),
             (46, Move::SheerCold),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Stomp,
+            Move::DoubleEdge,
+            Move::Mist,
+            Move::LeechSeed,
+            Move::Growth,
+            Move::SkullBash,
+            Move::BulletSeed,
+            Move::MagicalLeaf,
+            Move::NaturalGift,
+            Move::SeedBomb,
+            Move::Avalanche,
+        ])
     };
     pub const Abomasnow: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Ice),
@@ -18787,12 +21705,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::IcePunch),
             (1, Move::Leer),
@@ -18807,7 +21725,8 @@ impl PokemonData {
             (36, Move::WoodHammer),
             (47, Move::Blizzard),
             (58, Move::SheerCold),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Weavile: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Ice),
@@ -18824,12 +21743,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(125, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -18850,7 +21769,8 @@ impl PokemonData {
             (40, Move::Snatch),
             (44, Move::Punishment),
             (47, Move::DarkPulse),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Magnezone: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Electric, Type::Steel),
@@ -18867,12 +21787,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Supersonic),
@@ -18893,7 +21813,8 @@ impl PokemonData {
             (62, Move::MagnetRise),
             (67, Move::GyroBall),
             (73, Move::ZapCannon),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Lickilicky: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -18910,12 +21831,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Monster),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Lick),
             (5, Move::Supersonic),
@@ -18933,7 +21854,8 @@ impl PokemonData {
             (53, Move::PowerWhip),
             (57, Move::WringOut),
             (61, Move::GyroBall),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Rhyperior: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Rock),
@@ -18950,12 +21872,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Stomp),
             (1, Move::HornAttack),
@@ -18973,7 +21895,8 @@ impl PokemonData {
             (71, Move::HornDrill),
             (77, Move::Megahorn),
             (86, Move::RockWrecker),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Tangrowth: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -18990,12 +21913,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Constrict),
             (1, Move::Ingrain),
@@ -19016,7 +21939,8 @@ impl PokemonData {
             (49, Move::WringOut),
             (53, Move::PowerWhip),
             (56, Move::Block),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Electivire: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -19033,12 +21957,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::FirePunch),
             (1, Move::Leer),
@@ -19056,7 +21980,8 @@ impl PokemonData {
             (49, Move::Thunderbolt),
             (55, Move::Thunder),
             (62, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Magmortar: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -19073,12 +21998,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(83, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::ThunderPunch),
             (1, Move::Leer),
@@ -19096,7 +22021,8 @@ impl PokemonData {
             (49, Move::Flamethrower),
             (55, Move::FireBlast),
             (62, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Togekiss: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fairy, Type::Flying),
@@ -19113,18 +22039,19 @@ impl PokemonData {
             Stat::new(115, 1),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::Two(EggGroup::Flying, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::SkyAttack),
             (1, Move::ExtremeSpeed),
             (1, Move::AuraSphere),
             (1, Move::AirSlash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Yanmega: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Flying),
@@ -19141,12 +22068,12 @@ impl PokemonData {
             Stat::new(56, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::QuickAttack),
@@ -19166,7 +22093,8 @@ impl PokemonData {
             (49, Move::UTurn),
             (54, Move::AirSlash),
             (57, Move::BugBuzz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Leafeon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -19183,12 +22111,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -19204,7 +22132,8 @@ impl PokemonData {
             (37, Move::SunnyDay),
             (41, Move::LastResort),
             (45, Move::LeafBlade),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Glaceon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
@@ -19221,12 +22150,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 35,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -19242,7 +22171,8 @@ impl PokemonData {
             (37, Move::Hail),
             (41, Move::LastResort),
             (45, Move::Blizzard),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gliscor: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Flying),
@@ -19259,12 +22189,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Harden),
@@ -19284,7 +22214,8 @@ impl PokemonData {
             (45, Move::SkyUppercut),
             (50, Move::SwordsDance),
             (55, Move::Guillotine),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mamoswine: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Ground),
@@ -19301,12 +22232,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 50,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Peck),
             (1, Move::PowderSnow),
@@ -19325,7 +22256,8 @@ impl PokemonData {
             (46, Move::Earthquake),
             (52, Move::Blizzard),
             (58, Move::ScaryFace),
-        ]
+        ],
+        egg_moves: None
     };
     pub const PorygonZ: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -19342,12 +22274,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Conversion),
@@ -19366,7 +22298,8 @@ impl PokemonData {
             (56, Move::MagicCoat),
             (62, Move::ZapCannon),
             (67, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gallade: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Fighting),
@@ -19383,12 +22316,12 @@ impl PokemonData {
             Stat::new(115, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Confusion),
@@ -19407,7 +22340,8 @@ impl PokemonData {
             (53, Move::Protect),
             (59, Move::CloseCombat),
             (64, Move::StoredPower),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Probopass: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Steel),
@@ -19424,12 +22358,12 @@ impl PokemonData {
             Stat::new(150, 2),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::IronDefense),
@@ -19449,7 +22383,8 @@ impl PokemonData {
             (46, Move::StoneEdge),
             (50, Move::ZapCannon),
             (50, Move::LockOn),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Dusknoir: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ghost),
@@ -19466,12 +22401,12 @@ impl PokemonData {
             Stat::new(135, 2),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 35,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::FirePunch),
             (1, Move::IcePunch),
@@ -19493,7 +22428,8 @@ impl PokemonData {
             (49, Move::MeanLook),
             (58, Move::Payback),
             (61, Move::FutureSight),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Froslass: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ice, Type::Ghost),
@@ -19510,12 +22446,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(110, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::DoubleTeam),
@@ -19530,7 +22466,8 @@ impl PokemonData {
             (40, Move::Hail),
             (51, Move::Blizzard),
             (59, Move::DestinyBond),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Rotom: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Electric, Type::Ghost),
@@ -19547,12 +22484,12 @@ impl PokemonData {
             Stat::new(77, 0),
             Stat::new(91, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::ThunderShock),
             (1, Move::ThunderWave),
@@ -19568,7 +22505,8 @@ impl PokemonData {
             (50, Move::Hex),
             (57, Move::Charge),
             (64, Move::Discharge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Uxie: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -19585,12 +22523,12 @@ impl PokemonData {
             Stat::new(130, 1),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 140,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Rest),
@@ -19604,7 +22542,8 @@ impl PokemonData {
             (61, Move::Flail),
             (66, Move::NaturalGift),
             (76, Move::Memento),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Mesprit: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -19621,12 +22560,12 @@ impl PokemonData {
             Stat::new(105, 1),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 140,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Rest),
@@ -19640,7 +22579,8 @@ impl PokemonData {
             (61, Move::Copycat),
             (66, Move::NaturalGift),
             (76, Move::HealingWish),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Azelf: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -19657,12 +22597,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(115, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 140,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::Rest),
@@ -19676,7 +22616,8 @@ impl PokemonData {
             (61, Move::LastResort),
             (66, Move::NaturalGift),
             (76, Move::Explosion),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Dialga: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Dragon),
@@ -19693,12 +22634,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::ScaryFace),
             (1, Move::DragonBreath),
@@ -19713,7 +22654,8 @@ impl PokemonData {
             (42, Move::IronTail),
             (46, Move::RoarOfTime),
             (50, Move::FlashCannon),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Palkia: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Dragon),
@@ -19730,12 +22672,12 @@ impl PokemonData {
             Stat::new(120, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::ScaryFace),
             (1, Move::DragonBreath),
@@ -19749,7 +22691,8 @@ impl PokemonData {
             (37, Move::AuraSphere),
             (46, Move::SpacialRend),
             (50, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Heatran: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Steel),
@@ -19766,12 +22709,12 @@ impl PokemonData {
             Stat::new(106, 0),
             Stat::new(77, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 100,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::AncientPower),
             (9, Move::Leer),
@@ -19786,7 +22729,8 @@ impl PokemonData {
             (81, Move::HeatWave),
             (88, Move::StoneEdge),
             (96, Move::MagmaStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Regigigas: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -19803,12 +22747,12 @@ impl PokemonData {
             Stat::new(110, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::FirePunch),
             (1, Move::IcePunch),
@@ -19824,7 +22768,8 @@ impl PokemonData {
             (75, Move::CrushGrip),
             (90, Move::HeavySlam),
             (100, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const GiratinaAltered: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Dragon),
@@ -19841,12 +22786,12 @@ impl PokemonData {
             Stat::new(120, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::ScaryFace),
             (1, Move::DragonBreath),
@@ -19861,7 +22806,8 @@ impl PokemonData {
             (42, Move::ShadowClaw),
             (46, Move::ShadowForce),
             (50, Move::Hex),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cresselia: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -19878,12 +22824,12 @@ impl PokemonData {
             Stat::new(130, 3),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 100,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::DoubleTeam),
@@ -19897,7 +22843,8 @@ impl PokemonData {
             (75, Move::PsychoShift),
             (84, Move::LunarDance),
             (93, Move::Psychic),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Phione: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -19914,12 +22861,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Bubble),
             (1, Move::WaterSport),
@@ -19932,7 +22879,8 @@ impl PokemonData {
             (54, Move::AquaRing),
             (61, Move::Dive),
             (69, Move::RainDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Manaphy: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -19949,12 +22897,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Bubble),
             (1, Move::TailGlow),
@@ -19969,7 +22917,8 @@ impl PokemonData {
             (61, Move::Dive),
             (69, Move::RainDance),
             (76, Move::HeartSwap),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Darkrai: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dark),
@@ -19986,12 +22935,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(125, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Disable),
             (1, Move::OminousWind),
@@ -20005,7 +22954,8 @@ impl PokemonData {
             (75, Move::NastyPlot),
             (84, Move::DreamEater),
             (93, Move::DarkPulse),
-        ]
+        ],
+        egg_moves: None
     };
     pub const ShayminLand: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -20022,12 +22972,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 100,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growth),
             (10, Move::MagicalLeaf),
@@ -20041,7 +22991,8 @@ impl PokemonData {
             (82, Move::SweetKiss),
             (91, Move::HealingWish),
             (100, Move::SeedFlare),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Arceus: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -20058,12 +23009,12 @@ impl PokemonData {
             Stat::new(120, 0),
             Stat::new(120, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::SeismicToss),
             (1, Move::CosmicPower),
@@ -20079,7 +23030,8 @@ impl PokemonData {
             (80, Move::HyperBeam),
             (90, Move::PerishSong),
             (100, Move::Judgment),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Victini: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Fire),
@@ -20096,12 +23048,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 100,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Confusion),
             (1, Move::QuickAttack),
@@ -20120,7 +23072,8 @@ impl PokemonData {
             (81, Move::FinalGambit),
             (89, Move::StoredPower),
             (97, Move::Overheat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Snivy: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -20137,12 +23090,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(63, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::Leer),
@@ -20159,7 +23112,19 @@ impl PokemonData {
             (37, Move::WringOut),
             (40, Move::GastroAcid),
             (43, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Glare,
+            Move::MeanLook,
+            Move::Pursuit,
+            Move::SweetScent,
+            Move::IronTail,
+            Move::Twister,
+            Move::MirrorCoat,
+            Move::MagicalLeaf,
+            Move::NaturalGift,
+            Move::Captivate,
+        ])
     };
     pub const Servine: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -20176,12 +23141,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(83, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::VineWhip),
             (1, Move::Tackle),
@@ -20198,7 +23163,8 @@ impl PokemonData {
             (44, Move::WringOut),
             (48, Move::GastroAcid),
             (52, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Serperior: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -20215,12 +23181,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(113, 3)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::VineWhip),
             (1, Move::Tackle),
@@ -20237,7 +23203,8 @@ impl PokemonData {
             (50, Move::WringOut),
             (56, Move::GastroAcid),
             (62, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Tepig: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -20254,12 +23221,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (3, Move::TailWhip),
@@ -20276,7 +23243,19 @@ impl PokemonData {
             (37, Move::HeadSmash),
             (39, Move::Roar),
             (43, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Thrash,
+            Move::Curse,
+            Move::SleepTalk,
+            Move::Magnitude,
+            Move::Superpower,
+            Move::Yawn,
+            Move::Endeavor,
+            Move::Covet,
+            Move::HeavySlam,
+        ])
     };
     pub const Pignite: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Fighting),
@@ -20293,12 +23272,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -20316,7 +23295,8 @@ impl PokemonData {
             (44, Move::HeadSmash),
             (47, Move::Roar),
             (52, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Emboar: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Fire, Type::Fighting),
@@ -20333,12 +23313,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -20357,7 +23337,8 @@ impl PokemonData {
             (50, Move::HeadSmash),
             (55, Move::Roar),
             (62, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Oshawott: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -20374,12 +23355,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (5, Move::TailWhip),
@@ -20396,7 +23377,17 @@ impl PokemonData {
             (37, Move::Retaliate),
             (41, Move::SwordsDance),
             (43, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Screech,
+            Move::Detect,
+            Move::Brine,
+            Move::Assurance,
+            Move::TrumpCard,
+            Move::Copycat,
+            Move::NightSlash,
+            Move::AirSlash,
+        ])
     };
     pub const Dewott: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -20413,12 +23404,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -20435,7 +23426,8 @@ impl PokemonData {
             (44, Move::Retaliate),
             (49, Move::SwordsDance),
             (52, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Samurott: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -20452,12 +23444,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::TailWhip),
@@ -20476,7 +23468,8 @@ impl PokemonData {
             (50, Move::Retaliate),
             (57, Move::SwordsDance),
             (62, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Patrat: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -20493,12 +23486,12 @@ impl PokemonData {
             Stat::new(39, 0),
             Stat::new(42, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (3, Move::Leer),
@@ -20515,7 +23508,16 @@ impl PokemonData {
             (31, Move::MeanLook),
             (33, Move::BatonPass),
             (36, Move::Slam),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Screech,
+            Move::Flail,
+            Move::Foresight,
+            Move::Pursuit,
+            Move::IronTail,
+            Move::Revenge,
+            Move::Assurance,
+        ])
     };
     pub const Watchog: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -20532,12 +23534,12 @@ impl PokemonData {
             Stat::new(69, 0),
             Stat::new(77, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -20556,7 +23558,8 @@ impl PokemonData {
             (36, Move::MeanLook),
             (39, Move::BatonPass),
             (43, Move::Slam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Lillipup: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -20573,12 +23576,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -20593,7 +23596,20 @@ impl PokemonData {
             (33, Move::Reversal),
             (36, Move::LastResort),
             (40, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SandAttack,
+            Move::Lick,
+            Move::MudSlap,
+            Move::Endure,
+            Move::Charm,
+            Move::Pursuit,
+            Move::Yawn,
+            Move::Howl,
+            Move::ThunderFang,
+            Move::IceFang,
+            Move::FireFang,
+        ])
     };
     pub const Herdier: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -20610,12 +23626,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -20630,7 +23646,8 @@ impl PokemonData {
             (38, Move::Reversal),
             (42, Move::LastResort),
             (47, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Stoutland: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -20647,12 +23664,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Leer),
@@ -20670,7 +23687,8 @@ impl PokemonData {
             (42, Move::Reversal),
             (51, Move::LastResort),
             (59, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Purrloin: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dark),
@@ -20687,12 +23705,12 @@ impl PokemonData {
             Stat::new(37, 0),
             Stat::new(66, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (3, Move::Growl),
@@ -20710,7 +23728,17 @@ impl PokemonData {
             (39, Move::Snatch),
             (42, Move::NastyPlot),
             (46, Move::SuckerPunch),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::PayDay,
+            Move::FeintAttack,
+            Move::Charm,
+            Move::Encore,
+            Move::Yawn,
+            Move::FakeTears,
+            Move::Covet,
+            Move::FoulPlay,
+        ])
     };
     pub const Liepard: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dark),
@@ -20727,12 +23755,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(106, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::SandAttack),
@@ -20750,7 +23778,8 @@ impl PokemonData {
             (47, Move::Snatch),
             (50, Move::NastyPlot),
             (55, Move::SuckerPunch),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pansage: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -20767,12 +23796,12 @@ impl PokemonData {
             Stat::new(48, 0),
             Stat::new(64, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (4, Move::Leer),
@@ -20789,7 +23818,19 @@ impl PokemonData {
             (37, Move::Recycle),
             (40, Move::NaturalGift),
             (43, Move::Crunch),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::LowKick,
+            Move::RolePlay,
+            Move::Astonish,
+            Move::GrassWhistle,
+            Move::Tickle,
+            Move::BulletSeed,
+            Move::Covet,
+            Move::MagicalLeaf,
+            Move::NastyPlot,
+            Move::LeafStorm,
+        ])
     };
     pub const Simisage: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -20806,18 +23847,19 @@ impl PokemonData {
             Stat::new(63, 0),
             Stat::new(101, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Lick),
             (1, Move::FurySwipes),
             (1, Move::SeedBomb),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pansear: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -20834,12 +23876,12 @@ impl PokemonData {
             Stat::new(48, 0),
             Stat::new(64, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (4, Move::Leer),
@@ -20856,7 +23898,19 @@ impl PokemonData {
             (37, Move::Recycle),
             (40, Move::NaturalGift),
             (43, Move::Crunch),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FirePunch,
+            Move::LowKick,
+            Move::FireSpin,
+            Move::SleepTalk,
+            Move::HeatWave,
+            Move::RolePlay,
+            Move::Astonish,
+            Move::Tickle,
+            Move::Covet,
+            Move::NastyPlot,
+        ])
     };
     pub const Simisear: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -20873,18 +23927,19 @@ impl PokemonData {
             Stat::new(63, 0),
             Stat::new(101, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Lick),
             (1, Move::FurySwipes),
             (1, Move::FlameBurst),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Panpour: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -20901,12 +23956,12 @@ impl PokemonData {
             Stat::new(48, 0),
             Stat::new(64, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (4, Move::Leer),
@@ -20923,7 +23978,19 @@ impl PokemonData {
             (37, Move::Recycle),
             (40, Move::NaturalGift),
             (43, Move::Crunch),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::HydroPump,
+            Move::LowKick,
+            Move::RolePlay,
+            Move::MudSport,
+            Move::Astonish,
+            Move::Tickle,
+            Move::Covet,
+            Move::AquaRing,
+            Move::AquaTail,
+            Move::NastyPlot,
+        ])
     };
     pub const Simipour: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -20940,18 +24007,19 @@ impl PokemonData {
             Stat::new(63, 0),
             Stat::new(101, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Lick),
             (1, Move::FurySwipes),
             (1, Move::Scald),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Munna: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -20968,12 +24036,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(24, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::DefenseCurl),
             (1, Move::Psywave),
@@ -20992,7 +24060,18 @@ impl PokemonData {
             (41, Move::DreamEater),
             (43, Move::Telekinesis),
             (47, Move::StoredPower),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SonicBoom,
+            Move::Barrier,
+            Move::Swift,
+            Move::Curse,
+            Move::SleepTalk,
+            Move::BatonPass,
+            Move::HelpingHand,
+            Move::MagicCoat,
+            Move::SecretPower,
+        ])
     };
     pub const Musharna: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -21009,18 +24088,19 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(29, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 10,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Psybeam),
             (1, Move::Hypnosis),
             (1, Move::DefenseCurl),
             (1, Move::LuckyChant),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pidove: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -21037,12 +24117,12 @@ impl PokemonData {
             Stat::new(30, 0),
             Stat::new(43, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Gust),
             (4, Move::Growl),
@@ -21059,7 +24139,16 @@ impl PokemonData {
             (43, Move::Facade),
             (46, Move::Tailwind),
             (50, Move::SkyAttack),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Hypnosis,
+            Move::SteelWing,
+            Move::MorningSun,
+            Move::Uproar,
+            Move::Wish,
+            Move::LuckyChant,
+            Move::Bestow,
+        ])
     };
     pub const Tranquill: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -21076,12 +24165,12 @@ impl PokemonData {
             Stat::new(42, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::Leer),
@@ -21098,7 +24187,8 @@ impl PokemonData {
             (50, Move::Facade),
             (54, Move::Tailwind),
             (59, Move::SkyAttack),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Unfezant: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -21115,12 +24205,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(93, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::Leer),
@@ -21137,7 +24227,8 @@ impl PokemonData {
             (55, Move::Facade),
             (60, Move::Tailwind),
             (66, Move::SkyAttack),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Blitzle: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -21154,12 +24245,12 @@ impl PokemonData {
             Stat::new(32, 0),
             Stat::new(76, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::QuickAttack),
             (4, Move::TailWhip),
@@ -21174,7 +24265,18 @@ impl PokemonData {
             (36, Move::Agility),
             (39, Move::WildCharge),
             (43, Move::Thrash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleKick,
+            Move::SandAttack,
+            Move::TakeDown,
+            Move::DoubleEdge,
+            Move::Rage,
+            Move::Screech,
+            Move::Endure,
+            Move::ShockWave,
+            Move::MeFirst,
+        ])
     };
     pub const Zebstrika: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -21191,12 +24293,12 @@ impl PokemonData {
             Stat::new(63, 0),
             Stat::new(116, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::TailWhip),
             (1, Move::ThunderWave),
@@ -21211,7 +24313,8 @@ impl PokemonData {
             (42, Move::Agility),
             (47, Move::WildCharge),
             (53, Move::Thrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Roggenrola: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Rock),
@@ -21228,12 +24331,12 @@ impl PokemonData {
             Stat::new(25, 0),
             Stat::new(15, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (4, Move::Harden),
@@ -21248,7 +24351,17 @@ impl PokemonData {
             (33, Move::Sandstorm),
             (36, Move::StoneEdge),
             (40, Move::Explosion),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TakeDown,
+            Move::Curse,
+            Move::LockOn,
+            Move::Magnitude,
+            Move::RockTomb,
+            Move::Gravity,
+            Move::Autotomize,
+            Move::HeavySlam,
+        ])
     };
     pub const Boldore: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Rock),
@@ -21265,12 +24378,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Headbutt),
@@ -21286,7 +24399,8 @@ impl PokemonData {
             (42, Move::Sandstorm),
             (48, Move::StoneEdge),
             (55, Move::Explosion),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gigalith: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Rock),
@@ -21303,12 +24417,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Headbutt),
@@ -21324,7 +24438,8 @@ impl PokemonData {
             (42, Move::Sandstorm),
             (48, Move::StoneEdge),
             (55, Move::Explosion),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Woobat: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Flying),
@@ -21341,12 +24456,12 @@ impl PokemonData {
             Stat::new(43, 0),
             Stat::new(72, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Flying, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Confusion),
             (4, Move::OdorSleuth),
@@ -21362,7 +24477,18 @@ impl PokemonData {
             (36, Move::FutureSight),
             (41, Move::Psychic),
             (47, Move::Endeavor),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Supersonic,
+            Move::Charm,
+            Move::Flatter,
+            Move::HelpingHand,
+            Move::KnockOff,
+            Move::FakeTears,
+            Move::Roost,
+            Move::Synchronoise,
+            Move::StoredPower,
+        ])
     };
     pub const Swoobat: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Flying),
@@ -21379,12 +24505,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(114, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Flying, EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::Confusion),
@@ -21400,7 +24526,8 @@ impl PokemonData {
             (36, Move::FutureSight),
             (41, Move::Psychic),
             (47, Move::Endeavor),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Drilbur: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ground),
@@ -21417,12 +24544,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(68, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::MudSport),
@@ -21439,7 +24566,17 @@ impl PokemonData {
             (40, Move::Sandstorm),
             (43, Move::DrillRun),
             (47, Move::Fissure),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Submission,
+            Move::SkullBash,
+            Move::RapidSpin,
+            Move::CrushClaw,
+            Move::MetalSound,
+            Move::IronDefense,
+            Move::EarthPower,
+            Move::RockClimb,
+        ])
     };
     pub const Excadrill: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Steel),
@@ -21456,12 +24593,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(88, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::MudSlap),
@@ -21479,7 +24616,8 @@ impl PokemonData {
             (49, Move::Sandstorm),
             (55, Move::DrillRun),
             (62, Move::Fissure),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Audino: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -21496,12 +24634,12 @@ impl PokemonData {
             Stat::new(86, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Fairy),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Growl),
@@ -21517,7 +24655,19 @@ impl PokemonData {
             (45, Move::SimpleBeam),
             (50, Move::DoubleEdge),
             (55, Move::LastResort),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Amnesia,
+            Move::SweetKiss,
+            Move::SleepTalk,
+            Move::HealBell,
+            Move::Encore,
+            Move::Wish,
+            Move::Yawn,
+            Move::HealingWish,
+            Move::LuckyChant,
+            Move::Bestow,
+        ])
     };
     pub const Timburr: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -21534,12 +24684,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 180,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Leer),
@@ -21557,7 +24707,20 @@ impl PokemonData {
             (43, Move::StoneEdge),
             (46, Move::FocusPunch),
             (49, Move::Superpower),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::CometPunch,
+            Move::Counter,
+            Move::Reversal,
+            Move::MachPunch,
+            Move::Foresight,
+            Move::Detect,
+            Move::Endure,
+            Move::SmellingSalts,
+            Move::ForcePalm,
+            Move::DrainPunch,
+            Move::WideGuard,
+        ])
     };
     pub const Gurdurr: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -21574,12 +24737,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Leer),
@@ -21597,7 +24760,8 @@ impl PokemonData {
             (49, Move::StoneEdge),
             (53, Move::FocusPunch),
             (57, Move::Superpower),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Conkeldurr: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -21614,12 +24778,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::THREE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Leer),
@@ -21637,7 +24801,8 @@ impl PokemonData {
             (49, Move::StoneEdge),
             (53, Move::FocusPunch),
             (57, Move::Superpower),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Tympole: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -21654,12 +24819,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(64, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Bubble),
@@ -21675,7 +24840,17 @@ impl PokemonData {
             (38, Move::EchoedVoice),
             (42, Move::HydroPump),
             (45, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mist,
+            Move::Snore,
+            Move::SleepTalk,
+            Move::Refresh,
+            Move::MudSport,
+            Move::WaterPulse,
+            Move::EarthPower,
+            Move::MudBomb,
+        ])
     };
     pub const Palpitoad: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ground),
@@ -21692,12 +24867,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(69, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Supersonic),
@@ -21713,7 +24888,8 @@ impl PokemonData {
             (42, Move::EchoedVoice),
             (47, Move::HydroPump),
             (51, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Seismitoad: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ground),
@@ -21730,12 +24906,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(74, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Water1),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Supersonic),
@@ -21753,7 +24929,8 @@ impl PokemonData {
             (49, Move::EchoedVoice),
             (53, Move::HydroPump),
             (59, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Throh: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -21770,12 +24947,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bind),
             (1, Move::Leer),
@@ -21792,7 +24969,8 @@ impl PokemonData {
             (45, Move::WideGuard),
             (49, Move::Superpower),
             (53, Move::Reversal),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Sawk: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -21809,12 +24987,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(85, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::RockSmash),
@@ -21831,7 +25009,8 @@ impl PokemonData {
             (45, Move::QuickGuard),
             (49, Move::CloseCombat),
             (53, Move::Reversal),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Sewaddle: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Grass),
@@ -21848,12 +25027,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(42, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::StringShot),
@@ -21863,7 +25042,18 @@ impl PokemonData {
             (29, Move::Endure),
             (36, Move::BugBuzz),
             (43, Move::Flail),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::Agility,
+            Move::Screech,
+            Move::MindReader,
+            Move::BatonPass,
+            Move::Camouflage,
+            Move::SilverWind,
+            Move::MeFirst,
+            Move::AirSlash,
+        ])
     };
     pub const Swadloon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Grass),
@@ -21880,12 +25070,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(42, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::RazorLeaf),
@@ -21893,7 +25083,8 @@ impl PokemonData {
             (1, Move::GrassWhistle),
             (1, Move::BugBite),
             (20, Move::Protect),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Leavanny: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Grass),
@@ -21910,12 +25101,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(92, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::RazorLeaf),
@@ -21930,7 +25121,8 @@ impl PokemonData {
             (43, Move::Entrainment),
             (46, Move::SwordsDance),
             (50, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Venipede: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -21947,12 +25139,12 @@ impl PokemonData {
             Stat::new(39, 0),
             Stat::new(57, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::DefenseCurl),
             (1, Move::Rollout),
@@ -21968,7 +25160,15 @@ impl PokemonData {
             (36, Move::Toxic),
             (40, Move::RockClimb),
             (43, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TakeDown,
+            Move::Twineedle,
+            Move::PinMissile,
+            Move::Spikes,
+            Move::ToxicSpikes,
+            Move::RockClimb,
+        ])
     };
     pub const Whirlipede: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -21985,12 +25185,12 @@ impl PokemonData {
             Stat::new(79, 0),
             Stat::new(47, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::Screech),
@@ -22007,7 +25207,8 @@ impl PokemonData {
             (41, Move::Toxic),
             (46, Move::RockClimb),
             (50, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Scolipede: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Poison),
@@ -22024,12 +25225,12 @@ impl PokemonData {
             Stat::new(69, 0),
             Stat::new(112, 3)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::PoisonSting),
             (1, Move::Screech),
@@ -22047,7 +25248,8 @@ impl PokemonData {
             (44, Move::Toxic),
             (50, Move::RockClimb),
             (55, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cottonee: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Fairy),
@@ -22064,12 +25266,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(66, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Absorb),
             (4, Move::Growth),
@@ -22087,7 +25289,18 @@ impl PokemonData {
             (40, Move::SunnyDay),
             (44, Move::Endeavor),
             (46, Move::SolarBeam),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Encore,
+            Move::BeatUp,
+            Move::Memento,
+            Move::FakeTears,
+            Move::GrassWhistle,
+            Move::Tickle,
+            Move::NaturalGift,
+            Move::WorrySeed,
+            Move::Switcheroo,
+        ])
     };
     pub const Whimsicott: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Fairy),
@@ -22104,12 +25317,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(116, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Fairy, EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::MegaDrain),
             (1, Move::LeechSeed),
@@ -22118,7 +25331,8 @@ impl PokemonData {
             (10, Move::Gust),
             (28, Move::Tailwind),
             (46, Move::Hurricane),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Petilil: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -22135,12 +25349,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Absorb),
             (4, Move::Growth),
@@ -22158,7 +25372,18 @@ impl PokemonData {
             (40, Move::SunnyDay),
             (44, Move::AfterYou),
             (46, Move::LeafStorm),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Bide,
+            Move::Endure,
+            Move::Charm,
+            Move::SweetScent,
+            Move::Ingrain,
+            Move::GrassWhistle,
+            Move::HealingWish,
+            Move::NaturalGift,
+            Move::WorrySeed,
+        ])
     };
     pub const Lilligant: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -22175,12 +25400,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::MegaDrain),
             (1, Move::LeechSeed),
@@ -22189,7 +25414,8 @@ impl PokemonData {
             (10, Move::TeeterDance),
             (28, Move::QuiverDance),
             (46, Move::PetalDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const BasculinRedStriped: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -22206,12 +25432,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(98, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
-        egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 25,
+        egg_group: PokemonEggGroup::One(EggGroup::Water2),
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::WaterGun),
@@ -22229,7 +25455,18 @@ impl PokemonData {
             (46, Move::Flail),
             (51, Move::FinalGambit),
             (56, Move::Thrash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BubbleBeam,
+            Move::Agility,
+            Move::Rage,
+            Move::Swift,
+            Move::Whirlpool,
+            Move::Revenge,
+            Move::MuddyWater,
+            Move::MudShot,
+            Move::Brine,
+        ])
     };
     pub const Sandile: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Dark),
@@ -22246,12 +25483,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 180,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Rage),
@@ -22270,7 +25507,19 @@ impl PokemonData {
             (40, Move::Sandstorm),
             (43, Move::Earthquake),
             (46, Move::Thrash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::Counter,
+            Move::FocusEnergy,
+            Move::MeanLook,
+            Move::Pursuit,
+            Move::BeatUp,
+            Move::Uproar,
+            Move::ThunderFang,
+            Move::FireFang,
+            Move::RockClimb,
+        ])
     };
     pub const Krokorok: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Dark),
@@ -22287,12 +25536,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(74, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Leer),
@@ -22311,7 +25560,8 @@ impl PokemonData {
             (44, Move::Sandstorm),
             (48, Move::Earthquake),
             (52, Move::Thrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Krookodile: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Dark),
@@ -22328,12 +25578,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(92, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Leer),
@@ -22352,7 +25602,8 @@ impl PokemonData {
             (48, Move::Sandstorm),
             (54, Move::Earthquake),
             (60, Move::Outrage),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Darumaka: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -22369,12 +25620,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (3, Move::Rollout),
@@ -22392,7 +25643,18 @@ impl PokemonData {
             (35, Move::Taunt),
             (39, Move::Superpower),
             (42, Move::Overheat),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TakeDown,
+            Move::FocusEnergy,
+            Move::FlameWheel,
+            Move::Endure,
+            Move::SleepTalk,
+            Move::Encore,
+            Move::FocusPunch,
+            Move::Yawn,
+            Move::HammerArm,
+        ])
     };
     pub const DarmanitanStandard: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -22409,12 +25671,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
-        egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
+        egg_group: PokemonEggGroup::One(EggGroup::Ground),
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Rage),
@@ -22433,7 +25695,8 @@ impl PokemonData {
             (39, Move::Taunt),
             (47, Move::Superpower),
             (54, Move::Overheat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Maractus: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Grass),
@@ -22450,12 +25713,12 @@ impl PokemonData {
             Stat::new(67, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Peck),
             (1, Move::Absorb),
@@ -22475,7 +25738,17 @@ impl PokemonData {
             (50, Move::SolarBeam),
             (55, Move::CottonGuard),
             (57, Move::AfterYou),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::LeechSeed,
+            Move::Spikes,
+            Move::GrassWhistle,
+            Move::BulletSeed,
+            Move::Bounce,
+            Move::WorrySeed,
+            Move::SeedBomb,
+            Move::WoodHammer,
+        ])
     };
     pub const Dwebble: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Rock),
@@ -22492,12 +25765,12 @@ impl PokemonData {
             Stat::new(35, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Bug, EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::FuryCutter),
             (5, Move::RockBlast),
@@ -22514,7 +25787,17 @@ impl PokemonData {
             (37, Move::ShellSmash),
             (41, Move::Flail),
             (43, Move::RockWrecker),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::Curse,
+            Move::Spikes,
+            Move::Endure,
+            Move::SandTomb,
+            Move::IronDefense,
+            Move::Block,
+            Move::NightSlash,
+        ])
     };
     pub const Crustle: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Rock),
@@ -22531,12 +25814,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Bug, EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Withdraw),
@@ -22552,7 +25835,8 @@ impl PokemonData {
             (38, Move::XScissor),
             (50, Move::Flail),
             (55, Move::RockWrecker),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Scraggy: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Fighting),
@@ -22569,12 +25853,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(48, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 180,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::LowKick),
@@ -22592,7 +25876,20 @@ impl PokemonData {
             (45, Move::RockClimb),
             (49, Move::FocusPunch),
             (53, Move::HeadSmash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::FirePunch,
+            Move::IcePunch,
+            Move::ThunderPunch,
+            Move::Counter,
+            Move::Amnesia,
+            Move::FeintAttack,
+            Move::Detect,
+            Move::FakeOut,
+            Move::DragonDance,
+            Move::DrainPunch,
+            Move::ZenHeadbutt,
+        ])
     };
     pub const Scrafty: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Fighting),
@@ -22609,12 +25906,12 @@ impl PokemonData {
             Stat::new(115, 1),
             Stat::new(58, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Leer),
@@ -22632,7 +25929,8 @@ impl PokemonData {
             (51, Move::RockClimb),
             (58, Move::FocusPunch),
             (65, Move::HeadSmash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Sigilyph: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Psychic, Type::Flying),
@@ -22649,12 +25947,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(97, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::MiracleEye),
@@ -22673,7 +25971,15 @@ impl PokemonData {
             (44, Move::Psychic),
             (48, Move::CosmicPower),
             (51, Move::SkyAttack),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SteelWing,
+            Move::AncientPower,
+            Move::SkillSwap,
+            Move::Roost,
+            Move::PsychoShift,
+            Move::StoredPower,
+        ])
     };
     pub const Yamask: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ghost),
@@ -22690,12 +25996,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Mineral, EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Protect),
             (1, Move::Astonish),
@@ -22712,7 +26018,17 @@ impl PokemonData {
             (41, Move::Grudge),
             (45, Move::MeanLook),
             (49, Move::DestinyBond),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::Nightmare,
+            Move::Endure,
+            Move::Memento,
+            Move::Imprison,
+            Move::FakeTears,
+            Move::HealBlock,
+            Move::NastyPlot,
+        ])
     };
     pub const Cofagrigus: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ghost),
@@ -22729,12 +26045,12 @@ impl PokemonData {
             Stat::new(105, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::Two(EggGroup::Mineral, EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Disable),
             (1, Move::Haze),
@@ -22752,7 +26068,8 @@ impl PokemonData {
             (45, Move::Grudge),
             (51, Move::MeanLook),
             (57, Move::DestinyBond),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Tirtouga: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Rock),
@@ -22769,12 +26086,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(22, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::WaterGun),
             (1, Move::Withdraw),
@@ -22794,7 +26111,18 @@ impl PokemonData {
             (45, Move::RockSlide),
             (48, Move::RainDance),
             (51, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Slam,
+            Move::BodySlam,
+            Move::RockThrow,
+            Move::Bide,
+            Move::Flail,
+            Move::Whirlpool,
+            Move::KnockOff,
+            Move::IronDefense,
+            Move::WaterPulse,
+        ])
     };
     pub const Carracosta: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Rock),
@@ -22811,12 +26139,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(32, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::WaterGun),
             (1, Move::Withdraw),
@@ -22836,7 +26164,8 @@ impl PokemonData {
             (51, Move::RockSlide),
             (56, Move::RainDance),
             (61, Move::HydroPump),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Archen: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Flying),
@@ -22853,12 +26182,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Flying, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::WingAttack),
             (1, Move::Leer),
@@ -22878,7 +26207,16 @@ impl PokemonData {
             (45, Move::RockSlide),
             (48, Move::DragonClaw),
             (51, Move::Thrash),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Bite,
+            Move::SteelWing,
+            Move::KnockOff,
+            Move::DragonPulse,
+            Move::EarthPower,
+            Move::Defog,
+            Move::HeadSmash,
+        ])
     };
     pub const Archeops: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Flying),
@@ -22895,12 +26233,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(110, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Flying, EggGroup::Water3),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::WingAttack),
             (1, Move::Leer),
@@ -22920,7 +26258,8 @@ impl PokemonData {
             (51, Move::RockSlide),
             (56, Move::DragonClaw),
             (61, Move::Thrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Trubbish: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -22937,12 +26276,12 @@ impl PokemonData {
             Stat::new(62, 0),
             Stat::new(65, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::PoisonGas),
@@ -22960,7 +26299,17 @@ impl PokemonData {
             (40, Move::Amnesia),
             (45, Move::GunkShot),
             (47, Move::Explosion),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::SandAttack,
+            Move::Haze,
+            Move::SelfDestruct,
+            Move::Curse,
+            Move::Spikes,
+            Move::Rollout,
+            Move::MudSport,
+            Move::RockBlast,
+        ])
     };
     pub const Garbodor: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Poison),
@@ -22977,12 +26326,12 @@ impl PokemonData {
             Stat::new(82, 0),
             Stat::new(75, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::PoisonGas),
@@ -23000,7 +26349,8 @@ impl PokemonData {
             (46, Move::Amnesia),
             (54, Move::GunkShot),
             (59, Move::Explosion),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Zorua: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dark),
@@ -23017,12 +26367,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -23040,7 +26390,17 @@ impl PokemonData {
             (49, Move::NastyPlot),
             (53, Move::Imprison),
             (57, Move::NightDaze),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Counter,
+            Move::Detect,
+            Move::Memento,
+            Move::Snatch,
+            Move::Extrasensory,
+            Move::SuckerPunch,
+            Move::DarkPulse,
+            Move::Captivate,
+        ])
     };
     pub const Zoroark: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dark),
@@ -23057,12 +26417,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(105, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::SEVEN_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -23082,7 +26442,8 @@ impl PokemonData {
             (54, Move::NastyPlot),
             (59, Move::Imprison),
             (64, Move::NightDaze),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Minccino: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -23099,12 +26460,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(75, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Pound),
             (3, Move::Growl),
@@ -23123,7 +26484,18 @@ impl PokemonData {
             (43, Move::HyperVoice),
             (45, Move::LastResort),
             (49, Move::AfterYou),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::TailWhip,
+            Move::Flail,
+            Move::MudSlap,
+            Move::Endure,
+            Move::SleepTalk,
+            Move::IronTail,
+            Move::KnockOff,
+            Move::FakeTears,
+            Move::AquaTail,
+        ])
     };
     pub const Cinccino: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -23140,12 +26512,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(115, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Sing),
             (1, Move::HelpingHand),
@@ -23153,11 +26525,12 @@ impl PokemonData {
             (1, Move::BulletSeed),
             (1, Move::RockBlast),
             (1, Move::TailSlap),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gothita: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
-        ability: PokemonAbility::One(Ability::Frisk),
+        ability: PokemonAbility::Two(Ability::Frisk, Ability::Competitive),
         hidden_ability: Some(Ability::ShadowTag),
         height: 4,
         weight: 58,
@@ -23170,12 +26543,12 @@ impl PokemonData {
             Stat::new(65, 1),
             Stat::new(45, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (3, Move::Confusion),
@@ -23193,11 +26566,19 @@ impl PokemonData {
             (40, Move::Telekinesis),
             (46, Move::Charm),
             (48, Move::MagicRoom),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::MeanLook,
+            Move::MirrorCoat,
+            Move::Uproar,
+            Move::MiracleEye,
+            Move::DarkPulse,
+            Move::Captivate,
+        ])
     };
     pub const Gothorita: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
-        ability: PokemonAbility::One(Ability::Frisk),
+        ability: PokemonAbility::Two(Ability::Frisk, Ability::Competitive),
         hidden_ability: Some(Ability::ShadowTag),
         height: 7,
         weight: 180,
@@ -23210,12 +26591,12 @@ impl PokemonData {
             Stat::new(85, 2),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 100,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Confusion),
@@ -23233,11 +26614,12 @@ impl PokemonData {
             (43, Move::Telekinesis),
             (50, Move::Charm),
             (53, Move::MagicRoom),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Gothitelle: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
-        ability: PokemonAbility::One(Ability::Frisk),
+        ability: PokemonAbility::Two(Ability::Frisk, Ability::Competitive),
         hidden_ability: Some(Ability::ShadowTag),
         height: 15,
         weight: 440,
@@ -23250,12 +26632,12 @@ impl PokemonData {
             Stat::new(110, 3),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_THREE,
+        catch_rate: 50,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Confusion),
@@ -23273,7 +26655,8 @@ impl PokemonData {
             (45, Move::Telekinesis),
             (54, Move::Charm),
             (59, Move::MagicRoom),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Solosis: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -23290,12 +26673,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Psywave),
             (3, Move::Reflect),
@@ -23313,7 +26696,16 @@ impl PokemonData {
             (40, Move::SkillSwap),
             (46, Move::HealBlock),
             (48, Move::WonderRoom),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::NightShade,
+            Move::ConfuseRay,
+            Move::AcidArmor,
+            Move::Trick,
+            Move::Imprison,
+            Move::SecretPower,
+            Move::Astonish,
+        ])
     };
     pub const Duosion: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -23330,12 +26722,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 100,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Reflect),
             (1, Move::Psywave),
@@ -23353,7 +26745,8 @@ impl PokemonData {
             (43, Move::SkillSwap),
             (50, Move::HealBlock),
             (53, Move::WonderRoom),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Reuniclus: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -23370,12 +26763,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 50,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Reflect),
             (1, Move::Psywave),
@@ -23394,7 +26787,8 @@ impl PokemonData {
             (45, Move::SkillSwap),
             (54, Move::HealBlock),
             (59, Move::WonderRoom),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Ducklett: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Flying),
@@ -23411,12 +26805,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::WaterGun),
             (3, Move::WaterSport),
@@ -23433,7 +26827,16 @@ impl PokemonData {
             (37, Move::Tailwind),
             (41, Move::BraveBird),
             (46, Move::Hurricane),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Gust,
+            Move::MirrorMove,
+            Move::SteelWing,
+            Move::AirCutter,
+            Move::Brine,
+            Move::LuckyChant,
+            Move::MeFirst,
+        ])
     };
     pub const Swanna: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Flying),
@@ -23450,12 +26853,12 @@ impl PokemonData {
             Stat::new(63, 0),
             Stat::new(98, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::WingAttack),
             (1, Move::WaterGun),
@@ -23472,7 +26875,8 @@ impl PokemonData {
             (40, Move::Tailwind),
             (47, Move::BraveBird),
             (55, Move::Hurricane),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Vanillite: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
@@ -23489,12 +26893,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(44, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::IcicleSpear),
             (4, Move::Harden),
@@ -23511,7 +26915,17 @@ impl PokemonData {
             (44, Move::MirrorCoat),
             (49, Move::Blizzard),
             (53, Move::SheerCold),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::PowderSnow,
+            Move::Imprison,
+            Move::IronDefense,
+            Move::WaterPulse,
+            Move::NaturalGift,
+            Move::MagnetRise,
+            Move::IceShard,
+            Move::Autotomize,
+        ])
     };
     pub const Vanillish: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
@@ -23528,12 +26942,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(59, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Harden),
             (1, Move::Uproar),
@@ -23550,7 +26964,8 @@ impl PokemonData {
             (47, Move::MirrorCoat),
             (53, Move::Blizzard),
             (58, Move::SheerCold),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Vanilluxe: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
@@ -23567,12 +26982,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(79, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Harden),
             (1, Move::Uproar),
@@ -23590,7 +27005,8 @@ impl PokemonData {
             (50, Move::MirrorCoat),
             (59, Move::Blizzard),
             (67, Move::SheerCold),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Deerling: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Grass),
@@ -23607,12 +27023,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(75, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Camouflage),
@@ -23629,7 +27045,18 @@ impl PokemonData {
             (41, Move::NaturePower),
             (46, Move::DoubleEdge),
             (51, Move::SolarBeam),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Agility,
+            Move::SleepTalk,
+            Move::BatonPass,
+            Move::Synthesis,
+            Move::FakeTears,
+            Move::OdorSleuth,
+            Move::GrassWhistle,
+            Move::NaturalGift,
+            Move::WorrySeed,
+        ])
     };
     pub const Sawsbuck: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Grass),
@@ -23646,12 +27073,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::SandAttack),
             (1, Move::Tackle),
@@ -23670,7 +27097,8 @@ impl PokemonData {
             (44, Move::NaturePower),
             (52, Move::DoubleEdge),
             (60, Move::SolarBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Emolga: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Electric, Type::Flying),
@@ -23687,12 +27115,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(103, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::ThunderShock),
             (4, Move::QuickAttack),
@@ -23709,7 +27137,18 @@ impl PokemonData {
             (42, Move::VoltSwitch),
             (46, Move::Agility),
             (50, Move::Discharge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Charm,
+            Move::BatonPass,
+            Move::IronTail,
+            Move::Astonish,
+            Move::Tickle,
+            Move::Covet,
+            Move::ShockWave,
+            Move::Roost,
+            Move::AirSlash,
+        ])
     };
     pub const Karrablast: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -23726,12 +27165,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Peck),
             (4, Move::Leer),
@@ -23748,7 +27187,17 @@ impl PokemonData {
             (49, Move::Flail),
             (52, Move::SwordsDance),
             (56, Move::DoubleEdge),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::HornAttack,
+            Move::Counter,
+            Move::Screech,
+            Move::FeintAttack,
+            Move::Megahorn,
+            Move::Pursuit,
+            Move::KnockOff,
+            Move::BugBite,
+        ])
     };
     pub const Escavalier: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Steel),
@@ -23765,12 +27214,12 @@ impl PokemonData {
             Stat::new(105, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Twineedle),
             (1, Move::Leer),
@@ -23787,7 +27236,8 @@ impl PokemonData {
             (49, Move::Reversal),
             (52, Move::SwordsDance),
             (56, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Foongus: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -23804,12 +27254,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(15, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Absorb),
             (6, Move::Growth),
@@ -23826,7 +27276,17 @@ impl PokemonData {
             (43, Move::SolarBeam),
             (45, Move::RagePowder),
             (50, Move::Spore),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Growth,
+            Move::PoisonPowder,
+            Move::StunSpore,
+            Move::DefenseCurl,
+            Move::Endure,
+            Move::Rollout,
+            Move::GastroAcid,
+        ])
     };
     pub const Amoonguss: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Poison),
@@ -23843,12 +27303,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Plant),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Absorb),
             (1, Move::Growth),
@@ -23865,7 +27325,8 @@ impl PokemonData {
             (49, Move::SolarBeam),
             (54, Move::RagePowder),
             (62, Move::Spore),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Frillish: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ghost),
@@ -23882,12 +27343,12 @@ impl PokemonData {
             Stat::new(85, 1),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bubble),
             (1, Move::WaterSport),
@@ -23903,7 +27364,15 @@ impl PokemonData {
             (49, Move::HydroPump),
             (55, Move::WringOut),
             (61, Move::WaterSpout),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mist,
+            Move::Recover,
+            Move::ConfuseRay,
+            Move::Constrict,
+            Move::AcidArmor,
+            Move::PainSplit,
+        ])
     };
     pub const Jellicent: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Ghost),
@@ -23920,12 +27389,12 @@ impl PokemonData {
             Stat::new(105, 2),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Absorb),
             (1, Move::NightShade),
@@ -23941,7 +27410,8 @@ impl PokemonData {
             (53, Move::HydroPump),
             (61, Move::WringOut),
             (69, Move::WaterSpout),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Alomomola: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Water),
@@ -23958,12 +27428,12 @@ impl PokemonData {
             Stat::new(45, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Water2),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Fast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::WaterSport),
@@ -23982,7 +27452,15 @@ impl PokemonData {
             (53, Move::WideGuard),
             (57, Move::HealingWish),
             (61, Move::HydroPump),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Mist,
+            Move::Endure,
+            Move::PainSplit,
+            Move::MirrorCoat,
+            Move::Refresh,
+            Move::Tickle,
+        ])
     };
     pub const Joltik: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Electric),
@@ -23999,12 +27477,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(65, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::StringShot),
             (1, Move::LeechLife),
@@ -24022,7 +27500,16 @@ impl PokemonData {
             (40, Move::SuckerPunch),
             (45, Move::Discharge),
             (48, Move::BugBuzz),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::PoisonSting,
+            Move::PinMissile,
+            Move::Disable,
+            Move::FeintAttack,
+            Move::Pursuit,
+            Move::RockClimb,
+            Move::CrossPoison,
+        ])
     };
     pub const Galvantula: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Electric),
@@ -24039,12 +27526,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(108, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::StringShot),
             (1, Move::ThunderWave),
@@ -24062,7 +27549,8 @@ impl PokemonData {
             (46, Move::SuckerPunch),
             (54, Move::Discharge),
             (60, Move::BugBuzz),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Ferroseed: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Steel),
@@ -24079,12 +27567,12 @@ impl PokemonData {
             Stat::new(86, 0),
             Stat::new(10, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::Two(EggGroup::Plant, EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Harden),
@@ -24101,7 +27589,17 @@ impl PokemonData {
             (47, Move::Payback),
             (52, Move::FlashCannon),
             (55, Move::Explosion),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::LeechSeed,
+            Move::Spikes,
+            Move::BulletSeed,
+            Move::Gravity,
+            Move::WorrySeed,
+            Move::SeedBomb,
+            Move::RockClimb,
+            Move::StealthRock,
+        ])
     };
     pub const Ferrothorn: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Steel),
@@ -24118,12 +27616,12 @@ impl PokemonData {
             Stat::new(116, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::Two(EggGroup::Plant, EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::Harden),
@@ -24142,7 +27640,8 @@ impl PokemonData {
             (53, Move::Payback),
             (61, Move::FlashCannon),
             (67, Move::Explosion),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Klink: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Steel),
@@ -24159,12 +27658,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 130,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::ViseGrip),
             (6, Move::Charge),
@@ -24181,7 +27680,8 @@ impl PokemonData {
             (51, Move::LockOn),
             (54, Move::ZapCannon),
             (57, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Klang: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Steel),
@@ -24198,12 +27698,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::ViseGrip),
             (1, Move::ThunderShock),
@@ -24220,7 +27720,8 @@ impl PokemonData {
             (56, Move::LockOn),
             (60, Move::ZapCannon),
             (64, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Klinklang: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Steel),
@@ -24237,12 +27738,12 @@ impl PokemonData {
             Stat::new(85, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::ViseGrip),
             (1, Move::ThunderShock),
@@ -24259,7 +27760,8 @@ impl PokemonData {
             (60, Move::LockOn),
             (66, Move::ZapCannon),
             (72, Move::HyperBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Tynamo: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -24276,18 +27778,19 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(60, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::ThunderWave),
             (1, Move::Spark),
             (1, Move::ChargeBeam),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Eelektrik: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -24304,12 +27807,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::ThunderWave),
@@ -24326,7 +27829,8 @@ impl PokemonData {
             (64, Move::GastroAcid),
             (69, Move::ZapCannon),
             (74, Move::Thrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Eelektross: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Electric),
@@ -24343,19 +27847,20 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 30,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Headbutt),
             (1, Move::Acid),
             (1, Move::Crunch),
             (1, Move::CrushClaw),
             (1, Move::Discharge),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Elgyem: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -24372,12 +27877,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(30, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 255,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Confusion),
             (4, Move::Growl),
@@ -24397,7 +27902,17 @@ impl PokemonData {
             (50, Move::PowerSplit),
             (53, Move::Synchronoise),
             (56, Move::WonderRoom),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Disable,
+            Move::Teleport,
+            Move::Barrier,
+            Move::SkillSwap,
+            Move::Astonish,
+            Move::PowerSwap,
+            Move::GuardSwap,
+            Move::NastyPlot,
+        ])
     };
     pub const Beheeyem: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Psychic),
@@ -24414,12 +27929,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Confusion),
@@ -24439,7 +27954,8 @@ impl PokemonData {
             (58, Move::PowerSplit),
             (63, Move::Synchronoise),
             (68, Move::WonderRoom),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Litwick: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Fire),
@@ -24456,12 +27972,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(20, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Ember),
             (1, Move::Astonish),
@@ -24480,7 +27996,16 @@ impl PokemonData {
             (49, Move::ShadowBall),
             (55, Move::PainSplit),
             (61, Move::Overheat),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Acid,
+            Move::Haze,
+            Move::AcidArmor,
+            Move::Endure,
+            Move::HeatWave,
+            Move::Captivate,
+            Move::ClearSmog,
+        ])
     };
     pub const Lampent: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Fire),
@@ -24497,12 +28022,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Ember),
             (1, Move::Minimize),
@@ -24521,7 +28046,8 @@ impl PokemonData {
             (53, Move::ShadowBall),
             (61, Move::PainSplit),
             (69, Move::Overheat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Chandelure: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ghost, Type::Fire),
@@ -24538,18 +28064,19 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::ConfuseRay),
             (1, Move::Smog),
             (1, Move::FlameBurst),
             (1, Move::Hex),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Axew: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dragon),
@@ -24566,12 +28093,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(57, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Scratch),
             (4, Move::Leer),
@@ -24589,7 +28116,19 @@ impl PokemonData {
             (51, Move::Guillotine),
             (56, Move::Outrage),
             (61, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::RazorWind,
+            Move::Counter,
+            Move::Harden,
+            Move::FocusEnergy,
+            Move::Reversal,
+            Move::Endure,
+            Move::IronTail,
+            Move::Endeavor,
+            Move::NightSlash,
+            Move::DragonPulse,
+        ])
     };
     pub const Fraxure: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dragon),
@@ -24606,12 +28145,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(67, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -24629,7 +28168,8 @@ impl PokemonData {
             (54, Move::Guillotine),
             (60, Move::Outrage),
             (66, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Haxorus: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dragon),
@@ -24646,12 +28186,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(97, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -24669,11 +28209,12 @@ impl PokemonData {
             (58, Move::Guillotine),
             (66, Move::Outrage),
             (74, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cubchoo: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
-        ability: PokemonAbility::One(Ability::SnowCloak),
+        ability: PokemonAbility::Two(Ability::SnowCloak, Ability::SlushRush),
         hidden_ability: Some(Ability::Rattled),
         height: 5,
         weight: 85,
@@ -24686,12 +28227,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(40, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::PowderSnow),
             (5, Move::Growl),
@@ -24708,11 +28249,21 @@ impl PokemonData {
             (49, Move::Hail),
             (53, Move::Thrash),
             (57, Move::SheerCold),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::IcePunch,
+            Move::SleepTalk,
+            Move::Encore,
+            Move::FocusPunch,
+            Move::Yawn,
+            Move::Assurance,
+            Move::NightSlash,
+            Move::Avalanche,
+        ])
     };
     pub const Beartic: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
-        ability: PokemonAbility::One(Ability::SnowCloak),
+        ability: PokemonAbility::Two(Ability::SnowCloak, Ability::SlushRush),
         hidden_ability: Some(Ability::SwiftSwim),
         height: 26,
         weight: 2600,
@@ -24725,12 +28276,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(50, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Growl),
             (1, Move::Bide),
@@ -24750,7 +28301,8 @@ impl PokemonData {
             (53, Move::Hail),
             (59, Move::Thrash),
             (66, Move::SheerCold),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cryogonal: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Ice),
@@ -24767,12 +28319,12 @@ impl PokemonData {
             Stat::new(135, 2),
             Stat::new(105, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 25,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Bind),
             (5, Move::IceShard),
@@ -24792,7 +28344,8 @@ impl PokemonData {
             (53, Move::SolarBeam),
             (57, Move::NightSlash),
             (61, Move::SheerCold),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Shelmet: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -24809,12 +28362,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(25, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 200,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::LeechLife),
             (4, Move::Acid),
@@ -24831,7 +28384,19 @@ impl PokemonData {
             (49, Move::Recover),
             (52, Move::GuardSwap),
             (56, Move::FinalGambit),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::DoubleEdge,
+            Move::MindReader,
+            Move::MudSlap,
+            Move::Spikes,
+            Move::Endure,
+            Move::BatonPass,
+            Move::Encore,
+            Move::Pursuit,
+            Move::Feint,
+            Move::GuardSplit,
+        ])
     };
     pub const Accelgor: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Bug),
@@ -24848,12 +28413,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(145, 2)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 15,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::QuickAttack),
             (1, Move::DoubleTeam),
@@ -24870,7 +28435,8 @@ impl PokemonData {
             (49, Move::Recover),
             (52, Move::PowerSwap),
             (56, Move::FinalGambit),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Stunfisk: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Electric),
@@ -24887,12 +28453,12 @@ impl PokemonData {
             Stat::new(99, 0),
             Stat::new(32, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 75,
         egg_group: PokemonEggGroup::Two(EggGroup::Water1, EggGroup::Indeterminate),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::MudSlap),
             (1, Move::MudSport),
@@ -24909,7 +28475,18 @@ impl PokemonData {
             (50, Move::Revenge),
             (55, Move::Flail),
             (61, Move::Fissure),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Curse,
+            Move::Spite,
+            Move::Spark,
+            Move::SleepTalk,
+            Move::PainSplit,
+            Move::Yawn,
+            Move::Astonish,
+            Move::ShockWave,
+            Move::EarthPower,
+        ])
     };
     pub const Mienfoo: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -24926,12 +28503,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 180,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (5, Move::Meditate),
@@ -24949,7 +28526,17 @@ impl PokemonData {
             (53, Move::HighJumpKick),
             (57, Move::Reversal),
             (61, Move::AuraSphere),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::LowKick,
+            Move::Endure,
+            Move::BatonPass,
+            Move::VitalThrow,
+            Move::SmellingSalts,
+            Move::KnockOff,
+            Move::Feint,
+            Move::MeFirst,
+        ])
     };
     pub const Mienshao: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fighting),
@@ -24966,12 +28553,12 @@ impl PokemonData {
             Stat::new(60, 0),
             Stat::new(105, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Ground, EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumSlow,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::Meditate),
@@ -24989,7 +28576,8 @@ impl PokemonData {
             (56, Move::HighJumpKick),
             (63, Move::Reversal),
             (70, Move::AuraSphere),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Druddigon: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Dragon),
@@ -25006,12 +28594,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(48, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::Two(EggGroup::Monster, EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 30,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -25029,7 +28617,20 @@ impl PokemonData {
             (49, Move::RockClimb),
             (55, Move::Superpower),
             (62, Move::Outrage),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Glare,
+            Move::FeintAttack,
+            Move::Pursuit,
+            Move::IronTail,
+            Move::MetalClaw,
+            Move::Snatch,
+            Move::CrushClaw,
+            Move::PoisonTail,
+            Move::SuckerPunch,
+            Move::ThunderFang,
+            Move::FireFang,
+        ])
     };
     pub const Golett: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Ghost),
@@ -25046,12 +28647,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(35, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::DefenseCurl),
@@ -25068,7 +28669,8 @@ impl PokemonData {
             (45, Move::Earthquake),
             (50, Move::HammerArm),
             (55, Move::FocusPunch),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Golurk: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Ghost),
@@ -25085,12 +28687,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Mineral),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 25,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Pound),
             (1, Move::DefenseCurl),
@@ -25108,7 +28710,8 @@ impl PokemonData {
             (50, Move::Earthquake),
             (60, Move::HammerArm),
             (70, Move::FocusPunch),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Pawniard: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Steel),
@@ -25125,12 +28728,12 @@ impl PokemonData {
             Stat::new(40, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 120,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (6, Move::Leer),
@@ -25148,7 +28751,16 @@ impl PokemonData {
             (54, Move::IronHead),
             (57, Move::SwordsDance),
             (62, Move::Guillotine),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Headbutt,
+            Move::MeanLook,
+            Move::Pursuit,
+            Move::Revenge,
+            Move::SuckerPunch,
+            Move::PsychoCut,
+            Move::StealthRock,
+        ])
     };
     pub const Bisharp: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Steel),
@@ -25165,12 +28777,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(70, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Humanshape),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Scratch),
             (1, Move::Leer),
@@ -25189,7 +28801,8 @@ impl PokemonData {
             (57, Move::IronHead),
             (63, Move::SwordsDance),
             (71, Move::Guillotine),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Bouffalant: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Normal),
@@ -25206,12 +28819,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(55, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Pursuit),
@@ -25227,7 +28840,17 @@ impl PokemonData {
             (51, Move::Thrash),
             (56, Move::SwordsDance),
             (61, Move::GigaImpact),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Stomp,
+            Move::Headbutt,
+            Move::SkullBash,
+            Move::Amnesia,
+            Move::MudSlap,
+            Move::MudShot,
+            Move::RockClimb,
+            Move::IronHead,
+        ])
     };
     pub const Rufflet: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -25244,12 +28867,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::Peck),
@@ -25267,7 +28890,8 @@ impl PokemonData {
             (55, Move::Whirlwind),
             (59, Move::BraveBird),
             (64, Move::Thrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Braviary: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Flying),
@@ -25284,12 +28908,12 @@ impl PokemonData {
             Stat::new(75, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::WingAttack),
             (1, Move::FuryAttack),
@@ -25308,7 +28932,8 @@ impl PokemonData {
             (57, Move::Whirlwind),
             (63, Move::BraveBird),
             (70, Move::Thrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Vullaby: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Flying),
@@ -25325,12 +28950,12 @@ impl PokemonData {
             Stat::new(65, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 190,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::Leer),
@@ -25348,7 +28973,15 @@ impl PokemonData {
             (55, Move::Whirlwind),
             (59, Move::BraveBird),
             (64, Move::MirrorMove),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::ScaryFace,
+            Move::SteelWing,
+            Move::MeanLook,
+            Move::KnockOff,
+            Move::FakeTears,
+            Move::Roost,
+        ])
     };
     pub const Mandibuzz: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Flying),
@@ -25365,12 +28998,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(80, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::FEMALE_ONLY,
+        catch_rate: 60,
         egg_group: PokemonEggGroup::One(EggGroup::Flying),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::FuryAttack),
@@ -25389,7 +29022,8 @@ impl PokemonData {
             (57, Move::Whirlwind),
             (63, Move::BraveBird),
             (70, Move::MirrorMove),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Heatmor: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Fire),
@@ -25406,12 +29040,12 @@ impl PokemonData {
             Stat::new(66, 0),
             Stat::new(65, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Ground),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::Lick),
             (1, Move::Incinerate),
@@ -25429,7 +29063,19 @@ impl PokemonData {
             (56, Move::SpitUp),
             (56, Move::Swallow),
             (61, Move::Inferno),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::BodySlam,
+            Move::Wrap,
+            Move::Curse,
+            Move::FeintAttack,
+            Move::SleepTalk,
+            Move::Pursuit,
+            Move::HeatWave,
+            Move::Tickle,
+            Move::SuckerPunch,
+            Move::NightSlash,
+        ])
     };
     pub const Durant: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Steel),
@@ -25446,12 +29092,12 @@ impl PokemonData {
             Stat::new(48, 0),
             Stat::new(109, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 90,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 20,
+        base_friendship: 70,
+        level_rate: LevelRate::MediumFast,
         level_up_moves: &[
             (1, Move::ViseGrip),
             (1, Move::SandAttack),
@@ -25468,7 +29114,15 @@ impl PokemonData {
             (56, Move::IronDefense),
             (61, Move::Guillotine),
             (66, Move::MetalSound),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Screech,
+            Move::FeintAttack,
+            Move::Endure,
+            Move::BatonPass,
+            Move::ThunderFang,
+            Move::RockClimb,
+        ])
     };
     pub const Deino: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Dragon),
@@ -25485,12 +29139,12 @@ impl PokemonData {
             Stat::new(50, 0),
             Stat::new(38, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Tackle),
             (1, Move::DragonRage),
@@ -25508,7 +29162,19 @@ impl PokemonData {
             (52, Move::ScaryFace),
             (58, Move::HyperVoice),
             (62, Move::Outrage),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::Screech,
+            Move::Astonish,
+            Move::Assurance,
+            Move::DarkPulse,
+            Move::EarthPower,
+            Move::ThunderFang,
+            Move::IceFang,
+            Move::FireFang,
+            Move::HeadSmash,
+            Move::DoubleHit,
+        ])
     };
     pub const Zweilous: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Dragon),
@@ -25525,12 +29191,12 @@ impl PokemonData {
             Stat::new(70, 0),
             Stat::new(58, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Bite),
             (1, Move::DragonRage),
@@ -25548,7 +29214,8 @@ impl PokemonData {
             (55, Move::ScaryFace),
             (64, Move::HyperVoice),
             (71, Move::Outrage),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Hydreigon: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dark, Type::Dragon),
@@ -25565,12 +29232,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(98, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Dragon),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Bite),
             (1, Move::DragonRage),
@@ -25588,7 +29255,8 @@ impl PokemonData {
             (55, Move::ScaryFace),
             (68, Move::HyperVoice),
             (79, Move::Outrage),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Larvesta: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Fire),
@@ -25605,12 +29273,12 @@ impl PokemonData {
             Stat::new(55, 0),
             Stat::new(60, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 45,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Ember),
             (1, Move::StringShot),
@@ -25624,7 +29292,16 @@ impl PokemonData {
             (80, Move::Amnesia),
             (90, Move::Thrash),
             (100, Move::FlareBlitz),
-        ]
+        ],
+        egg_moves: Some(&[
+            Move::StringShot,
+            Move::Harden,
+            Move::Foresight,
+            Move::Endure,
+            Move::MorningSun,
+            Move::MagnetRise,
+            Move::ZenHeadbutt,
+        ])
     };
     pub const Volcarona: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Fire),
@@ -25641,12 +29318,12 @@ impl PokemonData {
             Stat::new(105, 0),
             Stat::new(100, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::ONE_TO_ONE,
+        catch_rate: 15,
         egg_group: PokemonEggGroup::One(EggGroup::Bug),
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 40,
+        base_friendship: 70,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::Ember),
@@ -25661,7 +29338,8 @@ impl PokemonData {
             (80, Move::RagePowder),
             (90, Move::Hurricane),
             (100, Move::FieryDance),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Cobalion: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Steel, Type::Fighting),
@@ -25678,12 +29356,12 @@ impl PokemonData {
             Stat::new(72, 0),
             Stat::new(108, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::QuickAttack),
@@ -25699,7 +29377,8 @@ impl PokemonData {
             (61, Move::WorkUp),
             (67, Move::MetalBurst),
             (73, Move::CloseCombat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Terrakion: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Rock, Type::Fighting),
@@ -25716,12 +29395,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(108, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::QuickAttack),
@@ -25737,7 +29416,8 @@ impl PokemonData {
             (61, Move::WorkUp),
             (67, Move::StoneEdge),
             (73, Move::CloseCombat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Virizion: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Grass, Type::Fighting),
@@ -25754,12 +29434,12 @@ impl PokemonData {
             Stat::new(129, 3),
             Stat::new(108, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::QuickAttack),
@@ -25775,7 +29455,8 @@ impl PokemonData {
             (61, Move::WorkUp),
             (67, Move::LeafBlade),
             (73, Move::CloseCombat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const TornadusIncarnate: PokemonData = PokemonData {
         _type: PokemonType::Single(Type::Flying),
@@ -25792,12 +29473,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(111, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 90,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Gust),
             (1, Move::Uproar),
@@ -25816,7 +29497,8 @@ impl PokemonData {
             (73, Move::DarkPulse),
             (79, Move::HammerArm),
             (85, Move::Thrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const ThundurusIncarnate: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Electric, Type::Flying),
@@ -25833,12 +29515,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(111, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 90,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::ThunderShock),
             (1, Move::Uproar),
@@ -25857,7 +29539,8 @@ impl PokemonData {
             (73, Move::DarkPulse),
             (79, Move::HammerArm),
             (85, Move::Thrash),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Reshiram: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Fire),
@@ -25874,12 +29557,12 @@ impl PokemonData {
             Stat::new(120, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::DragonRage),
             (1, Move::FireFang),
@@ -25896,7 +29579,8 @@ impl PokemonData {
             (85, Move::Outrage),
             (92, Move::HyperVoice),
             (100, Move::BlueFlare),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Zekrom: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Electric),
@@ -25913,12 +29597,12 @@ impl PokemonData {
             Stat::new(100, 0),
             Stat::new(90, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::DragonRage),
             (1, Move::ThunderFang),
@@ -25935,7 +29619,8 @@ impl PokemonData {
             (85, Move::Outrage),
             (92, Move::HyperVoice),
             (100, Move::BoltStrike),
-        ]
+        ],
+        egg_moves: None
     };
     pub const LandorusIncarnate: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Ground, Type::Flying),
@@ -25952,12 +29637,12 @@ impl PokemonData {
             Stat::new(80, 0),
             Stat::new(101, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::MALE_ONLY,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 90,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::RockTomb),
             (1, Move::Block),
@@ -25976,7 +29661,8 @@ impl PokemonData {
             (73, Move::StoneEdge),
             (79, Move::HammerArm),
             (85, Move::Outrage),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Kyurem: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Dragon, Type::Ice),
@@ -25993,12 +29679,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(95, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::DragonRage),
             (1, Move::IcyWind),
@@ -26014,7 +29700,8 @@ impl PokemonData {
             (78, Move::Blizzard),
             (85, Move::Outrage),
             (92, Move::HyperVoice),
-        ]
+        ],
+        egg_moves: None
     };
     pub const KeldeoOrdinary: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Water, Type::Fighting),
@@ -26031,12 +29718,12 @@ impl PokemonData {
             Stat::new(90, 0),
             Stat::new(108, 0)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 80,
+        base_friendship: 35,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Leer),
             (1, Move::AquaJet),
@@ -26052,7 +29739,8 @@ impl PokemonData {
             (61, Move::WorkUp),
             (67, Move::HydroPump),
             (73, Move::CloseCombat),
-        ]
+        ],
+        egg_moves: None
     };
     pub const MeloettaAria: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Normal, Type::Psychic),
@@ -26069,12 +29757,12 @@ impl PokemonData {
             Stat::new(128, 1),
             Stat::new(90, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 100,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::Round),
             (6, Move::QuickAttack),
@@ -26091,7 +29779,8 @@ impl PokemonData {
             (71, Move::RolePlay),
             (78, Move::CloseCombat),
             (85, Move::PerishSong),
-        ]
+        ],
+        egg_moves: None
     };
     pub const Genesect: PokemonData = PokemonData {
         _type: PokemonType::Double(Type::Bug, Type::Steel),
@@ -26108,12 +29797,12 @@ impl PokemonData {
             Stat::new(95, 0),
             Stat::new(99, 1)
         ),
-        gender_ratio: GenderRatio::Proportion(1, 1), //Hard-coded
-        catch_rate: 45, //Hard-coded
+        gender_ratio: GenderRatio::None,
+        catch_rate: 3,
         egg_group: PokemonEggGroup::None,
-        egg_cycles: 20, //Hard-coded
-        base_friendship: 70, //Hard-coded
-        level_rate: LevelRate::MediumSlow, //Hard-coded
+        egg_cycles: 120,
+        base_friendship: 0,
+        level_rate: LevelRate::Slow,
         level_up_moves: &[
             (1, Move::QuickAttack),
             (1, Move::Screech),
@@ -26134,7 +29823,8 @@ impl PokemonData {
             (66, Move::ZapCannon),
             (73, Move::HyperBeam),
             (77, Move::SelfDestruct),
-        ]
+        ],
+        egg_moves: None
     };
 }
 //endregion
