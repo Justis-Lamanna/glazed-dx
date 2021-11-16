@@ -9,6 +9,7 @@ use crate::data::abilities::{Ability, PokemonAbility};
 use crate::data::attack::Move;
 use crate::data::constants::Species;
 use crate::data::core::{Player, Season};
+use crate::data::item::{EvolutionHeldItem, EvolutionStone, Incense, Item, Pokeball};
 use crate::data::pokemon::AbilitySlot::SlotOne;
 use crate::data::types::{PokemonType, Type};
 
@@ -167,8 +168,8 @@ pub struct Pokemon {
     level_met: u8,
     nature: Nature,
     ability: AbilitySlot,
-    //poke_ball: Item,
-    //held_item: Option<Item>,
+    poke_ball: Pokeball,
+    held_item: Option<Item>,
     move_1: Option<MoveSlot>,
     move_2: Option<MoveSlot>,
     move_3: Option<MoveSlot>,
@@ -322,7 +323,6 @@ pub enum PokemonPokerusStatus {
     Cured
 }
 
-//region Nature
 /// Represents one of the 25 Natures of a Pokemon
 #[derive(Debug)]
 pub enum Nature {
@@ -386,7 +386,6 @@ impl Nature {
         }
     }
 }
-
 /// Allows for random generation of a Nature
 impl Distribution<Nature> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Nature {
@@ -420,7 +419,6 @@ impl Distribution<Nature> for Standard {
         }
     }
 }
-//endregion
 
 impl Pokemon {
     fn determine_moves_by_level(species_data: &PokemonData, level: u8) -> Vec<MoveSlot> {
@@ -476,6 +474,8 @@ impl Pokemon {
             egg: false,
             level_met: level,
             nature,
+            poke_ball: Pokeball::PokeBall,
+            held_item: None,
             move_1: moves.next(),
             move_2: moves.next(),
             move_3: moves.next(),
@@ -530,4 +530,77 @@ impl Pokemon {
 
         self.level = level;
     }
+}
+
+/// Represents evolution + breeding data for a species
+pub struct Evolution {
+    base: Species,
+    baby: Option<BabyPokemon>,
+    paths: &'static[EvolutionPath]
+}
+
+/// Represents data on the baby stage of this Pokemon
+pub struct BabyPokemon {
+    species: Species,
+    incense: Incense
+}
+
+/// Represents one possible evolution for this species
+pub struct EvolutionPath {
+    to: Species,
+    trigger: EvolutionTrigger
+}
+
+/// Represents all evolution triggers accepted by the game
+pub enum EvolutionTrigger {
+    AtLevel(u8),
+    AtLevelWithGender(EvolutionTriggerGender),
+    AtLevelSpawn(Species),
+    AtLevelRandomly(EvolutionTriggerRandom),
+    HighFriendship,
+    HighFriendshipAtTime(EvolutionTriggerTime),
+    HighFriendshipWithMoveType(Type),
+    KnowsMove(Move),
+    AtLocation(EvolutionTriggerLocation),
+    HoldingItemAtTime(EvolutionHeldItem, EvolutionTriggerTime),
+    WithPartyPokemon(Species),
+    HighBeauty,
+    WithHighStat(EvolutionTriggerStats),
+    EvolutionStone(EvolutionStone),
+    EvolutionStoneWithGender(EvolutionStone, EvolutionTriggerGender),
+    Trading,
+    TradingWithItem(EvolutionHeldItem),
+    TradingForPokemon(Species)
+}
+
+/// Represents a type of location that can trigger Evolution
+pub enum EvolutionTriggerLocation {
+    MossRock,
+    IceRock,
+    MagneticField
+}
+
+/// Represents a time of day that can trigger Evolution
+pub enum EvolutionTriggerTime {
+    Day,
+    Night
+}
+
+/// Represents a gender that can trigger Evolution
+pub enum EvolutionTriggerGender {
+    Male,
+    Female
+}
+
+/// Represents a trigger that chooses a random Evolution based on Personality
+pub enum EvolutionTriggerRandom {
+    Low,
+    High
+}
+
+/// Represents a trigger depending on a high stat
+pub enum EvolutionTriggerStats {
+    Attack,
+    Defense,
+    Equal
 }
