@@ -1,6 +1,6 @@
 use crate::data::types::Type;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Move {
     Pound,
     KarateChop,
@@ -664,20 +664,20 @@ pub enum Effect {
 
 #[derive(Debug)]
 pub struct MoveData {
-    id: u16,
-    pp: u8,
-    priority: i8,
-    accuracy: Accuracy,
-    _type: Type,
-    contest_type: ContestType,
-    damage_type: DamageType,
-    target: Target,
-    effects: &'static[Effect]
+    pub id: u16,
+    pub pp: u8,
+    pub priority: i8,
+    pub accuracy: Accuracy,
+    pub _type: Type,
+    pub contest_type: ContestType,
+    pub damage_type: DamageType,
+    pub target: Target,
+    pub effects: &'static[Effect]
 }
 
 //region MoveConstants
 impl Move {
-    fn data(&self) -> MoveData {
+    pub fn data(&self) -> MoveData {
         match self {
             Move::Pound => MoveData::Pound,
             Move::KarateChop => MoveData::KarateChop,

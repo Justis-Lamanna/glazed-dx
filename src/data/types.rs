@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::ops::Mul;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Type {
     Normal,
     Fighting,

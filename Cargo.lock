@@ -229,7 +229,7 @@ checksum = "4ec02e091aa634e2c3ada4a392989e7c3116673ef0ac5b72232439094d73b7fd"
 dependencies = [
  "cfg-if 1.0.0",
  "crossbeam-utils",
- "lazy_static",
+ "lazy_static 1.4.0",
  "memoffset",
  "scopeguard",
 ]
@@ -251,7 +251,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d82cfc11ce7f2c3faef78d8a684447b40d503d9681acebed6cb728d45940c4db"
 dependencies = [
  "cfg-if 1.0.0",
- "lazy_static",
+ "lazy_static 1.4.0",
 ]
 
 [[package]]
@@ -398,6 +398,7 @@ name = "glazed-dx"
 version = "0.1.0"
 dependencies = [
  "game-loop",
+ "lazy_static 0.1.16",
  "rand",
  "strum",
  "strum_macros",
@@ -441,6 +442,12 @@ checksum = "7cc9ffccd38c451a86bf13657df244e9c3f37493cce8e5e21e940963777acc84"
 dependencies = [
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "lazy_static"
+version = "0.1.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf186d1a8aa5f5bee5fd662bc9c1b949e0259e1bcc379d1f006847b0080c7417"
 
 [[package]]
 name = "lazy_static"
@@ -583,7 +590,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c5caf0c24d51ac1c905c27d4eda4fa0635bbe0de596b8f79235e0b17a4d29385"
 dependencies = [
- "lazy_static",
+ "lazy_static 1.4.0",
  "libc",
  "log",
  "ndk",
@@ -901,7 +908,7 @@ dependencies = [
  "bitflags",
  "calloop",
  "dlib 0.4.2",
- "lazy_static",
+ "lazy_static 1.4.0",
  "log",
  "memmap2",
  "nix 0.18.0",
@@ -1032,7 +1039,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a317bf8f9fba2476b4b2c85ef4c4af8ff39c3c7f0cdfeed4f82c34a880aa837b"
 dependencies = [
  "bumpalo",
- "lazy_static",
+ "lazy_static 1.4.0",
  "log",
  "proc-macro2",
  "quote",
@@ -1138,7 +1145,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d841fca9aed7febf9bed2e9796c49bf58d4152ceda8ac949ebe00868d8f0feb8"
 dependencies = [
  "dlib 0.5.0",
- "lazy_static",
+ "lazy_static 1.4.0",
  "pkg-config",
 ]
 
@@ -1196,7 +1203,7 @@ dependencies = [
  "core-video-sys",
  "dispatch",
  "instant",
- "lazy_static",
+ "lazy_static 1.4.0",
  "libc",
  "log",
  "mio",
@@ -1221,7 +1228,7 @@ version = "2.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea26926b4ce81a6f5d9d0f3a0bc401e5a37c6ae14a1bfaa8ff6099ca80038c59"
 dependencies = [
- "lazy_static",
+ "lazy_static 1.4.0",
  "libc",
  "pkg-config",
 ]

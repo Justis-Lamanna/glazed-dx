@@ -1,13 +1,22 @@
 mod data;
 
+#[macro_use]
+extern crate lazy_static;
+
 use std::any::Any;
 use game_loop::game_loop;
 
 use game_loop::winit::event::{Event, WindowEvent};
 use game_loop::winit::event_loop::EventLoop;
 use game_loop::winit::window::{Window, WindowBuilder};
+use crate::data::constants::Species;
+use crate::data::core::Player;
+use crate::data::pokemon::Pokemon;
 
 fn main() {
+    let player = Player::create_player("Milo");
+    let mon = Pokemon::create_from_species_level(&player, Species::Quilava, 8);
+    println!("{:#?}", mon);
     // let event_loop = EventLoop::new();
     // let window = WindowBuilder::new().build(&event_loop).unwrap();
     //

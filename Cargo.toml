@@ -8,3 +8,4 @@ rand = "0.8.4"
 game-loop = { version = "0.8.0", features = ["window"] }
 strum = "0.22"
 strum_macros = "0.22"
+lazy_static = "0.1.15"
