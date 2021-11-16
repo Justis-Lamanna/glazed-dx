@@ -1,5 +1,6 @@
 use crate::data::types::Type;
 
+/// Represents an Attack a Pokemon can have
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Move {
     Pound,
@@ -563,12 +564,14 @@ pub enum Move {
     FusionBolt
 }
 
+/// Represents the Accuracy of a move
 #[derive(Debug)]
 pub enum Accuracy {
     AlwaysHits,
     Percentage(u8)
 }
 
+/// Represents the type of Move, for contests
 #[derive(Debug)]
 pub enum ContestType {
     Tough,
@@ -578,6 +581,7 @@ pub enum ContestType {
     Cute
 }
 
+/// Represents the type of Move, for which attack/defense is used
 #[derive(Debug)]
 pub enum DamageType {
     Physical,
@@ -585,6 +589,7 @@ pub enum DamageType {
     Status
 }
 
+/// Represents the stats that are maintained in battle
 #[derive(Debug)]
 pub enum BattleStat {
     Attack,
@@ -596,6 +601,7 @@ pub enum BattleStat {
     Evasion
 }
 
+/// Represents a persistent status ailment
 #[derive(Debug)]
 pub enum NonVolatileBattleAilment {
     Paralysis,
@@ -605,12 +611,14 @@ pub enum NonVolatileBattleAilment {
     Poison(bool)
 }
 
+/// Represents a non-persistent status ailment
 #[derive(Debug)]
 pub enum VolatileBattleAilment {
     Confusion,
     Infatuation
 }
 
+/// Represents a weather condition in battle
 #[derive(Debug)]
 pub enum Weather {
     HarshSun,
@@ -620,6 +628,7 @@ pub enum Weather {
     Fog
 }
 
+/// Represents a target, or targets of an attack
 #[derive(Debug)]
 pub enum Target {
     User,
@@ -635,12 +644,14 @@ pub enum Target {
     All
 }
 
+/// Represents if a stat change affects the user, or the target
 #[derive(Debug)]
 pub enum StatChangeTarget {
     User,
     Target
 }
 
+/// Possible effects of an attack
 #[derive(Debug)]
 pub enum Effect {
     Damage(u8),
@@ -662,6 +673,7 @@ pub enum Effect {
     Custom
 }
 
+/// Represents data for a specific attack
 #[derive(Debug)]
 pub struct MoveData {
     pub id: u16,

@@ -1,6 +1,7 @@
 use std::sync::{Mutex, RwLock};
 use rand::RngCore;
 
+/// Represents the player of the game
 pub struct Player {
     pub name: String,
     pub trainer_id: u32,
@@ -18,6 +19,7 @@ impl Player {
     }
 }
 
+/// Represents the season in the game
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Season {
     Spring, Summer, Autumn, Winter

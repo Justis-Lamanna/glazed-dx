@@ -9,8 +9,10 @@ use crate::data::abilities::{Ability, PokemonAbility};
 use crate::data::attack::Move;
 use crate::data::constants::Species;
 use crate::data::core::{Player, Season};
+use crate::data::pokemon::AbilitySlot::SlotOne;
 use crate::data::types::{PokemonType, Type};
 
+/// Represents the probability of a Pokemon being male or female (or neither)
 #[derive(Debug)]
 pub enum GenderRatio {
     None,
@@ -26,6 +28,7 @@ impl GenderRatio {
     pub const SEVEN_TO_ONE: GenderRatio = GenderRatio::Proportion(7, 1);
 }
 
+/// Represents an Egg Group, i.e. the Compatibility of two Pokemon
 #[derive(Debug)]
 pub enum EggGroup {
     Monster,
@@ -44,6 +47,7 @@ pub enum EggGroup {
     Dragon
 }
 
+/// Represents the Egg Groups a Pokemon has
 #[derive(Debug)]
 pub enum PokemonEggGroup {
     None,
@@ -51,6 +55,7 @@ pub enum PokemonEggGroup {
     Two(EggGroup, EggGroup)
 }
 
+/// Represents how much EXP is required to advance levels
 #[derive(Debug)]
 pub enum LevelRate {
     Erratic, Fast, MediumFast, MediumSlow, Slow, Fluctuating
@@ -75,6 +80,7 @@ impl LevelRate {
         0, 0, 4, 13, 32, 65, 112, 178, 276, 393, 540, 745, 967, 1230, 1591, 1957, 2457, 3046, 3732, 4526, 5440, 6482, 7666, 9003, 10506, 12187, 14060, 16140, 18439, 20974, 23760, 26811, 30146, 33780, 37731, 42017, 46656, 50653, 55969, 60505, 66560, 71677, 78533, 84277, 91998, 98415, 107069, 114205, 123863, 131766, 142500, 151222, 163105, 172697, 185807, 196322, 210739, 222231, 238036, 250562, 267840, 281456, 300293, 315059, 335544, 351520, 373744, 390991, 415050, 433631, 459620, 479600, 507617, 529063, 559209, 582187, 614566, 639146, 673863, 700115, 737280, 765275, 804997, 834809, 877201, 908905, 954084, 987754, 1035837, 1071552, 1122660, 1160499, 1214753, 1254796, 1312322, 1354652, 1415577, 1460276, 1524731, 1571884, 1640000
     ];
 
+    /// Get the amount of EXP needed to make it to a specific level
     pub fn experience_for_level(&self, level: u8) -> u32 {
         let rate = match self {
             LevelRate::Erratic => LevelRate::ERRATIC_RATE,
@@ -87,6 +93,7 @@ impl LevelRate {
         return rate[level as usize];
     }
 
+    /// Get the level the Pokemon should be at with the given EXP
     pub fn level_for_experience(&self, experience: u32) -> u8 {
         let rate = match self {
             LevelRate::Erratic => LevelRate::ERRATIC_RATE,
@@ -107,14 +114,17 @@ impl LevelRate {
     }
 }
 
+/// Represents the Pokedex color of a Pokemon
 #[derive(Debug)]
 pub enum Color {
     Red, Blue, Yellow, Green, Black, Brown, Purple, Gray, White, Pink
 }
 
+/// Represents the six members of stat data for a Pokemon species as a whole
 #[derive(Debug)]
 pub struct Stats(pub Stat,pub Stat,pub Stat,pub Stat,pub Stat,pub Stat);
 
+/// Represents data tied to a Stat for a Pokemon species as a whole
 #[derive(Debug)]
 pub struct Stat {
     base_stat: u8,
@@ -129,6 +139,7 @@ impl Stat {
     }
 }
 
+/// Represents data on a Pokemon species as a whole
 #[derive(Debug)]
 pub struct PokemonData {
     pub _type: PokemonType,
@@ -148,12 +159,14 @@ pub struct PokemonData {
     pub egg_moves: Option<&'static[Move]>
 }
 
+/// Represents an individual member of a Pokemon species
 #[derive(Debug)]
 pub struct Pokemon {
     species: Species,
     egg: bool,
     level_met: u8,
     nature: Nature,
+    ability: AbilitySlot,
     //poke_ball: Item,
     //held_item: Option<Item>,
     move_1: Option<MoveSlot>,
@@ -181,6 +194,7 @@ pub struct Pokemon {
     fateful_encounter: bool
 }
 
+/// Represents the Contest Stats and Winnings of this Pokemon
 #[derive(Debug, Default)]
 pub struct PokemonContestStats {
     coolness: u8,
@@ -201,6 +215,7 @@ pub struct PokemonContestStats {
     effort_ribbon: bool
 }
 
+/// Represents the status conditions of this Pokemon
 #[derive(Debug, Default)]
 pub struct PokemonStatusCondition {
     sleep: u8,
@@ -211,6 +226,7 @@ pub struct PokemonStatusCondition {
     paralysis: bool
 }
 
+/// Represents the values tied to a given moveslot
 #[derive(Debug)]
 pub struct MoveSlot {
     attack: Move,
@@ -218,6 +234,7 @@ pub struct MoveSlot {
     pp_bonus: u8
 }
 
+/// Represents the values tied to a given stat (HP, Atk, etc.)
 #[derive(Debug)]
 pub struct StatSlot {
     value: u16,
@@ -225,6 +242,9 @@ pub struct StatSlot {
     ev: u8
 }
 impl StatSlot {
+    /// Create a StatSlot for the HP of Shedinja
+    /// Even with the smallest base HP, the minimum HP value is 4. Shedinja is handled as a special
+    /// case, to ensure it always has an HP of 1.
     fn hp_shedinja(iv: u8, ev: u8) -> StatSlot {
         StatSlot {
             value: 1,
@@ -233,6 +253,7 @@ impl StatSlot {
         }
     }
 
+    /// Create a StatSlot for the HP of a Pokemon
     fn hp(base: u8, level: u8, iv: u8, ev: u8) -> StatSlot {
         let calculation = (2u32 * u32::from(base)) + u32::from(iv) + (u32::from(ev) / 4u32);
         let calculation = calculation * u32::from(level);
@@ -245,11 +266,13 @@ impl StatSlot {
         }
     }
 
+    /// Recalculate (in-place) the HP of this Pokemon
     fn recalculate_hp(&mut self, base: u8, level: u8) {
         let recalc = StatSlot::hp(base, level, self.iv, self.ev);
         self.value = recalc.value;
     }
 
+    /// Create a StatSlot for this Pokemon
     fn stat(base: u8, level: u8, iv: u8, ev: u8, boost: &NatureBoost) -> StatSlot {
         let calculation = (2u32 * u32::from(base)) + u32::from(iv) + (u32::from(ev) / 4u32);
         let calculation = calculation * u32::from(level);
@@ -267,19 +290,31 @@ impl StatSlot {
         }
     }
 
+    /// Recalculate (in-place) the stat of this Pokemon
     fn recalculate(&mut self, base: u8, level: u8, boost: &NatureBoost) {
         let recalc = StatSlot::stat(base, level, self.iv, self.ev, boost);
         self.value = recalc.value;
     }
 }
 
+/// Represents which Ability the Pokemon has
 #[derive(Debug)]
 pub enum AbilitySlot {
     SlotOne,
     SlotTwo,
     Hidden
 }
+impl Distribution<AbilitySlot> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> AbilitySlot {
+        if rng.gen() {
+            AbilitySlot::SlotOne
+        } else {
+            AbilitySlot::SlotTwo
+        }
+    }
+}
 
+/// Represents the stage of Pokerus the Pokemon is at
 #[derive(Debug)]
 pub enum PokemonPokerusStatus {
     None,
@@ -288,7 +323,8 @@ pub enum PokemonPokerusStatus {
 }
 
 //region Nature
-#[derive(Debug, EnumIter)]
+/// Represents one of the 25 Natures of a Pokemon
+#[derive(Debug)]
 pub enum Nature {
     Hardy, Docile, Serious, Bashful, Quirky, //Neutrals
     Lonely, Brave, Adamant, Naughty, //Attack Up
@@ -298,13 +334,14 @@ pub enum Nature {
     Calm, Gentle, Sassy, Careful //Speed up
 }
 
+/// The result of checking if a stat is boosted by this nature
 pub enum NatureBoost {
     Increased,
     Decreased,
     Neutral
 }
-
 impl Nature {
+    /// Get whether the boost, if any, this nature gives the attack stat
     pub fn get_attack_boost(&self) -> NatureBoost {
         match self {
             Nature::Lonely | Nature::Brave | Nature::Adamant | Nature::Naughty => NatureBoost::Increased,
@@ -313,6 +350,7 @@ impl Nature {
         }
     }
 
+    /// Get whether the boost, if any, this nature gives the defense stat
     pub fn get_defense_boost(&self) -> NatureBoost {
         match self {
             Nature::Bold | Nature::Impish | Nature::Lax | Nature::Relaxed => NatureBoost::Increased,
@@ -321,6 +359,7 @@ impl Nature {
         }
     }
 
+    /// Get whether the boost, if any, this nature gives the special attack stat
     pub fn get_special_attack_boost(&self) -> NatureBoost {
         match self {
             Nature::Modest | Nature::Mild | Nature::Rash | Nature::Quiet => NatureBoost::Increased,
@@ -329,6 +368,7 @@ impl Nature {
         }
     }
 
+    /// Get whether the boost, if any, this nature gives the special defense stat
     pub fn get_special_defense_boost(&self) -> NatureBoost {
         match self {
             Nature::Calm | Nature::Gentle | Nature::Careful | Nature::Sassy => NatureBoost::Increased,
@@ -337,6 +377,7 @@ impl Nature {
         }
     }
 
+    /// Get whether the boost, if any, this nature gives the speed stat
     pub fn get_speed_boost(&self) -> NatureBoost {
         match self {
             Nature::Timid | Nature::Hasty | Nature::Jolly | Nature::Naive => NatureBoost::Increased,
@@ -345,6 +386,8 @@ impl Nature {
         }
     }
 }
+
+/// Allows for random generation of a Nature
 impl Distribution<Nature> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Nature {
         match rng.gen_range(0..=24) {
@@ -406,6 +449,7 @@ impl Pokemon {
         movepool
     }
 
+    /// Create a Pokemon of a given owner, species, and level
     pub fn create_from_species_level(player: &Player, species: Species, level: u8) -> Pokemon {
         let species_data = species.data();
         let mut rng = rand::thread_rng();
@@ -421,9 +465,14 @@ impl Pokemon {
         let special_attack = StatSlot::stat(species_data.stats.3.base_stat, level, rng.gen_range(0..=31), 0, &nature.get_special_attack_boost());
         let special_defense = StatSlot::stat(species_data.stats.4.base_stat, level, rng.gen_range(0..=31), 0, &nature.get_special_defense_boost());
         let speed = StatSlot::stat(species_data.stats.5.base_stat, level, rng.gen_range(0..=31), 0, &nature.get_speed_boost());
+        let ability = match species_data.ability {
+            PokemonAbility::One(_) => AbilitySlot::SlotOne,
+            PokemonAbility::Two(_, _) => rand::thread_rng().gen()
+        };
 
         Pokemon {
             species,
+            ability,
             egg: false,
             level_met: level,
             nature,
@@ -453,6 +502,7 @@ impl Pokemon {
         }
     }
 
+    /// Create a basic Pokemon Egg
     pub fn create_egg(player: &Player, species: Species) -> Pokemon {
         let mut p = Pokemon::create_from_species_level(player, species, 1);
         p.egg = true;
@@ -460,9 +510,10 @@ impl Pokemon {
         p
     }
 
+    /// Recalculate the level + stats of this Pokemon
     pub fn recalculate_stats(&mut self) {
         let species_data = self.species.data();
-        let level = self.level;
+        let level = species_data.level_rate.level_for_experience(self.experience);
         match self.species {
             Species::Shedinja => self.hp.value = 1,
             _ => self.hp.recalculate_hp(species_data.stats.0.base_stat, level)
@@ -476,5 +527,7 @@ impl Pokemon {
         if self.current_hp > self.hp.value {
             self.current_hp = self.hp.value;
         }
+
+        self.level = level;
     }
 }

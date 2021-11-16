@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::ops::Mul;
 
+/// Represents the Type of a Pokemon
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Type {
     Normal,
@@ -24,6 +25,7 @@ pub enum Type {
 }
 
 impl Type {
+    /// Determine the effectiveness of this type trying to hit another type
     pub fn attacking(&self, defending_type: &Type) -> Effectiveness {
         match self {
             Type::Normal => match defending_type {
@@ -204,6 +206,7 @@ impl Type {
     }
 }
 
+/// Represents the effectiveness of a Move matchup
 #[derive(Debug)]
 pub enum Effectiveness {
     Immune,
@@ -228,6 +231,7 @@ impl Mul for Effectiveness {
     }
 }
 
+/// Represents the type(s) for a Pokemon
 #[derive(Debug)]
 pub enum PokemonType {
     Single(Type),

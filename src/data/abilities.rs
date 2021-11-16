@@ -1,3 +1,4 @@
+/// Represents an Ability a Pokemon has
 #[derive(Debug)]
 pub enum Ability {
     AirLock,
@@ -170,6 +171,7 @@ pub enum Ability {
     Protean
 }
 
+/// Represents the ability(s) for a Pokemon
 #[derive(Debug)]
 pub enum PokemonAbility {
     One(Ability),
