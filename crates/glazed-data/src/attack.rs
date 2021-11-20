@@ -1,4 +1,4 @@
-use crate::data::types::Type;
+use crate::types::Type;
 
 /// Represents an Attack a Pokemon can have
 #[derive(Debug, Copy, Clone, PartialEq)]

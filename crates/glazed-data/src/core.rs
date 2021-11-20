@@ -1,4 +1,3 @@
-use std::sync::{Mutex, RwLock};
 use rand::RngCore;
 
 /// Represents the player of the game

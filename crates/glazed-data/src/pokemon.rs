@@ -1,17 +1,12 @@
 use rand::{Rng, RngCore};
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
-use strum_macros;
-use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
-
-use crate::data::abilities::{Ability, PokemonAbility};
-use crate::data::attack::Move;
-use crate::data::constants::Species;
-use crate::data::core::{Player, Season};
-use crate::data::item::{EvolutionHeldItem, EvolutionStone, Incense, Item, Pokeball};
-use crate::data::pokemon::AbilitySlot::SlotOne;
-use crate::data::types::{PokemonType, Type};
+use crate::abilities::{Ability, PokemonAbility};
+use crate::attack::Move;
+use crate::constants::Species;
+use crate::core::Player;
+use crate::item::{Item, Pokeball};
+use crate::types::PokemonType;
 
 /// Represents the probability of a Pokemon being male or female (or neither)
 #[derive(Debug)]
@@ -449,8 +444,12 @@ impl Pokemon {
 
     /// Create a Pokemon of a given owner, species, and level
     pub fn create_from_species_level(player: &Player, species: Species, level: u8) -> Pokemon {
-        let species_data = species.data();
         let mut rng = rand::thread_rng();
+        let species = match species {
+            Species::Unown(_) => Species::Unown(rng.gen()),
+            _ => species
+        };
+        let species_data = species.data();
         let mut moves = Pokemon::determine_moves_by_level(&species_data, level);
         let mut moves = moves.drain(..);
         let nature: Nature = rng.gen();

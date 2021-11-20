@@ -1,11 +1,4 @@
-[package]
-name = "glazed-dx"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-rand = "0.8.4"
-game-loop = { version = "0.8.0", features = ["window"] }
-strum = "0.22"
-strum_macros = "0.22"
-lazy_static = "0.1.15"
+[workspace]
+members = [
+    "crates/*",
+]
