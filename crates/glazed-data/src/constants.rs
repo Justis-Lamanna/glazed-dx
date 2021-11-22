@@ -662,6 +662,11 @@ pub enum Species {
     Meloetta(MeloettaForm),
     Genesect(GenesectForm)
 }
+impl Default for Species {
+    fn default() -> Self {
+        Species::Bulbasaur
+    }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum UnownForm {

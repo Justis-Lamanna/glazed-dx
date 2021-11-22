@@ -1,6 +1,7 @@
 use rand::RngCore;
 
 /// Represents the player of the game
+#[derive(Debug)]
 pub struct Player {
     pub name: String,
     pub trainer_id: u32,

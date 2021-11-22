@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use rand::{Rng, RngCore};
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
@@ -6,6 +7,7 @@ use crate::attack::Move;
 use crate::constants::Species;
 use crate::core::Player;
 use crate::item::{Item, Pokeball};
+use crate::pokemon::MoveTemplate::NaturalMove;
 use crate::types::PokemonType;
 
 /// Represents the probability of a Pokemon being male or female (or neither)
@@ -172,7 +174,7 @@ pub struct Pokemon {
     experience: u32,
     personality: u32,
     friendship: u8,
-    original_trainer_id: u32,
+    original_trainer_id: u16,
     original_trainer_name: String,
     nickname: Option<String>,
     level: u8,
@@ -228,6 +230,15 @@ pub struct MoveSlot {
     attack: Move,
     pp: u8,
     pp_bonus: u8
+}
+impl From<Move> for MoveSlot {
+    fn from(m: Move) -> Self {
+        MoveSlot {
+            attack: m,
+            pp: m.data().pp,
+            pp_bonus: 0
+        }
+    }
 }
 
 /// Represents the values tied to a given stat (HP, Atk, etc.)
@@ -442,65 +453,6 @@ impl Pokemon {
         movepool
     }
 
-    /// Create a Pokemon of a given owner, species, and level
-    pub fn create_from_species_level(player: &Player, species: Species, level: u8) -> Pokemon {
-        let mut rng = rand::thread_rng();
-        let species = match species {
-            Species::Unown(_) => Species::Unown(rng.gen()),
-            _ => species
-        };
-        let species_data = species.data();
-        let mut moves = Pokemon::determine_moves_by_level(&species_data, level);
-        let mut moves = moves.drain(..);
-        let nature: Nature = rng.gen();
-        let hp = match species {
-            Species::Shedinja => StatSlot::hp_shedinja(rng.gen_range(0..=31), 0),
-            _ => StatSlot::hp(species_data.stats.0.base_stat, level, rng.gen_range(0..=31), 0)
-        };
-        let attack = StatSlot::stat(species_data.stats.1.base_stat, level, rng.gen_range(0..=31), 0, &nature.get_attack_boost());
-        let defense = StatSlot::stat(species_data.stats.2.base_stat, level, rng.gen_range(0..=31), 0, &nature.get_defense_boost());
-        let special_attack = StatSlot::stat(species_data.stats.3.base_stat, level, rng.gen_range(0..=31), 0, &nature.get_special_attack_boost());
-        let special_defense = StatSlot::stat(species_data.stats.4.base_stat, level, rng.gen_range(0..=31), 0, &nature.get_special_defense_boost());
-        let speed = StatSlot::stat(species_data.stats.5.base_stat, level, rng.gen_range(0..=31), 0, &nature.get_speed_boost());
-        let ability = match species_data.ability {
-            PokemonAbility::One(_) => AbilitySlot::SlotOne,
-            PokemonAbility::Two(_, _) => rand::thread_rng().gen()
-        };
-
-        Pokemon {
-            species,
-            ability,
-            egg: false,
-            level_met: level,
-            nature,
-            poke_ball: Pokeball::PokeBall,
-            held_item: None,
-            move_1: moves.next(),
-            move_2: moves.next(),
-            move_3: moves.next(),
-            move_4: moves.next(),
-            experience: species_data.level_rate.experience_for_level(level),
-            personality: rng.next_u32(),
-            friendship: species_data.base_friendship,
-            original_trainer_id: player.trainer_id,
-            original_trainer_name: player.name.clone(),
-            nickname: None,
-            level,
-            markings: [false; 6],
-            status: PokemonStatusCondition::default(),
-            pokerus: PokemonPokerusStatus::None,
-            current_hp: hp.value,
-            hp,
-            attack,
-            defense,
-            special_attack,
-            special_defense,
-            speed,
-            contest: PokemonContestStats::default(),
-            fateful_encounter: false
-        }
-    }
-
     /// Recalculate the level + stats of this Pokemon
     pub fn recalculate_stats(&mut self) {
         let species_data = self.species.data();
@@ -520,6 +472,11 @@ impl Pokemon {
         }
 
         self.level = level;
+    }
+
+    /// Restore this Pokemon to its max HP
+    pub fn heal(&mut self) {
+        self.current_hp = self.hp.value;
     }
 
     /// Get the actual ability of this Pokemon
@@ -551,5 +508,186 @@ impl Pokemon {
                 Some(a) => a
             }
         }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct PokemonTemplate {
+    pub species: Species,
+    pub level_met: Option<u8>,
+    pub nature: Option<Nature>,
+    pub ability: Option<AbilitySlot>,
+    pub poke_ball: Option<Pokeball>,
+    pub held_item: Option<Item>,
+    pub move_1: MoveTemplate,
+    pub move_2: MoveTemplate,
+    pub move_3: MoveTemplate,
+    pub move_4: MoveTemplate,
+    pub personality: Option<u32>,
+    pub friendship: Option<u8>,
+    pub original_trainer_id: Option<u16>,
+    pub original_trainer_name: Option<String>,
+    pub nickname: Option<String>,
+    pub level: u8,
+    pub markings: [bool; 6],
+    pub status: Option<PokemonStatusCondition>,
+    pub pokerus: Option<PokemonPokerusStatus>,
+    pub current_hp: Option<u16>,
+    pub ivs: IVTemplate,
+    pub evs: EVTemplate,
+    pub contest: Option<PokemonContestStats>,
+    pub fateful_encounter: bool
+}
+
+#[derive(Debug)]
+pub enum MoveTemplate {
+    HardCoded(Move),
+    NaturalMove,
+    None
+}
+impl Default for MoveTemplate {
+    fn default() -> Self {
+        MoveTemplate::NaturalMove
+    }
+}
+
+#[derive(Debug)]
+pub enum IVTemplate {
+    Random,
+    HardCoded(u8, u8, u8, u8, u8, u8),
+    All(u8),
+    Rare
+}
+impl Default for IVTemplate {
+    fn default() -> Self {
+        IVTemplate::Random
+    }
+}
+
+#[derive(Debug)]
+pub enum EVTemplate {
+    HardCoded(u8, u8, u8, u8, u8, u8),
+    All(u8)
+}
+impl Default for EVTemplate {
+    fn default() -> Self {
+        EVTemplate::All(0)
+    }
+}
+
+impl PokemonTemplate {
+    pub fn new(species: Species) -> PokemonTemplate {
+        PokemonTemplate {
+            species,
+            ..Default::default()
+        }
+    }
+
+    fn create_stats(ivs: IVTemplate, evs: EVTemplate) -> (StatSlot, StatSlot, StatSlot, StatSlot, StatSlot, StatSlot) {
+        let ivs = match ivs {
+            IVTemplate::Random => [
+                rand::thread_rng().gen_range(0..=31),
+                rand::thread_rng().gen_range(0..=31),
+                rand::thread_rng().gen_range(0..=31),
+                rand::thread_rng().gen_range(0..=31),
+                rand::thread_rng().gen_range(0..=31),
+                rand::thread_rng().gen_range(0..=31)
+            ],
+            IVTemplate::HardCoded(hp, atk, def, spa, spd, spe) => [hp, atk, def, spa, spd, spe],
+            IVTemplate::All(val) => [val; 6],
+            IVTemplate::Rare => {
+                let mut lucky_slots = [false; 6];
+                let mut counter = 0;
+                while counter < 3 {
+                    let slot = rand::thread_rng().gen_range(0..6);
+                    if !lucky_slots[slot] {
+                        lucky_slots[slot] = true;
+                        counter += 1;
+                    }
+                }
+                let mut stats = [0u8; 6];
+                for (idx, slot) in stats.iter_mut().enumerate() {
+                    if lucky_slots[idx] {
+                        *slot = 31u8;
+                    } else {
+                        *slot = rand::thread_rng().gen_range(0u8..=31u8);
+                    }
+                }
+                stats
+            }
+        };
+        let evs = match evs {
+            EVTemplate::HardCoded(a, b, c, d, e, f) => [a, b, c, d, e, f],
+            EVTemplate::All(v) => [v; 6]
+        };
+        (
+            StatSlot {value: 0, iv: ivs[0], ev: evs[0] },
+            StatSlot {value: 0, iv: ivs[1], ev: evs[1] },
+            StatSlot {value: 0, iv: ivs[2], ev: evs[2] },
+            StatSlot {value: 0, iv: ivs[3], ev: evs[3] },
+            StatSlot {value: 0, iv: ivs[4], ev: evs[4] },
+            StatSlot {value: 0, iv: ivs[5], ev: evs[5] }
+        )
+    }
+}
+
+impl From<PokemonTemplate> for Pokemon {
+    fn from(template: PokemonTemplate) -> Self {
+        let data = template.species.data();
+        let (hp, atk, def, spa, spd, spe)
+            = PokemonTemplate::create_stats(template.ivs, template.evs);
+        let mut moves = Pokemon::determine_moves_by_level(data, template.level);
+        let mut moves = moves.drain(..);
+        let mut p = Pokemon {
+            species: template.species,
+            egg: template.level == 0,
+            level_met: template.level_met.unwrap_or(template.level),
+            nature: template.nature.unwrap_or_else(|| rand::thread_rng().gen()),
+            ability: template.ability.unwrap_or_else(|| rand::thread_rng().gen()),
+            poke_ball: template.poke_ball.unwrap_or(Pokeball::PokeBall),
+            held_item: template.held_item,
+            move_1: match template.move_1 {
+                MoveTemplate::HardCoded(m) => Some(MoveSlot::from(m)),
+                MoveTemplate::NaturalMove => moves.next(),
+                MoveTemplate::None => None
+            },
+            move_2: match template.move_2 {
+                MoveTemplate::HardCoded(m) => Some(MoveSlot::from(m)),
+                MoveTemplate::NaturalMove => moves.next(),
+                MoveTemplate::None => None
+            },
+            move_3: match template.move_3 {
+                MoveTemplate::HardCoded(m) => Some(MoveSlot::from(m)),
+                MoveTemplate::NaturalMove => moves.next(),
+                MoveTemplate::None => None
+            },
+            move_4: match template.move_4 {
+                MoveTemplate::HardCoded(m) => Some(MoveSlot::from(m)),
+                MoveTemplate::NaturalMove => moves.next(),
+                MoveTemplate::None => None
+            },
+            experience: data.level_rate.experience_for_level(template.level),
+            personality: template.personality.unwrap_or_else(|| rand::thread_rng().gen()),
+            friendship: template.friendship.unwrap_or(data.base_friendship),
+            original_trainer_id: template.original_trainer_id.unwrap_or_else(|| rand::thread_rng().gen()),
+            original_trainer_name: template.original_trainer_name.unwrap_or(String::from("Trainer")),
+            nickname: template.nickname,
+            level: template.level,
+            markings: template.markings,
+            status: template.status.unwrap_or_else(|| PokemonStatusCondition::default()),
+            pokerus: template.pokerus.unwrap_or_else(|| PokemonPokerusStatus::None),
+            contest: template.contest.unwrap_or_else(|| PokemonContestStats::default()),
+            fateful_encounter: template.fateful_encounter,
+            current_hp: 0,
+            hp,
+            attack: atk,
+            defense: def,
+            special_attack: spa,
+            special_defense: spd,
+            speed: spe
+        };
+        p.recalculate_stats();
+        p.heal();
+        p
     }
 }
