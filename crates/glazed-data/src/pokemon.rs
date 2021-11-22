@@ -575,6 +575,10 @@ impl Default for EVTemplate {
     }
 }
 
+/// A template which can be used to create individual Pokemon
+/// Use as few or as many fields as necessary. Any unused are given
+/// suitable defaults, or are randomly generated.
+/// At minimum, only a species is required (an egg will be generated).
 impl PokemonTemplate {
     pub fn new(species: Species) -> PokemonTemplate {
         PokemonTemplate {
@@ -630,7 +634,6 @@ impl PokemonTemplate {
         )
     }
 }
-
 impl From<PokemonTemplate> for Pokemon {
     fn from(template: PokemonTemplate) -> Self {
         let data = template.species.data();

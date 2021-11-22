@@ -33,6 +33,9 @@ pub enum Pokeball {
     ParkBall,
     DreamBall
 }
+impl From<Pokeball> for Item {
+    fn from(p: Pokeball) -> Self { Item::Pokeball(p) }
+}
 
 /// All Evolution Stones in the game
 #[derive(Debug)]
@@ -48,6 +51,9 @@ pub enum EvolutionStone {
     DawnStone,
     IceStone
 }
+impl From<EvolutionStone> for Item {
+    fn from(p: EvolutionStone) -> Self { Item::Stone(p) }
+}
 
 /// All incenses in the game
 #[derive(Debug)]
@@ -61,6 +67,9 @@ pub enum Incense {
     RoseIncense,
     SeaIncense,
     WaveIncense
+}
+impl From<Incense> for Item {
+    fn from(p: Incense) -> Self { Item::Incense(p) }
 }
 
 /// All Evolution-inducing held items in the game
@@ -81,6 +90,9 @@ pub enum EvolutionHeldItem {
     RazorFang,
     ReaperCloth,
     UpGrade
+}
+impl From<EvolutionHeldItem> for Item {
+    fn from(p: EvolutionHeldItem) -> Self { Item::EvolutionHeldItem(p) }
 }
 
 /// All berries in the game
@@ -153,6 +165,9 @@ pub enum Berry {
     RoseliBerry,
     KeeBerry,
     MarangaBerry
+}
+impl From<Berry> for Item {
+    fn from(p: Berry) -> Self { Item::Berry(p) }
 }
 
 //region TMs and HMs
@@ -264,6 +279,9 @@ impl TM {
         }
     }
 }
+impl From<TM> for Item {
+    fn from(p: TM) -> Self { Item::TM(p) }
+}
 
 /// All HMs in the game, and their mappings
 #[derive(Debug)]
@@ -284,6 +302,9 @@ impl HM {
         }
     }
 }
+impl From<HM> for Item {
+    fn from(p: HM) -> Self { Item::HM(p) }
+}
 //endregion
 
 /// All Mail in the game
@@ -303,11 +324,17 @@ pub enum Mail {
     SteelMail(String),
     TunnelMail(String)
 }
+impl From<Mail> for Item {
+    fn from(p: Mail) -> Self { Item::Mail(p) }
+}
 
 /// All Key items in the game
 #[derive(Debug)]
 pub enum KeyItem {
 
+}
+impl From<KeyItem> for Item {
+    fn from(p: KeyItem) -> Self { Item::KeyItem(p) }
 }
 
 /// All Items in the game
