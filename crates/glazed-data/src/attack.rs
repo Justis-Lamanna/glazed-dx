@@ -713,6 +713,8 @@ impl Item {
             Item::SplashPlate | Item::SpookyPlate | Item::StonePlate | Item::ToxicPlate | Item::ZapPlate => 90,
             Item::HardStone => 100,
             Item::IronBall => 130,
+            Item::TM(tm) => tm.get_move().get_power().unwrap_or(10),
+            Item::HM(hm) => hm.get_move().get_power().unwrap_or(10),
             _ => 30
         }
     }
@@ -1282,6 +1284,17 @@ impl Move {
             Move::FusionFlare => &FusionFlare,
             Move::FusionBolt => &FusionBolt,
         }
+    }
+
+    pub fn get_power(&self) -> Option<u8> {
+        let data = self.data();
+        for fx in data.effects {
+            match fx {
+                Effect::Damage(u) => Some(u),
+                _ => continue
+            };
+        }
+        None
     }
 }
 
