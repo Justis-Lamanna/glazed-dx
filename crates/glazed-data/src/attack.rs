@@ -679,7 +679,6 @@ pub enum Effect {
 /// Represents data for a specific attack
 #[derive(Debug)]
 pub struct MoveData {
-    pub id: u16,
     pub pp: u8,
     pub priority: i8,
     pub accuracy: Accuracy,
@@ -1299,7 +1298,6 @@ impl Move {
 }
 
 pub static Pound: MoveData = MoveData {
-    id: 1,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1310,7 +1308,6 @@ pub static Pound: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static KarateChop: MoveData = MoveData {
-    id: 2,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1321,7 +1318,6 @@ pub static KarateChop: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::Critical(1)],
 };
 pub static DoubleSlap: MoveData = MoveData {
-    id: 3,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -1332,7 +1328,6 @@ pub static DoubleSlap: MoveData = MoveData {
     effects: &[Effect::Damage(15), Effect::MultiHit(2, 5)],
 };
 pub static CometPunch: MoveData = MoveData {
-    id: 4,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -1343,7 +1338,6 @@ pub static CometPunch: MoveData = MoveData {
     effects: &[Effect::Damage(18), Effect::MultiHit(2, 5)],
 };
 pub static MegaPunch: MoveData = MoveData {
-    id: 5,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -1354,7 +1348,6 @@ pub static MegaPunch: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static PayDay: MoveData = MoveData {
-    id: 6,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1365,7 +1358,6 @@ pub static PayDay: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static FirePunch: MoveData = MoveData {
-    id: 7,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1376,7 +1368,6 @@ pub static FirePunch: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static IcePunch: MoveData = MoveData {
-    id: 8,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1387,7 +1378,6 @@ pub static IcePunch: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static ThunderPunch: MoveData = MoveData {
-    id: 9,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1398,7 +1388,6 @@ pub static ThunderPunch: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static Scratch: MoveData = MoveData {
-    id: 10,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1409,7 +1398,6 @@ pub static Scratch: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static ViseGrip: MoveData = MoveData {
-    id: 11,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1420,7 +1408,6 @@ pub static ViseGrip: MoveData = MoveData {
     effects: &[Effect::Damage(55)],
 };
 pub static Guillotine: MoveData = MoveData {
-    id: 12,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(30),
@@ -1431,7 +1418,6 @@ pub static Guillotine: MoveData = MoveData {
     effects: &[Effect::OneHitKnockout],
 };
 pub static RazorWind: MoveData = MoveData {
-    id: 13,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1442,7 +1428,6 @@ pub static RazorWind: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Critical(1)],
 };
 pub static SwordsDance: MoveData = MoveData {
-    id: 14,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -1453,7 +1438,6 @@ pub static SwordsDance: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 2, 100, StatChangeTarget::User)],
 };
 pub static Cut: MoveData = MoveData {
-    id: 15,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -1464,7 +1448,6 @@ pub static Cut: MoveData = MoveData {
     effects: &[Effect::Damage(50)],
 };
 pub static Gust: MoveData = MoveData {
-    id: 16,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1475,7 +1458,6 @@ pub static Gust: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static WingAttack: MoveData = MoveData {
-    id: 17,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1486,7 +1468,6 @@ pub static WingAttack: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static Whirlwind: MoveData = MoveData {
-    id: 18,
     pp: 20,
     priority: -6,
     accuracy: Accuracy::AlwaysHits,
@@ -1497,7 +1478,6 @@ pub static Whirlwind: MoveData = MoveData {
     effects: &[Effect::ForceTargetSwitch],
 };
 pub static Fly: MoveData = MoveData {
-    id: 19,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -1508,7 +1488,6 @@ pub static Fly: MoveData = MoveData {
     effects: &[Effect::Damage(90)],
 };
 pub static Bind: MoveData = MoveData {
-    id: 20,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -1519,7 +1498,6 @@ pub static Bind: MoveData = MoveData {
     effects: &[Effect::Damage(15), Effect::Custom],
 };
 pub static Slam: MoveData = MoveData {
-    id: 21,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -1530,7 +1508,6 @@ pub static Slam: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static VineWhip: MoveData = MoveData {
-    id: 22,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1541,7 +1518,6 @@ pub static VineWhip: MoveData = MoveData {
     effects: &[Effect::Damage(45)],
 };
 pub static Stomp: MoveData = MoveData {
-    id: 23,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1552,7 +1528,6 @@ pub static Stomp: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::Flinch(30)],
 };
 pub static DoubleKick: MoveData = MoveData {
-    id: 24,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1563,7 +1538,6 @@ pub static DoubleKick: MoveData = MoveData {
     effects: &[Effect::Damage(30), Effect::MultiHit(2, 2)],
 };
 pub static MegaKick: MoveData = MoveData {
-    id: 25,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -1574,7 +1548,6 @@ pub static MegaKick: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static JumpKick: MoveData = MoveData {
-    id: 26,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -1585,7 +1558,6 @@ pub static JumpKick: MoveData = MoveData {
     effects: &[Effect::Damage(100)],
 };
 pub static RollingKick: MoveData = MoveData {
-    id: 27,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -1596,7 +1568,6 @@ pub static RollingKick: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::Flinch(30)],
 };
 pub static SandAttack: MoveData = MoveData {
-    id: 28,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1607,7 +1578,6 @@ pub static SandAttack: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 100, StatChangeTarget::Target)],
 };
 pub static Headbutt: MoveData = MoveData {
-    id: 29,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1618,7 +1588,6 @@ pub static Headbutt: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::Flinch(30)],
 };
 pub static HornAttack: MoveData = MoveData {
-    id: 30,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1629,7 +1598,6 @@ pub static HornAttack: MoveData = MoveData {
     effects: &[Effect::Damage(65)],
 };
 pub static FuryAttack: MoveData = MoveData {
-    id: 31,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -1640,7 +1608,6 @@ pub static FuryAttack: MoveData = MoveData {
     effects: &[Effect::Damage(15), Effect::MultiHit(2, 5)],
 };
 pub static HornDrill: MoveData = MoveData {
-    id: 32,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(30),
@@ -1651,7 +1618,6 @@ pub static HornDrill: MoveData = MoveData {
     effects: &[Effect::OneHitKnockout],
 };
 pub static Tackle: MoveData = MoveData {
-    id: 33,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1662,7 +1628,6 @@ pub static Tackle: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static BodySlam: MoveData = MoveData {
-    id: 34,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1673,7 +1638,6 @@ pub static BodySlam: MoveData = MoveData {
     effects: &[Effect::Damage(85), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static Wrap: MoveData = MoveData {
-    id: 35,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -1684,7 +1648,6 @@ pub static Wrap: MoveData = MoveData {
     effects: &[Effect::Damage(15), Effect::Custom],
 };
 pub static TakeDown: MoveData = MoveData {
-    id: 36,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -1695,7 +1658,6 @@ pub static TakeDown: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::Recoil(25)],
 };
 pub static Thrash: MoveData = MoveData {
-    id: 37,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1706,7 +1668,6 @@ pub static Thrash: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static DoubleEdge: MoveData = MoveData {
-    id: 38,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1717,7 +1678,6 @@ pub static DoubleEdge: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::Recoil(33)],
 };
 pub static TailWhip: MoveData = MoveData {
-    id: 39,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1728,7 +1688,6 @@ pub static TailWhip: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::Target)],
 };
 pub static PoisonSting: MoveData = MoveData {
-    id: 40,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1739,7 +1698,6 @@ pub static PoisonSting: MoveData = MoveData {
     effects: &[Effect::Damage(15), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static Twineedle: MoveData = MoveData {
-    id: 41,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1750,7 +1708,6 @@ pub static Twineedle: MoveData = MoveData {
     effects: &[Effect::Damage(25), Effect::MultiHit(2, 2), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 20)],
 };
 pub static PinMissile: MoveData = MoveData {
-    id: 42,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -1761,7 +1718,6 @@ pub static PinMissile: MoveData = MoveData {
     effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
 };
 pub static Leer: MoveData = MoveData {
-    id: 43,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1772,7 +1728,6 @@ pub static Leer: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::Target)],
 };
 pub static Bite: MoveData = MoveData {
-    id: 44,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1783,7 +1738,6 @@ pub static Bite: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::Flinch(30)],
 };
 pub static Growl: MoveData = MoveData {
-    id: 45,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1794,7 +1748,6 @@ pub static Growl: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, -1, 100, StatChangeTarget::Target)],
 };
 pub static Roar: MoveData = MoveData {
-    id: 46,
     pp: 20,
     priority: -6,
     accuracy: Accuracy::AlwaysHits,
@@ -1805,7 +1758,6 @@ pub static Roar: MoveData = MoveData {
     effects: &[Effect::ForceTargetSwitch],
 };
 pub static Sing: MoveData = MoveData {
-    id: 47,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(55),
@@ -1816,7 +1768,6 @@ pub static Sing: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 0)],
 };
 pub static Supersonic: MoveData = MoveData {
-    id: 48,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(55),
@@ -1827,7 +1778,6 @@ pub static Supersonic: MoveData = MoveData {
     effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0)],
 };
 pub static SonicBoom: MoveData = MoveData {
-    id: 49,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -1838,7 +1788,6 @@ pub static SonicBoom: MoveData = MoveData {
     effects: &[],
 };
 pub static Disable: MoveData = MoveData {
-    id: 50,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1849,7 +1798,6 @@ pub static Disable: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static Acid: MoveData = MoveData {
-    id: 51,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1860,7 +1808,6 @@ pub static Acid: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static Ember: MoveData = MoveData {
-    id: 52,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1871,7 +1818,6 @@ pub static Ember: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Flamethrower: MoveData = MoveData {
-    id: 53,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1882,7 +1828,6 @@ pub static Flamethrower: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Mist: MoveData = MoveData {
-    id: 54,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -1893,7 +1838,6 @@ pub static Mist: MoveData = MoveData {
     effects: &[],
 };
 pub static WaterGun: MoveData = MoveData {
-    id: 55,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1904,7 +1848,6 @@ pub static WaterGun: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static HydroPump: MoveData = MoveData {
-    id: 56,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(80),
@@ -1915,7 +1858,6 @@ pub static HydroPump: MoveData = MoveData {
     effects: &[Effect::Damage(110)],
 };
 pub static Surf: MoveData = MoveData {
-    id: 57,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1926,7 +1868,6 @@ pub static Surf: MoveData = MoveData {
     effects: &[Effect::Damage(90)],
 };
 pub static IceBeam: MoveData = MoveData {
-    id: 58,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1937,7 +1878,6 @@ pub static IceBeam: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static Blizzard: MoveData = MoveData {
-    id: 59,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(70),
@@ -1948,7 +1888,6 @@ pub static Blizzard: MoveData = MoveData {
     effects: &[Effect::Damage(110), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static Psybeam: MoveData = MoveData {
-    id: 60,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1959,7 +1898,6 @@ pub static Psybeam: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10)],
 };
 pub static BubbleBeam: MoveData = MoveData {
-    id: 61,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1970,7 +1908,6 @@ pub static BubbleBeam: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Speed, -1, 10, StatChangeTarget::Target)],
 };
 pub static AuroraBeam: MoveData = MoveData {
-    id: 62,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -1981,7 +1918,6 @@ pub static AuroraBeam: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Attack, -1, 10, StatChangeTarget::Target)],
 };
 pub static HyperBeam: MoveData = MoveData {
-    id: 63,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -1992,7 +1928,6 @@ pub static HyperBeam: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static Peck: MoveData = MoveData {
-    id: 64,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2003,7 +1938,6 @@ pub static Peck: MoveData = MoveData {
     effects: &[Effect::Damage(35)],
 };
 pub static DrillPeck: MoveData = MoveData {
-    id: 65,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2014,7 +1948,6 @@ pub static DrillPeck: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static Submission: MoveData = MoveData {
-    id: 66,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(80),
@@ -2025,7 +1958,6 @@ pub static Submission: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Recoil(25)],
 };
 pub static LowKick: MoveData = MoveData {
-    id: 67,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2036,7 +1968,6 @@ pub static LowKick: MoveData = MoveData {
     effects: &[],
 };
 pub static Counter: MoveData = MoveData {
-    id: 68,
     pp: 20,
     priority: -5,
     accuracy: Accuracy::Percentage(100),
@@ -2047,7 +1978,6 @@ pub static Counter: MoveData = MoveData {
     effects: &[],
 };
 pub static SeismicToss: MoveData = MoveData {
-    id: 69,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2058,7 +1988,6 @@ pub static SeismicToss: MoveData = MoveData {
     effects: &[],
 };
 pub static Strength: MoveData = MoveData {
-    id: 70,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2069,7 +1998,6 @@ pub static Strength: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static Absorb: MoveData = MoveData {
-    id: 71,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2080,7 +2008,6 @@ pub static Absorb: MoveData = MoveData {
     effects: &[Effect::Damage(20), Effect::Drain(50)],
 };
 pub static MegaDrain: MoveData = MoveData {
-    id: 72,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2091,7 +2018,6 @@ pub static MegaDrain: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::Drain(50)],
 };
 pub static LeechSeed: MoveData = MoveData {
-    id: 73,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -2102,7 +2028,6 @@ pub static LeechSeed: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static Growth: MoveData = MoveData {
-    id: 74,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2113,7 +2038,6 @@ pub static Growth: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 100, StatChangeTarget::User)],
 };
 pub static RazorLeaf: MoveData = MoveData {
-    id: 75,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -2124,7 +2048,6 @@ pub static RazorLeaf: MoveData = MoveData {
     effects: &[Effect::Damage(55), Effect::Critical(1)],
 };
 pub static SolarBeam: MoveData = MoveData {
-    id: 76,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2135,7 +2058,6 @@ pub static SolarBeam: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static PoisonPowder: MoveData = MoveData {
-    id: 77,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -2146,7 +2068,6 @@ pub static PoisonPowder: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 0)],
 };
 pub static StunSpore: MoveData = MoveData {
-    id: 78,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -2157,7 +2078,6 @@ pub static StunSpore: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 0)],
 };
 pub static SleepPowder: MoveData = MoveData {
-    id: 79,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -2168,7 +2088,6 @@ pub static SleepPowder: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 0)],
 };
 pub static PetalDance: MoveData = MoveData {
-    id: 80,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2179,7 +2098,6 @@ pub static PetalDance: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static StringShot: MoveData = MoveData {
-    id: 81,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -2190,7 +2108,6 @@ pub static StringShot: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Speed, -2, 100, StatChangeTarget::Target)],
 };
 pub static DragonRage: MoveData = MoveData {
-    id: 82,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2201,7 +2118,6 @@ pub static DragonRage: MoveData = MoveData {
     effects: &[],
 };
 pub static FireSpin: MoveData = MoveData {
-    id: 83,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -2212,7 +2128,6 @@ pub static FireSpin: MoveData = MoveData {
     effects: &[Effect::Damage(35), Effect::Custom],
 };
 pub static ThunderShock: MoveData = MoveData {
-    id: 84,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2223,7 +2138,6 @@ pub static ThunderShock: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static Thunderbolt: MoveData = MoveData {
-    id: 85,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2234,7 +2148,6 @@ pub static Thunderbolt: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static ThunderWave: MoveData = MoveData {
-    id: 86,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -2245,7 +2158,6 @@ pub static ThunderWave: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 0)],
 };
 pub static Thunder: MoveData = MoveData {
-    id: 87,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(70),
@@ -2256,7 +2168,6 @@ pub static Thunder: MoveData = MoveData {
     effects: &[Effect::Damage(110), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static RockThrow: MoveData = MoveData {
-    id: 88,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -2267,7 +2178,6 @@ pub static RockThrow: MoveData = MoveData {
     effects: &[Effect::Damage(50)],
 };
 pub static Earthquake: MoveData = MoveData {
-    id: 89,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2278,7 +2188,6 @@ pub static Earthquake: MoveData = MoveData {
     effects: &[Effect::Damage(100)],
 };
 pub static Fissure: MoveData = MoveData {
-    id: 90,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(30),
@@ -2289,7 +2198,6 @@ pub static Fissure: MoveData = MoveData {
     effects: &[Effect::OneHitKnockout],
 };
 pub static Dig: MoveData = MoveData {
-    id: 91,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2300,7 +2208,6 @@ pub static Dig: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static Toxic: MoveData = MoveData {
-    id: 92,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -2311,7 +2218,6 @@ pub static Toxic: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(true), 0)],
 };
 pub static Confusion: MoveData = MoveData {
-    id: 93,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2322,7 +2228,6 @@ pub static Confusion: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10)],
 };
 pub static Psychic: MoveData = MoveData {
-    id: 94,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2333,7 +2238,6 @@ pub static Psychic: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static Hypnosis: MoveData = MoveData {
-    id: 95,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(60),
@@ -2344,7 +2248,6 @@ pub static Hypnosis: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 0)],
 };
 pub static Meditate: MoveData = MoveData {
-    id: 96,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2355,7 +2258,6 @@ pub static Meditate: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User)],
 };
 pub static Agility: MoveData = MoveData {
-    id: 97,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2366,7 +2268,6 @@ pub static Agility: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Speed, 2, 100, StatChangeTarget::User)],
 };
 pub static QuickAttack: MoveData = MoveData {
-    id: 98,
     pp: 30,
     priority: 1,
     accuracy: Accuracy::Percentage(100),
@@ -2377,7 +2278,6 @@ pub static QuickAttack: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static Rage: MoveData = MoveData {
-    id: 99,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2388,7 +2288,6 @@ pub static Rage: MoveData = MoveData {
     effects: &[Effect::Damage(20)],
 };
 pub static Teleport: MoveData = MoveData {
-    id: 100,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2399,7 +2298,6 @@ pub static Teleport: MoveData = MoveData {
     effects: &[],
 };
 pub static NightShade: MoveData = MoveData {
-    id: 101,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2410,7 +2308,6 @@ pub static NightShade: MoveData = MoveData {
     effects: &[],
 };
 pub static Mimic: MoveData = MoveData {
-    id: 102,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2421,7 +2318,6 @@ pub static Mimic: MoveData = MoveData {
     effects: &[],
 };
 pub static Screech: MoveData = MoveData {
-    id: 103,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -2432,7 +2328,6 @@ pub static Screech: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, -2, 100, StatChangeTarget::Target)],
 };
 pub static DoubleTeam: MoveData = MoveData {
-    id: 104,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2443,7 +2338,6 @@ pub static DoubleTeam: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Evasion, 1, 100, StatChangeTarget::User)],
 };
 pub static Recover: MoveData = MoveData {
-    id: 105,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2454,7 +2348,6 @@ pub static Recover: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static Harden: MoveData = MoveData {
-    id: 106,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2465,7 +2358,6 @@ pub static Harden: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, 1, 100, StatChangeTarget::User)],
 };
 pub static Minimize: MoveData = MoveData {
-    id: 107,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2476,7 +2368,6 @@ pub static Minimize: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Evasion, 2, 100, StatChangeTarget::User)],
 };
 pub static Smokescreen: MoveData = MoveData {
-    id: 108,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2487,7 +2378,6 @@ pub static Smokescreen: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 100, StatChangeTarget::Target)],
 };
 pub static ConfuseRay: MoveData = MoveData {
-    id: 109,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2498,7 +2388,6 @@ pub static ConfuseRay: MoveData = MoveData {
     effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0)],
 };
 pub static Withdraw: MoveData = MoveData {
-    id: 110,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2509,7 +2398,6 @@ pub static Withdraw: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, 1, 100, StatChangeTarget::User)],
 };
 pub static DefenseCurl: MoveData = MoveData {
-    id: 111,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2520,7 +2408,6 @@ pub static DefenseCurl: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, 1, 100, StatChangeTarget::User)],
 };
 pub static Barrier: MoveData = MoveData {
-    id: 112,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2531,7 +2418,6 @@ pub static Barrier: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, 2, 100, StatChangeTarget::User)],
 };
 pub static LightScreen: MoveData = MoveData {
-    id: 113,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2542,7 +2428,6 @@ pub static LightScreen: MoveData = MoveData {
     effects: &[],
 };
 pub static Haze: MoveData = MoveData {
-    id: 114,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2553,7 +2438,6 @@ pub static Haze: MoveData = MoveData {
     effects: &[],
 };
 pub static Reflect: MoveData = MoveData {
-    id: 115,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2564,7 +2448,6 @@ pub static Reflect: MoveData = MoveData {
     effects: &[],
 };
 pub static FocusEnergy: MoveData = MoveData {
-    id: 116,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2575,7 +2458,6 @@ pub static FocusEnergy: MoveData = MoveData {
     effects: &[],
 };
 pub static Bide: MoveData = MoveData {
-    id: 117,
     pp: 10,
     priority: 1,
     accuracy: Accuracy::AlwaysHits,
@@ -2586,7 +2468,6 @@ pub static Bide: MoveData = MoveData {
     effects: &[],
 };
 pub static Metronome: MoveData = MoveData {
-    id: 118,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2597,7 +2478,6 @@ pub static Metronome: MoveData = MoveData {
     effects: &[],
 };
 pub static MirrorMove: MoveData = MoveData {
-    id: 119,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2608,7 +2488,6 @@ pub static MirrorMove: MoveData = MoveData {
     effects: &[],
 };
 pub static SelfDestruct: MoveData = MoveData {
-    id: 120,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2619,7 +2498,6 @@ pub static SelfDestruct: MoveData = MoveData {
     effects: &[Effect::Damage(200)],
 };
 pub static EggBomb: MoveData = MoveData {
-    id: 121,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -2630,7 +2508,6 @@ pub static EggBomb: MoveData = MoveData {
     effects: &[Effect::Damage(100)],
 };
 pub static Lick: MoveData = MoveData {
-    id: 122,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2641,7 +2518,6 @@ pub static Lick: MoveData = MoveData {
     effects: &[Effect::Damage(30), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static Smog: MoveData = MoveData {
-    id: 123,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(70),
@@ -2652,7 +2528,6 @@ pub static Smog: MoveData = MoveData {
     effects: &[Effect::Damage(30), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 40)],
 };
 pub static Sludge: MoveData = MoveData {
-    id: 124,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2663,7 +2538,6 @@ pub static Sludge: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static BoneClub: MoveData = MoveData {
-    id: 125,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -2674,7 +2548,6 @@ pub static BoneClub: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::Flinch(10)],
 };
 pub static FireBlast: MoveData = MoveData {
-    id: 126,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -2685,7 +2558,6 @@ pub static FireBlast: MoveData = MoveData {
     effects: &[Effect::Damage(110), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Waterfall: MoveData = MoveData {
-    id: 127,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2696,7 +2568,6 @@ pub static Waterfall: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Flinch(20)],
 };
 pub static Clamp: MoveData = MoveData {
-    id: 128,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -2707,7 +2578,6 @@ pub static Clamp: MoveData = MoveData {
     effects: &[Effect::Damage(35), Effect::Custom],
 };
 pub static Swift: MoveData = MoveData {
-    id: 129,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2718,7 +2588,6 @@ pub static Swift: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static SkullBash: MoveData = MoveData {
-    id: 130,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2729,7 +2598,6 @@ pub static SkullBash: MoveData = MoveData {
     effects: &[Effect::Damage(130)],
 };
 pub static SpikeCannon: MoveData = MoveData {
-    id: 131,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2740,7 +2608,6 @@ pub static SpikeCannon: MoveData = MoveData {
     effects: &[Effect::Damage(20), Effect::MultiHit(2, 5)],
 };
 pub static Constrict: MoveData = MoveData {
-    id: 132,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2751,7 +2618,6 @@ pub static Constrict: MoveData = MoveData {
     effects: &[Effect::Damage(10), Effect::StatChange(BattleStat::Speed, -1, 10, StatChangeTarget::Target)],
 };
 pub static Amnesia: MoveData = MoveData {
-    id: 133,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2762,7 +2628,6 @@ pub static Amnesia: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialDefense, 2, 100, StatChangeTarget::User)],
 };
 pub static Kinesis: MoveData = MoveData {
-    id: 134,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(80),
@@ -2773,7 +2638,6 @@ pub static Kinesis: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 100, StatChangeTarget::Target)],
 };
 pub static SoftBoiled: MoveData = MoveData {
-    id: 135,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2784,7 +2648,6 @@ pub static SoftBoiled: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static HighJumpKick: MoveData = MoveData {
-    id: 136,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -2795,7 +2658,6 @@ pub static HighJumpKick: MoveData = MoveData {
     effects: &[Effect::Damage(130)],
 };
 pub static Glare: MoveData = MoveData {
-    id: 137,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2806,7 +2668,6 @@ pub static Glare: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 0)],
 };
 pub static DreamEater: MoveData = MoveData {
-    id: 138,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2817,7 +2678,6 @@ pub static DreamEater: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::Drain(50)],
 };
 pub static PoisonGas: MoveData = MoveData {
-    id: 139,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -2828,7 +2688,6 @@ pub static PoisonGas: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 0)],
 };
 pub static Barrage: MoveData = MoveData {
-    id: 140,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -2839,7 +2698,6 @@ pub static Barrage: MoveData = MoveData {
     effects: &[Effect::Damage(15), Effect::MultiHit(2, 5)],
 };
 pub static LeechLife: MoveData = MoveData {
-    id: 141,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2850,7 +2708,6 @@ pub static LeechLife: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Drain(50)],
 };
 pub static LovelyKiss: MoveData = MoveData {
-    id: 142,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -2861,7 +2718,6 @@ pub static LovelyKiss: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 0)],
 };
 pub static SkyAttack: MoveData = MoveData {
-    id: 143,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -2872,7 +2728,6 @@ pub static SkyAttack: MoveData = MoveData {
     effects: &[Effect::Damage(140), Effect::Critical(1), Effect::Flinch(30)],
 };
 pub static Transform: MoveData = MoveData {
-    id: 144,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2883,7 +2738,6 @@ pub static Transform: MoveData = MoveData {
     effects: &[],
 };
 pub static Bubble: MoveData = MoveData {
-    id: 145,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2894,7 +2748,6 @@ pub static Bubble: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::StatChange(BattleStat::Speed, -1, 10, StatChangeTarget::Target)],
 };
 pub static DizzyPunch: MoveData = MoveData {
-    id: 146,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2905,7 +2758,6 @@ pub static DizzyPunch: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20)],
 };
 pub static Spore: MoveData = MoveData {
-    id: 147,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2916,7 +2768,6 @@ pub static Spore: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 0)],
 };
 pub static Flash: MoveData = MoveData {
-    id: 148,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2927,7 +2778,6 @@ pub static Flash: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 100, StatChangeTarget::Target)],
 };
 pub static Psywave: MoveData = MoveData {
-    id: 149,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2938,7 +2788,6 @@ pub static Psywave: MoveData = MoveData {
     effects: &[],
 };
 pub static Splash: MoveData = MoveData {
-    id: 150,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2949,7 +2798,6 @@ pub static Splash: MoveData = MoveData {
     effects: &[],
 };
 pub static AcidArmor: MoveData = MoveData {
-    id: 151,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -2960,7 +2808,6 @@ pub static AcidArmor: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, 2, 100, StatChangeTarget::User)],
 };
 pub static Crabhammer: MoveData = MoveData {
-    id: 152,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -2971,7 +2818,6 @@ pub static Crabhammer: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::Critical(1)],
 };
 pub static Explosion: MoveData = MoveData {
-    id: 153,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -2982,7 +2828,6 @@ pub static Explosion: MoveData = MoveData {
     effects: &[Effect::Damage(250)],
 };
 pub static FurySwipes: MoveData = MoveData {
-    id: 154,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(80),
@@ -2993,7 +2838,6 @@ pub static FurySwipes: MoveData = MoveData {
     effects: &[Effect::Damage(18), Effect::MultiHit(2, 5)],
 };
 pub static Bonemerang: MoveData = MoveData {
-    id: 155,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -3004,7 +2848,6 @@ pub static Bonemerang: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::MultiHit(2, 2)],
 };
 pub static Rest: MoveData = MoveData {
-    id: 156,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3015,7 +2858,6 @@ pub static Rest: MoveData = MoveData {
     effects: &[],
 };
 pub static RockSlide: MoveData = MoveData {
-    id: 157,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -3026,7 +2868,6 @@ pub static RockSlide: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::Flinch(30)],
 };
 pub static HyperFang: MoveData = MoveData {
-    id: 158,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -3037,7 +2878,6 @@ pub static HyperFang: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Flinch(10)],
 };
 pub static Sharpen: MoveData = MoveData {
-    id: 159,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3048,7 +2888,6 @@ pub static Sharpen: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User)],
 };
 pub static Conversion: MoveData = MoveData {
-    id: 160,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3059,7 +2898,6 @@ pub static Conversion: MoveData = MoveData {
     effects: &[],
 };
 pub static TriAttack: MoveData = MoveData {
-    id: 161,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3070,7 +2908,6 @@ pub static TriAttack: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Custom],
 };
 pub static SuperFang: MoveData = MoveData {
-    id: 162,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -3081,7 +2918,6 @@ pub static SuperFang: MoveData = MoveData {
     effects: &[],
 };
 pub static Slash: MoveData = MoveData {
-    id: 163,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3092,7 +2928,6 @@ pub static Slash: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::Critical(1)],
 };
 pub static Substitute: MoveData = MoveData {
-    id: 164,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3103,7 +2938,6 @@ pub static Substitute: MoveData = MoveData {
     effects: &[],
 };
 pub static Struggle: MoveData = MoveData {
-    id: 165,
     pp: 1,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3114,7 +2948,6 @@ pub static Struggle: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::Recoil(25)],
 };
 pub static Sketch: MoveData = MoveData {
-    id: 166,
     pp: 1,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3125,7 +2958,6 @@ pub static Sketch: MoveData = MoveData {
     effects: &[],
 };
 pub static TripleKick: MoveData = MoveData {
-    id: 167,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -3136,7 +2968,6 @@ pub static TripleKick: MoveData = MoveData {
     effects: &[Effect::Damage(10), Effect::MultiHit(3, 3)],
 };
 pub static Thief: MoveData = MoveData {
-    id: 168,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3147,7 +2978,6 @@ pub static Thief: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static SpiderWeb: MoveData = MoveData {
-    id: 169,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3158,7 +2988,6 @@ pub static SpiderWeb: MoveData = MoveData {
     effects: &[],
 };
 pub static MindReader: MoveData = MoveData {
-    id: 170,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3169,7 +2998,6 @@ pub static MindReader: MoveData = MoveData {
     effects: &[],
 };
 pub static Nightmare: MoveData = MoveData {
-    id: 171,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3180,7 +3008,6 @@ pub static Nightmare: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static FlameWheel: MoveData = MoveData {
-    id: 172,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3191,7 +3018,6 @@ pub static FlameWheel: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Snore: MoveData = MoveData {
-    id: 173,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3202,7 +3028,6 @@ pub static Snore: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::Flinch(30)],
 };
 pub static Curse: MoveData = MoveData {
-    id: 174,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3213,7 +3038,6 @@ pub static Curse: MoveData = MoveData {
     effects: &[],
 };
 pub static Flail: MoveData = MoveData {
-    id: 175,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3224,7 +3048,6 @@ pub static Flail: MoveData = MoveData {
     effects: &[],
 };
 pub static Conversion2: MoveData = MoveData {
-    id: 176,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3235,7 +3058,6 @@ pub static Conversion2: MoveData = MoveData {
     effects: &[],
 };
 pub static Aeroblast: MoveData = MoveData {
-    id: 177,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -3246,7 +3068,6 @@ pub static Aeroblast: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::Critical(1)],
 };
 pub static CottonSpore: MoveData = MoveData {
-    id: 178,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3257,7 +3078,6 @@ pub static CottonSpore: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Speed, -2, 100, StatChangeTarget::Target)],
 };
 pub static Reversal: MoveData = MoveData {
-    id: 179,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3268,7 +3088,6 @@ pub static Reversal: MoveData = MoveData {
     effects: &[],
 };
 pub static Spite: MoveData = MoveData {
-    id: 180,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3279,7 +3098,6 @@ pub static Spite: MoveData = MoveData {
     effects: &[],
 };
 pub static PowderSnow: MoveData = MoveData {
-    id: 181,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3290,7 +3108,6 @@ pub static PowderSnow: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static Protect: MoveData = MoveData {
-    id: 182,
     pp: 10,
     priority: 4,
     accuracy: Accuracy::AlwaysHits,
@@ -3301,7 +3118,6 @@ pub static Protect: MoveData = MoveData {
     effects: &[],
 };
 pub static MachPunch: MoveData = MoveData {
-    id: 183,
     pp: 30,
     priority: 1,
     accuracy: Accuracy::Percentage(100),
@@ -3312,7 +3128,6 @@ pub static MachPunch: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static ScaryFace: MoveData = MoveData {
-    id: 184,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3323,7 +3138,6 @@ pub static ScaryFace: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Speed, -2, 100, StatChangeTarget::Target)],
 };
 pub static FeintAttack: MoveData = MoveData {
-    id: 185,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3334,7 +3148,6 @@ pub static FeintAttack: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static SweetKiss: MoveData = MoveData {
-    id: 186,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -3345,7 +3158,6 @@ pub static SweetKiss: MoveData = MoveData {
     effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0)],
 };
 pub static BellyDrum: MoveData = MoveData {
-    id: 187,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3356,7 +3168,6 @@ pub static BellyDrum: MoveData = MoveData {
     effects: &[],
 };
 pub static SludgeBomb: MoveData = MoveData {
-    id: 188,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3367,7 +3178,6 @@ pub static SludgeBomb: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static MudSlap: MoveData = MoveData {
-    id: 189,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3378,7 +3188,6 @@ pub static MudSlap: MoveData = MoveData {
     effects: &[Effect::Damage(20), Effect::StatChange(BattleStat::Accuracy, -1, 100, StatChangeTarget::Target)],
 };
 pub static Octazooka: MoveData = MoveData {
-    id: 190,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -3389,7 +3198,6 @@ pub static Octazooka: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Accuracy, -1, 50, StatChangeTarget::Target)],
 };
 pub static Spikes: MoveData = MoveData {
-    id: 191,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3400,7 +3208,6 @@ pub static Spikes: MoveData = MoveData {
     effects: &[],
 };
 pub static ZapCannon: MoveData = MoveData {
-    id: 192,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(50),
@@ -3411,7 +3218,6 @@ pub static ZapCannon: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 100)],
 };
 pub static Foresight: MoveData = MoveData {
-    id: 193,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3422,7 +3228,6 @@ pub static Foresight: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static DestinyBond: MoveData = MoveData {
-    id: 194,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3433,7 +3238,6 @@ pub static DestinyBond: MoveData = MoveData {
     effects: &[],
 };
 pub static PerishSong: MoveData = MoveData {
-    id: 195,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3444,7 +3248,6 @@ pub static PerishSong: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static IcyWind: MoveData = MoveData {
-    id: 196,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -3455,7 +3258,6 @@ pub static IcyWind: MoveData = MoveData {
     effects: &[Effect::Damage(55), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static Detect: MoveData = MoveData {
-    id: 197,
     pp: 5,
     priority: 4,
     accuracy: Accuracy::AlwaysHits,
@@ -3466,7 +3268,6 @@ pub static Detect: MoveData = MoveData {
     effects: &[],
 };
 pub static BoneRush: MoveData = MoveData {
-    id: 198,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -3477,7 +3278,6 @@ pub static BoneRush: MoveData = MoveData {
     effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
 };
 pub static LockOn: MoveData = MoveData {
-    id: 199,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3488,7 +3288,6 @@ pub static LockOn: MoveData = MoveData {
     effects: &[],
 };
 pub static Outrage: MoveData = MoveData {
-    id: 200,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3499,7 +3298,6 @@ pub static Outrage: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static Sandstorm: MoveData = MoveData {
-    id: 201,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3510,7 +3308,6 @@ pub static Sandstorm: MoveData = MoveData {
     effects: &[Effect::ChangeWeather(Weather::Sandstorm)],
 };
 pub static GigaDrain: MoveData = MoveData {
-    id: 202,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3521,7 +3318,6 @@ pub static GigaDrain: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::Drain(50)],
 };
 pub static Endure: MoveData = MoveData {
-    id: 203,
     pp: 10,
     priority: 4,
     accuracy: Accuracy::AlwaysHits,
@@ -3532,7 +3328,6 @@ pub static Endure: MoveData = MoveData {
     effects: &[],
 };
 pub static Charm: MoveData = MoveData {
-    id: 204,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3543,7 +3338,6 @@ pub static Charm: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, -2, 100, StatChangeTarget::Target)],
 };
 pub static Rollout: MoveData = MoveData {
-    id: 205,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -3554,7 +3348,6 @@ pub static Rollout: MoveData = MoveData {
     effects: &[Effect::Damage(30)],
 };
 pub static FalseSwipe: MoveData = MoveData {
-    id: 206,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3565,7 +3358,6 @@ pub static FalseSwipe: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static Swagger: MoveData = MoveData {
-    id: 207,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -3576,7 +3368,6 @@ pub static Swagger: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 2, 100, StatChangeTarget::Target), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0)],
 };
 pub static MilkDrink: MoveData = MoveData {
-    id: 208,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3587,7 +3378,6 @@ pub static MilkDrink: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static Spark: MoveData = MoveData {
-    id: 209,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3598,7 +3388,6 @@ pub static Spark: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static FuryCutter: MoveData = MoveData {
-    id: 210,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -3609,7 +3398,6 @@ pub static FuryCutter: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static SteelWing: MoveData = MoveData {
-    id: 211,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -3620,7 +3408,6 @@ pub static SteelWing: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User)],
 };
 pub static MeanLook: MoveData = MoveData {
-    id: 212,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3631,7 +3418,6 @@ pub static MeanLook: MoveData = MoveData {
     effects: &[],
 };
 pub static Attract: MoveData = MoveData {
-    id: 213,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3642,7 +3428,6 @@ pub static Attract: MoveData = MoveData {
     effects: &[Effect::VolatileStatus(VolatileBattleAilment::Infatuation, 0)],
 };
 pub static SleepTalk: MoveData = MoveData {
-    id: 214,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3653,7 +3438,6 @@ pub static SleepTalk: MoveData = MoveData {
     effects: &[],
 };
 pub static HealBell: MoveData = MoveData {
-    id: 215,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3664,7 +3448,6 @@ pub static HealBell: MoveData = MoveData {
     effects: &[],
 };
 pub static Return: MoveData = MoveData {
-    id: 216,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3675,7 +3458,6 @@ pub static Return: MoveData = MoveData {
     effects: &[],
 };
 pub static Present: MoveData = MoveData {
-    id: 217,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -3686,7 +3468,6 @@ pub static Present: MoveData = MoveData {
     effects: &[],
 };
 pub static Frustration: MoveData = MoveData {
-    id: 218,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3697,7 +3478,6 @@ pub static Frustration: MoveData = MoveData {
     effects: &[],
 };
 pub static Safeguard: MoveData = MoveData {
-    id: 219,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3708,7 +3488,6 @@ pub static Safeguard: MoveData = MoveData {
     effects: &[],
 };
 pub static PainSplit: MoveData = MoveData {
-    id: 220,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3719,7 +3498,6 @@ pub static PainSplit: MoveData = MoveData {
     effects: &[],
 };
 pub static SacredFire: MoveData = MoveData {
-    id: 221,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -3730,7 +3508,6 @@ pub static SacredFire: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 50)],
 };
 pub static Magnitude: MoveData = MoveData {
-    id: 222,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3741,7 +3518,6 @@ pub static Magnitude: MoveData = MoveData {
     effects: &[],
 };
 pub static DynamicPunch: MoveData = MoveData {
-    id: 223,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(50),
@@ -3752,7 +3528,6 @@ pub static DynamicPunch: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 100)],
 };
 pub static Megahorn: MoveData = MoveData {
-    id: 224,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -3763,7 +3538,6 @@ pub static Megahorn: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static DragonBreath: MoveData = MoveData {
-    id: 225,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3774,7 +3548,6 @@ pub static DragonBreath: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static BatonPass: MoveData = MoveData {
-    id: 226,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3785,7 +3558,6 @@ pub static BatonPass: MoveData = MoveData {
     effects: &[],
 };
 pub static Encore: MoveData = MoveData {
-    id: 227,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3796,7 +3568,6 @@ pub static Encore: MoveData = MoveData {
     effects: &[],
 };
 pub static Pursuit: MoveData = MoveData {
-    id: 228,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3807,7 +3578,6 @@ pub static Pursuit: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static RapidSpin: MoveData = MoveData {
-    id: 229,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3818,7 +3588,6 @@ pub static RapidSpin: MoveData = MoveData {
     effects: &[Effect::Damage(50)],
 };
 pub static SweetScent: MoveData = MoveData {
-    id: 230,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3829,7 +3598,6 @@ pub static SweetScent: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Evasion, -2, 100, StatChangeTarget::Target)],
 };
 pub static IronTail: MoveData = MoveData {
-    id: 231,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -3840,7 +3608,6 @@ pub static IronTail: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::StatChange(BattleStat::Defense, -1, 30, StatChangeTarget::Target)],
 };
 pub static MetalClaw: MoveData = MoveData {
-    id: 232,
     pp: 35,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -3851,7 +3618,6 @@ pub static MetalClaw: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User)],
 };
 pub static VitalThrow: MoveData = MoveData {
-    id: 233,
     pp: 10,
     priority: -1,
     accuracy: Accuracy::AlwaysHits,
@@ -3862,7 +3628,6 @@ pub static VitalThrow: MoveData = MoveData {
     effects: &[Effect::Damage(70)],
 };
 pub static MorningSun: MoveData = MoveData {
-    id: 234,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3873,7 +3638,6 @@ pub static MorningSun: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static Synthesis: MoveData = MoveData {
-    id: 235,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3884,7 +3648,6 @@ pub static Synthesis: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static Moonlight: MoveData = MoveData {
-    id: 236,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3895,7 +3658,6 @@ pub static Moonlight: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static HiddenPower: MoveData = MoveData {
-    id: 237,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3906,7 +3668,6 @@ pub static HiddenPower: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static CrossChop: MoveData = MoveData {
-    id: 238,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(80),
@@ -3917,7 +3678,6 @@ pub static CrossChop: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::Critical(1)],
 };
 pub static Twister: MoveData = MoveData {
-    id: 239,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3928,7 +3688,6 @@ pub static Twister: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::Flinch(20)],
 };
 pub static RainDance: MoveData = MoveData {
-    id: 240,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3939,7 +3698,6 @@ pub static RainDance: MoveData = MoveData {
     effects: &[Effect::ChangeWeather(Weather::Rain)],
 };
 pub static SunnyDay: MoveData = MoveData {
-    id: 241,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3950,7 +3708,6 @@ pub static SunnyDay: MoveData = MoveData {
     effects: &[Effect::ChangeWeather(Weather::HarshSun)],
 };
 pub static Crunch: MoveData = MoveData {
-    id: 242,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -3961,7 +3718,6 @@ pub static Crunch: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::StatChange(BattleStat::Defense, -1, 20, StatChangeTarget::Target)],
 };
 pub static MirrorCoat: MoveData = MoveData {
-    id: 243,
     pp: 20,
     priority: -5,
     accuracy: Accuracy::Percentage(100),
@@ -3972,7 +3728,6 @@ pub static MirrorCoat: MoveData = MoveData {
     effects: &[],
 };
 pub static PsychUp: MoveData = MoveData {
-    id: 244,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -3983,7 +3738,6 @@ pub static PsychUp: MoveData = MoveData {
     effects: &[],
 };
 pub static ExtremeSpeed: MoveData = MoveData {
-    id: 245,
     pp: 5,
     priority: 2,
     accuracy: Accuracy::Percentage(100),
@@ -3994,7 +3748,6 @@ pub static ExtremeSpeed: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static AncientPower: MoveData = MoveData {
-    id: 246,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4005,7 +3758,6 @@ pub static AncientPower: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 10, StatChangeTarget::User)],
 };
 pub static ShadowBall: MoveData = MoveData {
-    id: 247,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4016,7 +3768,6 @@ pub static ShadowBall: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::StatChange(BattleStat::SpecialDefense, -1, 20, StatChangeTarget::Target)],
 };
 pub static FutureSight: MoveData = MoveData {
-    id: 248,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4027,7 +3778,6 @@ pub static FutureSight: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static RockSmash: MoveData = MoveData {
-    id: 249,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4038,7 +3788,6 @@ pub static RockSmash: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::StatChange(BattleStat::Defense, -1, 50, StatChangeTarget::Target)],
 };
 pub static Whirlpool: MoveData = MoveData {
-    id: 250,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -4049,7 +3798,6 @@ pub static Whirlpool: MoveData = MoveData {
     effects: &[Effect::Damage(35), Effect::Custom],
 };
 pub static BeatUp: MoveData = MoveData {
-    id: 251,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4060,7 +3808,6 @@ pub static BeatUp: MoveData = MoveData {
     effects: &[Effect::MultiHit(6, 6)],
 };
 pub static FakeOut: MoveData = MoveData {
-    id: 252,
     pp: 10,
     priority: 3,
     accuracy: Accuracy::Percentage(100),
@@ -4071,7 +3818,6 @@ pub static FakeOut: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::Flinch(100)],
 };
 pub static Uproar: MoveData = MoveData {
-    id: 253,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4082,7 +3828,6 @@ pub static Uproar: MoveData = MoveData {
     effects: &[Effect::Damage(90)],
 };
 pub static Stockpile: MoveData = MoveData {
-    id: 254,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4093,7 +3838,6 @@ pub static Stockpile: MoveData = MoveData {
     effects: &[],
 };
 pub static SpitUp: MoveData = MoveData {
-    id: 255,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4104,7 +3848,6 @@ pub static SpitUp: MoveData = MoveData {
     effects: &[],
 };
 pub static Swallow: MoveData = MoveData {
-    id: 256,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4115,7 +3858,6 @@ pub static Swallow: MoveData = MoveData {
     effects: &[Effect::Heal(25)],
 };
 pub static HeatWave: MoveData = MoveData {
-    id: 257,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -4126,7 +3868,6 @@ pub static HeatWave: MoveData = MoveData {
     effects: &[Effect::Damage(95), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Hail: MoveData = MoveData {
-    id: 258,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4137,7 +3878,6 @@ pub static Hail: MoveData = MoveData {
     effects: &[Effect::ChangeWeather(Weather::Hail)],
 };
 pub static Torment: MoveData = MoveData {
-    id: 259,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4148,7 +3888,6 @@ pub static Torment: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static Flatter: MoveData = MoveData {
-    id: 260,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4159,7 +3898,6 @@ pub static Flatter: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialAttack, 1, 100, StatChangeTarget::Target), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0)],
 };
 pub static WillOWisp: MoveData = MoveData {
-    id: 261,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -4170,7 +3908,6 @@ pub static WillOWisp: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 0)],
 };
 pub static Memento: MoveData = MoveData {
-    id: 262,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4181,7 +3918,6 @@ pub static Memento: MoveData = MoveData {
     effects: &[],
 };
 pub static Facade: MoveData = MoveData {
-    id: 263,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4192,7 +3928,6 @@ pub static Facade: MoveData = MoveData {
     effects: &[Effect::Damage(70)],
 };
 pub static FocusPunch: MoveData = MoveData {
-    id: 264,
     pp: 20,
     priority: -3,
     accuracy: Accuracy::Percentage(100),
@@ -4203,7 +3938,6 @@ pub static FocusPunch: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static SmellingSalts: MoveData = MoveData {
-    id: 265,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4214,7 +3948,6 @@ pub static SmellingSalts: MoveData = MoveData {
     effects: &[Effect::Damage(70)],
 };
 pub static FollowMe: MoveData = MoveData {
-    id: 266,
     pp: 20,
     priority: 2,
     accuracy: Accuracy::AlwaysHits,
@@ -4225,7 +3958,6 @@ pub static FollowMe: MoveData = MoveData {
     effects: &[],
 };
 pub static NaturePower: MoveData = MoveData {
-    id: 267,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4236,7 +3968,6 @@ pub static NaturePower: MoveData = MoveData {
     effects: &[],
 };
 pub static Charge: MoveData = MoveData {
-    id: 268,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4247,7 +3978,6 @@ pub static Charge: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialDefense, 1, 100, StatChangeTarget::User)],
 };
 pub static Taunt: MoveData = MoveData {
-    id: 269,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4258,7 +3988,6 @@ pub static Taunt: MoveData = MoveData {
     effects: &[],
 };
 pub static HelpingHand: MoveData = MoveData {
-    id: 270,
     pp: 20,
     priority: 5,
     accuracy: Accuracy::AlwaysHits,
@@ -4269,7 +3998,6 @@ pub static HelpingHand: MoveData = MoveData {
     effects: &[],
 };
 pub static Trick: MoveData = MoveData {
-    id: 271,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4280,7 +4008,6 @@ pub static Trick: MoveData = MoveData {
     effects: &[],
 };
 pub static RolePlay: MoveData = MoveData {
-    id: 272,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4291,7 +4018,6 @@ pub static RolePlay: MoveData = MoveData {
     effects: &[],
 };
 pub static Wish: MoveData = MoveData {
-    id: 273,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4302,7 +4028,6 @@ pub static Wish: MoveData = MoveData {
     effects: &[],
 };
 pub static Assist: MoveData = MoveData {
-    id: 274,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4313,7 +4038,6 @@ pub static Assist: MoveData = MoveData {
     effects: &[],
 };
 pub static Ingrain: MoveData = MoveData {
-    id: 275,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4324,7 +4048,6 @@ pub static Ingrain: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static Superpower: MoveData = MoveData {
-    id: 276,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4335,7 +4058,6 @@ pub static Superpower: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::StatChange(BattleStat::Attack, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::User)],
 };
 pub static MagicCoat: MoveData = MoveData {
-    id: 277,
     pp: 15,
     priority: 4,
     accuracy: Accuracy::AlwaysHits,
@@ -4346,7 +4068,6 @@ pub static MagicCoat: MoveData = MoveData {
     effects: &[],
 };
 pub static Recycle: MoveData = MoveData {
-    id: 278,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4357,7 +4078,6 @@ pub static Recycle: MoveData = MoveData {
     effects: &[],
 };
 pub static Revenge: MoveData = MoveData {
-    id: 279,
     pp: 10,
     priority: -4,
     accuracy: Accuracy::Percentage(100),
@@ -4368,7 +4088,6 @@ pub static Revenge: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static BrickBreak: MoveData = MoveData {
-    id: 280,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4379,7 +4098,6 @@ pub static BrickBreak: MoveData = MoveData {
     effects: &[Effect::Damage(75)],
 };
 pub static Yawn: MoveData = MoveData {
-    id: 281,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4390,7 +4108,6 @@ pub static Yawn: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static KnockOff: MoveData = MoveData {
-    id: 282,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4401,7 +4118,6 @@ pub static KnockOff: MoveData = MoveData {
     effects: &[Effect::Damage(65)],
 };
 pub static Endeavor: MoveData = MoveData {
-    id: 283,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4412,7 +4128,6 @@ pub static Endeavor: MoveData = MoveData {
     effects: &[],
 };
 pub static Eruption: MoveData = MoveData {
-    id: 284,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4423,7 +4138,6 @@ pub static Eruption: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static SkillSwap: MoveData = MoveData {
-    id: 285,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4434,7 +4148,6 @@ pub static SkillSwap: MoveData = MoveData {
     effects: &[],
 };
 pub static Imprison: MoveData = MoveData {
-    id: 286,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4445,7 +4158,6 @@ pub static Imprison: MoveData = MoveData {
     effects: &[],
 };
 pub static Refresh: MoveData = MoveData {
-    id: 287,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4456,7 +4168,6 @@ pub static Refresh: MoveData = MoveData {
     effects: &[],
 };
 pub static Grudge: MoveData = MoveData {
-    id: 288,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4467,7 +4178,6 @@ pub static Grudge: MoveData = MoveData {
     effects: &[],
 };
 pub static Snatch: MoveData = MoveData {
-    id: 289,
     pp: 10,
     priority: 4,
     accuracy: Accuracy::AlwaysHits,
@@ -4478,7 +4188,6 @@ pub static Snatch: MoveData = MoveData {
     effects: &[],
 };
 pub static SecretPower: MoveData = MoveData {
-    id: 290,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4489,7 +4198,6 @@ pub static SecretPower: MoveData = MoveData {
     effects: &[Effect::Damage(70)],
 };
 pub static Dive: MoveData = MoveData {
-    id: 291,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4500,7 +4208,6 @@ pub static Dive: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static ArmThrust: MoveData = MoveData {
-    id: 292,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4511,7 +4218,6 @@ pub static ArmThrust: MoveData = MoveData {
     effects: &[Effect::Damage(15), Effect::MultiHit(2, 5)],
 };
 pub static Camouflage: MoveData = MoveData {
-    id: 293,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4522,7 +4228,6 @@ pub static Camouflage: MoveData = MoveData {
     effects: &[],
 };
 pub static TailGlow: MoveData = MoveData {
-    id: 294,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4533,7 +4238,6 @@ pub static TailGlow: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialAttack, 3, 100, StatChangeTarget::User)],
 };
 pub static LusterPurge: MoveData = MoveData {
-    id: 295,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4544,7 +4248,6 @@ pub static LusterPurge: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::StatChange(BattleStat::SpecialDefense, -1, 50, StatChangeTarget::Target)],
 };
 pub static MistBall: MoveData = MoveData {
-    id: 296,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4555,7 +4258,6 @@ pub static MistBall: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::StatChange(BattleStat::SpecialAttack, -1, 50, StatChangeTarget::Target)],
 };
 pub static FeatherDance: MoveData = MoveData {
-    id: 297,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4566,7 +4268,6 @@ pub static FeatherDance: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, -2, 100, StatChangeTarget::Target)],
 };
 pub static TeeterDance: MoveData = MoveData {
-    id: 298,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4577,7 +4278,6 @@ pub static TeeterDance: MoveData = MoveData {
     effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0)],
 };
 pub static BlazeKick: MoveData = MoveData {
-    id: 299,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -4588,7 +4288,6 @@ pub static BlazeKick: MoveData = MoveData {
     effects: &[Effect::Damage(85), Effect::Critical(1), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static MudSport: MoveData = MoveData {
-    id: 300,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4599,7 +4298,6 @@ pub static MudSport: MoveData = MoveData {
     effects: &[],
 };
 pub static IceBall: MoveData = MoveData {
-    id: 301,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -4610,7 +4308,6 @@ pub static IceBall: MoveData = MoveData {
     effects: &[Effect::Damage(30)],
 };
 pub static NeedleArm: MoveData = MoveData {
-    id: 302,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4621,7 +4318,6 @@ pub static NeedleArm: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::Flinch(30)],
 };
 pub static SlackOff: MoveData = MoveData {
-    id: 303,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4632,7 +4328,6 @@ pub static SlackOff: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static HyperVoice: MoveData = MoveData {
-    id: 304,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4643,7 +4338,6 @@ pub static HyperVoice: MoveData = MoveData {
     effects: &[Effect::Damage(90)],
 };
 pub static PoisonFang: MoveData = MoveData {
-    id: 305,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4654,7 +4348,6 @@ pub static PoisonFang: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 50)],
 };
 pub static CrushClaw: MoveData = MoveData {
-    id: 306,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -4665,7 +4358,6 @@ pub static CrushClaw: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::StatChange(BattleStat::Defense, -1, 50, StatChangeTarget::Target)],
 };
 pub static BlastBurn: MoveData = MoveData {
-    id: 307,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -4676,7 +4368,6 @@ pub static BlastBurn: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static HydroCannon: MoveData = MoveData {
-    id: 308,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -4687,7 +4378,6 @@ pub static HydroCannon: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static MeteorMash: MoveData = MoveData {
-    id: 309,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -4698,7 +4388,6 @@ pub static MeteorMash: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::Attack, 1, 20, StatChangeTarget::User)],
 };
 pub static Astonish: MoveData = MoveData {
-    id: 310,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4709,7 +4398,6 @@ pub static Astonish: MoveData = MoveData {
     effects: &[Effect::Damage(30), Effect::Flinch(30)],
 };
 pub static WeatherBall: MoveData = MoveData {
-    id: 311,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4720,7 +4408,6 @@ pub static WeatherBall: MoveData = MoveData {
     effects: &[Effect::Damage(50)],
 };
 pub static Aromatherapy: MoveData = MoveData {
-    id: 312,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4731,7 +4418,6 @@ pub static Aromatherapy: MoveData = MoveData {
     effects: &[],
 };
 pub static FakeTears: MoveData = MoveData {
-    id: 313,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4742,7 +4428,6 @@ pub static FakeTears: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialDefense, -2, 100, StatChangeTarget::Target)],
 };
 pub static AirCutter: MoveData = MoveData {
-    id: 314,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -4753,7 +4438,6 @@ pub static AirCutter: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::Critical(1)],
 };
 pub static Overheat: MoveData = MoveData {
-    id: 315,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -4764,7 +4448,6 @@ pub static Overheat: MoveData = MoveData {
     effects: &[Effect::Damage(130), Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
 };
 pub static OdorSleuth: MoveData = MoveData {
-    id: 316,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4775,7 +4458,6 @@ pub static OdorSleuth: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static RockTomb: MoveData = MoveData {
-    id: 317,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -4786,7 +4468,6 @@ pub static RockTomb: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static SilverWind: MoveData = MoveData {
-    id: 318,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4797,7 +4478,6 @@ pub static SilverWind: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 10, StatChangeTarget::User)],
 };
 pub static MetalSound: MoveData = MoveData {
-    id: 319,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -4808,7 +4488,6 @@ pub static MetalSound: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialDefense, -2, 100, StatChangeTarget::Target)],
 };
 pub static GrassWhistle: MoveData = MoveData {
-    id: 320,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(55),
@@ -4819,7 +4498,6 @@ pub static GrassWhistle: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 0)],
 };
 pub static Tickle: MoveData = MoveData {
-    id: 321,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4830,7 +4508,6 @@ pub static Tickle: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, -1, 100, StatChangeTarget::Target), Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::Target)],
 };
 pub static CosmicPower: MoveData = MoveData {
-    id: 322,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4841,7 +4518,6 @@ pub static CosmicPower: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 100, StatChangeTarget::User)],
 };
 pub static WaterSpout: MoveData = MoveData {
-    id: 323,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4852,7 +4528,6 @@ pub static WaterSpout: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static SignalBeam: MoveData = MoveData {
-    id: 324,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4863,7 +4538,6 @@ pub static SignalBeam: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10)],
 };
 pub static ShadowPunch: MoveData = MoveData {
-    id: 325,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4874,7 +4548,6 @@ pub static ShadowPunch: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static Extrasensory: MoveData = MoveData {
-    id: 326,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4885,7 +4558,6 @@ pub static Extrasensory: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Flinch(10)],
 };
 pub static SkyUppercut: MoveData = MoveData {
-    id: 327,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -4896,7 +4568,6 @@ pub static SkyUppercut: MoveData = MoveData {
     effects: &[Effect::Damage(85)],
 };
 pub static SandTomb: MoveData = MoveData {
-    id: 328,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -4907,7 +4578,6 @@ pub static SandTomb: MoveData = MoveData {
     effects: &[Effect::Damage(35), Effect::Custom],
 };
 pub static SheerCold: MoveData = MoveData {
-    id: 329,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(30),
@@ -4918,7 +4588,6 @@ pub static SheerCold: MoveData = MoveData {
     effects: &[Effect::OneHitKnockout],
 };
 pub static MuddyWater: MoveData = MoveData {
-    id: 330,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -4929,7 +4598,6 @@ pub static MuddyWater: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::Accuracy, -1, 30, StatChangeTarget::Target)],
 };
 pub static BulletSeed: MoveData = MoveData {
-    id: 331,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4940,7 +4608,6 @@ pub static BulletSeed: MoveData = MoveData {
     effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
 };
 pub static AerialAce: MoveData = MoveData {
-    id: 332,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4951,7 +4618,6 @@ pub static AerialAce: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static IcicleSpear: MoveData = MoveData {
-    id: 333,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -4962,7 +4628,6 @@ pub static IcicleSpear: MoveData = MoveData {
     effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
 };
 pub static IronDefense: MoveData = MoveData {
-    id: 334,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4973,7 +4638,6 @@ pub static IronDefense: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, 2, 100, StatChangeTarget::User)],
 };
 pub static Block: MoveData = MoveData {
-    id: 335,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4984,7 +4648,6 @@ pub static Block: MoveData = MoveData {
     effects: &[],
 };
 pub static Howl: MoveData = MoveData {
-    id: 336,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -4995,7 +4658,6 @@ pub static Howl: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User)],
 };
 pub static DragonClaw: MoveData = MoveData {
-    id: 337,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5006,7 +4668,6 @@ pub static DragonClaw: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static FrenzyPlant: MoveData = MoveData {
-    id: 338,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -5017,7 +4678,6 @@ pub static FrenzyPlant: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static BulkUp: MoveData = MoveData {
-    id: 339,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5028,7 +4688,6 @@ pub static BulkUp: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 100, StatChangeTarget::User)],
 };
 pub static Bounce: MoveData = MoveData {
-    id: 340,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -5039,7 +4698,6 @@ pub static Bounce: MoveData = MoveData {
     effects: &[Effect::Damage(85), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static MudShot: MoveData = MoveData {
-    id: 341,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -5050,7 +4708,6 @@ pub static MudShot: MoveData = MoveData {
     effects: &[Effect::Damage(55), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static PoisonTail: MoveData = MoveData {
-    id: 342,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5061,7 +4718,6 @@ pub static PoisonTail: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::Critical(1), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
 };
 pub static Covet: MoveData = MoveData {
-    id: 343,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5072,7 +4728,6 @@ pub static Covet: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static VoltTackle: MoveData = MoveData {
-    id: 344,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5083,7 +4738,6 @@ pub static VoltTackle: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::Recoil(33), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static MagicalLeaf: MoveData = MoveData {
-    id: 345,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5094,7 +4748,6 @@ pub static MagicalLeaf: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static WaterSport: MoveData = MoveData {
-    id: 346,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5105,7 +4758,6 @@ pub static WaterSport: MoveData = MoveData {
     effects: &[],
 };
 pub static CalmMind: MoveData = MoveData {
-    id: 347,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5116,7 +4768,6 @@ pub static CalmMind: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialAttack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 100, StatChangeTarget::User)],
 };
 pub static LeafBlade: MoveData = MoveData {
-    id: 348,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5127,7 +4778,6 @@ pub static LeafBlade: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::Critical(1)],
 };
 pub static DragonDance: MoveData = MoveData {
-    id: 349,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5138,7 +4788,6 @@ pub static DragonDance: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 100, StatChangeTarget::User)],
 };
 pub static RockBlast: MoveData = MoveData {
-    id: 350,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -5149,7 +4798,6 @@ pub static RockBlast: MoveData = MoveData {
     effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
 };
 pub static ShockWave: MoveData = MoveData {
-    id: 351,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5160,7 +4808,6 @@ pub static ShockWave: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static WaterPulse: MoveData = MoveData {
-    id: 352,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5171,7 +4818,6 @@ pub static WaterPulse: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20)],
 };
 pub static DoomDesire: MoveData = MoveData {
-    id: 353,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5182,7 +4828,6 @@ pub static DoomDesire: MoveData = MoveData {
     effects: &[Effect::Damage(140)],
 };
 pub static PsychoBoost: MoveData = MoveData {
-    id: 354,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -5193,7 +4838,6 @@ pub static PsychoBoost: MoveData = MoveData {
     effects: &[Effect::Damage(140), Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
 };
 pub static Roost: MoveData = MoveData {
-    id: 355,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5204,7 +4848,6 @@ pub static Roost: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static Gravity: MoveData = MoveData {
-    id: 356,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5215,7 +4858,6 @@ pub static Gravity: MoveData = MoveData {
     effects: &[],
 };
 pub static MiracleEye: MoveData = MoveData {
-    id: 357,
     pp: 40,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5226,7 +4868,6 @@ pub static MiracleEye: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static WakeUpSlap: MoveData = MoveData {
-    id: 358,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5237,7 +4878,6 @@ pub static WakeUpSlap: MoveData = MoveData {
     effects: &[Effect::Damage(70)],
 };
 pub static HammerArm: MoveData = MoveData {
-    id: 359,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -5248,7 +4888,6 @@ pub static HammerArm: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::User)],
 };
 pub static GyroBall: MoveData = MoveData {
-    id: 360,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5259,7 +4898,6 @@ pub static GyroBall: MoveData = MoveData {
     effects: &[],
 };
 pub static HealingWish: MoveData = MoveData {
-    id: 361,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5270,7 +4908,6 @@ pub static HealingWish: MoveData = MoveData {
     effects: &[],
 };
 pub static Brine: MoveData = MoveData {
-    id: 362,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5281,7 +4918,6 @@ pub static Brine: MoveData = MoveData {
     effects: &[Effect::Damage(65)],
 };
 pub static NaturalGift: MoveData = MoveData {
-    id: 363,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5292,7 +4928,6 @@ pub static NaturalGift: MoveData = MoveData {
     effects: &[],
 };
 pub static Feint: MoveData = MoveData {
-    id: 364,
     pp: 10,
     priority: 2,
     accuracy: Accuracy::Percentage(100),
@@ -5303,7 +4938,6 @@ pub static Feint: MoveData = MoveData {
     effects: &[Effect::Damage(30)],
 };
 pub static Pluck: MoveData = MoveData {
-    id: 365,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5314,7 +4948,6 @@ pub static Pluck: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static Tailwind: MoveData = MoveData {
-    id: 366,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5325,7 +4958,6 @@ pub static Tailwind: MoveData = MoveData {
     effects: &[],
 };
 pub static Acupressure: MoveData = MoveData {
-    id: 367,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5336,7 +4968,6 @@ pub static Acupressure: MoveData = MoveData {
     effects: &[],
 };
 pub static MetalBurst: MoveData = MoveData {
-    id: 368,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5347,7 +4978,6 @@ pub static MetalBurst: MoveData = MoveData {
     effects: &[],
 };
 pub static UTurn: MoveData = MoveData {
-    id: 369,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5358,7 +4988,6 @@ pub static UTurn: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::ForceUserSwitch],
 };
 pub static CloseCombat: MoveData = MoveData {
-    id: 370,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5369,7 +4998,6 @@ pub static CloseCombat: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, -1, 100, StatChangeTarget::User)],
 };
 pub static Payback: MoveData = MoveData {
-    id: 371,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5380,7 +5008,6 @@ pub static Payback: MoveData = MoveData {
     effects: &[Effect::Damage(50)],
 };
 pub static Assurance: MoveData = MoveData {
-    id: 372,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5391,7 +5018,6 @@ pub static Assurance: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static Embargo: MoveData = MoveData {
-    id: 373,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5402,7 +5028,6 @@ pub static Embargo: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static Fling: MoveData = MoveData {
-    id: 374,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5413,7 +5038,6 @@ pub static Fling: MoveData = MoveData {
     effects: &[],
 };
 pub static PsychoShift: MoveData = MoveData {
-    id: 375,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5424,7 +5048,6 @@ pub static PsychoShift: MoveData = MoveData {
     effects: &[],
 };
 pub static TrumpCard: MoveData = MoveData {
-    id: 376,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5435,7 +5058,6 @@ pub static TrumpCard: MoveData = MoveData {
     effects: &[],
 };
 pub static HealBlock: MoveData = MoveData {
-    id: 377,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5446,7 +5068,6 @@ pub static HealBlock: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static WringOut: MoveData = MoveData {
-    id: 378,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5457,7 +5078,6 @@ pub static WringOut: MoveData = MoveData {
     effects: &[],
 };
 pub static PowerTrick: MoveData = MoveData {
-    id: 379,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5468,7 +5088,6 @@ pub static PowerTrick: MoveData = MoveData {
     effects: &[],
 };
 pub static GastroAcid: MoveData = MoveData {
-    id: 380,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5479,7 +5098,6 @@ pub static GastroAcid: MoveData = MoveData {
     effects: &[],
 };
 pub static LuckyChant: MoveData = MoveData {
-    id: 381,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5490,7 +5108,6 @@ pub static LuckyChant: MoveData = MoveData {
     effects: &[],
 };
 pub static MeFirst: MoveData = MoveData {
-    id: 382,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5501,7 +5118,6 @@ pub static MeFirst: MoveData = MoveData {
     effects: &[],
 };
 pub static Copycat: MoveData = MoveData {
-    id: 383,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5512,7 +5128,6 @@ pub static Copycat: MoveData = MoveData {
     effects: &[],
 };
 pub static PowerSwap: MoveData = MoveData {
-    id: 384,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5523,7 +5138,6 @@ pub static PowerSwap: MoveData = MoveData {
     effects: &[],
 };
 pub static GuardSwap: MoveData = MoveData {
-    id: 385,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5534,7 +5148,6 @@ pub static GuardSwap: MoveData = MoveData {
     effects: &[],
 };
 pub static Punishment: MoveData = MoveData {
-    id: 386,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5545,7 +5158,6 @@ pub static Punishment: MoveData = MoveData {
     effects: &[],
 };
 pub static LastResort: MoveData = MoveData {
-    id: 387,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5556,7 +5168,6 @@ pub static LastResort: MoveData = MoveData {
     effects: &[Effect::Damage(140)],
 };
 pub static WorrySeed: MoveData = MoveData {
-    id: 388,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5567,7 +5178,6 @@ pub static WorrySeed: MoveData = MoveData {
     effects: &[],
 };
 pub static SuckerPunch: MoveData = MoveData {
-    id: 389,
     pp: 5,
     priority: 1,
     accuracy: Accuracy::Percentage(100),
@@ -5578,7 +5188,6 @@ pub static SuckerPunch: MoveData = MoveData {
     effects: &[Effect::Damage(70)],
 };
 pub static ToxicSpikes: MoveData = MoveData {
-    id: 390,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5589,7 +5198,6 @@ pub static ToxicSpikes: MoveData = MoveData {
     effects: &[],
 };
 pub static HeartSwap: MoveData = MoveData {
-    id: 391,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5600,7 +5208,6 @@ pub static HeartSwap: MoveData = MoveData {
     effects: &[],
 };
 pub static AquaRing: MoveData = MoveData {
-    id: 392,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5611,7 +5218,6 @@ pub static AquaRing: MoveData = MoveData {
     effects: &[],
 };
 pub static MagnetRise: MoveData = MoveData {
-    id: 393,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5622,7 +5228,6 @@ pub static MagnetRise: MoveData = MoveData {
     effects: &[],
 };
 pub static FlareBlitz: MoveData = MoveData {
-    id: 394,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5633,7 +5238,6 @@ pub static FlareBlitz: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::Recoil(33), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static ForcePalm: MoveData = MoveData {
-    id: 395,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5644,7 +5248,6 @@ pub static ForcePalm: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static AuraSphere: MoveData = MoveData {
-    id: 396,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5655,7 +5258,6 @@ pub static AuraSphere: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static RockPolish: MoveData = MoveData {
-    id: 397,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5666,7 +5268,6 @@ pub static RockPolish: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Speed, 2, 100, StatChangeTarget::User)],
 };
 pub static PoisonJab: MoveData = MoveData {
-    id: 398,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5677,7 +5278,6 @@ pub static PoisonJab: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static DarkPulse: MoveData = MoveData {
-    id: 399,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5688,7 +5288,6 @@ pub static DarkPulse: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Flinch(20)],
 };
 pub static NightSlash: MoveData = MoveData {
-    id: 400,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5699,7 +5298,6 @@ pub static NightSlash: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::Critical(1)],
 };
 pub static AquaTail: MoveData = MoveData {
-    id: 401,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -5710,7 +5308,6 @@ pub static AquaTail: MoveData = MoveData {
     effects: &[Effect::Damage(90)],
 };
 pub static SeedBomb: MoveData = MoveData {
-    id: 402,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5721,7 +5318,6 @@ pub static SeedBomb: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static AirSlash: MoveData = MoveData {
-    id: 403,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -5732,7 +5328,6 @@ pub static AirSlash: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::Flinch(30)],
 };
 pub static XScissor: MoveData = MoveData {
-    id: 404,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5743,7 +5338,6 @@ pub static XScissor: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static BugBuzz: MoveData = MoveData {
-    id: 405,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5754,7 +5348,6 @@ pub static BugBuzz: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static DragonPulse: MoveData = MoveData {
-    id: 406,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5765,7 +5358,6 @@ pub static DragonPulse: MoveData = MoveData {
     effects: &[Effect::Damage(85)],
 };
 pub static DragonRush: MoveData = MoveData {
-    id: 407,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -5776,7 +5368,6 @@ pub static DragonRush: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::Flinch(20)],
 };
 pub static PowerGem: MoveData = MoveData {
-    id: 408,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5787,7 +5378,6 @@ pub static PowerGem: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static DrainPunch: MoveData = MoveData {
-    id: 409,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5798,7 +5388,6 @@ pub static DrainPunch: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::Drain(50)],
 };
 pub static VacuumWave: MoveData = MoveData {
-    id: 410,
     pp: 30,
     priority: 1,
     accuracy: Accuracy::Percentage(100),
@@ -5809,7 +5398,6 @@ pub static VacuumWave: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static FocusBlast: MoveData = MoveData {
-    id: 411,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(70),
@@ -5820,7 +5408,6 @@ pub static FocusBlast: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static EnergyBall: MoveData = MoveData {
-    id: 412,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5831,7 +5418,6 @@ pub static EnergyBall: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static BraveBird: MoveData = MoveData {
-    id: 413,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5842,7 +5428,6 @@ pub static BraveBird: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::Recoil(33)],
 };
 pub static EarthPower: MoveData = MoveData {
-    id: 414,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5853,7 +5438,6 @@ pub static EarthPower: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static Switcheroo: MoveData = MoveData {
-    id: 415,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5864,7 +5448,6 @@ pub static Switcheroo: MoveData = MoveData {
     effects: &[],
 };
 pub static GigaImpact: MoveData = MoveData {
-    id: 416,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -5875,7 +5458,6 @@ pub static GigaImpact: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static NastyPlot: MoveData = MoveData {
-    id: 417,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -5886,7 +5468,6 @@ pub static NastyPlot: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialAttack, 2, 100, StatChangeTarget::User)],
 };
 pub static BulletPunch: MoveData = MoveData {
-    id: 418,
     pp: 30,
     priority: 1,
     accuracy: Accuracy::Percentage(100),
@@ -5897,7 +5478,6 @@ pub static BulletPunch: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static Avalanche: MoveData = MoveData {
-    id: 419,
     pp: 10,
     priority: -4,
     accuracy: Accuracy::Percentage(100),
@@ -5908,7 +5488,6 @@ pub static Avalanche: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static IceShard: MoveData = MoveData {
-    id: 420,
     pp: 30,
     priority: 1,
     accuracy: Accuracy::Percentage(100),
@@ -5919,7 +5498,6 @@ pub static IceShard: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static ShadowClaw: MoveData = MoveData {
-    id: 421,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5930,7 +5508,6 @@ pub static ShadowClaw: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::Critical(1)],
 };
 pub static ThunderFang: MoveData = MoveData {
-    id: 422,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -5941,7 +5518,6 @@ pub static ThunderFang: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::Flinch(10), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static IceFang: MoveData = MoveData {
-    id: 423,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -5952,7 +5528,6 @@ pub static IceFang: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::Flinch(10), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static FireFang: MoveData = MoveData {
-    id: 424,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -5963,7 +5538,6 @@ pub static FireFang: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::Flinch(10), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static ShadowSneak: MoveData = MoveData {
-    id: 425,
     pp: 30,
     priority: 1,
     accuracy: Accuracy::Percentage(100),
@@ -5974,7 +5548,6 @@ pub static ShadowSneak: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static MudBomb: MoveData = MoveData {
-    id: 426,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -5985,7 +5558,6 @@ pub static MudBomb: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Accuracy, -1, 30, StatChangeTarget::Target)],
 };
 pub static PsychoCut: MoveData = MoveData {
-    id: 427,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -5996,7 +5568,6 @@ pub static PsychoCut: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::Critical(1)],
 };
 pub static ZenHeadbutt: MoveData = MoveData {
-    id: 428,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -6007,7 +5578,6 @@ pub static ZenHeadbutt: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Flinch(20)],
 };
 pub static MirrorShot: MoveData = MoveData {
-    id: 429,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -6018,7 +5588,6 @@ pub static MirrorShot: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Accuracy, -1, 30, StatChangeTarget::Target)],
 };
 pub static FlashCannon: MoveData = MoveData {
-    id: 430,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6029,7 +5598,6 @@ pub static FlashCannon: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static RockClimb: MoveData = MoveData {
-    id: 431,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -6040,7 +5608,6 @@ pub static RockClimb: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20)],
 };
 pub static Defog: MoveData = MoveData {
-    id: 432,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6051,7 +5618,6 @@ pub static Defog: MoveData = MoveData {
     effects: &[Effect::DispelWeather],
 };
 pub static TrickRoom: MoveData = MoveData {
-    id: 433,
     pp: 5,
     priority: -7,
     accuracy: Accuracy::AlwaysHits,
@@ -6062,7 +5628,6 @@ pub static TrickRoom: MoveData = MoveData {
     effects: &[],
 };
 pub static DracoMeteor: MoveData = MoveData {
-    id: 434,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -6073,7 +5638,6 @@ pub static DracoMeteor: MoveData = MoveData {
     effects: &[Effect::Damage(130), Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
 };
 pub static Discharge: MoveData = MoveData {
-    id: 435,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6084,7 +5648,6 @@ pub static Discharge: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static LavaPlume: MoveData = MoveData {
-    id: 436,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6095,7 +5658,6 @@ pub static LavaPlume: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
 };
 pub static LeafStorm: MoveData = MoveData {
-    id: 437,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -6106,7 +5668,6 @@ pub static LeafStorm: MoveData = MoveData {
     effects: &[Effect::Damage(130), Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
 };
 pub static PowerWhip: MoveData = MoveData {
-    id: 438,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -6117,7 +5678,6 @@ pub static PowerWhip: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static RockWrecker: MoveData = MoveData {
-    id: 439,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -6128,7 +5688,6 @@ pub static RockWrecker: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static CrossPoison: MoveData = MoveData {
-    id: 440,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6139,7 +5698,6 @@ pub static CrossPoison: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::Critical(1), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
 };
 pub static GunkShot: MoveData = MoveData {
-    id: 441,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(80),
@@ -6150,7 +5708,6 @@ pub static GunkShot: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static IronHead: MoveData = MoveData {
-    id: 442,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6161,7 +5718,6 @@ pub static IronHead: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Flinch(30)],
 };
 pub static MagnetBomb: MoveData = MoveData {
-    id: 443,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6172,7 +5728,6 @@ pub static MagnetBomb: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static StoneEdge: MoveData = MoveData {
-    id: 444,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(80),
@@ -6183,7 +5738,6 @@ pub static StoneEdge: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::Critical(1)],
 };
 pub static Captivate: MoveData = MoveData {
-    id: 445,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6194,7 +5748,6 @@ pub static Captivate: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::Target)],
 };
 pub static StealthRock: MoveData = MoveData {
-    id: 446,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6205,7 +5758,6 @@ pub static StealthRock: MoveData = MoveData {
     effects: &[],
 };
 pub static GrassKnot: MoveData = MoveData {
-    id: 447,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6216,7 +5768,6 @@ pub static GrassKnot: MoveData = MoveData {
     effects: &[],
 };
 pub static Chatter: MoveData = MoveData {
-    id: 448,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6227,7 +5778,6 @@ pub static Chatter: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 100)],
 };
 pub static Judgment: MoveData = MoveData {
-    id: 449,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6238,7 +5788,6 @@ pub static Judgment: MoveData = MoveData {
     effects: &[Effect::Damage(100)],
 };
 pub static BugBite: MoveData = MoveData {
-    id: 450,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6249,7 +5798,6 @@ pub static BugBite: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static ChargeBeam: MoveData = MoveData {
-    id: 451,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -6260,7 +5808,6 @@ pub static ChargeBeam: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::StatChange(BattleStat::SpecialAttack, 1, 70, StatChangeTarget::User)],
 };
 pub static WoodHammer: MoveData = MoveData {
-    id: 452,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6271,7 +5818,6 @@ pub static WoodHammer: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::Recoil(33)],
 };
 pub static AquaJet: MoveData = MoveData {
-    id: 453,
     pp: 20,
     priority: 1,
     accuracy: Accuracy::Percentage(100),
@@ -6282,7 +5828,6 @@ pub static AquaJet: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static AttackOrder: MoveData = MoveData {
-    id: 454,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6293,7 +5838,6 @@ pub static AttackOrder: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::Critical(1)],
 };
 pub static DefendOrder: MoveData = MoveData {
-    id: 455,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6304,7 +5848,6 @@ pub static DefendOrder: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 100, StatChangeTarget::User)],
 };
 pub static HealOrder: MoveData = MoveData {
-    id: 456,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6315,7 +5858,6 @@ pub static HealOrder: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static HeadSmash: MoveData = MoveData {
-    id: 457,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(80),
@@ -6326,7 +5868,6 @@ pub static HeadSmash: MoveData = MoveData {
     effects: &[Effect::Damage(150), Effect::Recoil(50)],
 };
 pub static DoubleHit: MoveData = MoveData {
-    id: 458,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -6337,7 +5878,6 @@ pub static DoubleHit: MoveData = MoveData {
     effects: &[Effect::Damage(35), Effect::MultiHit(2, 2)],
 };
 pub static RoarOfTime: MoveData = MoveData {
-    id: 459,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -6348,7 +5888,6 @@ pub static RoarOfTime: MoveData = MoveData {
     effects: &[Effect::Damage(150)],
 };
 pub static SpacialRend: MoveData = MoveData {
-    id: 460,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -6359,7 +5898,6 @@ pub static SpacialRend: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::Critical(1)],
 };
 pub static LunarDance: MoveData = MoveData {
-    id: 461,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6370,7 +5908,6 @@ pub static LunarDance: MoveData = MoveData {
     effects: &[],
 };
 pub static CrushGrip: MoveData = MoveData {
-    id: 462,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6381,7 +5918,6 @@ pub static CrushGrip: MoveData = MoveData {
     effects: &[],
 };
 pub static MagmaStorm: MoveData = MoveData {
-    id: 463,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(75),
@@ -6392,7 +5928,6 @@ pub static MagmaStorm: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::Custom],
 };
 pub static DarkVoid: MoveData = MoveData {
-    id: 464,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(50),
@@ -6403,7 +5938,6 @@ pub static DarkVoid: MoveData = MoveData {
     effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 0)],
 };
 pub static SeedFlare: MoveData = MoveData {
-    id: 465,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -6414,7 +5948,6 @@ pub static SeedFlare: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::StatChange(BattleStat::SpecialDefense, -2, 40, StatChangeTarget::Target)],
 };
 pub static OminousWind: MoveData = MoveData {
-    id: 466,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6425,7 +5958,6 @@ pub static OminousWind: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 10, StatChangeTarget::User)],
 };
 pub static ShadowForce: MoveData = MoveData {
-    id: 467,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6436,7 +5968,6 @@ pub static ShadowForce: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static HoneClaws: MoveData = MoveData {
-    id: 468,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6447,7 +5978,6 @@ pub static HoneClaws: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Accuracy, 1, 100, StatChangeTarget::User)],
 };
 pub static WideGuard: MoveData = MoveData {
-    id: 469,
     pp: 10,
     priority: 3,
     accuracy: Accuracy::AlwaysHits,
@@ -6458,7 +5988,6 @@ pub static WideGuard: MoveData = MoveData {
     effects: &[],
 };
 pub static GuardSplit: MoveData = MoveData {
-    id: 470,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6469,7 +5998,6 @@ pub static GuardSplit: MoveData = MoveData {
     effects: &[],
 };
 pub static PowerSplit: MoveData = MoveData {
-    id: 471,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6480,7 +6008,6 @@ pub static PowerSplit: MoveData = MoveData {
     effects: &[],
 };
 pub static WonderRoom: MoveData = MoveData {
-    id: 472,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6491,7 +6018,6 @@ pub static WonderRoom: MoveData = MoveData {
     effects: &[],
 };
 pub static Psyshock: MoveData = MoveData {
-    id: 473,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6502,7 +6028,6 @@ pub static Psyshock: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static Venoshock: MoveData = MoveData {
-    id: 474,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6513,7 +6038,6 @@ pub static Venoshock: MoveData = MoveData {
     effects: &[Effect::Damage(65)],
 };
 pub static Autotomize: MoveData = MoveData {
-    id: 475,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6524,7 +6048,6 @@ pub static Autotomize: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Speed, 2, 100, StatChangeTarget::User)],
 };
 pub static RagePowder: MoveData = MoveData {
-    id: 476,
     pp: 20,
     priority: 2,
     accuracy: Accuracy::AlwaysHits,
@@ -6535,7 +6058,6 @@ pub static RagePowder: MoveData = MoveData {
     effects: &[],
 };
 pub static Telekinesis: MoveData = MoveData {
-    id: 477,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6546,7 +6068,6 @@ pub static Telekinesis: MoveData = MoveData {
     effects: &[Effect::Custom],
 };
 pub static MagicRoom: MoveData = MoveData {
-    id: 478,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6557,7 +6078,6 @@ pub static MagicRoom: MoveData = MoveData {
     effects: &[],
 };
 pub static SmackDown: MoveData = MoveData {
-    id: 479,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6568,7 +6088,6 @@ pub static SmackDown: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::Custom],
 };
 pub static StormThrow: MoveData = MoveData {
-    id: 480,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6579,7 +6098,6 @@ pub static StormThrow: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::Critical(6)],
 };
 pub static FlameBurst: MoveData = MoveData {
-    id: 481,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6590,7 +6108,6 @@ pub static FlameBurst: MoveData = MoveData {
     effects: &[Effect::Damage(70)],
 };
 pub static SludgeWave: MoveData = MoveData {
-    id: 482,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6601,7 +6118,6 @@ pub static SludgeWave: MoveData = MoveData {
     effects: &[Effect::Damage(95), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
 };
 pub static QuiverDance: MoveData = MoveData {
-    id: 483,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6612,7 +6128,6 @@ pub static QuiverDance: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::SpecialAttack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 100, StatChangeTarget::User)],
 };
 pub static HeavySlam: MoveData = MoveData {
-    id: 484,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6623,7 +6138,6 @@ pub static HeavySlam: MoveData = MoveData {
     effects: &[],
 };
 pub static Synchronoise: MoveData = MoveData {
-    id: 485,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6634,7 +6148,6 @@ pub static Synchronoise: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static ElectroBall: MoveData = MoveData {
-    id: 486,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6645,7 +6158,6 @@ pub static ElectroBall: MoveData = MoveData {
     effects: &[],
 };
 pub static Soak: MoveData = MoveData {
-    id: 487,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6656,7 +6168,6 @@ pub static Soak: MoveData = MoveData {
     effects: &[],
 };
 pub static FlameCharge: MoveData = MoveData {
-    id: 488,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6667,7 +6178,6 @@ pub static FlameCharge: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::StatChange(BattleStat::Speed, 1, 100, StatChangeTarget::User)],
 };
 pub static Coil: MoveData = MoveData {
-    id: 489,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6678,7 +6188,6 @@ pub static Coil: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Accuracy, 1, 100, StatChangeTarget::User)],
 };
 pub static LowSweep: MoveData = MoveData {
-    id: 490,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6689,7 +6198,6 @@ pub static LowSweep: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static AcidSpray: MoveData = MoveData {
-    id: 491,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6700,7 +6208,6 @@ pub static AcidSpray: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::StatChange(BattleStat::SpecialDefense, -2, 100, StatChangeTarget::Target)],
 };
 pub static FoulPlay: MoveData = MoveData {
-    id: 492,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6711,7 +6218,6 @@ pub static FoulPlay: MoveData = MoveData {
     effects: &[Effect::Damage(95)],
 };
 pub static SimpleBeam: MoveData = MoveData {
-    id: 493,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6722,7 +6228,6 @@ pub static SimpleBeam: MoveData = MoveData {
     effects: &[],
 };
 pub static Entrainment: MoveData = MoveData {
-    id: 494,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6733,7 +6238,6 @@ pub static Entrainment: MoveData = MoveData {
     effects: &[],
 };
 pub static AfterYou: MoveData = MoveData {
-    id: 495,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6744,7 +6248,6 @@ pub static AfterYou: MoveData = MoveData {
     effects: &[],
 };
 pub static Round: MoveData = MoveData {
-    id: 496,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6755,7 +6258,6 @@ pub static Round: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static EchoedVoice: MoveData = MoveData {
-    id: 497,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6766,7 +6268,6 @@ pub static EchoedVoice: MoveData = MoveData {
     effects: &[Effect::Damage(40)],
 };
 pub static ChipAway: MoveData = MoveData {
-    id: 498,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6777,7 +6278,6 @@ pub static ChipAway: MoveData = MoveData {
     effects: &[Effect::Damage(70)],
 };
 pub static ClearSmog: MoveData = MoveData {
-    id: 499,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6788,7 +6288,6 @@ pub static ClearSmog: MoveData = MoveData {
     effects: &[Effect::Damage(50)],
 };
 pub static StoredPower: MoveData = MoveData {
-    id: 500,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6799,7 +6298,6 @@ pub static StoredPower: MoveData = MoveData {
     effects: &[Effect::Damage(20)],
 };
 pub static QuickGuard: MoveData = MoveData {
-    id: 501,
     pp: 15,
     priority: 3,
     accuracy: Accuracy::AlwaysHits,
@@ -6810,7 +6308,6 @@ pub static QuickGuard: MoveData = MoveData {
     effects: &[],
 };
 pub static AllySwitch: MoveData = MoveData {
-    id: 502,
     pp: 15,
     priority: 2,
     accuracy: Accuracy::AlwaysHits,
@@ -6821,7 +6318,6 @@ pub static AllySwitch: MoveData = MoveData {
     effects: &[],
 };
 pub static Scald: MoveData = MoveData {
-    id: 503,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6832,7 +6328,6 @@ pub static Scald: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
 };
 pub static ShellSmash: MoveData = MoveData {
-    id: 504,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6843,7 +6338,6 @@ pub static ShellSmash: MoveData = MoveData {
     effects: &[],
 };
 pub static HealPulse: MoveData = MoveData {
-    id: 505,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6854,7 +6348,6 @@ pub static HealPulse: MoveData = MoveData {
     effects: &[Effect::Heal(50)],
 };
 pub static Hex: MoveData = MoveData {
-    id: 506,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6865,7 +6358,6 @@ pub static Hex: MoveData = MoveData {
     effects: &[Effect::Damage(65)],
 };
 pub static SkyDrop: MoveData = MoveData {
-    id: 507,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6876,7 +6368,6 @@ pub static SkyDrop: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static ShiftGear: MoveData = MoveData {
-    id: 508,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6887,7 +6378,6 @@ pub static ShiftGear: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 2, 100, StatChangeTarget::User)],
 };
 pub static CircleThrow: MoveData = MoveData {
-    id: 509,
     pp: 10,
     priority: -6,
     accuracy: Accuracy::Percentage(90),
@@ -6898,7 +6388,6 @@ pub static CircleThrow: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::ForceTargetSwitch],
 };
 pub static Incinerate: MoveData = MoveData {
-    id: 510,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6909,7 +6398,6 @@ pub static Incinerate: MoveData = MoveData {
     effects: &[Effect::Damage(60)],
 };
 pub static Quash: MoveData = MoveData {
-    id: 511,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6920,7 +6408,6 @@ pub static Quash: MoveData = MoveData {
     effects: &[],
 };
 pub static Acrobatics: MoveData = MoveData {
-    id: 512,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6931,7 +6418,6 @@ pub static Acrobatics: MoveData = MoveData {
     effects: &[Effect::Damage(55)],
 };
 pub static ReflectType: MoveData = MoveData {
-    id: 513,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6942,7 +6428,6 @@ pub static ReflectType: MoveData = MoveData {
     effects: &[],
 };
 pub static Retaliate: MoveData = MoveData {
-    id: 514,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6953,7 +6438,6 @@ pub static Retaliate: MoveData = MoveData {
     effects: &[Effect::Damage(70)],
 };
 pub static FinalGambit: MoveData = MoveData {
-    id: 515,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6964,7 +6448,6 @@ pub static FinalGambit: MoveData = MoveData {
     effects: &[],
 };
 pub static Bestow: MoveData = MoveData {
-    id: 516,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -6975,7 +6458,6 @@ pub static Bestow: MoveData = MoveData {
     effects: &[],
 };
 pub static Inferno: MoveData = MoveData {
-    id: 517,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(50),
@@ -6986,7 +6468,6 @@ pub static Inferno: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 100)],
 };
 pub static WaterPledge: MoveData = MoveData {
-    id: 518,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -6997,7 +6478,6 @@ pub static WaterPledge: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static FirePledge: MoveData = MoveData {
-    id: 519,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7008,7 +6488,6 @@ pub static FirePledge: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static GrassPledge: MoveData = MoveData {
-    id: 520,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7019,7 +6498,6 @@ pub static GrassPledge: MoveData = MoveData {
     effects: &[Effect::Damage(80)],
 };
 pub static VoltSwitch: MoveData = MoveData {
-    id: 521,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7030,7 +6508,6 @@ pub static VoltSwitch: MoveData = MoveData {
     effects: &[Effect::Damage(70), Effect::ForceUserSwitch],
 };
 pub static StruggleBug: MoveData = MoveData {
-    id: 522,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7041,7 +6518,6 @@ pub static StruggleBug: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::StatChange(BattleStat::SpecialAttack, -1, 100, StatChangeTarget::Target)],
 };
 pub static Bulldoze: MoveData = MoveData {
-    id: 523,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7052,7 +6528,6 @@ pub static Bulldoze: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static FrostBreath: MoveData = MoveData {
-    id: 524,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -7063,7 +6538,6 @@ pub static FrostBreath: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::Critical(6)],
 };
 pub static DragonTail: MoveData = MoveData {
-    id: 525,
     pp: 10,
     priority: -6,
     accuracy: Accuracy::Percentage(90),
@@ -7074,7 +6548,6 @@ pub static DragonTail: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::ForceTargetSwitch],
 };
 pub static WorkUp: MoveData = MoveData {
-    id: 526,
     pp: 30,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -7085,7 +6558,6 @@ pub static WorkUp: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 100, StatChangeTarget::User)],
 };
 pub static Electroweb: MoveData = MoveData {
-    id: 527,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -7096,7 +6568,6 @@ pub static Electroweb: MoveData = MoveData {
     effects: &[Effect::Damage(55), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static WildCharge: MoveData = MoveData {
-    id: 528,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7107,7 +6578,6 @@ pub static WildCharge: MoveData = MoveData {
     effects: &[Effect::Damage(90), Effect::Recoil(25)],
 };
 pub static DrillRun: MoveData = MoveData {
-    id: 529,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -7118,7 +6588,6 @@ pub static DrillRun: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::Critical(1)],
 };
 pub static DualChop: MoveData = MoveData {
-    id: 530,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -7129,7 +6598,6 @@ pub static DualChop: MoveData = MoveData {
     effects: &[Effect::Damage(40), Effect::MultiHit(2, 2)],
 };
 pub static HeartStamp: MoveData = MoveData {
-    id: 531,
     pp: 25,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7140,7 +6608,6 @@ pub static HeartStamp: MoveData = MoveData {
     effects: &[Effect::Damage(60), Effect::Flinch(30)],
 };
 pub static HornLeech: MoveData = MoveData {
-    id: 532,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7151,7 +6618,6 @@ pub static HornLeech: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::Drain(50)],
 };
 pub static SacredSword: MoveData = MoveData {
-    id: 533,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7162,7 +6628,6 @@ pub static SacredSword: MoveData = MoveData {
     effects: &[Effect::Damage(90)],
 };
 pub static RazorShell: MoveData = MoveData {
-    id: 534,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -7173,7 +6638,6 @@ pub static RazorShell: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::StatChange(BattleStat::Defense, -1, 50, StatChangeTarget::Target)],
 };
 pub static HeatCrash: MoveData = MoveData {
-    id: 535,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7184,7 +6648,6 @@ pub static HeatCrash: MoveData = MoveData {
     effects: &[],
 };
 pub static LeafTornado: MoveData = MoveData {
-    id: 536,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -7195,7 +6658,6 @@ pub static LeafTornado: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Accuracy, -1, 50, StatChangeTarget::Target)],
 };
 pub static Steamroller: MoveData = MoveData {
-    id: 537,
     pp: 20,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7206,7 +6668,6 @@ pub static Steamroller: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::Flinch(30)],
 };
 pub static CottonGuard: MoveData = MoveData {
-    id: 538,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::AlwaysHits,
@@ -7217,7 +6678,6 @@ pub static CottonGuard: MoveData = MoveData {
     effects: &[Effect::StatChange(BattleStat::Defense, 3, 100, StatChangeTarget::User)],
 };
 pub static NightDaze: MoveData = MoveData {
-    id: 539,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -7228,7 +6688,6 @@ pub static NightDaze: MoveData = MoveData {
     effects: &[Effect::Damage(85), Effect::StatChange(BattleStat::Accuracy, -1, 40, StatChangeTarget::Target)],
 };
 pub static Psystrike: MoveData = MoveData {
-    id: 540,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7239,7 +6698,6 @@ pub static Psystrike: MoveData = MoveData {
     effects: &[Effect::Damage(100)],
 };
 pub static TailSlap: MoveData = MoveData {
-    id: 541,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -7250,7 +6708,6 @@ pub static TailSlap: MoveData = MoveData {
     effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
 };
 pub static Hurricane: MoveData = MoveData {
-    id: 542,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(70),
@@ -7261,7 +6718,6 @@ pub static Hurricane: MoveData = MoveData {
     effects: &[Effect::Damage(110), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 30)],
 };
 pub static HeadCharge: MoveData = MoveData {
-    id: 543,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7272,7 +6728,6 @@ pub static HeadCharge: MoveData = MoveData {
     effects: &[Effect::Damage(120), Effect::Recoil(25)],
 };
 pub static GearGrind: MoveData = MoveData {
-    id: 544,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -7283,7 +6738,6 @@ pub static GearGrind: MoveData = MoveData {
     effects: &[Effect::Damage(50), Effect::MultiHit(2, 2)],
 };
 pub static SearingShot: MoveData = MoveData {
-    id: 545,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7294,7 +6748,6 @@ pub static SearingShot: MoveData = MoveData {
     effects: &[Effect::Damage(100), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
 };
 pub static TechnoBlast: MoveData = MoveData {
-    id: 546,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7305,7 +6758,6 @@ pub static TechnoBlast: MoveData = MoveData {
     effects: &[Effect::Damage(120)],
 };
 pub static RelicSong: MoveData = MoveData {
-    id: 547,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7316,7 +6768,6 @@ pub static RelicSong: MoveData = MoveData {
     effects: &[Effect::Damage(75), Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 10)],
 };
 pub static SecretSword: MoveData = MoveData {
-    id: 548,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7327,7 +6778,6 @@ pub static SecretSword: MoveData = MoveData {
     effects: &[Effect::Damage(85)],
 };
 pub static Glaciate: MoveData = MoveData {
-    id: 549,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -7338,7 +6788,6 @@ pub static Glaciate: MoveData = MoveData {
     effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static BoltStrike: MoveData = MoveData {
-    id: 550,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -7349,7 +6798,6 @@ pub static BoltStrike: MoveData = MoveData {
     effects: &[Effect::Damage(130), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 20)],
 };
 pub static BlueFlare: MoveData = MoveData {
-    id: 551,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(85),
@@ -7360,7 +6808,6 @@ pub static BlueFlare: MoveData = MoveData {
     effects: &[Effect::Damage(130), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 20)],
 };
 pub static FieryDance: MoveData = MoveData {
-    id: 552,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7371,7 +6818,6 @@ pub static FieryDance: MoveData = MoveData {
     effects: &[Effect::Damage(80), Effect::StatChange(BattleStat::SpecialAttack, 1, 50, StatChangeTarget::User)],
 };
 pub static FreezeShock: MoveData = MoveData {
-    id: 553,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -7382,7 +6828,6 @@ pub static FreezeShock: MoveData = MoveData {
     effects: &[Effect::Damage(140), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static IceBurn: MoveData = MoveData {
-    id: 554,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -7393,7 +6838,6 @@ pub static IceBurn: MoveData = MoveData {
     effects: &[Effect::Damage(140), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
 };
 pub static Snarl: MoveData = MoveData {
-    id: 555,
     pp: 15,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -7404,7 +6848,6 @@ pub static Snarl: MoveData = MoveData {
     effects: &[Effect::Damage(55), Effect::StatChange(BattleStat::SpecialAttack, -1, 100, StatChangeTarget::Target)],
 };
 pub static IcicleCrash: MoveData = MoveData {
-    id: 556,
     pp: 10,
     priority: 0,
     accuracy: Accuracy::Percentage(90),
@@ -7415,7 +6858,6 @@ pub static IcicleCrash: MoveData = MoveData {
     effects: &[Effect::Damage(85), Effect::Flinch(30)],
 };
 pub static VCreate: MoveData = MoveData {
-    id: 557,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(95),
@@ -7426,7 +6868,6 @@ pub static VCreate: MoveData = MoveData {
     effects: &[Effect::Damage(180), Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::User)],
 };
 pub static FusionFlare: MoveData = MoveData {
-    id: 558,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),
@@ -7437,7 +6878,6 @@ pub static FusionFlare: MoveData = MoveData {
     effects: &[Effect::Damage(100)],
 };
 pub static FusionBolt: MoveData = MoveData {
-    id: 559,
     pp: 5,
     priority: 0,
     accuracy: Accuracy::Percentage(100),

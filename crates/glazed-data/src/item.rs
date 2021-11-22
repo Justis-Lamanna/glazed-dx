@@ -394,7 +394,6 @@ pub enum Pocket {
 
 #[derive(Debug)]
 pub struct ItemData {
-    pub id: u16,
     pub cost: u16,
     pub pocket: Pocket,
     pub countable: bool,
@@ -684,7 +683,6 @@ impl Item {
 }
 
 pub static PokeBall: ItemData = ItemData {
-    id: 0,
     cost: 200,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -694,7 +692,6 @@ pub static PokeBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static GreatBall: ItemData = ItemData {
-    id: 1,
     cost: 600,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -704,7 +701,6 @@ pub static GreatBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static UltraBall: ItemData = ItemData {
-    id: 2,
     cost: 800,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -714,7 +710,6 @@ pub static UltraBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MasterBall: ItemData = ItemData {
-    id: 3,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -724,7 +719,6 @@ pub static MasterBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SafariBall: ItemData = ItemData {
-    id: 4,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -734,7 +728,6 @@ pub static SafariBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static FastBall: ItemData = ItemData {
-    id: 5,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -744,7 +737,6 @@ pub static FastBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LevelBall: ItemData = ItemData {
-    id: 6,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -754,7 +746,6 @@ pub static LevelBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LureBall: ItemData = ItemData {
-    id: 7,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -764,7 +755,6 @@ pub static LureBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static HeavyBall: ItemData = ItemData {
-    id: 8,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -774,7 +764,6 @@ pub static HeavyBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LoveBall: ItemData = ItemData {
-    id: 9,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -784,7 +773,6 @@ pub static LoveBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static FriendBall: ItemData = ItemData {
-    id: 10,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -794,7 +782,6 @@ pub static FriendBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MoonBall: ItemData = ItemData {
-    id: 11,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -804,7 +791,6 @@ pub static MoonBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SportBall: ItemData = ItemData {
-    id: 12,
     cost: 300,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -814,7 +800,6 @@ pub static SportBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static NetBall: ItemData = ItemData {
-    id: 13,
     cost: 1000,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -824,7 +809,6 @@ pub static NetBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static NestBall: ItemData = ItemData {
-    id: 14,
     cost: 1000,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -834,7 +818,6 @@ pub static NestBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RepeatBall: ItemData = ItemData {
-    id: 15,
     cost: 1000,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -844,7 +827,6 @@ pub static RepeatBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static TimerBall: ItemData = ItemData {
-    id: 16,
     cost: 1000,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -854,7 +836,6 @@ pub static TimerBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LuxuryBall: ItemData = ItemData {
-    id: 17,
     cost: 1000,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -864,7 +845,6 @@ pub static LuxuryBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PremierBall: ItemData = ItemData {
-    id: 18,
     cost: 20,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -874,7 +854,6 @@ pub static PremierBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DiveBall: ItemData = ItemData {
-    id: 19,
     cost: 1000,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -884,7 +863,6 @@ pub static DiveBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DuskBall: ItemData = ItemData {
-    id: 20,
     cost: 1000,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -894,7 +872,6 @@ pub static DuskBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static HealBall: ItemData = ItemData {
-    id: 21,
     cost: 300,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -904,7 +881,6 @@ pub static HealBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static QuickBall: ItemData = ItemData {
-    id: 22,
     cost: 1000,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -914,7 +890,6 @@ pub static QuickBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static CherishBall: ItemData = ItemData {
-    id: 23,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: true,
@@ -924,7 +899,6 @@ pub static CherishBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ParkBall: ItemData = ItemData {
-    id: 24,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -934,7 +908,6 @@ pub static ParkBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DreamBall: ItemData = ItemData {
-    id: 25,
     cost: 0,
     pocket: Pocket::PokeBalls,
     countable: false,
@@ -944,7 +917,6 @@ pub static DreamBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static FireStone: ItemData = ItemData {
-    id: 26,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -954,7 +926,6 @@ pub static FireStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static WaterStone: ItemData = ItemData {
-    id: 27,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -964,7 +935,6 @@ pub static WaterStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ThunderStone: ItemData = ItemData {
-    id: 28,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -974,7 +944,6 @@ pub static ThunderStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LeafStone: ItemData = ItemData {
-    id: 29,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -984,7 +953,6 @@ pub static LeafStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MoonStone: ItemData = ItemData {
-    id: 30,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -994,7 +962,6 @@ pub static MoonStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SunStone: ItemData = ItemData {
-    id: 31,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -1004,7 +971,6 @@ pub static SunStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ShinyStone: ItemData = ItemData {
-    id: 32,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -1014,7 +980,6 @@ pub static ShinyStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DuskStone: ItemData = ItemData {
-    id: 33,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -1024,7 +989,6 @@ pub static DuskStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DawnStone: ItemData = ItemData {
-    id: 34,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -1034,7 +998,6 @@ pub static DawnStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static IceStone: ItemData = ItemData {
-    id: 35,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -1044,7 +1007,6 @@ pub static IceStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static FullIncense: ItemData = ItemData {
-    id: 36,
     cost: 5000,
     pocket: Pocket::Items,
     countable: false,
@@ -1054,7 +1016,6 @@ pub static FullIncense: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LaxIncense: ItemData = ItemData {
-    id: 37,
     cost: 5000,
     pocket: Pocket::Items,
     countable: false,
@@ -1064,7 +1025,6 @@ pub static LaxIncense: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LuckIncense: ItemData = ItemData {
-    id: 38,
     cost: 11000,
     pocket: Pocket::Items,
     countable: false,
@@ -1074,7 +1034,6 @@ pub static LuckIncense: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static OddIncense: ItemData = ItemData {
-    id: 39,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1084,7 +1043,6 @@ pub static OddIncense: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PureIncense: ItemData = ItemData {
-    id: 40,
     cost: 6000,
     pocket: Pocket::Items,
     countable: false,
@@ -1094,7 +1052,6 @@ pub static PureIncense: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RockIncense: ItemData = ItemData {
-    id: 41,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1104,7 +1061,6 @@ pub static RockIncense: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RoseIncense: ItemData = ItemData {
-    id: 42,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1114,7 +1070,6 @@ pub static RoseIncense: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SeaIncense: ItemData = ItemData {
-    id: 43,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1124,7 +1079,6 @@ pub static SeaIncense: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static WaveIncense: ItemData = ItemData {
-    id: 44,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1134,7 +1088,6 @@ pub static WaveIncense: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DeepSeaTooth: ItemData = ItemData {
-    id: 45,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1144,7 +1097,6 @@ pub static DeepSeaTooth: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DeepSeaScale: ItemData = ItemData {
-    id: 46,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1154,7 +1106,6 @@ pub static DeepSeaScale: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DragonScale: ItemData = ItemData {
-    id: 47,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1164,7 +1115,6 @@ pub static DragonScale: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DubiousDisc: ItemData = ItemData {
-    id: 48,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1174,7 +1124,6 @@ pub static DubiousDisc: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Electirizer: ItemData = ItemData {
-    id: 49,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1184,7 +1133,6 @@ pub static Electirizer: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static KingsRock: ItemData = ItemData {
-    id: 50,
     cost: 5000,
     pocket: Pocket::Items,
     countable: false,
@@ -1194,7 +1142,6 @@ pub static KingsRock: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Magmarizer: ItemData = ItemData {
-    id: 51,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1204,7 +1151,6 @@ pub static Magmarizer: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MetalCoat: ItemData = ItemData {
-    id: 52,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1214,7 +1160,6 @@ pub static MetalCoat: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static OvalStone: ItemData = ItemData {
-    id: 53,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1224,7 +1169,6 @@ pub static OvalStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PrismScale: ItemData = ItemData {
-    id: 54,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1234,7 +1178,6 @@ pub static PrismScale: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Protector: ItemData = ItemData {
-    id: 55,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1244,7 +1187,6 @@ pub static Protector: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RazorClaw: ItemData = ItemData {
-    id: 56,
     cost: 5000,
     pocket: Pocket::Items,
     countable: false,
@@ -1254,7 +1196,6 @@ pub static RazorClaw: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RazorFang: ItemData = ItemData {
-    id: 57,
     cost: 5000,
     pocket: Pocket::Items,
     countable: false,
@@ -1264,7 +1205,6 @@ pub static RazorFang: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ReaperCloth: ItemData = ItemData {
-    id: 58,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1274,7 +1214,6 @@ pub static ReaperCloth: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static UpGrade: ItemData = ItemData {
-    id: 59,
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
@@ -1284,7 +1223,6 @@ pub static UpGrade: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static CheriBerry: ItemData = ItemData {
-    id: 60,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1294,7 +1232,6 @@ pub static CheriBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ChestoBerry: ItemData = ItemData {
-    id: 61,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1304,7 +1241,6 @@ pub static ChestoBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PechaBerry: ItemData = ItemData {
-    id: 62,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1314,7 +1250,6 @@ pub static PechaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RawstBerry: ItemData = ItemData {
-    id: 63,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1324,7 +1259,6 @@ pub static RawstBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static AspearBerry: ItemData = ItemData {
-    id: 64,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1334,7 +1268,6 @@ pub static AspearBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LeppaBerry: ItemData = ItemData {
-    id: 65,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1344,7 +1277,6 @@ pub static LeppaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static OranBerry: ItemData = ItemData {
-    id: 66,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1354,7 +1286,6 @@ pub static OranBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PersimBerry: ItemData = ItemData {
-    id: 67,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1364,7 +1295,6 @@ pub static PersimBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LumBerry: ItemData = ItemData {
-    id: 68,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1374,7 +1304,6 @@ pub static LumBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SitrusBerry: ItemData = ItemData {
-    id: 69,
     cost: 20,
     pocket: Pocket::Medicine,
     countable: false,
@@ -1384,7 +1313,6 @@ pub static SitrusBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static FigyBerry: ItemData = ItemData {
-    id: 70,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1394,7 +1322,6 @@ pub static FigyBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static WikiBerry: ItemData = ItemData {
-    id: 71,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1404,7 +1331,6 @@ pub static WikiBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MagoBerry: ItemData = ItemData {
-    id: 72,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1414,7 +1340,6 @@ pub static MagoBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static AguavBerry: ItemData = ItemData {
-    id: 73,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1424,7 +1349,6 @@ pub static AguavBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static IapapaBerry: ItemData = ItemData {
-    id: 74,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1434,7 +1358,6 @@ pub static IapapaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RazzBerry: ItemData = ItemData {
-    id: 75,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1444,7 +1367,6 @@ pub static RazzBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BlukBerry: ItemData = ItemData {
-    id: 76,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1454,7 +1376,6 @@ pub static BlukBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static NanabBerry: ItemData = ItemData {
-    id: 77,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1464,7 +1385,6 @@ pub static NanabBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static WepearBerry: ItemData = ItemData {
-    id: 78,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1474,7 +1394,6 @@ pub static WepearBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PinapBerry: ItemData = ItemData {
-    id: 79,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1484,7 +1403,6 @@ pub static PinapBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PomegBerry: ItemData = ItemData {
-    id: 80,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1494,7 +1412,6 @@ pub static PomegBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static KelpsyBerry: ItemData = ItemData {
-    id: 81,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1504,7 +1421,6 @@ pub static KelpsyBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static QualotBerry: ItemData = ItemData {
-    id: 82,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1514,7 +1430,6 @@ pub static QualotBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static HondewBerry: ItemData = ItemData {
-    id: 83,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1524,7 +1439,6 @@ pub static HondewBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static GrepaBerry: ItemData = ItemData {
-    id: 84,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1534,7 +1448,6 @@ pub static GrepaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static TamatoBerry: ItemData = ItemData {
-    id: 85,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1544,7 +1457,6 @@ pub static TamatoBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static CornnBerry: ItemData = ItemData {
-    id: 86,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1554,7 +1466,6 @@ pub static CornnBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MagostBerry: ItemData = ItemData {
-    id: 87,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1564,7 +1475,6 @@ pub static MagostBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RabutaBerry: ItemData = ItemData {
-    id: 88,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1574,7 +1484,6 @@ pub static RabutaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static NomelBerry: ItemData = ItemData {
-    id: 89,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1584,7 +1493,6 @@ pub static NomelBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SpelonBerry: ItemData = ItemData {
-    id: 90,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1594,7 +1502,6 @@ pub static SpelonBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PamtreBerry: ItemData = ItemData {
-    id: 91,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1604,7 +1511,6 @@ pub static PamtreBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static WatmelBerry: ItemData = ItemData {
-    id: 92,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1614,7 +1520,6 @@ pub static WatmelBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DurinBerry: ItemData = ItemData {
-    id: 93,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1624,7 +1529,6 @@ pub static DurinBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BelueBerry: ItemData = ItemData {
-    id: 94,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1634,7 +1538,6 @@ pub static BelueBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static OccaBerry: ItemData = ItemData {
-    id: 95,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1644,7 +1547,6 @@ pub static OccaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PasshoBerry: ItemData = ItemData {
-    id: 96,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1654,7 +1556,6 @@ pub static PasshoBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static WacanBerry: ItemData = ItemData {
-    id: 97,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1664,7 +1565,6 @@ pub static WacanBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RindoBerry: ItemData = ItemData {
-    id: 98,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1674,7 +1574,6 @@ pub static RindoBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static YacheBerry: ItemData = ItemData {
-    id: 99,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1684,7 +1583,6 @@ pub static YacheBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ChopleBerry: ItemData = ItemData {
-    id: 100,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1694,7 +1592,6 @@ pub static ChopleBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static KebiaBerry: ItemData = ItemData {
-    id: 101,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1704,7 +1601,6 @@ pub static KebiaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ShucaBerry: ItemData = ItemData {
-    id: 102,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1714,7 +1610,6 @@ pub static ShucaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static CobaBerry: ItemData = ItemData {
-    id: 103,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1724,7 +1619,6 @@ pub static CobaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PayapaBerry: ItemData = ItemData {
-    id: 104,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1734,7 +1628,6 @@ pub static PayapaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static TangaBerry: ItemData = ItemData {
-    id: 105,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1744,7 +1637,6 @@ pub static TangaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ChartiBerry: ItemData = ItemData {
-    id: 106,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1754,7 +1646,6 @@ pub static ChartiBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static KasibBerry: ItemData = ItemData {
-    id: 107,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1764,7 +1655,6 @@ pub static KasibBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static HabanBerry: ItemData = ItemData {
-    id: 108,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1774,7 +1664,6 @@ pub static HabanBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ColburBerry: ItemData = ItemData {
-    id: 109,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1784,7 +1673,6 @@ pub static ColburBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BabiriBerry: ItemData = ItemData {
-    id: 110,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1794,7 +1682,6 @@ pub static BabiriBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ChilanBerry: ItemData = ItemData {
-    id: 111,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1804,7 +1691,6 @@ pub static ChilanBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LiechiBerry: ItemData = ItemData {
-    id: 112,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1814,7 +1700,6 @@ pub static LiechiBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static GanlonBerry: ItemData = ItemData {
-    id: 113,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1824,7 +1709,6 @@ pub static GanlonBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SalacBerry: ItemData = ItemData {
-    id: 114,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1834,7 +1718,6 @@ pub static SalacBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PetayaBerry: ItemData = ItemData {
-    id: 115,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1844,7 +1727,6 @@ pub static PetayaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ApicotBerry: ItemData = ItemData {
-    id: 116,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1854,7 +1736,6 @@ pub static ApicotBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LansatBerry: ItemData = ItemData {
-    id: 117,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1864,7 +1745,6 @@ pub static LansatBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static StarfBerry: ItemData = ItemData {
-    id: 118,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1874,7 +1754,6 @@ pub static StarfBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static EnigmaBerry: ItemData = ItemData {
-    id: 119,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1884,7 +1763,6 @@ pub static EnigmaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MicleBerry: ItemData = ItemData {
-    id: 120,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1894,7 +1772,6 @@ pub static MicleBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static CustapBerry: ItemData = ItemData {
-    id: 121,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1904,7 +1781,6 @@ pub static CustapBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static JabocaBerry: ItemData = ItemData {
-    id: 122,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1914,7 +1790,6 @@ pub static JabocaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RowapBerry: ItemData = ItemData {
-    id: 123,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1924,7 +1799,6 @@ pub static RowapBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RoseliBerry: ItemData = ItemData {
-    id: 124,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1934,7 +1808,6 @@ pub static RoseliBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static KeeBerry: ItemData = ItemData {
-    id: 125,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1944,7 +1817,6 @@ pub static KeeBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MarangaBerry: ItemData = ItemData {
-    id: 126,
     cost: 20,
     pocket: Pocket::Berries,
     countable: false,
@@ -1954,7 +1826,6 @@ pub static MarangaBerry: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static AirMail: ItemData = ItemData {
-    id: 127,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -1964,7 +1835,6 @@ pub static AirMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BloomMail: ItemData = ItemData {
-    id: 128,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -1974,7 +1844,6 @@ pub static BloomMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BrickMail: ItemData = ItemData {
-    id: 129,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -1984,7 +1853,6 @@ pub static BrickMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BubbleMail: ItemData = ItemData {
-    id: 130,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -1994,7 +1862,6 @@ pub static BubbleMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static FlameMail: ItemData = ItemData {
-    id: 131,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -2004,7 +1871,6 @@ pub static FlameMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static GrassMail: ItemData = ItemData {
-    id: 132,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -2014,7 +1880,6 @@ pub static GrassMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static HeartMail: ItemData = ItemData {
-    id: 133,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -2024,7 +1889,6 @@ pub static HeartMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MosaicMail: ItemData = ItemData {
-    id: 134,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -2034,7 +1898,6 @@ pub static MosaicMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SnowMail: ItemData = ItemData {
-    id: 135,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -2044,7 +1907,6 @@ pub static SnowMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SpaceMail: ItemData = ItemData {
-    id: 136,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -2054,7 +1916,6 @@ pub static SpaceMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SteelMail: ItemData = ItemData {
-    id: 137,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -2064,7 +1925,6 @@ pub static SteelMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static TunnelMail: ItemData = ItemData {
-    id: 138,
     cost: 50,
     pocket: Pocket::Mail,
     countable: false,
@@ -2074,7 +1934,6 @@ pub static TunnelMail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Potion: ItemData = ItemData {
-    id: 139,
     cost: 200,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2084,7 +1943,6 @@ pub static Potion: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static SuperPotion: ItemData = ItemData {
-    id: 140,
     cost: 700,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2094,7 +1952,6 @@ pub static SuperPotion: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static HyperPotion: ItemData = ItemData {
-    id: 141,
     cost: 1500,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2104,7 +1961,6 @@ pub static HyperPotion: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static MaxPotion: ItemData = ItemData {
-    id: 142,
     cost: 2500,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2114,7 +1970,6 @@ pub static MaxPotion: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static BerryJuice: ItemData = ItemData {
-    id: 143,
     cost: 200,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2124,7 +1979,6 @@ pub static BerryJuice: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static EnergyRoot: ItemData = ItemData {
-    id: 144,
     cost: 1200,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2134,7 +1988,6 @@ pub static EnergyRoot: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static EnergyPowder: ItemData = ItemData {
-    id: 145,
     cost: 500,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2144,7 +1997,6 @@ pub static EnergyPowder: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static FreshWater: ItemData = ItemData {
-    id: 146,
     cost: 200,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2154,7 +2006,6 @@ pub static FreshWater: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Lemonade: ItemData = ItemData {
-    id: 147,
     cost: 400,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2164,7 +2015,6 @@ pub static Lemonade: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static MoomooMilk: ItemData = ItemData {
-    id: 148,
     cost: 600,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2174,7 +2024,6 @@ pub static MoomooMilk: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static RageCandyBar: ItemData = ItemData {
-    id: 149,
     cost: 350,
     pocket: Pocket::KeyItems,
     countable: false,
@@ -2184,7 +2033,6 @@ pub static RageCandyBar: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SacredAsh: ItemData = ItemData {
-    id: 150,
     cost: 50000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2194,7 +2042,6 @@ pub static SacredAsh: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static ShellBell: ItemData = ItemData {
-    id: 151,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -2204,7 +2051,6 @@ pub static ShellBell: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SodaPop: ItemData = ItemData {
-    id: 152,
     cost: 300,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2214,7 +2060,6 @@ pub static SodaPop: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static SweetHeart: ItemData = ItemData {
-    id: 153,
     cost: 3000,
     pocket: Pocket::Medicine,
     countable: false,
@@ -2224,7 +2069,6 @@ pub static SweetHeart: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RevivalHerb: ItemData = ItemData {
-    id: 154,
     cost: 2800,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2234,7 +2078,6 @@ pub static RevivalHerb: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Antidote: ItemData = ItemData {
-    id: 155,
     cost: 200,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2244,7 +2087,6 @@ pub static Antidote: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Awakening: ItemData = ItemData {
-    id: 156,
     cost: 100,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2254,7 +2096,6 @@ pub static Awakening: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static BurnHeal: ItemData = ItemData {
-    id: 157,
     cost: 300,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2264,7 +2105,6 @@ pub static BurnHeal: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static FullHeal: ItemData = ItemData {
-    id: 158,
     cost: 400,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2274,7 +2114,6 @@ pub static FullHeal: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static FullRestore: ItemData = ItemData {
-    id: 159,
     cost: 3000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2284,7 +2123,6 @@ pub static FullRestore: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static IceHeal: ItemData = ItemData {
-    id: 160,
     cost: 100,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2294,7 +2132,6 @@ pub static IceHeal: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static ParalyzeHeal: ItemData = ItemData {
-    id: 161,
     cost: 300,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2304,7 +2141,6 @@ pub static ParalyzeHeal: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Revive: ItemData = ItemData {
-    id: 162,
     cost: 2000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2314,7 +2150,6 @@ pub static Revive: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static MaxRevive: ItemData = ItemData {
-    id: 163,
     cost: 4000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2324,7 +2159,6 @@ pub static MaxRevive: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static LavaCookie: ItemData = ItemData {
-    id: 164,
     cost: 350,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2334,7 +2168,6 @@ pub static LavaCookie: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static MentalHerb: ItemData = ItemData {
-    id: 165,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -2344,7 +2177,6 @@ pub static MentalHerb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static OldGateau: ItemData = ItemData {
-    id: 166,
     cost: 350,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2354,7 +2186,6 @@ pub static OldGateau: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Casteliacone: ItemData = ItemData {
-    id: 167,
     cost: 350,
     pocket: Pocket::Medicine,
     countable: false,
@@ -2364,7 +2195,6 @@ pub static Casteliacone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Ether: ItemData = ItemData {
-    id: 168,
     cost: 1200,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2374,7 +2204,6 @@ pub static Ether: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static MaxEther: ItemData = ItemData {
-    id: 169,
     cost: 2000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2384,7 +2213,6 @@ pub static MaxEther: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Elixir: ItemData = ItemData {
-    id: 170,
     cost: 3000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2394,7 +2222,6 @@ pub static Elixir: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static MaxElixir: ItemData = ItemData {
-    id: 171,
     cost: 4500,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2404,7 +2231,6 @@ pub static MaxElixir: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static PpUp: ItemData = ItemData {
-    id: 172,
     cost: 10000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2414,7 +2240,6 @@ pub static PpUp: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static PpMax: ItemData = ItemData {
-    id: 173,
     cost: 10000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2424,7 +2249,6 @@ pub static PpMax: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static HpUp: ItemData = ItemData {
-    id: 174,
     cost: 10000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2434,7 +2258,6 @@ pub static HpUp: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Protein: ItemData = ItemData {
-    id: 175,
     cost: 10000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2444,7 +2267,6 @@ pub static Protein: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Iron: ItemData = ItemData {
-    id: 176,
     cost: 10000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2454,7 +2276,6 @@ pub static Iron: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Calcium: ItemData = ItemData {
-    id: 177,
     cost: 10000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2464,7 +2285,6 @@ pub static Calcium: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Zinc: ItemData = ItemData {
-    id: 178,
     cost: 10000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2474,7 +2294,6 @@ pub static Zinc: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static Carbos: ItemData = ItemData {
-    id: 179,
     cost: 10000,
     pocket: Pocket::Medicine,
     countable: true,
@@ -2484,7 +2303,6 @@ pub static Carbos: ItemData = ItemData {
     overworld_usable: true,
 };
 pub static ShockDrive: ItemData = ItemData {
-    id: 180,
     cost: 0,
     pocket: Pocket::Items,
     countable: false,
@@ -2494,7 +2312,6 @@ pub static ShockDrive: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BurnDrive: ItemData = ItemData {
-    id: 181,
     cost: 0,
     pocket: Pocket::Items,
     countable: false,
@@ -2504,7 +2321,6 @@ pub static BurnDrive: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ChillDrive: ItemData = ItemData {
-    id: 182,
     cost: 0,
     pocket: Pocket::Items,
     countable: false,
@@ -2514,7 +2330,6 @@ pub static ChillDrive: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DouseDrive: ItemData = ItemData {
-    id: 183,
     cost: 0,
     pocket: Pocket::Items,
     countable: false,
@@ -2524,7 +2339,6 @@ pub static DouseDrive: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PowerAnklet: ItemData = ItemData {
-    id: 184,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -2534,7 +2348,6 @@ pub static PowerAnklet: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PowerBand: ItemData = ItemData {
-    id: 185,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -2544,7 +2357,6 @@ pub static PowerBand: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PowerBelt: ItemData = ItemData {
-    id: 186,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -2554,7 +2366,6 @@ pub static PowerBelt: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PowerBracer: ItemData = ItemData {
-    id: 187,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -2564,7 +2375,6 @@ pub static PowerBracer: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PowerLens: ItemData = ItemData {
-    id: 188,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -2574,7 +2384,6 @@ pub static PowerLens: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PowerWeight: ItemData = ItemData {
-    id: 189,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -2584,7 +2393,6 @@ pub static PowerWeight: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ExpShare: ItemData = ItemData {
-    id: 190,
     cost: 0,
     pocket: Pocket::Items,
     countable: false,
@@ -2594,7 +2402,6 @@ pub static ExpShare: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LuckyEgg: ItemData = ItemData {
-    id: 191,
     cost: 10000,
     pocket: Pocket::Items,
     countable: false,
@@ -2604,7 +2411,6 @@ pub static LuckyEgg: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DracoPlate: ItemData = ItemData {
-    id: 192,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2614,7 +2420,6 @@ pub static DracoPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DreadPlate: ItemData = ItemData {
-    id: 193,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2624,7 +2429,6 @@ pub static DreadPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static EarthPlate: ItemData = ItemData {
-    id: 194,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2634,7 +2438,6 @@ pub static EarthPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static FistPlate: ItemData = ItemData {
-    id: 195,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2644,7 +2447,6 @@ pub static FistPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static FlamePlate: ItemData = ItemData {
-    id: 196,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2654,7 +2456,6 @@ pub static FlamePlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static IciclePlate: ItemData = ItemData {
-    id: 197,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2664,7 +2465,6 @@ pub static IciclePlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static InsectPlate: ItemData = ItemData {
-    id: 198,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2674,7 +2474,6 @@ pub static InsectPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static IronPlate: ItemData = ItemData {
-    id: 199,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2684,7 +2483,6 @@ pub static IronPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MeadowPlate: ItemData = ItemData {
-    id: 200,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2694,7 +2492,6 @@ pub static MeadowPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MindPlate: ItemData = ItemData {
-    id: 201,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2704,7 +2501,6 @@ pub static MindPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PixiePlate: ItemData = ItemData {
-    id: 202,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2714,7 +2510,6 @@ pub static PixiePlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SkyPlate: ItemData = ItemData {
-    id: 203,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2724,7 +2519,6 @@ pub static SkyPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SplashPlate: ItemData = ItemData {
-    id: 204,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2734,7 +2528,6 @@ pub static SplashPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SpookyPlate: ItemData = ItemData {
-    id: 205,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2744,7 +2537,6 @@ pub static SpookyPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static StonePlate: ItemData = ItemData {
-    id: 206,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2754,7 +2546,6 @@ pub static StonePlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ToxicPlate: ItemData = ItemData {
-    id: 207,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2764,7 +2555,6 @@ pub static ToxicPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ZapPlate: ItemData = ItemData {
-    id: 208,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2774,7 +2564,6 @@ pub static ZapPlate: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Eviolite: ItemData = ItemData {
-    id: 209,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -2784,7 +2573,6 @@ pub static Eviolite: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Leek: ItemData = ItemData {
-    id: 210,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2794,7 +2582,6 @@ pub static Leek: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LightBall: ItemData = ItemData {
-    id: 211,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2804,7 +2591,6 @@ pub static LightBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LuckyPunch: ItemData = ItemData {
-    id: 212,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2814,7 +2600,6 @@ pub static LuckyPunch: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MetalPowder: ItemData = ItemData {
-    id: 213,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2824,7 +2609,6 @@ pub static MetalPowder: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static QuickPowder: ItemData = ItemData {
-    id: 214,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2834,7 +2618,6 @@ pub static QuickPowder: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SoulDew: ItemData = ItemData {
-    id: 215,
     cost: 0,
     pocket: Pocket::Items,
     countable: false,
@@ -2844,7 +2627,6 @@ pub static SoulDew: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ThickClub: ItemData = ItemData {
-    id: 216,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2854,7 +2636,6 @@ pub static ThickClub: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BlackBelt: ItemData = ItemData {
-    id: 217,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2864,7 +2645,6 @@ pub static BlackBelt: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BlackGlasses: ItemData = ItemData {
-    id: 218,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2874,7 +2654,6 @@ pub static BlackGlasses: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Charcoal: ItemData = ItemData {
-    id: 219,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2884,7 +2663,6 @@ pub static Charcoal: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static DragonFang: ItemData = ItemData {
-    id: 220,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2894,7 +2672,6 @@ pub static DragonFang: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static HardStone: ItemData = ItemData {
-    id: 221,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2904,7 +2681,6 @@ pub static HardStone: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Magnet: ItemData = ItemData {
-    id: 222,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2914,7 +2690,6 @@ pub static Magnet: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MiracleSeed: ItemData = ItemData {
-    id: 224,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2924,7 +2699,6 @@ pub static MiracleSeed: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MysticWater: ItemData = ItemData {
-    id: 225,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2934,7 +2708,6 @@ pub static MysticWater: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static NeverMeltIce: ItemData = ItemData {
-    id: 226,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2944,7 +2717,6 @@ pub static NeverMeltIce: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PoisonBarb: ItemData = ItemData {
-    id: 227,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2954,7 +2726,6 @@ pub static PoisonBarb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SharpBeak: ItemData = ItemData {
-    id: 228,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2964,7 +2735,6 @@ pub static SharpBeak: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SilkScarf: ItemData = ItemData {
-    id: 229,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2974,7 +2744,6 @@ pub static SilkScarf: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SilverPowder: ItemData = ItemData {
-    id: 230,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2984,7 +2753,6 @@ pub static SilverPowder: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SoftSand: ItemData = ItemData {
-    id: 231,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -2994,7 +2762,6 @@ pub static SoftSand: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SpellTag: ItemData = ItemData {
-    id: 232,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -3004,7 +2771,6 @@ pub static SpellTag: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static TwistedSpoon: ItemData = ItemData {
-    id: 233,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -3014,7 +2780,6 @@ pub static TwistedSpoon: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static AdamantOrb: ItemData = ItemData {
-    id: 234,
     cost: 0,
     pocket: Pocket::Items,
     countable: false,
@@ -3024,7 +2789,6 @@ pub static AdamantOrb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LustrousOrb: ItemData = ItemData {
-    id: 235,
     cost: 0,
     pocket: Pocket::Items,
     countable: false,
@@ -3034,7 +2798,6 @@ pub static LustrousOrb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static GriseousOrb: ItemData = ItemData {
-    id: 236,
     cost: 0,
     pocket: Pocket::Items,
     countable: false,
@@ -3044,7 +2807,6 @@ pub static GriseousOrb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BlueScarf: ItemData = ItemData {
-    id: 237,
     cost: 100,
     pocket: Pocket::Items,
     countable: false,
@@ -3054,7 +2816,6 @@ pub static BlueScarf: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static GreenScarf: ItemData = ItemData {
-    id: 238,
     cost: 100,
     pocket: Pocket::Items,
     countable: false,
@@ -3064,7 +2825,6 @@ pub static GreenScarf: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static PinkScarf: ItemData = ItemData {
-    id: 239,
     cost: 100,
     pocket: Pocket::Items,
     countable: false,
@@ -3074,7 +2834,6 @@ pub static PinkScarf: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RedScarf: ItemData = ItemData {
-    id: 240,
     cost: 100,
     pocket: Pocket::Items,
     countable: false,
@@ -3084,7 +2843,6 @@ pub static RedScarf: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static YellowScarf: ItemData = ItemData {
-    id: 241,
     cost: 100,
     pocket: Pocket::Items,
     countable: false,
@@ -3094,7 +2852,6 @@ pub static YellowScarf: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static SootheBell: ItemData = ItemData {
-    id: 242,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3104,7 +2861,6 @@ pub static SootheBell: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static CleanseTag: ItemData = ItemData {
-    id: 243,
     cost: 5000,
     pocket: Pocket::Items,
     countable: false,
@@ -3114,7 +2870,6 @@ pub static CleanseTag: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ChoiceBand: ItemData = ItemData {
-    id: 244,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3124,7 +2879,6 @@ pub static ChoiceBand: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ChoiceScarf: ItemData = ItemData {
-    id: 245,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3134,7 +2888,6 @@ pub static ChoiceScarf: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ChoiceSpecs: ItemData = ItemData {
-    id: 246,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3144,7 +2897,6 @@ pub static ChoiceSpecs: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static BlackSludge: ItemData = ItemData {
-    id: 247,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3154,7 +2906,6 @@ pub static BlackSludge: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LifeOrb: ItemData = ItemData {
-    id: 248,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3164,7 +2915,6 @@ pub static LifeOrb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RockyHelmet: ItemData = ItemData {
-    id: 249,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3174,7 +2924,6 @@ pub static RockyHelmet: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static StickyBarb: ItemData = ItemData {
-    id: 250,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3184,7 +2933,6 @@ pub static StickyBarb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static GripClaw: ItemData = ItemData {
-    id: 251,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3194,7 +2942,6 @@ pub static GripClaw: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LightClay: ItemData = ItemData {
-    id: 252,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3204,7 +2951,6 @@ pub static LightClay: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static TerrainExtender: ItemData = ItemData {
-    id: 253,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3214,7 +2960,6 @@ pub static TerrainExtender: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static AssaultVest: ItemData = ItemData {
-    id: 254,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -3224,7 +2969,6 @@ pub static AssaultVest: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static FlameOrb: ItemData = ItemData {
-    id: 255,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3234,7 +2978,6 @@ pub static FlameOrb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static IronBall: ItemData = ItemData {
-    id: 256,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3244,7 +2987,6 @@ pub static IronBall: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LaggingTail: ItemData = ItemData {
-    id: 257,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3254,7 +2996,6 @@ pub static LaggingTail: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static MachoBrace: ItemData = ItemData {
-    id: 258,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
@@ -3264,7 +3005,6 @@ pub static MachoBrace: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static RingTarget: ItemData = ItemData {
-    id: 259,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3274,7 +3014,6 @@ pub static RingTarget: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static ToxicOrb: ItemData = ItemData {
-    id: 260,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3284,7 +3023,6 @@ pub static ToxicOrb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Leftovers: ItemData = ItemData {
-    id: 261,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3294,7 +3032,6 @@ pub static Leftovers: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static AbsorbBulb: ItemData = ItemData {
-    id: 262,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3304,7 +3041,6 @@ pub static AbsorbBulb: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static CellBattery: ItemData = ItemData {
-    id: 263,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3314,7 +3050,6 @@ pub static CellBattery: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static EjectButton: ItemData = ItemData {
-    id: 264,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3324,7 +3059,6 @@ pub static EjectButton: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static LuminousMoss: ItemData = ItemData {
-    id: 265,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3334,7 +3068,6 @@ pub static LuminousMoss: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static Snowball: ItemData = ItemData {
-    id: 266,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3344,7 +3077,6 @@ pub static Snowball: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static WeaknessPolicy: ItemData = ItemData {
-    id: 267,
     cost: 1000,
     pocket: Pocket::Items,
     countable: false,
@@ -3354,7 +3086,6 @@ pub static WeaknessPolicy: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static WideLens: ItemData = ItemData {
-    id: 268,
     cost: 4000,
     pocket: Pocket::Items,
     countable: false,
@@ -3364,7 +3095,6 @@ pub static WideLens: ItemData = ItemData {
     overworld_usable: false,
 };
 pub static cEverstone: ItemData = ItemData {
-    id: 269,
     cost: 3000,
     pocket: Pocket::Items,
     countable: false,
