@@ -501,14 +501,6 @@ impl Pokemon {
         }
     }
 
-    /// Create a basic Pokemon Egg
-    pub fn create_egg(player: &Player, species: Species) -> Pokemon {
-        let mut p = Pokemon::create_from_species_level(player, species, 1);
-        p.egg = true;
-        p.level_met = 0;
-        p
-    }
-
     /// Recalculate the level + stats of this Pokemon
     pub fn recalculate_stats(&mut self) {
         let species_data = self.species.data();
@@ -528,5 +520,36 @@ impl Pokemon {
         }
 
         self.level = level;
+    }
+
+    /// Get the actual ability of this Pokemon
+    /// Rules:
+    /// If pokemon has SlotOne, return the first standard ability
+    /// If pokemon has SlotTwo:
+    ///     If pokemon has only one standard ability, return it
+    ///     If pokemon has two standard abilities, returns the second standard ability
+    /// If pokemon has Hidden:
+    ///     If pokemon has a hidden ability, return it
+    ///     If pokemon has no hidden ability, return the first standard ability
+    pub fn get_ability(&self) -> &Ability {
+        let data = self.species.data();
+        match self.ability {
+            AbilitySlot::SlotOne => {
+                match &data.ability {
+                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => a
+                }
+            },
+            AbilitySlot::SlotTwo => {
+                match &data.ability {
+                    PokemonAbility::One(a) | PokemonAbility::Two(_, a) => a
+                }
+            },
+            AbilitySlot::Hidden => match &data.hidden_ability {
+                None => match &data.ability {
+                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => a
+                },
+                Some(a) => a
+            }
+        }
     }
 }
