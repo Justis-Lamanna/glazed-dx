@@ -2,9 +2,11 @@
 
 use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
 use crate::types::Type;
+use glazed_core::Id;
+use glazed_macro::*;
 
 /// Represents an Attack a Pokemon can have
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum Move {
     Pound,
     KarateChop,

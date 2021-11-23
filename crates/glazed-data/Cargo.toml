@@ -11,3 +11,5 @@ rand = "0.8.4"
 strum = "0.22"
 strum_macros = "0.22"
 lazy_static = "0.1.15"
+glazed-core = { path = "../glazed-core" }
+glazed-macro = { path = "../glazed-macro" }

@@ -1,7 +1,8 @@
 #![allow(non_upper_case_globals)]
 
 use crate::attack::Move;
-use crate::item::Item::Everstone;
+use glazed_core::Id;
+use glazed_macro::*;
 
 /// All Pokeballs in the game
 #[derive(Debug)]

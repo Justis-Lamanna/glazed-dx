@@ -8,9 +8,12 @@ use crate::attack::Move;
 use crate::core::Season;
 use crate::pokemon::{EggGroup, GenderRatio, LevelRate, PokemonData, PokemonEggGroup, Stat, Stats};
 use crate::types::{PokemonType, Type};
+use glazed_core::Id;
+use glazed_macro::*;
 
 //region Pokemon Species Enums
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
+#[tuple()]
 pub enum Species {
     Bulbasaur,
     Ivysaur,
@@ -668,7 +671,7 @@ impl Default for Species {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum UnownForm {
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
     ExclamationMark,
@@ -710,77 +713,77 @@ impl Distribution<UnownForm> for Standard {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum CastformForm {
     Normal, Sunny, Rainy, Snowy
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum DeoxysForm {
     Normal, Attack, Defense, Speed
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum BurmyWormadamForm {
     Plant, Sandy, Trash
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum CherrimForm {
     Overcase, Sunshine
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum ShellosGastrodonForm {
     WestSea, EastSea
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum RotomForm {
     Normal, Heat, Wash, Frost, Fan, Mow
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum GiratinaForm {
     Altered, Origin
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum ShayminForm {
     Land, Sky
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum BasculinForm {
     RedStriped, BlueStriped
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum DarmanitanForm {
     Standard, Zen
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum ForcesOfNatureForm {
     Incarnate, Therian
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum KyuremForm {
     Normal, White, Black
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum KeldeoForm {
     Ordinary, Resolute
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum MeloettaForm {
     Aria, Pirouette
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum GenesectForm {
     Normal, Shock, Burn, Chill, Douse
 }

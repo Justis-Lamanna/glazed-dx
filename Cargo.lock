@@ -20,9 +20,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "glazed-battle"
+version = "0.1.0"
+dependencies = [
+ "glazed-data",
+]
+
+[[package]]
+name = "glazed-core"
+version = "0.1.0"
+
+[[package]]
 name = "glazed-data"
 version = "0.1.0"
 dependencies = [
+ "glazed-core",
+ "glazed-macro",
  "lazy_static",
  "rand",
  "strum",
@@ -33,7 +46,18 @@ dependencies = [
 name = "glazed-dx"
 version = "0.1.0"
 dependencies = [
+ "glazed-battle",
+ "glazed-core",
  "glazed-data",
+]
+
+[[package]]
+name = "glazed-macro"
+version = "0.1.0"
+dependencies = [
+ "glazed-core",
+ "quote",
+ "syn",
 ]
 
 [[package]]

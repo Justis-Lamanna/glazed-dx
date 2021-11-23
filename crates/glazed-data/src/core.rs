@@ -1,4 +1,6 @@
 use rand::RngCore;
+use glazed_core::Id;
+use glazed_macro::*;
 
 /// Represents the player of the game
 #[derive(Debug)]
@@ -20,7 +22,7 @@ impl Player {
 }
 
 /// Represents the season in the game
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum Season {
     Spring, Summer, Autumn, Winter
 }

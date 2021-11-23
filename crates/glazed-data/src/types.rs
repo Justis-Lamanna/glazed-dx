@@ -1,8 +1,10 @@
 use std::collections::{HashMap, HashSet};
 use std::ops::Mul;
+use glazed_core::Id;
+use glazed_macro::*;
 
 /// Represents the Type of a Pokemon
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Id)]
 pub enum Type {
     Normal,
     Fighting,

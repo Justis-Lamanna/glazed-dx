@@ -6,6 +6,9 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/glazed-data/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/glazed-dx/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/old-data/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/glazed-battle/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/glazed-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/glazed-macro/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
