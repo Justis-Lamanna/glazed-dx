@@ -660,6 +660,7 @@ pub enum StatChangeTarget {
 #[derive(Debug)]
 pub enum Effect {
     Damage(u8),
+    SetDamage(u8),
     Critical(u8),
     StatChange(BattleStat, i8, u8, StatChangeTarget),
     NonVolatileStatus(NonVolatileBattleAilment, u8),
@@ -1787,7 +1788,7 @@ pub static SonicBoom: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::SetDamage(20)],
 };
 pub static Disable: MoveData = MoveData {
     pp: 20,
@@ -2117,7 +2118,7 @@ pub static DragonRage: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::SetDamage(40)],
 };
 pub static FireSpin: MoveData = MoveData {
     pp: 15,
