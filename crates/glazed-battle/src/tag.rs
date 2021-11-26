@@ -1,4 +1,4 @@
-use crate::{BattleData, Battlefield, EntryHazard, Party};
+use crate::{BattleData, Battlefield, EntryHazard, Field, Party};
 use crate::double::DoubleTurnAction;
 
 /// One side of battle in a tag battle (two trainers, one pokemon each)
@@ -32,7 +32,7 @@ impl Battlefield<TagBattleSide> {
         Battlefield {
             user: user.into(),
             opponent: opponent.into(),
-            weather: Option::None
+            field: Field::default()
         }
     }
 

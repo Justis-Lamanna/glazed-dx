@@ -3,7 +3,7 @@
 use crate::attack::Move;
 use crate::constants::{BasculinForm, BurmyWormadamForm, CastformForm, CherrimForm, DarmanitanForm, DeoxysForm, ForcesOfNatureForm, GenesectForm, GiratinaForm, KeldeoForm, KyuremForm, MeloettaForm, RotomForm, ShayminForm, ShellosGastrodonForm, Species, UnownForm};
 use crate::core::Season;
-use crate::item::{EvolutionHeldItem, EvolutionStone, Incense, Item};
+use crate::item::{EvolutionHeldItem, EvolutionStone, Incense};
 use crate::types::Type;
 
 /// Represents evolution + breeding data for a species

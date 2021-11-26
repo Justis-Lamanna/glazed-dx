@@ -1,12 +1,8 @@
 use glazed_battle::{Battlefield, Party};
 use glazed_battle::single::SingleTurnAction;
-use glazed_data::attack::BattleStat::Attack;
-use glazed_data::attack::DamageType::Special;
 use glazed_data::constants::Species;
-use glazed_data::pokemon::{Pokemon, PokemonTemplate};
+use glazed_data::pokemon::PokemonTemplate;
 use glazed_data::attack::Move;
-
-use glazed_core::Id;
 
 fn main() {
     let me = Party::create_one(PokemonTemplate::pokemon(Species::Quilava, 20));

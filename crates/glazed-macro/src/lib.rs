@@ -1,11 +1,9 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
-use std::env::var;
 use quote::quote;
 use syn;
-use syn::{Data, Fields, Type, Variant};
-use glazed_core::Id;
+use syn::{Data, Fields, Variant};
 
 #[proc_macro_derive(Id, attributes(tuple))]
 pub fn id_macro_derive(input: TokenStream) -> TokenStream {
@@ -46,7 +44,7 @@ fn impl_id_macro(ast: &syn::DeriveInput) -> TokenStream {
 
 fn is_variant_tupleable(variant: &Variant) -> bool {
     match &variant.fields {
-        Fields::Unnamed(data) => true,
+        Fields::Unnamed(_) => true,
         Fields::Unit | Fields::Named(_) => false
     }
 }

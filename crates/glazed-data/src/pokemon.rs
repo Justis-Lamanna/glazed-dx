@@ -1,13 +1,10 @@
-use std::collections::HashSet;
-use rand::{Rng, RngCore};
+use rand::Rng;
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::Move;
 use crate::constants::Species;
-use crate::core::Player;
 use crate::item::{Item, Pokeball};
-use crate::pokemon::MoveTemplate::NaturalMove;
 use crate::types::PokemonType;
 
 /// Represents the probability of a Pokemon being male or female (or neither)
@@ -254,17 +251,6 @@ pub struct StatSlot {
     ev: u8
 }
 impl StatSlot {
-    /// Create a StatSlot for the HP of Shedinja
-    /// Even with the smallest base HP, the minimum HP value is 4. Shedinja is handled as a special
-    /// case, to ensure it always has an HP of 1.
-    fn hp_shedinja(iv: u8, ev: u8) -> StatSlot {
-        StatSlot {
-            value: 1,
-            iv,
-            ev
-        }
-    }
-
     /// Create a StatSlot for the HP of a Pokemon
     fn hp(base: u8, level: u8, iv: u8, ev: u8) -> StatSlot {
         let calculation = (2u32 * u32::from(base)) + u32::from(iv) + (u32::from(ev) / 4u32);

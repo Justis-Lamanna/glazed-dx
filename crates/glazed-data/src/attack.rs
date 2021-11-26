@@ -587,7 +587,7 @@ pub enum ContestType {
 }
 
 /// Represents the type of Move, for which attack/defense is used
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum DamageType {
     Physical,
     Special,
@@ -698,7 +698,7 @@ impl Item {
             Item::Berry(_) | Item::Incense(_) | Item::RedScarf | Item::YellowScarf | Item::PinkScarf | Item::GreenScarf | Item::BlueScarf |
             Item::ChoiceBand | Item::ChoiceScarf | Item::ChoiceSpecs | Item::LaggingTail | Item::Leftovers | Item::MentalHerb |
             Item::MetalPowder | Item::QuickPowder | Item::EvolutionHeldItem(EvolutionHeldItem::ReaperCloth) | Item::RingTarget |
-            Item::SilkScarf | Item::SilverPowder | Item::SoftSand | Item::SootheBell | Item::WideLens => 10,
+            Item::SilkScarf | Item::SilverPowder | Item::SoftSand | Item::SootheBell | Item::WideLens | Item::BrightPowder | Item::ZoomLens => 10,
             Item::Eviolite | Item::LuckyPunch => 40,
             Item::EvolutionHeldItem(EvolutionHeldItem::DubiousDisk) | Item::SharpBeak => 50,
             Item::AdamantOrb | Item::GriseousOrb | Item::Leek | Item::LustrousOrb | Item::MachoBrace | Item::RockyHelmet => 60,

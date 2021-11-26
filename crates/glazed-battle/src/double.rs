@@ -1,6 +1,6 @@
 use glazed_data::attack::Move;
 use glazed_data::item::Item;
-use crate::{BattleData, Battlefield, EntryHazard, Party};
+use crate::{BattleData, Battlefield, EntryHazard, Field, Party};
 
 /// One side of battle in a double battle (one trainer, two pokemon)
 #[derive(Debug)]
@@ -33,7 +33,7 @@ impl Battlefield<DoubleBattleSide> {
         Battlefield {
             user: user.into(),
             opponent: opponent.into(),
-            weather: Option::None
+            field: Field::default()
         }
     }
 

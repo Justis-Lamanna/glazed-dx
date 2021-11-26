@@ -1,4 +1,3 @@
-use std::collections::{HashMap, HashSet};
 use std::ops::Mul;
 use glazed_core::Id;
 use glazed_macro::*;

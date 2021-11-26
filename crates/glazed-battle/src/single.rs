@@ -1,9 +1,7 @@
-use glazed_data::abilities::Ability;
 use glazed_data::attack::Move;
-use glazed_data::constants::Species;
 use glazed_data::item::Item;
 use crate::{core, Field, Side};
-use crate::{Action, BattleData, Battlefield, BattlePokemon, EntryHazard, MutBattlePokemon, Party, Weather};
+use crate::{Action, BattleData, Battlefield, BattlePokemon, MutBattlePokemon, Party};
 
 /// One side of battle in a single battle (one trainer, one pokemon)
 #[derive(Debug)]
@@ -57,52 +55,12 @@ impl Battlefield<SingleBattleSide> {
         }
     }
 
-    /// Get the current effective speed of a specific Pokemon on a specific side of the field
-    /// This takes into account:
-    /// * Raw speed stat of the Pokemon
-    /// * Speed stage
-    /// * Abilities, if applicable to the current state of the field
-    /// * Items, if applicable to the current state of the field
-    /// * Other statuses, such as paralysis or Tailwind
-    fn get_effective_speed(&self, side: &Side, pokemon: &BattlePokemon) -> u16 {
-        let speed = pokemon.get_effective_speed(); //Raw speed + stage multipliers
-
-        // Ability modifiers
-        let ability_multiplier = match pokemon.get_ability() {
-            Ability::Chlorophyll if self.field.is_sunny() => 2.0,
-            Ability::SandRush if self.field.is_sandstorm() => 2.0,
-            Ability::SwiftSwim if self.field.is_rain() => 2.0,
-            Ability::SlushRush if self.field.is_hail() => 2.0,
-            Ability::QuickFeet if pokemon.has_status_condition() => 1.5,
-            Ability::Unburden if pokemon.battle_data.lost_held_item => 2.0,
-            Ability::SlowStart if pokemon.battle_data.turn_count < 5 => 0.5,
-            _ => 1.0
-        };
-
-        let item_multiplier = match pokemon.pokemon.held_item {
-            Some(Item::ChoiceScarf) => 1.5,
-            Some(Item::QuickPowder) if pokemon.pokemon.species == Species::Ditto => 2.0,
-            _ => 1.0
-        };
-
-        let mut eff_speed = f64::from(speed) * ability_multiplier * item_multiplier;
-        if side.tailwind > 0 {
-            eff_speed *= 2.0;
-        }
-        if pokemon.pokemon.status.paralysis {
-            eff_speed *= 0.5;
-        }
-
-        eff_speed as u16
-    }
-
     /// Perform a turn, given everyone's attempted action
     pub fn do_turn(&mut self, user_action: SingleTurnAction, opponent_action: SingleTurnAction) -> () {
         let user_pokemon_speed = self.get_effective_speed(&self.user.side, &self.user.current());
         let opponent_pokemon_speed = self.get_effective_speed(&self.opponent.side, &self.opponent.current());
         let action_order = core::get_action_order(vec![(user_action, user_pokemon_speed), (opponent_action, opponent_pokemon_speed)]);
         println!("{:?}", action_order);
-
     }
 }
 

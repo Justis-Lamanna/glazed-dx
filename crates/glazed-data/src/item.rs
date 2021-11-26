@@ -1,8 +1,6 @@
 #![allow(non_upper_case_globals)]
 
 use crate::attack::Move;
-use glazed_core::Id;
-use glazed_macro::*;
 
 /// All Pokeballs in the game
 #[derive(Debug)]
@@ -378,7 +376,7 @@ pub enum Item {
     SootheBell, CleanseTag, ChoiceBand, ChoiceScarf, ChoiceSpecs, BlackSludge, LifeOrb, RockyHelmet, StickyBarb,
     GripClaw, LightClay, TerrainExtender, AssaultVest, FlameOrb, IronBall, LaggingTail, MachoBrace,
     RingTarget, ToxicOrb, Leftovers, AbsorbBulb, CellBattery, EjectButton, LuminousMoss,
-    Snowball, WeaknessPolicy, WideLens
+    Snowball, WeaknessPolicy, WideLens, ZoomLens, BrightPowder
 }
 
 #[derive(Debug)]
@@ -678,6 +676,8 @@ impl Item {
             Item::WeaknessPolicy => &WeaknessPolicy,
             Item::WideLens => &WideLens,
             Item::Everstone => &cEverstone,
+            Item::BrightPowder => &BrightPowder,
+            Item::ZoomLens => &ZoomLens,
             Item::TM(_) | Item::HM(_) | Item::KeyItem(_) => panic!("No TM, HM, Key Item data filled in")
         }
     }
@@ -3103,5 +3103,23 @@ pub static cEverstone: ItemData = ItemData {
     holdable: true,
     battle_usable: false,
     overworld_usable: false,
+};
+pub const ZoomLens: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
+};
+pub const BrightPowder: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
 };
 //endregion
