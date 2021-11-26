@@ -24,6 +24,7 @@ name = "glazed-battle"
 version = "0.1.0"
 dependencies = [
  "glazed-data",
+ "rand",
 ]
 
 [[package]]

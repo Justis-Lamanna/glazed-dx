@@ -216,12 +216,17 @@ pub struct PokemonContestStats {
 /// Represents the status conditions of this Pokemon
 #[derive(Debug, Default)]
 pub struct PokemonStatusCondition {
-    sleep: u8,
-    poison: bool,
-    bad_poison: bool,
-    burn: bool,
-    freeze: bool,
-    paralysis: bool
+    pub sleep: u8,
+    pub poison: bool,
+    pub bad_poison: bool,
+    pub burn: bool,
+    pub freeze: bool,
+    pub paralysis: bool
+}
+impl PokemonStatusCondition {
+    pub fn has_status_condition(&self) -> bool {
+        self.sleep > 0 || self.poison || self.bad_poison || self.burn || self.freeze || self.paralysis
+    }
 }
 
 /// Represents the values tied to a given moveslot
@@ -244,7 +249,7 @@ impl From<Move> for MoveSlot {
 /// Represents the values tied to a given stat (HP, Atk, etc.)
 #[derive(Debug)]
 pub struct StatSlot {
-    value: u16,
+    pub value: u16,
     iv: u8,
     ev: u8
 }
@@ -580,9 +585,17 @@ impl Default for EVTemplate {
 /// suitable defaults, or are randomly generated.
 /// At minimum, only a species is required (an egg will be generated).
 impl PokemonTemplate {
-    pub fn new(species: Species) -> PokemonTemplate {
+    pub fn egg(species: Species) -> PokemonTemplate {
         PokemonTemplate {
             species,
+            ..Default::default()
+        }
+    }
+
+    pub fn pokemon(species: Species, level: u8) -> PokemonTemplate {
+        PokemonTemplate {
+            species,
+            level,
             ..Default::default()
         }
     }
