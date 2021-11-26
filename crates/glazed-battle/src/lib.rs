@@ -13,6 +13,7 @@ use glazed_data::attack::{Accuracy, Move};
 use glazed_data::item::Item;
 use glazed_data::pokemon::Pokemon;
 
+/// Helper structure that assists in retrieving a Pokemon on the field
 #[derive(Debug)]
 pub struct BattlePokemon<'a> {
     pokemon: &'a Pokemon,
@@ -60,11 +61,62 @@ impl <'a> BattlePokemon<'a> {
     fn has_status_condition(&self) -> bool {
         self.pokemon.status.has_status_condition()
     }
+
+    fn get_ability(&self) -> &Ability {
+        self.battle_data.temp_ability.as_ref().unwrap_or_else(|| self.get_ability())
+    }
 }
 
+/// Helper structure that assists in retrieving a mutable Pokemon on the field
 pub struct MutBattlePokemon<'a> {
     pokemon: &'a mut Pokemon,
     ailments: &'a mut BattleData
+}
+
+/// Represents one side of a battlefield
+#[derive(Default, Debug)]
+pub struct Side {
+    hazard: Option<EntryHazard>,
+    tailwind: u8
+}
+
+/// Represents the entire battlefield
+#[derive(Default, Debug)]
+pub struct Field {
+    weather: Option<Weather>
+}
+impl Field {
+    /// Return if harsh sunlight is present on the field
+    pub fn is_sunny(&self) -> bool {
+        match self.weather {
+            Some(Weather::Sun(_)) => true,
+            _ => false
+        }
+    }
+
+    /// Return if it is raining on the field
+    pub fn is_rain(&self) -> bool {
+        match self.weather {
+            Some(Weather::Rain(_)) => true,
+            _ => false
+        }
+    }
+
+    /// Return if there is a sandstorm on the field
+    pub fn is_sandstorm(&self) -> bool {
+        match self.weather {
+            Some(Weather::Sandstorm(_)) => true,
+            _ => false
+        }
+    }
+
+    /// Return if there is hail on the field
+    pub fn is_hail(&self) -> bool {
+        match self.weather {
+            Some(Weather::Hail(_)) => true,
+            _ => false
+        }
+    }
 }
 
 /// A group of between 1 and 6 Pokemon, which a trainer owns
@@ -127,45 +179,20 @@ impl Party {
     }
 }
 
+/// Represents the current battlefield
 #[derive(Debug)]
 pub struct Battlefield<T> {
     user: T,
     opponent: T,
-    weather: Option<Weather>
-}
-impl <T> Battlefield<T> {
-    pub fn is_sunny(&self) -> bool {
-        match self.weather {
-            Some(Weather::Sun(_)) => true,
-            _ => false
-        }
-    }
-
-    pub fn is_rain(&self) -> bool {
-        match self.weather {
-            Some(Weather::Rain(_)) => true,
-            _ => false
-        }
-    }
-
-    pub fn is_sandstorm(&self) -> bool {
-        match self.weather {
-            Some(Weather::Sandstorm(_)) => true,
-            _ => false
-        }
-    }
-
-    pub fn is_hail(&self) -> bool {
-        match self.weather {
-            Some(Weather::Hail(_)) => true,
-            _ => false
-        }
-    }
+    field: Field
 }
 
 #[derive(Default, Debug)]
 /// Really, anything that needs to be tracked during the course of the battle
+/// When the pokemon is switched out, everything here is reset to defaults
 struct BattleData {
+    turn_count: u8,
+
     attack_stage: i8,
     defense_stage: i8,
     special_attack_stage: i8,
@@ -175,13 +202,17 @@ struct BattleData {
     evasion_stage: i8,
 
     lost_held_item: bool,
-    turn_count: u8
+    temp_ability: Option<Ability>
 }
 
+/// Methods common to all actions
 pub trait Action {
+    /// Get the priority of this move
+    /// 0 is default. >0 means it will happen sooner, and <0 means it will happen later
     fn get_priority(&self) -> i8;
 }
 
+/// One of the possible weather conditions that can occur on the field
 #[derive(Debug)]
 enum Weather {
     Rain(u8),
@@ -190,6 +221,7 @@ enum Weather {
     Sandstorm(u8)
 }
 
+/// One of the possible entry hazards that can occur on one side of the field
 #[derive(Debug)]
 enum EntryHazard {
     Spikes(u8),
