@@ -242,6 +242,19 @@ impl From<Move> for MoveSlot {
         }
     }
 }
+impl MoveSlot {
+    pub fn copy_for_transform(&self) -> Self {
+        MoveSlot {
+            attack: self.attack,
+            pp: if self.pp > 5 {
+                5
+            } else {
+                self.pp
+            },
+            pp_bonus: 0
+        }
+    }
+}
 
 /// Represents the values tied to a given stat (HP, Atk, etc.)
 #[derive(Debug)]

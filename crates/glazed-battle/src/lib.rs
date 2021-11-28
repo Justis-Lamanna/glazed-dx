@@ -4,11 +4,11 @@ pub mod double;
 pub mod tag;
 
 use std::option::Option::Some;
-use glazed_data::abilities::Ability;
+use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{Accuracy, DamageType, Move};
 use glazed_data::constants::Species;
 use glazed_data::item::{Incense, Item};
-use glazed_data::pokemon::Pokemon;
+use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
 
 /// Helper structure that assists in retrieving a Pokemon on the field
 #[derive(Debug)]
@@ -17,50 +17,77 @@ pub struct BattlePokemon<'a> {
     battle_data: &'a BattleData
 }
 impl <'a> BattlePokemon<'a> {
+    /// Get the species of this Pokemon. Takes Transform into account
+    fn get_effective_species(&self) -> &Species {
+        match &self.battle_data.transformed {
+            None => &self.pokemon.species,
+            Some(t) => &t.species
+        }
+    }
+
+    /// Get the effective attack of this Pokemon. Takes Transform and Attack stage into account
     fn get_effective_attack(&self) -> u16 {
         let multiplier = core::determine_stat_multiplier(self.battle_data.attack_stage);
-        let raw = f64::from(self.pokemon.attack.value) * multiplier;
+        let raw = match &self.battle_data.transformed {
+            None => f64::from(self.pokemon.attack.value),
+            Some(t) => f64::from(t.attack.value)
+        } * multiplier;
         raw as u16
     }
 
+    /// Get the effective defense of this Pokemon. Takes Transform and Defense stage into account
     fn get_effective_defense(&self) -> u16 {
         let multiplier = core::determine_stat_multiplier(self.battle_data.defense_stage);
-        let raw = f64::from(self.pokemon.defense.value) * multiplier;
+        let raw = match &self.battle_data.transformed {
+            None => f64::from(self.pokemon.defense.value),
+            Some(t) => f64::from(t.defense.value)
+        } * multiplier;
         raw as u16
     }
 
+    /// Get the effective special attack of this Pokemon. Takes Transform and Sp. Attack stage into account
     fn get_effective_special_attack(&self) -> u16 {
         let multiplier = core::determine_stat_multiplier(self.battle_data.special_attack_stage);
-        let raw = f64::from(self.pokemon.special_attack.value) * multiplier;
+        let raw = match &self.battle_data.transformed {
+            None => f64::from(self.pokemon.special_attack.value),
+            Some(t) => f64::from(t.special_attack.value)
+        } * multiplier;
         raw as u16
     }
 
+    /// Get the effective special defense of this Pokemon. Takes Transform and Sp. Defense stage into account
     fn get_effective_special_defense(&self) -> u16 {
         let multiplier = core::determine_stat_multiplier(self.battle_data.special_defense_stage);
-        let raw = f64::from(self.pokemon.special_defense.value) * multiplier;
+        let raw = match &self.battle_data.transformed {
+            None => f64::from(self.pokemon.special_defense.value),
+            Some(t) => f64::from(t.special_defense.value)
+        } * multiplier;
         raw as u16
     }
 
+    /// Get the effective speed of this Pokemon. Takes Transform and Speed stage into account
     fn get_effective_speed(&self) -> u16 {
         let multiplier = core::determine_stat_multiplier(self.battle_data.speed_stage);
-        let raw = f64::from(self.pokemon.speed.value) * multiplier;
+        let raw = match &self.battle_data.transformed {
+            None => f64::from(self.pokemon.speed.value),
+            Some(t) => f64::from(t.speed.value)
+        } * multiplier;
         raw as u16
     }
 
-    fn get_effective_accuracy(&self) -> f64 {
-        core::determine_accuracy_stat_multiplier(self.battle_data.accuracy_stage)
-    }
-
-    fn get_effective_evasion(&self) -> f64 {
-        core::determine_accuracy_stat_multiplier(self.battle_data.evasion_stage)
-    }
-
+    /// Check if this Pokemon has a status condition (may be expanded to handle volatile status ailments
     fn has_status_condition(&self) -> bool {
         self.pokemon.status.has_status_condition()
     }
 
-    fn get_ability(&self) -> &Ability {
-        self.battle_data.temp_ability.as_ref().unwrap_or_else(|| self.pokemon.get_ability())
+    /// Get the effective ability of this Pokemon. Takes Transform and temporary Ability changes into affect
+    fn get_effective_ability(&self) -> &Ability {
+        self.battle_data.temp_ability.as_ref().unwrap_or_else(|| {
+            match &self.battle_data.transformed {
+                None => self.pokemon.get_ability(),
+                Some(t) => t.get_ability()
+            }
+        })
     }
 }
 
@@ -214,7 +241,7 @@ impl <T> Battlefield<T> {
         let speed = pokemon.get_effective_speed(); //Raw speed + stage multipliers
 
         // Ability modifiers
-        let ability_multiplier = match pokemon.get_ability() {
+        let ability_multiplier = match pokemon.get_effective_ability() {
             Ability::Chlorophyll if self.field.is_sunny() => 2.0,
             Ability::SandRush if self.field.is_sandstorm() => 2.0,
             Ability::SwiftSwim if self.field.is_rain() => 2.0,
@@ -272,7 +299,7 @@ impl <T> Battlefield<T> {
             field_modifier *= 5f64 / 3f64
         }
 
-        let user_ability_modifier = match user.get_ability() {
+        let user_ability_modifier = match user.get_effective_ability() {
             Ability::CompoundEyes => 1.3,
             Ability::VictoryStar => 1.1,
             Ability::Hustle if move_data.damage_type == DamageType::Physical => 0.8,
@@ -285,7 +312,7 @@ impl <T> Battlefield<T> {
             _ => 1.0
         };
 
-        let defender_ability_modifier = match defender.get_ability() {
+        let defender_ability_modifier = match defender.get_effective_ability() {
             Ability::WonderSkin if move_data.damage_type == DamageType::Status => 0.5,
             Ability::SandVeil if self.field.is_sandstorm() => 4f64 / 5f64,
             Ability::SnowCloak if self.field.is_hail() => 4f64 / 5f64,
@@ -384,7 +411,7 @@ struct BattleData {
     /// This Pokemon is thrashing, and must continue using last_used_move.
     thrashing: u8,
     /// This Pokemon is transformed into another.
-    transformed: bool, //TODO: Maintain a copy of everything transformed
+    transformed: Option<TransformData>,
 
     /// If true, this Pokemon had a held item + subsequently lost it
     lost_held_item: bool,
@@ -407,6 +434,68 @@ pub trait Action {
 /// Identifier of a member on the field
 #[derive(Debug)]
 pub struct Battler(u8);
+
+#[derive(Debug)]
+struct TransformData {
+    species: Species,
+    ability: AbilitySlot,
+    attack: StatSlot,
+    defense: StatSlot,
+    special_attack: StatSlot,
+    special_defense: StatSlot,
+    speed: StatSlot,
+    move_1: Option<MoveSlot>,
+    move_2: Option<MoveSlot>,
+    move_3: Option<MoveSlot>,
+    move_4: Option<MoveSlot>
+}
+impl From<Pokemon> for TransformData {
+    fn from(p: Pokemon) -> Self {
+        TransformData {
+            species: p.species,
+            ability: p.ability,
+            attack: p.attack,
+            defense: p.defense,
+            special_attack: p.special_attack,
+            special_defense: p.special_defense,
+            speed: p.speed,
+            move_1: TransformData::transform_move(p.move_1),
+            move_2: TransformData::transform_move(p.move_2),
+            move_3: TransformData::transform_move(p.move_3),
+            move_4: TransformData::transform_move(p.move_4)
+        }
+    }
+}
+impl TransformData {
+    fn transform_move(slot: Option<MoveSlot>) -> Option<MoveSlot> {
+        match slot {
+            None => None,
+            Some(m) => Some(m.copy_for_transform())
+        }
+    }
+
+    fn get_ability(&self) -> &Ability {
+        let data = self.species.data();
+        match self.ability {
+            AbilitySlot::SlotOne => {
+                match &data.ability {
+                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => a
+                }
+            },
+            AbilitySlot::SlotTwo => {
+                match &data.ability {
+                    PokemonAbility::One(a) | PokemonAbility::Two(_, a) => a
+                }
+            },
+            AbilitySlot::Hidden => match &data.hidden_ability {
+                None => match &data.ability {
+                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => a
+                },
+                Some(a) => a
+            }
+        }
+    }
+}
 
 /// One of the possible weather conditions that can occur on the field
 #[derive(Debug)]
