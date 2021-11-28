@@ -5,12 +5,12 @@ pub mod tag;
 
 use std::option::Option::Some;
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{Accuracy, DamageType, Move};
+use glazed_data::attack::{Accuracy, DamageType, Move, NonVolatileBattleAilment};
 use glazed_data::constants::Species;
-use glazed_data::constants::UnownForm::P;
+use glazed_data::constants::UnownForm::{P, V};
 use glazed_data::item::{EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
-use glazed_data::types::PokemonType;
+use glazed_data::types::{Effectiveness, PokemonType};
 
 /// Helper structure that assists in retrieving a Pokemon on the field
 #[derive(Debug)]
@@ -250,7 +250,8 @@ pub trait BattleTypeTrait {
 pub struct Battlefield<T> where T: BattleTypeTrait {
     user: T,
     opponent: T,
-    field: Field
+    field: Field,
+    turn_record: Vec<Turn>
 }
 impl <T> Battlefield<T> where T: BattleTypeTrait {
     fn get_side_by_id(&self, id: &Battler) -> &Side {
@@ -519,6 +520,12 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
 
         raw_accuracy * field_modifier * user_ability_modifier * user_item_modifier * defender_ability_modifier * defender_item_modifier
     }
+
+    /// Pushes this Turn to the Turn Record, to signal it is complete and permanent.
+    /// Intentionally eats the passed-in turn...it belongs to the battlefield now
+    pub fn finish_turn(&mut self, turn: Turn) {
+        self.turn_record.push(turn);
+    }
 }
 
 #[derive(Default, Debug)]
@@ -620,13 +627,6 @@ impl BattleData {
     }
 }
 
-/// Methods common to all actions
-pub trait Action {
-    /// Get the priority of this move
-    /// 0 is default. >0 means it will happen sooner, and <0 means it will happen later
-    fn get_priority(&self) -> i8;
-}
-
 /// Identifier of a member on the field
 #[derive(Debug)]
 pub struct Battler(bool, u8);
@@ -717,4 +717,87 @@ enum SemiInvulnerableLocation {
     Underground,
     Underwater,
     InAir
+}
+
+// Turn Recording (for use by UIs)
+/// One of the usable actions that can be taken in a turn
+#[derive(Debug)]
+pub enum TurnAction {
+    Attack(Move, Battler),
+    Swap(u8),
+    UseItem(Item),
+    Flee
+}
+impl TurnAction{
+    /// Get the priority of this move
+    /// 0 is default. >0 means it will happen sooner, and <0 means it will happen later
+    fn get_priority(&self) -> i8 {
+        match self {
+            TurnAction::Attack(m, _) => m.data().priority,
+            TurnAction::Swap(_) => 10,
+            TurnAction::UseItem(_) => 10,
+            TurnAction::Flee => 10
+        }
+    }
+}
+
+/// Represents the actions taken during one turn of battle
+#[derive(Debug)]
+pub struct Turn {
+    /// All side effects that occur at the start of the turn
+    pub start_of_turn: Vec<ActionSideEffects>,
+    /// All actions that take place during the turn, in order
+    pub actions: Vec<ActionRecord>,
+    /// All side effects that occur at the end of the turn
+    pub end_of_turn: Vec<ActionSideEffects>
+}
+impl Turn {
+    pub fn new() -> Turn {
+        Turn {
+            start_of_turn: Vec::new(),
+            actions: Vec::new(),
+            end_of_turn: Vec::new()
+        }
+    }
+}
+
+/// An action, and all consequences that occurred because of it
+#[derive(Debug)]
+pub struct ActionRecord {
+    pub user: Battler,
+    pub action: TurnAction,
+    pub side_effects: Vec<ActionSideEffects>
+}
+
+/// The cause of some particular action's side effect
+#[derive(Debug)]
+pub enum Cause {
+    /// A battler's ability caused the side effect
+    Ability(Battler, Ability),
+    /// A previously used move caused the side effect
+    Move(Battler, Move),
+    /// The side effect was the cause of a user's ailment
+    Ailment(NonVolatileBattleAilment),
+    /// A battler's held item caused the side effect
+    HeldItem(Battler, Item)
+}
+
+/// Possible consequences of an Action
+/// Plan is to use these to determine which text boxes to say.
+#[derive(Debug)]
+pub enum ActionSideEffects {
+    DirectDamage {
+        end_hp: u8,
+        critical_hit: bool,
+        effectiveness: Effectiveness,
+        ohko: bool
+    },
+    ReceivedNonVolatileStatus {
+        status: NonVolatileBattleAilment,
+        cause: Cause
+    },
+    IndirectDamage {
+        end_hp: u8,
+        cause: Cause
+    }
 }

@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 use rand::Rng;
-use crate::Action;
+use crate::TurnAction;
 
 pub fn determine_stat_multiplier(stage: i8) -> f64 {
     match stage {
@@ -36,8 +36,7 @@ pub fn determine_accuracy_stat_multiplier(stage: i8) -> f64 {
     }
 }
 
-pub fn get_action_order<T>(mut actions: Vec<(T, u16)>) -> Vec<(T, u16)> where
-    T: Action {
+pub fn get_action_order(mut actions: Vec<(TurnAction, u16)>) -> Vec<(TurnAction, u16)> {
     actions.sort_unstable_by(|left, right| {
         let (left_action, left_speed) = left;
         let (right_action, right_speed) = right;

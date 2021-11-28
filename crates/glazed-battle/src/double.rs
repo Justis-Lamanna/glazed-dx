@@ -67,7 +67,8 @@ impl Battlefield<DoubleBattleSide> {
         Battlefield {
             user: user.into(),
             opponent: opponent.into(),
-            field: Field::default()
+            field: Field::default(),
+            turn_record: Vec::new()
         }
     }
 

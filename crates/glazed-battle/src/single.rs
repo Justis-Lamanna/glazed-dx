@@ -1,8 +1,8 @@
 use glazed_data::attack::Move;
 use glazed_data::item::Item;
 use glazed_data::pokemon::Pokemon;
-use crate::{Battler, BattleTypeTrait, core, Field, Side};
-use crate::{Action, BattleData, Battlefield, BattlePokemon, MutBattlePokemon, Party};
+use crate::{Battler, BattleTypeTrait, core, Field, Side, Turn, TurnAction};
+use crate::{BattleData, Battlefield, BattlePokemon, MutBattlePokemon, Party};
 
 /// One side of battle in a single battle (one trainer, one pokemon)
 #[derive(Debug)]
@@ -13,6 +13,9 @@ pub struct SingleBattleSide {
     side: Side
 }
 impl SingleBattleSide {
+    pub const USER: Battler = Battler(false, 0);
+    pub const OPPONENT: Battler = Battler(true, 0);
+
     pub fn start(party: Party) -> SingleBattleSide {
         SingleBattleSide {
             party,
@@ -45,8 +48,6 @@ impl BattleTypeTrait for SingleBattleSide {
 }
 
 impl Battlefield<SingleBattleSide> {
-    const USER: Battler = Battler(false, 0);
-    const OPPONENT: Battler = Battler(true, 0);
     /// Create a Single Battle with a user and an opponent
     pub fn single_battle<F>(user: F, opponent: F) -> Battlefield<SingleBattleSide> where
         F: Into<SingleBattleSide>
@@ -54,34 +55,20 @@ impl Battlefield<SingleBattleSide> {
         Battlefield {
             user: user.into(),
             opponent: opponent.into(),
-            field: Field::default()
+            field: Field::default(),
+            turn_record: Vec::new()
         }
     }
 
     /// Perform a turn, given everyone's attempted action
-    pub fn do_turn(&mut self, user_action: SingleTurnAction, opponent_action: SingleTurnAction) -> () {
-        let user_pokemon_speed = self.get_effective_speed(Battlefield::USER);
-        let opponent_pokemon_speed = self.get_effective_speed(Battlefield::OPPONENT);
+    pub fn perform_turn(&mut self, user_action: TurnAction, opponent_action: TurnAction) -> Turn {
+        let mut turn = Turn::new();
+
+        let user_pokemon_speed = self.get_effective_speed(SingleBattleSide::USER);
+        let opponent_pokemon_speed = self.get_effective_speed(SingleBattleSide::OPPONENT);
         let action_order = core::get_action_order(vec![(user_action, user_pokemon_speed), (opponent_action, opponent_pokemon_speed)]);
         println!("{:?}", action_order);
-    }
-}
 
-/// One of the usable actions that can be taken in a turn
-#[derive(Debug)]
-pub enum SingleTurnAction {
-    Attack(Move),
-    Swap(u8),
-    UseItem(Item),
-    Flee
-}
-impl Action for SingleTurnAction {
-    fn get_priority(&self) -> i8 {
-        match self {
-            SingleTurnAction::Attack(a) => a.data().priority,
-            SingleTurnAction::Swap(_) => 7,
-            SingleTurnAction::UseItem(_) => 7,
-            SingleTurnAction::Flee => -7
-        }
+        turn
     }
 }
