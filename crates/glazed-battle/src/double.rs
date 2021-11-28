@@ -1,6 +1,6 @@
 use glazed_data::attack::Move;
 use glazed_data::item::Item;
-use crate::{BattleData, Battlefield, EntryHazard, Field, Party};
+use crate::{BattleData, Battlefield, BattlePokemon, BattleTypeTrait, EntryHazard, Field, Party, Side};
 
 /// One side of battle in a double battle (one trainer, two pokemon)
 #[derive(Debug)]
@@ -8,7 +8,41 @@ pub struct DoubleBattleSide {
     party: Party,
     current_out: (u8, u8),
     current_inflictions: (BattleData, BattleData),
-    hazard: Option<EntryHazard>
+    side: Side
+}
+impl BattleTypeTrait for DoubleBattleSide {
+    fn get_by_id(&self, id: u8) -> Option<BattlePokemon> {
+        match id {
+            0 => {
+                let (idx, _) = self.current_out;
+                let (affl, _) = &self.current_inflictions;
+                let pkmn = self.party.members[usize::from(idx)].as_ref();
+                match pkmn {
+                    Some(p) => Some(BattlePokemon {
+                        pokemon: p,
+                        battle_data: affl
+                    }),
+                    None => None
+                }
+            },
+            _ => {
+                let (_, idx) = self.current_out;
+                let (_, affl) = &self.current_inflictions;
+                let pkmn = self.party.members[usize::from(idx)].as_ref();
+                match pkmn {
+                    Some(p) => Some(BattlePokemon {
+                        pokemon: p,
+                        battle_data: affl
+                    }),
+                    None => None
+                }
+            }
+        }
+    }
+
+    fn get_side(&self) -> &Side {
+        &self.side
+    }
 }
 impl DoubleBattleSide {
     pub fn start(party: Party) -> DoubleBattleSide {
@@ -16,7 +50,7 @@ impl DoubleBattleSide {
             party,
             current_out: (0, 1),
             current_inflictions: (BattleData::default(), BattleData::default()),
-            hazard: None
+            side: Side::default()
         }
     }
 }

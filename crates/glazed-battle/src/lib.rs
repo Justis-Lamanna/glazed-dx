@@ -7,8 +7,10 @@ use std::option::Option::Some;
 use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{Accuracy, DamageType, Move};
 use glazed_data::constants::Species;
-use glazed_data::item::{Incense, Item};
+use glazed_data::constants::UnownForm::P;
+use glazed_data::item::{EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
+use glazed_data::types::PokemonType;
 
 /// Helper structure that assists in retrieving a Pokemon on the field
 #[derive(Debug)]
@@ -25,22 +27,22 @@ impl <'a> BattlePokemon<'a> {
         }
     }
 
-    /// Get the effective attack of this Pokemon. Takes Transform and Attack stage into account
+    /// Get the effective attack of this Pokemon. Takes Transform, Power Trick, and Attack stage into account
     fn get_effective_attack(&self) -> u16 {
         let multiplier = core::determine_stat_multiplier(self.battle_data.attack_stage);
         let raw = match &self.battle_data.transformed {
-            None => f64::from(self.pokemon.attack.value),
-            Some(t) => f64::from(t.attack.value)
+            None => f64::from(if self.battle_data.power_trick {self.pokemon.defense.value} else {self.pokemon.attack.value}),
+            Some(t) => f64::from(if self.battle_data.power_trick {t.defense.value} else {t.attack.value})
         } * multiplier;
         raw as u16
     }
 
-    /// Get the effective defense of this Pokemon. Takes Transform and Defense stage into account
+    /// Get the effective defense of this Pokemon. Takes Transform, Power Trick, and Defense stage into account
     fn get_effective_defense(&self) -> u16 {
         let multiplier = core::determine_stat_multiplier(self.battle_data.defense_stage);
         let raw = match &self.battle_data.transformed {
-            None => f64::from(self.pokemon.defense.value),
-            Some(t) => f64::from(t.defense.value)
+            None => f64::from(if self.battle_data.power_trick {self.pokemon.attack.value} else {self.pokemon.defense.value}),
+            Some(t) => f64::from(if self.battle_data.power_trick {t.attack.value} else {t.defense.value})
         } * multiplier;
         raw as u16
     }
@@ -75,12 +77,12 @@ impl <'a> BattlePokemon<'a> {
         raw as u16
     }
 
-    /// Check if this Pokemon has a status condition (may be expanded to handle volatile status ailments
+    /// Check if this Pokemon has a status condition (may be expanded to handle volatile status ailments)
     fn has_status_condition(&self) -> bool {
         self.pokemon.status.has_status_condition()
     }
 
-    /// Get the effective ability of this Pokemon. Takes Transform and temporary Ability changes into affect
+    /// Get the effective ability of this Pokemon. Takes Transform and temporary Ability changes into effect
     fn get_effective_ability(&self) -> &Ability {
         self.battle_data.temp_ability.as_ref().unwrap_or_else(|| {
             match &self.battle_data.transformed {
@@ -88,6 +90,22 @@ impl <'a> BattlePokemon<'a> {
                 Some(t) => t.get_ability()
             }
         })
+    }
+
+    /// Get the effective type(s) of this Pokemon. Taks Transform and temporary Type changes into effect
+    fn get_effective_type(&self) -> &PokemonType {
+        self.battle_data.temp_type.as_ref().unwrap_or_else(|| {
+            match &self.battle_data.transformed {
+                None => &self.pokemon.species.data()._type,
+                Some(t) => &t.species.data()._type
+            }
+        })
+    }
+
+    fn is_half_health_or_worse(&self) -> bool {
+        let current = u32::from(self.pokemon.current_hp);
+        let max = u32::from(self.pokemon.hp.value);
+        current * 2u32 <= max
     }
 }
 
@@ -222,14 +240,174 @@ impl Party {
     }
 }
 
+pub trait BattleTypeTrait {
+    fn get_by_id(&self, id: u8) -> Option<BattlePokemon>;
+    fn get_side(&self) -> &Side;
+}
+
 /// Represents the current battlefield
 #[derive(Debug)]
-pub struct Battlefield<T> {
+pub struct Battlefield<T> where T: BattleTypeTrait {
     user: T,
     opponent: T,
     field: Field
 }
-impl <T> Battlefield<T> {
+impl <T> Battlefield<T> where T: BattleTypeTrait {
+    fn get_side_by_id(&self, id: &Battler) -> &Side {
+        let Battler(side, _) = id;
+        if *side {
+            self.opponent.get_side()
+        } else {
+            self.user.get_side()
+        }
+    }
+
+    fn get_by_id(&self, id: &Battler) -> Option<BattlePokemon> {
+        let Battler(side, id) = id;
+        if *side {
+            self.opponent.get_by_id(*id)
+        } else {
+            self.user.get_by_id(*id)
+        }
+    }
+
+    fn get_ally(&self, id: &Battler) -> Option<BattlePokemon> {
+        let Battler(side, id) = id;
+        if *id == 0 {
+            self.get_by_id(&Battler(*side, 1))
+        } else {
+            self.get_by_id(&Battler(*side, 0))
+        }
+    }
+
+    /// Gets the effective attack stat of a Pokemon on the field
+    /// This takes into account:
+    /// * Raw attack stat (or defense stat, if afflicted with Power Trick)
+    /// * Attack stage
+    /// * Burn (+ Immunity to burn attack drop if ability is Guts
+    /// * Abilities
+    /// * Items
+    /// * Transform
+    fn get_effective_attack(&self, id: Battler) -> u16 {
+        let user = self.get_by_id(&id).unwrap();
+        let mut atk = f64::from(user.get_effective_attack()); //Raw attack + stage multipliers + Power Trick
+
+        if user.pokemon.status.burn && *user.get_effective_ability() != Ability::Guts {
+            atk *= 0.5;
+        }
+
+        let ability_multiplier = match user.get_effective_ability() {
+            Ability::FlowerGift if self.field.is_sunny() => 1.5,
+            Ability::Guts if user.has_status_condition() => 1.5,
+            Ability::HugePower => 2.0,
+            Ability::Hustle => 1.5,
+            Ability::PurePower => 2.0,
+            Ability::Defeatist if user.is_half_health_or_worse() => 0.5,
+            Ability::SlowStart if user.battle_data.turn_count < 5 => 0.5,
+            _ => 1.0
+        };
+
+        let item_multiplier = match user.pokemon.held_item {
+            Some(Item::ChoiceBand) => 1.5,
+            Some(Item::LightBall) if *user.get_effective_species() == Species::Pikachu => 2.0,
+            Some(Item::ThickClub) if *user.get_effective_species() == Species::Marowak => 2.0,
+            _ => 1.0
+        };
+
+        (atk * ability_multiplier * item_multiplier) as u16
+    }
+
+    /// Gets the effective defense stat of a Pokemon on the field
+    /// This takes into account:
+    /// * Raw defense stat (or attack stat, if afflicted with Power Trick)
+    /// * Defense stage
+    /// * Abilities
+    /// * Items
+    /// * Transform
+    fn get_effective_defense(&self, id: Battler) -> u16 {
+        let user = self.get_by_id(&id).unwrap();
+        let def = f64::from(user.get_effective_defense()); //Raw defense + stage multipliers + Power Trick
+
+        let ability_multiplier = match user.get_effective_ability() {
+            Ability::MarvelScale if user.has_status_condition() => 1.5,
+            _ => 1.0
+        };
+
+        let item_multiplier = match user.pokemon.held_item {
+            Some(Item::Eviolite) if !user.get_effective_species().is_fully_evolved() => 1.5,
+            Some(Item::MetalPowder) if user.pokemon.species == Species::Ditto && user.battle_data.transformed.is_none() => 2.0,
+            _ => 1.0
+        };
+
+        (def * ability_multiplier * item_multiplier) as u16
+    }
+
+    /// Gets the effective special attack stat of a Pokemon on the field
+    /// This takes into account:
+    /// * Raw special attack stat
+    /// * Special Attack stage
+    /// * Abilities
+    /// * Items
+    /// * Transform
+    /// * Plus or Minus, if the Ally also has Plus or Minus (no restrictions on two Plus or two Minus)
+    fn get_effective_special_attack(&self, id: Battler) -> u16 {
+        let user = self.get_by_id(&id).unwrap();
+        let spa = f64::from(user.get_effective_special_attack()); //Raw SpA + stage multipliers
+
+        let ability_multiplier = match user.get_effective_ability() {
+            Ability::Plus | Ability::Minus => {
+                match self.get_ally(&id) {
+                    Some(p) if *p.get_effective_ability() == Ability::Plus
+                        || *p.get_effective_ability() == Ability::Minus => 1.5,
+                    _ => 1.0
+                }
+            }
+            Ability::SolarPower if self.field.is_sunny() => 1.5,
+            Ability::Defeatist if user.is_half_health_or_worse() => 0.5,
+            _ => 1.0
+        };
+
+        let item_multiplier = match user.pokemon.held_item {
+            Some(Item::ChoiceSpecs) => 1.5,
+            Some(Item::EvolutionHeldItem(EvolutionHeldItem::DeepSeaTooth))
+                if *user.get_effective_species() == Species::Clamperl => 2.0,
+            Some(Item::LightBall) if *user.get_effective_species() == Species::Pikachu => 2.0,
+            Some(Item::SoulDew) if *user.get_effective_species() == Species::Latias || *user.get_effective_species() == Species::Latios => 1.5,
+            _ => 1.0
+        };
+
+        (spa * ability_multiplier * item_multiplier) as u16
+    }
+
+    /// Gets the effective special defense stat of a Pokemon on the field
+    /// This takes into account:
+    /// * Raw special defense stat
+    /// * Special Defense stage
+    /// * Abilities
+    /// * Items
+    /// * Transform
+    fn get_effective_special_defense(&self, id: Battler) -> u16 {
+        let user = self.get_by_id(&id).unwrap();
+        let spd = f64::from(user.get_effective_special_defense());
+
+        let ability_multiplier = match user.get_effective_ability() {
+            Ability::FlowerGift if self.field.is_sunny() => 1.5,
+            _ => 1.0
+        };
+
+        let item_multiplier = match user.pokemon.held_item {
+            Some(Item::AssaultVest) => 1.5,
+            Some(Item::EvolutionHeldItem(EvolutionHeldItem::DeepSeaScale))
+                if *user.get_effective_species() == Species::Clamperl => 2.0,
+            Some(Item::Eviolite) if !user.get_effective_species().is_fully_evolved() => 1.5,
+            Some(Item::MetalPowder) if user.pokemon.species == Species::Ditto => 1.5,
+            Some(Item::SoulDew) if *user.get_effective_species() == Species::Latias || *user.get_effective_species() == Species::Latios => 1.5,
+            _ => 1.0
+        };
+
+        (spd * ability_multiplier * item_multiplier) as u16
+    }
+
     /// Get the current effective speed of a specific Pokemon on a specific side of the field
     /// This takes into account:
     /// * Raw speed stat of the Pokemon
@@ -237,7 +415,10 @@ impl <T> Battlefield<T> {
     /// * Abilities, if applicable to the current state of the field
     /// * Items, if applicable to the current state of the field
     /// * Other statuses, such as paralysis or Tailwind
-    fn get_effective_speed(&self, side: &Side, pokemon: &BattlePokemon) -> u16 {
+    /// * Transform
+    fn get_effective_speed(&self, id: Battler) -> u16 {
+        let pokemon = self.get_by_id(&id).unwrap();
+        let side = self.get_side_by_id(&id);
         let speed = pokemon.get_effective_speed(); //Raw speed + stage multipliers
 
         // Ability modifiers
@@ -262,6 +443,7 @@ impl <T> Battlefield<T> {
         if side.tailwind > 0 {
             eff_speed *= 2.0;
         }
+
         if pokemon.pokemon.status.paralysis {
             eff_speed *= 0.5;
         }
@@ -276,11 +458,12 @@ impl <T> Battlefield<T> {
     /// * User Accuracy and Target Evasion
     /// * Abilities (User and Target)
     /// * Held Items (User and Target)
+    /// * Allied Pokemon with Victory Star (doesn't stack if you send out two Victini)
     /// Documentation is vague on what part of the equation the modifiers are applied to. Some moves
     /// affect the accuracy of the move, while others affect the accuracy of the Pokemon
-    /// Does not take into account:
-    /// * Allied Pokemon with Victory Star. Double and Tag battles need to account for this on their own.
-    fn get_accuracy_factor(&self, user: &BattlePokemon, attack: Move, defender: &BattlePokemon) -> f64 {
+    fn get_accuracy_factor(&self, user_id: Battler, attack: Move, defender_id: Battler) -> f64 {
+        let user = self.get_by_id(&user_id).unwrap();
+        let defender = self.get_by_id(&defender_id).unwrap();
         let move_data = attack.data();
         let move_hit_percent = match move_data.accuracy {
             Accuracy::AlwaysHits => return 100f64,
@@ -298,12 +481,21 @@ impl <T> Battlefield<T> {
         if self.field.gravity {
             field_modifier *= 5f64 / 3f64
         }
+        match self.get_ally(&user_id) {
+            Some(b) if *b.get_effective_ability() == Ability::VictoryStar => field_modifier *= 1.1,
+            _ => {}
+        }
 
         let user_ability_modifier = match user.get_effective_ability() {
             Ability::CompoundEyes => 1.3,
             Ability::VictoryStar => 1.1,
             Ability::Hustle if move_data.damage_type == DamageType::Physical => 0.8,
-            _ => 1.0
+            _ => {
+                match self.get_ally(&user_id) {
+                    Some(b) if *b.get_effective_ability() == Ability::VictoryStar => 1.1,
+                    _ => 1.0
+                }
+            }
         };
 
         let user_item_modifier = match user.pokemon.held_item {
@@ -416,7 +608,11 @@ struct BattleData {
     /// If true, this Pokemon had a held item + subsequently lost it
     lost_held_item: bool,
     /// If present, this Pokemon has this ability instead of its usual one
-    temp_ability: Option<Ability>
+    temp_ability: Option<Ability>,
+    /// If present, this Pokemon has this type instead of its usual one
+    temp_type: Option<PokemonType>,
+    /// If true, this Pokemon has been Power Tricked, and its Attack and Defense are swapped
+    power_trick: bool
 }
 impl BattleData {
     pub fn is_confused(&self) -> bool {
@@ -433,7 +629,7 @@ pub trait Action {
 
 /// Identifier of a member on the field
 #[derive(Debug)]
-pub struct Battler(u8);
+pub struct Battler(bool, u8);
 
 #[derive(Debug)]
 struct TransformData {

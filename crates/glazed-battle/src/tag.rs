@@ -1,4 +1,4 @@
-use crate::{BattleData, Battlefield, EntryHazard, Field, Party};
+use crate::{BattleData, Battlefield, BattlePokemon, BattleTypeTrait, EntryHazard, Field, Party, Side};
 use crate::double::DoubleTurnAction;
 
 /// One side of battle in a tag battle (two trainers, one pokemon each)
@@ -7,7 +7,7 @@ pub struct TagBattleSide {
     party: (Party, Party),
     current_out: (u8, u8),
     current_inflictions: (BattleData, BattleData),
-    hazard: Option<EntryHazard>
+    side: Side
 }
 impl TagBattleSide {
     pub fn start(party_left: Party, party_right: Party) -> TagBattleSide {
@@ -15,13 +15,49 @@ impl TagBattleSide {
             party: (party_left, party_right),
             current_out: (0, 0),
             current_inflictions: (BattleData::default(), BattleData::default()),
-            hazard: None
+            side: Side::default()
         }
     }
 }
 impl From<(Party, Party)> for TagBattleSide {
     fn from(pair: (Party, Party)) -> Self {
         TagBattleSide::start(pair.0, pair.1)
+    }
+}
+impl BattleTypeTrait for TagBattleSide {
+    fn get_by_id(&self, id: u8) -> Option<BattlePokemon> {
+        match id {
+            0 => {
+                let (party, _) = &self.party;
+                let (idx, _) = self.current_out;
+                let (affl, _) = &self.current_inflictions;
+                let pkmn = party.members[usize::from(idx)].as_ref();
+                match pkmn {
+                    Some(p) => Some(BattlePokemon {
+                        pokemon: p,
+                        battle_data: affl
+                    }),
+                    None => None
+                }
+            },
+            _ => {
+                let (_, party) = &self.party;
+                let (_, idx) = self.current_out;
+                let (_, affl) = &self.current_inflictions;
+                let pkmn = party.members[usize::from(idx)].as_ref();
+                match pkmn {
+                    Some(p) => Some(BattlePokemon {
+                        pokemon: p,
+                        battle_data: affl
+                    }),
+                    None => None
+                }
+            }
+        }
+    }
+
+    fn get_side(&self) -> &Side {
+        &self.side
     }
 }
 

@@ -751,6 +751,11 @@ impl Species {
             Species::Genesect(_) => &Genesect
         }
     }
+
+    /// Check if this Pokemon is fully evolved or not
+    pub fn is_fully_evolved(&self) -> bool {
+        self.get_evolutions().paths.len() == 0
+    }
 }
 
 //region Evolution Constants
