@@ -4,13 +4,14 @@ pub mod double;
 pub mod tag;
 
 use std::option::Option::Some;
+use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{Accuracy, DamageType, Move, NonVolatileBattleAilment};
+use glazed_data::attack::{Accuracy, DamageType, Effect, Move, MoveData, NonVolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::constants::UnownForm::{P, V};
 use glazed_data::item::{EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
-use glazed_data::types::{Effectiveness, PokemonType};
+use glazed_data::types::{Effectiveness, PokemonType, Type};
 
 /// Helper structure that assists in retrieving a Pokemon on the field
 #[derive(Debug)]
@@ -107,12 +108,18 @@ impl <'a> BattlePokemon<'a> {
         let max = u32::from(self.pokemon.hp.value);
         current * 2u32 <= max
     }
+
+    fn is_quarter_health_or_worse(&self) -> bool {
+        let current = u32::from(self.pokemon.current_hp);
+        let max = u32::from(self.pokemon.hp.value);
+        current * 4u32 <= max
+    }
 }
 
 /// Helper structure that assists in retrieving a mutable Pokemon on the field
 pub struct MutBattlePokemon<'a> {
     pokemon: &'a mut Pokemon,
-    ailments: &'a mut BattleData
+    battle_data: &'a mut BattleData
 }
 
 /// Represents one side of a battlefield
@@ -242,6 +249,11 @@ impl Party {
 
 pub trait BattleTypeTrait {
     fn get_by_id(&self, id: u8) -> Option<BattlePokemon>;
+    fn do_by_id<F>(&mut self, id: u8, func: F) where
+        F: Fn(&mut Pokemon, &mut BattleData) -> ()
+    {
+        unimplemented!()
+    }
     fn get_side(&self) -> &Side;
 }
 
@@ -272,6 +284,16 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
     }
 
+    fn do_by_id<F>(&mut self, id: &Battler, func: F) -> () where
+        F: Fn(&mut Pokemon, &mut BattleData) -> () {
+        let Battler(side, id) = id;
+        if *side {
+            self.opponent.do_by_id(*id, func)
+        } else {
+            self.user.do_by_id(*id, func)
+        }
+    }
+
     fn get_ally(&self, id: &Battler) -> Option<BattlePokemon> {
         let Battler(side, id) = id;
         if *id == 0 {
@@ -289,13 +311,9 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     /// * Abilities
     /// * Items
     /// * Transform
-    fn get_effective_attack(&self, id: Battler) -> u16 {
-        let user = self.get_by_id(&id).unwrap();
+    fn get_effective_attack(&self, id: &Battler) -> f64 {
+        let user = self.get_by_id(id).unwrap();
         let mut atk = f64::from(user.get_effective_attack()); //Raw attack + stage multipliers + Power Trick
-
-        if user.pokemon.status.burn && *user.get_effective_ability() != Ability::Guts {
-            atk *= 0.5;
-        }
 
         let ability_multiplier = match user.get_effective_ability() {
             Ability::FlowerGift if self.field.is_sunny() => 1.5,
@@ -315,7 +333,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             _ => 1.0
         };
 
-        (atk * ability_multiplier * item_multiplier) as u16
+        atk * ability_multiplier * item_multiplier
     }
 
     /// Gets the effective defense stat of a Pokemon on the field
@@ -325,8 +343,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     /// * Abilities
     /// * Items
     /// * Transform
-    fn get_effective_defense(&self, id: Battler) -> u16 {
-        let user = self.get_by_id(&id).unwrap();
+    fn get_effective_defense(&self, id: &Battler) -> f64 {
+        let user = self.get_by_id(id).unwrap();
         let def = f64::from(user.get_effective_defense()); //Raw defense + stage multipliers + Power Trick
 
         let ability_multiplier = match user.get_effective_ability() {
@@ -340,7 +358,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             _ => 1.0
         };
 
-        (def * ability_multiplier * item_multiplier) as u16
+        def * ability_multiplier * item_multiplier
     }
 
     /// Gets the effective special attack stat of a Pokemon on the field
@@ -351,8 +369,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     /// * Items
     /// * Transform
     /// * Plus or Minus, if the Ally also has Plus or Minus (no restrictions on two Plus or two Minus)
-    fn get_effective_special_attack(&self, id: Battler) -> u16 {
-        let user = self.get_by_id(&id).unwrap();
+    fn get_effective_special_attack(&self, id: &Battler) -> f64 {
+        let user = self.get_by_id(id).unwrap();
         let spa = f64::from(user.get_effective_special_attack()); //Raw SpA + stage multipliers
 
         let ability_multiplier = match user.get_effective_ability() {
@@ -377,7 +395,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             _ => 1.0
         };
 
-        (spa * ability_multiplier * item_multiplier) as u16
+        spa * ability_multiplier * item_multiplier
     }
 
     /// Gets the effective special defense stat of a Pokemon on the field
@@ -387,8 +405,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     /// * Abilities
     /// * Items
     /// * Transform
-    fn get_effective_special_defense(&self, id: Battler) -> u16 {
-        let user = self.get_by_id(&id).unwrap();
+    fn get_effective_special_defense(&self, id: &Battler) -> f64 {
+        let user = self.get_by_id(id).unwrap();
         let spd = f64::from(user.get_effective_special_defense());
 
         let ability_multiplier = match user.get_effective_ability() {
@@ -406,7 +424,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             _ => 1.0
         };
 
-        (spd * ability_multiplier * item_multiplier) as u16
+        spd * ability_multiplier * item_multiplier
     }
 
     /// Get the current effective speed of a specific Pokemon on a specific side of the field
@@ -417,9 +435,9 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     /// * Items, if applicable to the current state of the field
     /// * Other statuses, such as paralysis or Tailwind
     /// * Transform
-    fn get_effective_speed(&self, id: Battler) -> u16 {
-        let pokemon = self.get_by_id(&id).unwrap();
-        let side = self.get_side_by_id(&id);
+    fn get_effective_speed(&self, id: &Battler) -> f64 {
+        let pokemon = self.get_by_id(id).unwrap();
+        let side = self.get_side_by_id(id);
         let speed = pokemon.get_effective_speed(); //Raw speed + stage multipliers
 
         // Ability modifiers
@@ -449,7 +467,31 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             eff_speed *= 0.5;
         }
 
-        eff_speed as u16
+        eff_speed
+    }
+
+    fn get_effective_crit_rate(&self, id: &Battler, attack: &Move) -> u8 {
+        let user = self.get_by_id(id).unwrap();
+
+        let mut stage = attack.get_crit_rate().unwrap_or(0);
+
+        stage += match *user.get_effective_ability() {
+            Ability::SuperLuck => 1,
+            _ => 0
+        };
+
+        stage += match user.pokemon.held_item {
+            Some(Item::EvolutionHeldItem(EvolutionHeldItem::RazorClaw)) => 1,
+            Some(Item::Leek) if *user.get_effective_species() == Species::Farfetchd => 2,
+            Some(Item::LuckyPunch) if *user.get_effective_species() == Species::Chansey => 2,
+            _ => 0
+        };
+
+        if user.battle_data.focused {
+            stage += 2;
+        }
+
+        stage
     }
 
     /// Gets the factor of accuracy for a user hitting the defender with the move. This is, essentially,
@@ -462,9 +504,9 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     /// * Allied Pokemon with Victory Star (doesn't stack if you send out two Victini)
     /// Documentation is vague on what part of the equation the modifiers are applied to. Some moves
     /// affect the accuracy of the move, while others affect the accuracy of the Pokemon
-    fn get_accuracy_factor(&self, user_id: Battler, attack: Move, defender_id: Battler) -> f64 {
-        let user = self.get_by_id(&user_id).unwrap();
-        let defender = self.get_by_id(&defender_id).unwrap();
+    fn get_accuracy_factor(&self, user_id: &Battler, attack: &Move, defender_id: &Battler) -> f64 {
+        let user = self.get_by_id(user_id).unwrap();
+        let defender = self.get_by_id(defender_id).unwrap();
         let move_data = attack.data();
         let move_hit_percent = match move_data.accuracy {
             Accuracy::AlwaysHits => return 100f64,
@@ -519,6 +561,203 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         };
 
         raw_accuracy * field_modifier * user_ability_modifier * user_item_modifier * defender_ability_modifier * defender_item_modifier
+    }
+
+    fn calculate_attack_damage(&self, user: &Battler, user_data: &BattlePokemon, attack: &Move, data: &MoveData, base: u8, defender: &Battler, defender_data: &BattlePokemon, is_multi: bool)
+        -> (f64, bool, Effectiveness) {
+        // base calculations
+        let mut calc = ((2.0 * f64::from(user_data.pokemon.level)) / 5.0) + 2.0;
+        calc *= f64::from(base) * match data.damage_type {
+            DamageType::Physical => self.get_effective_attack(&user) / self.get_effective_defense(&defender),
+            DamageType::Special => self.get_effective_special_attack(&user) / self.get_effective_special_defense(&defender),
+            DamageType::Status => 0.0
+        };
+        calc = (calc / 50.0) + 2.0;
+
+        // targets
+        if is_multi {
+            calc *= 0.75
+        }
+
+        // weather
+        calc *= match (&self.field.weather, data._type) {
+            (Some(Weather::Sun(_)), Type::Fire) => 1.5,
+            (Some(Weather::Sun(_)), Type::Water) => 0.5,
+            (Some(Weather::Rain(_)), Type::Fire) => 0.5,
+            (Some(Weather::Rain(_)), Type::Water) => 1.5,
+            _ => 1.0
+        };
+
+        // critical
+        let critical_hit = match self.get_effective_crit_rate(&user, &attack) {
+            0 => rand::thread_rng().gen_bool(1.0 / 16.0),
+            1 => rand::thread_rng().gen_bool(1.0 / 8.0),
+            2 => rand::thread_rng().gen_bool(1.0 / 4.0),
+            3 => rand::thread_rng().gen_bool(1.0 / 3.0),
+            _ => rand::thread_rng().gen_bool(0.5)
+        };
+        if critical_hit {
+            calc *= 2.0
+        }
+
+        // random factor - 85% to 100%
+        calc *= rand::thread_rng().gen_range(0.85..=1.0);
+
+        // stab
+        let stab = match user_data.get_effective_type() {
+            PokemonType::Single(t) => *t == data._type,
+            PokemonType::Double(t1, t2) => *t1 == data._type || *t2 == data._type
+        };
+        if stab {
+            calc *= if *user_data.get_effective_ability() == Ability::Adaptability {
+                2.0
+            } else {
+                1.5
+            }
+        }
+
+        // type matchup
+        let effectiveness = defender_data.get_effective_type().defending_against(&data._type);
+        calc *= match effectiveness {
+            Effectiveness::Immune => 0.0,
+            Effectiveness::Effect(a) => 2f64.powi(i32::from(a))
+        };
+
+        //burn
+        if data.damage_type == DamageType::Physical && user_data.pokemon.status.burn && *user_data.get_effective_ability() != Ability::Guts {
+            calc *= 0.5;
+        }
+
+        //other
+
+        if calc < 1.0 {
+            calc = 1.0
+        }
+
+        (calc, critical_hit, effectiveness)
+    }
+
+    pub fn do_attack(&mut self, user: Battler, attack: Move, defender: Battler, is_multi: bool) -> Vec<ActionSideEffects> {
+        let data = attack.data();
+        {
+            let defender_data = self.get_by_id(&defender);
+            if defender_data.is_none() {
+                return vec![ActionSideEffects::NoTarget];
+            }
+        }
+        let mut effects = Vec::new();
+
+        for effect in data.effects {
+            match effect {
+                Effect::Damage(base) => {
+                    let user_data = self.get_by_id(&user).unwrap();
+                    let defender_data = self.get_by_id(&defender).unwrap();
+
+                    let accuracy_factor = self.get_accuracy_factor(&user, &attack, &defender);
+                    if rand::thread_rng().gen_range(0f64..=100f64) > accuracy_factor {
+                        effects.push(ActionSideEffects::Missed);
+                        break;
+                    }
+
+                    let (calc, critical_hit, effectiveness) = self.calculate_attack_damage(
+                        &user,
+                        &user_data,
+                        &attack,
+                        data,
+                        *base,
+                        &defender,
+                        &defender_data,
+                        is_multi
+                    );
+
+                    // Clamps end hp at 0. No funny rollovers!
+                    let start_hp = defender_data.pokemon.current_hp;
+                    let end_hp = match effectiveness {
+                        Effectiveness::Immune => start_hp,
+                        Effectiveness::Effect(_) => defender_data.pokemon.current_hp.saturating_sub(calc as u16)
+                    };
+
+                    self.do_by_id(&defender, |pkmn, _| pkmn.current_hp = end_hp);
+
+                    if let Effectiveness::Effect(_) = effectiveness {
+                        effects.push(ActionSideEffects::DirectDamage {
+                            start_hp,
+                            end_hp,
+                            critical_hit,
+                            effectiveness
+                        })
+                    } else {
+                        effects.push(ActionSideEffects::NoEffect)
+                    }
+                }
+                Effect::SetDamage(drop) => {
+                    let defender_data = self.get_by_id(&defender).unwrap();
+                    let start_hp = defender_data.pokemon.current_hp;
+
+                    let (effectiveness, end_hp) = match defender_data.get_effective_type().defending_against(&data._type) {
+                        Effectiveness::Immune => (Effectiveness::Immune, start_hp),
+                        Effectiveness::Effect(_) => (Effectiveness::NORMAL, defender_data.pokemon.current_hp.saturating_sub(u16::from(*drop)))
+                    };
+
+                    if let Effectiveness::Effect(_) = effectiveness {
+                        effects.push(ActionSideEffects::DirectDamage {
+                            start_hp,
+                            end_hp,
+                            critical_hit: false,
+                            effectiveness,
+                        });
+                    } else {
+                        effects.push(ActionSideEffects::NoEffect)
+                    }
+                }
+                Effect::Critical(_) => {} // Handled in standard damage
+                Effect::StatChange(_, _, _, _) => {}
+                Effect::NonVolatileStatus(_, _) => {}
+                Effect::VolatileStatus(_, _) => {}
+                Effect::OneHitKnockout => {
+                    let user_data = self.get_by_id(&user).unwrap();
+                    let defender_data = self.get_by_id(&defender).unwrap();
+                    let effectiveness = defender_data.get_effective_type().defending_against(&data._type);
+
+                    if user_data.pokemon.level < defender_data.pokemon.level {
+                        effects.push(ActionSideEffects::NoEffect);
+                        break;
+                    } else {
+                        if let Effectiveness::Effect(_) = effectiveness {
+                            let addl_accuracy = user_data.pokemon.level - defender_data.pokemon.level;
+                            let hit = match data.accuracy {
+                                Accuracy::AlwaysHits => true,
+                                Accuracy::Percentage(p) => {
+                                    let number = rand::thread_rng().gen_range(0..=100);
+                                    number <= (p + addl_accuracy)
+                                }
+                            };
+                            if hit {
+                                self.do_by_id(&defender, |pkmn, _| pkmn.current_hp = 0);
+                                effects.push(ActionSideEffects::OneHitKnockout)
+                            } else {
+                                effects.push(ActionSideEffects::Missed)
+                            }
+                        } else {
+                            effects.push(ActionSideEffects::NoEffect)
+                        }
+                    }
+                }
+                Effect::Heal(_) => {}
+                Effect::Drain(_) => {}
+                Effect::Recoil(_) => {}
+                Effect::Flinch(_) => {}
+                Effect::ChangeWeather(_) => {}
+                Effect::DispelWeather => {}
+                Effect::ForceTargetSwitch => {}
+                Effect::ForceUserSwitch => {}
+                Effect::MultiHit(_, _) => {}
+                Effect::MultiTurn(_, _) => {}
+                Effect::Custom => {}
+            }
+        }
+
+        effects
     }
 
     /// Pushes this Turn to the Turn Record, to signal it is complete and permanent.
@@ -611,6 +850,8 @@ struct BattleData {
     thrashing: u8,
     /// This Pokemon is transformed into another.
     transformed: Option<TransformData>,
+    /// This Pokemon is focused, increasing crit ratio
+    focused: bool,
 
     /// If true, this Pokemon had a held item + subsequently lost it
     lost_held_item: bool,
@@ -768,6 +1009,15 @@ pub struct ActionRecord {
     pub action: TurnAction,
     pub side_effects: Vec<ActionSideEffects>
 }
+impl ActionRecord {
+    fn new(user: Battler, action: TurnAction) -> ActionRecord {
+        ActionRecord {
+            user,
+            action,
+            side_effects: Vec::new()
+        }
+    }
+}
 
 /// The cause of some particular action's side effect
 #[derive(Debug)]
@@ -787,11 +1037,14 @@ pub enum Cause {
 #[derive(Debug)]
 pub enum ActionSideEffects {
     DirectDamage {
-        end_hp: u8,
+        start_hp: u16,
+        end_hp: u16,
         critical_hit: bool,
-        effectiveness: Effectiveness,
-        ohko: bool
+        effectiveness: Effectiveness
     },
+    Missed,
+    OneHitKnockout,
+    NoEffect,
     ReceivedNonVolatileStatus {
         status: NonVolatileBattleAilment,
         cause: Cause
@@ -799,5 +1052,6 @@ pub enum ActionSideEffects {
     IndirectDamage {
         end_hp: u8,
         cause: Cause
-    }
+    },
+    NoTarget
 }

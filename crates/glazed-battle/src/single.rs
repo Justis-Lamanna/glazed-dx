@@ -42,6 +42,16 @@ impl BattleTypeTrait for SingleBattleSide {
         }
     }
 
+    fn do_by_id<F>(&mut self, id: u8, func: F) where F: Fn(&mut Pokemon, &mut BattleData) -> () {
+        let member = self.party.members[usize::from(self.current_out)].as_mut();
+        match member {
+            Some(p) => {
+                func(p, &mut self.current_inflictions)
+            },
+            None => {}
+        }
+    }
+
     fn get_side(&self) -> &Side {
         &self.side
     }
@@ -64,8 +74,8 @@ impl Battlefield<SingleBattleSide> {
     pub fn perform_turn(&mut self, user_action: TurnAction, opponent_action: TurnAction) -> Turn {
         let mut turn = Turn::new();
 
-        let user_pokemon_speed = self.get_effective_speed(SingleBattleSide::USER);
-        let opponent_pokemon_speed = self.get_effective_speed(SingleBattleSide::OPPONENT);
+        let user_pokemon_speed = self.get_effective_speed(&SingleBattleSide::USER);
+        let opponent_pokemon_speed = self.get_effective_speed(&SingleBattleSide::OPPONENT);
         let action_order = core::get_action_order(vec![(user_action, user_pokemon_speed), (opponent_action, opponent_pokemon_speed)]);
         println!("{:?}", action_order);
 

@@ -1298,6 +1298,17 @@ impl Move {
         }
         None
     }
+
+    pub fn get_crit_rate(&self) -> Option<u8> {
+        let data = self.data();
+        for fx in data.effects {
+            match fx {
+                Effect::Critical(u) => Some(u),
+                _ => continue
+            };
+        }
+        None
+    }
 }
 
 pub static Pound: MoveData = MoveData {
