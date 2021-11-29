@@ -573,7 +573,18 @@ pub enum Move {
 #[derive(Debug)]
 pub enum Accuracy {
     AlwaysHits,
-    Percentage(u8)
+    Percentage(u8),
+    Variable
+}
+
+/// Represents the Power of a move
+#[derive(Debug)]
+pub enum Power {
+    None,
+    Base(u8),
+    OneHitKnockout,
+    Exact(u8),
+    SetToUser
 }
 
 /// Represents the type of Move, for contests
@@ -659,13 +670,9 @@ pub enum StatChangeTarget {
 /// Possible effects of an attack
 #[derive(Debug)]
 pub enum Effect {
-    Damage(u8),
-    SetDamage(u8),
-    Critical(u8),
     StatChange(BattleStat, i8, u8, StatChangeTarget),
     NonVolatileStatus(NonVolatileBattleAilment, u8),
     VolatileStatus(VolatileBattleAilment, u8),
-    OneHitKnockout,
     Heal(u8),
     Drain(u8),
     Recoil(u8),
@@ -684,11 +691,13 @@ pub enum Effect {
 pub struct MoveData {
     pub pp: u8,
     pub priority: i8,
+    pub power: Power,
     pub accuracy: Accuracy,
     pub _type: Type,
     pub contest_type: ContestType,
     pub damage_type: DamageType,
     pub target: Target,
+    pub crit_rate: Option<u8>,
     pub effects: &'static[Effect]
 }
 
@@ -1289,25 +1298,14 @@ impl Move {
     }
 
     pub fn get_power(&self) -> Option<u8> {
-        let data = self.data();
-        for fx in data.effects {
-            match fx {
-                Effect::Damage(u) => Some(u),
-                _ => continue
-            };
+        match self.data().power {
+            Power::Base(a) => Some(a),
+            _ => None
         }
-        None
     }
 
     pub fn get_crit_rate(&self) -> Option<u8> {
-        let data = self.data();
-        for fx in data.effects {
-            match fx {
-                Effect::Critical(u) => Some(u),
-                _ => continue
-            };
-        }
-        None
+        self.data().crit_rate
     }
 }
 
@@ -1319,7 +1317,9 @@ pub static Pound: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+    crit_rate: None,
+    effects: &[],
 };
 pub static KarateChop: MoveData = MoveData {
     pp: 25,
@@ -1329,7 +1329,9 @@ pub static KarateChop: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::Critical(1)],
+    power: Power::Base(50),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static DoubleSlap: MoveData = MoveData {
     pp: 10,
@@ -1339,7 +1341,9 @@ pub static DoubleSlap: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(15), Effect::MultiHit(2, 5)],
+    power: Power::Base(15),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static CometPunch: MoveData = MoveData {
     pp: 15,
@@ -1349,7 +1353,9 @@ pub static CometPunch: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(18), Effect::MultiHit(2, 5)],
+    power: Power::Base(18),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static MegaPunch: MoveData = MoveData {
     pp: 20,
@@ -1359,7 +1365,9 @@ pub static MegaPunch: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static PayDay: MoveData = MoveData {
     pp: 20,
@@ -1369,7 +1377,9 @@ pub static PayDay: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FirePunch: MoveData = MoveData {
     pp: 15,
@@ -1379,7 +1389,9 @@ pub static FirePunch: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static IcePunch: MoveData = MoveData {
     pp: 15,
@@ -1389,7 +1401,9 @@ pub static IcePunch: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static ThunderPunch: MoveData = MoveData {
     pp: 15,
@@ -1399,7 +1413,9 @@ pub static ThunderPunch: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static Scratch: MoveData = MoveData {
     pp: 35,
@@ -1409,7 +1425,9 @@ pub static Scratch: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ViseGrip: MoveData = MoveData {
     pp: 30,
@@ -1419,17 +1437,21 @@ pub static ViseGrip: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(55)],
+    power: Power::Base(55),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Guillotine: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::OneHitKnockout,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(30),
     _type: Type::Normal,
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::OneHitKnockout],
+    effects: &[],
 };
 pub static RazorWind: MoveData = MoveData {
     pp: 10,
@@ -1439,11 +1461,15 @@ pub static RazorWind: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(80), Effect::Critical(1)],
+    power: Power::Base(80),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static SwordsDance: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -1459,7 +1485,9 @@ pub static Cut: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Gust: MoveData = MoveData {
     pp: 35,
@@ -1469,7 +1497,9 @@ pub static Gust: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static WingAttack: MoveData = MoveData {
     pp: 35,
@@ -1479,11 +1509,15 @@ pub static WingAttack: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Whirlwind: MoveData = MoveData {
     pp: 20,
     priority: -6,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -1499,7 +1533,9 @@ pub static Fly: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Bind: MoveData = MoveData {
     pp: 20,
@@ -1509,7 +1545,9 @@ pub static Bind: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(15), Effect::Custom],
+    power: Power::Base(15),
+	crit_rate: None,
+	effects: &[Effect::Custom],
 };
 pub static Slam: MoveData = MoveData {
     pp: 20,
@@ -1519,7 +1557,9 @@ pub static Slam: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static VineWhip: MoveData = MoveData {
     pp: 25,
@@ -1529,7 +1569,9 @@ pub static VineWhip: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(45)],
+    power: Power::Base(45),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Stomp: MoveData = MoveData {
     pp: 20,
@@ -1539,7 +1581,9 @@ pub static Stomp: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::Flinch(30)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static DoubleKick: MoveData = MoveData {
     pp: 30,
@@ -1549,7 +1593,9 @@ pub static DoubleKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(30), Effect::MultiHit(2, 2)],
+    power: Power::Base(30),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 2)],
 };
 pub static MegaKick: MoveData = MoveData {
     pp: 5,
@@ -1559,7 +1605,9 @@ pub static MegaKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static JumpKick: MoveData = MoveData {
     pp: 10,
@@ -1569,7 +1617,9 @@ pub static JumpKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[],
 };
 pub static RollingKick: MoveData = MoveData {
     pp: 15,
@@ -1579,11 +1629,15 @@ pub static RollingKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::Flinch(30)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static SandAttack: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Ground,
     contest_type: ContestType::Cute,
@@ -1599,7 +1653,9 @@ pub static Headbutt: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::Flinch(30)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static HornAttack: MoveData = MoveData {
     pp: 25,
@@ -1609,7 +1665,9 @@ pub static HornAttack: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FuryAttack: MoveData = MoveData {
     pp: 20,
@@ -1619,17 +1677,21 @@ pub static FuryAttack: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(15), Effect::MultiHit(2, 5)],
+    power: Power::Base(15),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static HornDrill: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::OneHitKnockout,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(30),
     _type: Type::Normal,
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::OneHitKnockout],
+    effects: &[],
 };
 pub static Tackle: MoveData = MoveData {
     pp: 35,
@@ -1639,7 +1701,9 @@ pub static Tackle: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static BodySlam: MoveData = MoveData {
     pp: 15,
@@ -1649,7 +1713,9 @@ pub static BodySlam: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(85), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
+    power: Power::Base(85),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static Wrap: MoveData = MoveData {
     pp: 20,
@@ -1659,7 +1725,9 @@ pub static Wrap: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(15), Effect::Custom],
+    power: Power::Base(15),
+	crit_rate: None,
+	effects: &[Effect::Custom],
 };
 pub static TakeDown: MoveData = MoveData {
     pp: 20,
@@ -1669,7 +1737,9 @@ pub static TakeDown: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::Recoil(25)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::Recoil(25)],
 };
 pub static Thrash: MoveData = MoveData {
     pp: 10,
@@ -1679,7 +1749,9 @@ pub static Thrash: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::RandomOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static DoubleEdge: MoveData = MoveData {
     pp: 15,
@@ -1689,11 +1761,15 @@ pub static DoubleEdge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::Recoil(33)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::Recoil(33)],
 };
 pub static TailWhip: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -1709,7 +1785,9 @@ pub static PoisonSting: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(15), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+    power: Power::Base(15),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static Twineedle: MoveData = MoveData {
     pp: 20,
@@ -1719,7 +1797,9 @@ pub static Twineedle: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(25), Effect::MultiHit(2, 2), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 20)],
+    power: Power::Base(25),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 2), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 20)],
 };
 pub static PinMissile: MoveData = MoveData {
     pp: 20,
@@ -1729,11 +1809,15 @@ pub static PinMissile: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
+    power: Power::Base(25),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static Leer: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cool,
@@ -1749,11 +1833,15 @@ pub static Bite: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::Flinch(30)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static Growl: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -1764,6 +1852,8 @@ pub static Growl: MoveData = MoveData {
 pub static Roar: MoveData = MoveData {
     pp: 20,
     priority: -6,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cool,
@@ -1774,6 +1864,8 @@ pub static Roar: MoveData = MoveData {
 pub static Sing: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(55),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -1784,6 +1876,8 @@ pub static Sing: MoveData = MoveData {
 pub static Supersonic: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(55),
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -1794,16 +1888,20 @@ pub static Supersonic: MoveData = MoveData {
 pub static SonicBoom: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::Exact(20),
+    crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Normal,
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::SetDamage(20)],
+    effects: &[],
 };
 pub static Disable: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -1819,7 +1917,9 @@ pub static Acid: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(40), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static Ember: MoveData = MoveData {
     pp: 25,
@@ -1829,7 +1929,9 @@ pub static Ember: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Flamethrower: MoveData = MoveData {
     pp: 15,
@@ -1839,11 +1941,15 @@ pub static Flamethrower: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Mist: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Ice,
     contest_type: ContestType::Beauty,
@@ -1859,7 +1965,9 @@ pub static WaterGun: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static HydroPump: MoveData = MoveData {
     pp: 5,
@@ -1869,7 +1977,9 @@ pub static HydroPump: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(110)],
+    power: Power::Base(110),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Surf: MoveData = MoveData {
     pp: 15,
@@ -1879,7 +1989,9 @@ pub static Surf: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(90)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[],
 };
 pub static IceBeam: MoveData = MoveData {
     pp: 10,
@@ -1889,7 +2001,9 @@ pub static IceBeam: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static Blizzard: MoveData = MoveData {
     pp: 5,
@@ -1899,7 +2013,9 @@ pub static Blizzard: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(110), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
+    power: Power::Base(110),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static Psybeam: MoveData = MoveData {
     pp: 20,
@@ -1909,7 +2025,9 @@ pub static Psybeam: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10)],
 };
 pub static BubbleBeam: MoveData = MoveData {
     pp: 20,
@@ -1919,7 +2037,9 @@ pub static BubbleBeam: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Speed, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 10, StatChangeTarget::Target)],
 };
 pub static AuroraBeam: MoveData = MoveData {
     pp: 20,
@@ -1929,7 +2049,9 @@ pub static AuroraBeam: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Attack, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Attack, -1, 10, StatChangeTarget::Target)],
 };
 pub static HyperBeam: MoveData = MoveData {
     pp: 5,
@@ -1939,7 +2061,9 @@ pub static HyperBeam: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Peck: MoveData = MoveData {
     pp: 35,
@@ -1949,7 +2073,9 @@ pub static Peck: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(35)],
+    power: Power::Base(35),
+	crit_rate: None,
+	effects: &[],
 };
 pub static DrillPeck: MoveData = MoveData {
     pp: 20,
@@ -1959,7 +2085,9 @@ pub static DrillPeck: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Submission: MoveData = MoveData {
     pp: 20,
@@ -1969,11 +2097,15 @@ pub static Submission: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Recoil(25)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::Recoil(25)],
 };
 pub static LowKick: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,
     contest_type: ContestType::Tough,
@@ -1984,6 +2116,8 @@ pub static LowKick: MoveData = MoveData {
 pub static Counter: MoveData = MoveData {
     pp: 20,
     priority: -5,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,
     contest_type: ContestType::Tough,
@@ -1994,6 +2128,8 @@ pub static Counter: MoveData = MoveData {
 pub static SeismicToss: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,
     contest_type: ContestType::Tough,
@@ -2009,7 +2145,9 @@ pub static Strength: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Absorb: MoveData = MoveData {
     pp: 25,
@@ -2019,7 +2157,9 @@ pub static Absorb: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(20), Effect::Drain(50)],
+    power: Power::Base(20),
+	crit_rate: None,
+	effects: &[Effect::Drain(50)],
 };
 pub static MegaDrain: MoveData = MoveData {
     pp: 15,
@@ -2029,11 +2169,15 @@ pub static MegaDrain: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40), Effect::Drain(50)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::Drain(50)],
 };
 pub static LeechSeed: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Grass,
     contest_type: ContestType::Smart,
@@ -2044,6 +2188,8 @@ pub static LeechSeed: MoveData = MoveData {
 pub static Growth: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -2059,7 +2205,9 @@ pub static RazorLeaf: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::Opponents,
-    effects: &[Effect::Damage(55), Effect::Critical(1)],
+    power: Power::Base(55),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static SolarBeam: MoveData = MoveData {
     pp: 10,
@@ -2069,11 +2217,15 @@ pub static SolarBeam: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static PoisonPowder: MoveData = MoveData {
     pp: 35,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(75),
     _type: Type::Poison,
     contest_type: ContestType::Smart,
@@ -2084,6 +2236,8 @@ pub static PoisonPowder: MoveData = MoveData {
 pub static StunSpore: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(75),
     _type: Type::Grass,
     contest_type: ContestType::Smart,
@@ -2094,6 +2248,8 @@ pub static StunSpore: MoveData = MoveData {
 pub static SleepPowder: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(75),
     _type: Type::Grass,
     contest_type: ContestType::Smart,
@@ -2109,11 +2265,15 @@ pub static PetalDance: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::RandomOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static StringShot: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(95),
     _type: Type::Bug,
     contest_type: ContestType::Smart,
@@ -2124,12 +2284,14 @@ pub static StringShot: MoveData = MoveData {
 pub static DragonRage: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::Exact(40),
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dragon,
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::SetDamage(40)],
+    effects: &[],
 };
 pub static FireSpin: MoveData = MoveData {
     pp: 15,
@@ -2139,7 +2301,9 @@ pub static FireSpin: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(35), Effect::Custom],
+    power: Power::Base(35),
+	crit_rate: None,
+	effects: &[Effect::Custom],
 };
 pub static ThunderShock: MoveData = MoveData {
     pp: 30,
@@ -2149,7 +2313,9 @@ pub static ThunderShock: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static Thunderbolt: MoveData = MoveData {
     pp: 15,
@@ -2159,11 +2325,15 @@ pub static Thunderbolt: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static ThunderWave: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Electric,
     contest_type: ContestType::Cool,
@@ -2179,7 +2349,9 @@ pub static Thunder: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(110), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
+    power: Power::Base(110),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static RockThrow: MoveData = MoveData {
     pp: 15,
@@ -2189,7 +2361,9 @@ pub static RockThrow: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Earthquake: MoveData = MoveData {
     pp: 10,
@@ -2199,17 +2373,21 @@ pub static Earthquake: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(100)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Fissure: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::OneHitKnockout,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(30),
     _type: Type::Ground,
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::OneHitKnockout],
+    effects: &[],
 };
 pub static Dig: MoveData = MoveData {
     pp: 10,
@@ -2219,11 +2397,15 @@ pub static Dig: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Toxic: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Poison,
     contest_type: ContestType::Smart,
@@ -2239,7 +2421,9 @@ pub static Confusion: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10)],
 };
 pub static Psychic: MoveData = MoveData {
     pp: 10,
@@ -2249,11 +2433,15 @@ pub static Psychic: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static Hypnosis: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(60),
     _type: Type::Psychic,
     contest_type: ContestType::Smart,
@@ -2264,6 +2452,8 @@ pub static Hypnosis: MoveData = MoveData {
 pub static Meditate: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Beauty,
@@ -2274,6 +2464,8 @@ pub static Meditate: MoveData = MoveData {
 pub static Agility: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cool,
@@ -2289,7 +2481,9 @@ pub static QuickAttack: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Rage: MoveData = MoveData {
     pp: 20,
@@ -2299,11 +2493,15 @@ pub static Rage: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(20)],
+    power: Power::Base(20),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Teleport: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cool,
@@ -2314,6 +2512,8 @@ pub static Teleport: MoveData = MoveData {
 pub static NightShade: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Ghost,
     contest_type: ContestType::Smart,
@@ -2324,6 +2524,8 @@ pub static NightShade: MoveData = MoveData {
 pub static Mimic: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -2334,6 +2536,8 @@ pub static Mimic: MoveData = MoveData {
 pub static Screech: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(85),
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -2344,6 +2548,8 @@ pub static Screech: MoveData = MoveData {
 pub static DoubleTeam: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cool,
@@ -2354,6 +2560,8 @@ pub static DoubleTeam: MoveData = MoveData {
 pub static Recover: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -2364,6 +2572,8 @@ pub static Recover: MoveData = MoveData {
 pub static Harden: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -2374,6 +2584,8 @@ pub static Harden: MoveData = MoveData {
 pub static Minimize: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -2384,6 +2596,8 @@ pub static Minimize: MoveData = MoveData {
 pub static Smokescreen: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -2394,6 +2608,8 @@ pub static Smokescreen: MoveData = MoveData {
 pub static ConfuseRay: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Ghost,
     contest_type: ContestType::Smart,
@@ -2404,6 +2620,8 @@ pub static ConfuseRay: MoveData = MoveData {
 pub static Withdraw: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Water,
     contest_type: ContestType::Cute,
@@ -2414,6 +2632,8 @@ pub static Withdraw: MoveData = MoveData {
 pub static DefenseCurl: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -2424,6 +2644,8 @@ pub static DefenseCurl: MoveData = MoveData {
 pub static Barrier: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cool,
@@ -2434,6 +2656,8 @@ pub static Barrier: MoveData = MoveData {
 pub static LightScreen: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Beauty,
@@ -2444,6 +2668,8 @@ pub static LightScreen: MoveData = MoveData {
 pub static Haze: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Ice,
     contest_type: ContestType::Beauty,
@@ -2454,6 +2680,8 @@ pub static Haze: MoveData = MoveData {
 pub static Reflect: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Smart,
@@ -2464,6 +2692,8 @@ pub static Reflect: MoveData = MoveData {
 pub static FocusEnergy: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cool,
@@ -2474,6 +2704,8 @@ pub static FocusEnergy: MoveData = MoveData {
 pub static Bide: MoveData = MoveData {
     pp: 10,
     priority: 1,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -2484,6 +2716,8 @@ pub static Bide: MoveData = MoveData {
 pub static Metronome: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -2494,6 +2728,8 @@ pub static Metronome: MoveData = MoveData {
 pub static MirrorMove: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Flying,
     contest_type: ContestType::Smart,
@@ -2509,7 +2745,9 @@ pub static SelfDestruct: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(200)],
+    power: Power::Base(200),
+	crit_rate: None,
+	effects: &[],
 };
 pub static EggBomb: MoveData = MoveData {
     pp: 10,
@@ -2519,7 +2757,9 @@ pub static EggBomb: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Lick: MoveData = MoveData {
     pp: 30,
@@ -2529,7 +2769,9 @@ pub static Lick: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(30), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
+    power: Power::Base(30),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static Smog: MoveData = MoveData {
     pp: 20,
@@ -2539,7 +2781,9 @@ pub static Smog: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(30), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 40)],
+    power: Power::Base(30),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 40)],
 };
 pub static Sludge: MoveData = MoveData {
     pp: 20,
@@ -2549,7 +2793,9 @@ pub static Sludge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static BoneClub: MoveData = MoveData {
     pp: 20,
@@ -2559,7 +2805,9 @@ pub static BoneClub: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::Flinch(10)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::Flinch(10)],
 };
 pub static FireBlast: MoveData = MoveData {
     pp: 5,
@@ -2569,7 +2817,9 @@ pub static FireBlast: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(110), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+    power: Power::Base(110),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Waterfall: MoveData = MoveData {
     pp: 15,
@@ -2579,7 +2829,9 @@ pub static Waterfall: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Flinch(20)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::Flinch(20)],
 };
 pub static Clamp: MoveData = MoveData {
     pp: 15,
@@ -2589,7 +2841,9 @@ pub static Clamp: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(35), Effect::Custom],
+    power: Power::Base(35),
+	crit_rate: None,
+	effects: &[Effect::Custom],
 };
 pub static Swift: MoveData = MoveData {
     pp: 20,
@@ -2599,7 +2853,9 @@ pub static Swift: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SkullBash: MoveData = MoveData {
     pp: 10,
@@ -2609,7 +2865,9 @@ pub static SkullBash: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(130)],
+    power: Power::Base(130),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SpikeCannon: MoveData = MoveData {
     pp: 15,
@@ -2619,7 +2877,9 @@ pub static SpikeCannon: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(20), Effect::MultiHit(2, 5)],
+    power: Power::Base(20),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static Constrict: MoveData = MoveData {
     pp: 35,
@@ -2629,11 +2889,15 @@ pub static Constrict: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(10), Effect::StatChange(BattleStat::Speed, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(10),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 10, StatChangeTarget::Target)],
 };
 pub static Amnesia: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cute,
@@ -2644,6 +2908,8 @@ pub static Amnesia: MoveData = MoveData {
 pub static Kinesis: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(80),
     _type: Type::Psychic,
     contest_type: ContestType::Smart,
@@ -2654,6 +2920,8 @@ pub static Kinesis: MoveData = MoveData {
 pub static SoftBoiled: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -2669,11 +2937,15 @@ pub static HighJumpKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(130)],
+    power: Power::Base(130),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Glare: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -2689,11 +2961,15 @@ pub static DreamEater: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::Drain(50)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[Effect::Drain(50)],
 };
 pub static PoisonGas: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Poison,
     contest_type: ContestType::Smart,
@@ -2709,7 +2985,9 @@ pub static Barrage: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(15), Effect::MultiHit(2, 5)],
+    power: Power::Base(15),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static LeechLife: MoveData = MoveData {
     pp: 10,
@@ -2719,11 +2997,15 @@ pub static LeechLife: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Drain(50)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::Drain(50)],
 };
 pub static LovelyKiss: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(75),
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -2739,11 +3021,15 @@ pub static SkyAttack: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(140), Effect::Critical(1), Effect::Flinch(30)],
+    power: Power::Base(140),
+	crit_rate: Some(1),
+	effects: &[Effect::Flinch(30)],
 };
 pub static Transform: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -2759,7 +3045,9 @@ pub static Bubble: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(40), Effect::StatChange(BattleStat::Speed, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 10, StatChangeTarget::Target)],
 };
 pub static DizzyPunch: MoveData = MoveData {
     pp: 10,
@@ -2769,11 +3057,15 @@ pub static DizzyPunch: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20)],
 };
 pub static Spore: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Grass,
     contest_type: ContestType::Beauty,
@@ -2784,6 +3076,8 @@ pub static Spore: MoveData = MoveData {
 pub static Flash: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -2794,6 +3088,8 @@ pub static Flash: MoveData = MoveData {
 pub static Psywave: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Psychic,
     contest_type: ContestType::Smart,
@@ -2804,6 +3100,8 @@ pub static Psywave: MoveData = MoveData {
 pub static Splash: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -2814,6 +3112,8 @@ pub static Splash: MoveData = MoveData {
 pub static AcidArmor: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Poison,
     contest_type: ContestType::Tough,
@@ -2829,7 +3129,9 @@ pub static Crabhammer: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::Critical(1)],
+    power: Power::Base(100),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static Explosion: MoveData = MoveData {
     pp: 5,
@@ -2839,7 +3141,9 @@ pub static Explosion: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(250)],
+    power: Power::Base(250),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FurySwipes: MoveData = MoveData {
     pp: 15,
@@ -2849,7 +3153,9 @@ pub static FurySwipes: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(18), Effect::MultiHit(2, 5)],
+    power: Power::Base(18),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static Bonemerang: MoveData = MoveData {
     pp: 10,
@@ -2859,11 +3165,15 @@ pub static Bonemerang: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::MultiHit(2, 2)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 2)],
 };
 pub static Rest: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cute,
@@ -2879,7 +3189,9 @@ pub static RockSlide: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::Opponents,
-    effects: &[Effect::Damage(75), Effect::Flinch(30)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static HyperFang: MoveData = MoveData {
     pp: 15,
@@ -2889,11 +3201,15 @@ pub static HyperFang: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Flinch(10)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::Flinch(10)],
 };
 pub static Sharpen: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -2904,6 +3220,8 @@ pub static Sharpen: MoveData = MoveData {
 pub static Conversion: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -2919,11 +3237,15 @@ pub static TriAttack: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Custom],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::Custom],
 };
 pub static SuperFang: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -2939,11 +3261,15 @@ pub static Slash: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::Critical(1)],
+    power: Power::Base(70),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static Substitute: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -2959,11 +3285,15 @@ pub static Struggle: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::RandomOpponent,
-    effects: &[Effect::Damage(50), Effect::Recoil(25)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::Recoil(25)],
 };
 pub static Sketch: MoveData = MoveData {
     pp: 1,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -2979,7 +3309,9 @@ pub static TripleKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(10), Effect::MultiHit(3, 3)],
+    power: Power::Base(10),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(3, 3)],
 };
 pub static Thief: MoveData = MoveData {
     pp: 25,
@@ -2989,11 +3321,15 @@ pub static Thief: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SpiderWeb: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Bug,
     contest_type: ContestType::Smart,
@@ -3004,6 +3340,8 @@ pub static SpiderWeb: MoveData = MoveData {
 pub static MindReader: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -3014,6 +3352,8 @@ pub static MindReader: MoveData = MoveData {
 pub static Nightmare: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Ghost,
     contest_type: ContestType::Smart,
@@ -3029,7 +3369,9 @@ pub static FlameWheel: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Snore: MoveData = MoveData {
     pp: 15,
@@ -3039,11 +3381,15 @@ pub static Snore: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::Flinch(30)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static Curse: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Ghost,
     contest_type: ContestType::Tough,
@@ -3054,6 +3400,8 @@ pub static Curse: MoveData = MoveData {
 pub static Flail: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3064,6 +3412,8 @@ pub static Flail: MoveData = MoveData {
 pub static Conversion2: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -3079,11 +3429,15 @@ pub static Aeroblast: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::Critical(1)],
+    power: Power::Base(100),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static CottonSpore: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Grass,
     contest_type: ContestType::Beauty,
@@ -3094,6 +3448,8 @@ pub static CottonSpore: MoveData = MoveData {
 pub static Reversal: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,
     contest_type: ContestType::Cool,
@@ -3104,6 +3460,8 @@ pub static Reversal: MoveData = MoveData {
 pub static Spite: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Ghost,
     contest_type: ContestType::Tough,
@@ -3119,11 +3477,15 @@ pub static PowderSnow: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(40), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static Protect: MoveData = MoveData {
     pp: 10,
     priority: 4,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3139,11 +3501,15 @@ pub static MachPunch: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ScaryFace: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -3159,11 +3525,15 @@ pub static FeintAttack: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SweetKiss: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(75),
     _type: Type::Fairy,
     contest_type: ContestType::Cute,
@@ -3174,6 +3544,8 @@ pub static SweetKiss: MoveData = MoveData {
 pub static BellyDrum: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3189,7 +3561,9 @@ pub static SludgeBomb: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static MudSlap: MoveData = MoveData {
     pp: 10,
@@ -3199,7 +3573,9 @@ pub static MudSlap: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(20), Effect::StatChange(BattleStat::Accuracy, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(20),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 100, StatChangeTarget::Target)],
 };
 pub static Octazooka: MoveData = MoveData {
     pp: 10,
@@ -3209,11 +3585,15 @@ pub static Octazooka: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Accuracy, -1, 50, StatChangeTarget::Target)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 50, StatChangeTarget::Target)],
 };
 pub static Spikes: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Ground,
     contest_type: ContestType::Smart,
@@ -3229,11 +3609,15 @@ pub static ZapCannon: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 100)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 100)],
 };
 pub static Foresight: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -3244,6 +3628,8 @@ pub static Foresight: MoveData = MoveData {
 pub static DestinyBond: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Ghost,
     contest_type: ContestType::Smart,
@@ -3254,6 +3640,8 @@ pub static DestinyBond: MoveData = MoveData {
 pub static PerishSong: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -3269,11 +3657,15 @@ pub static IcyWind: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(55), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(55),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static Detect: MoveData = MoveData {
     pp: 5,
     priority: 4,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Fighting,
     contest_type: ContestType::Cool,
@@ -3289,11 +3681,15 @@ pub static BoneRush: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
+    power: Power::Base(25),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static LockOn: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -3309,11 +3705,15 @@ pub static Outrage: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::RandomOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Sandstorm: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Rock,
     contest_type: ContestType::Tough,
@@ -3329,11 +3729,15 @@ pub static GigaDrain: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::Drain(50)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::Drain(50)],
 };
 pub static Endure: MoveData = MoveData {
     pp: 10,
     priority: 4,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -3344,6 +3748,8 @@ pub static Endure: MoveData = MoveData {
 pub static Charm: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fairy,
     contest_type: ContestType::Cute,
@@ -3359,7 +3765,9 @@ pub static Rollout: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(30)],
+    power: Power::Base(30),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FalseSwipe: MoveData = MoveData {
     pp: 40,
@@ -3369,11 +3777,15 @@ pub static FalseSwipe: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Swagger: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(85),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3384,6 +3796,8 @@ pub static Swagger: MoveData = MoveData {
 pub static MilkDrink: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3399,7 +3813,9 @@ pub static Spark: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static FuryCutter: MoveData = MoveData {
     pp: 20,
@@ -3409,7 +3825,9 @@ pub static FuryCutter: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SteelWing: MoveData = MoveData {
     pp: 25,
@@ -3419,11 +3837,15 @@ pub static SteelWing: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User)],
 };
 pub static MeanLook: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -3434,6 +3856,8 @@ pub static MeanLook: MoveData = MoveData {
 pub static Attract: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3444,6 +3868,8 @@ pub static Attract: MoveData = MoveData {
 pub static SleepTalk: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3454,6 +3880,8 @@ pub static SleepTalk: MoveData = MoveData {
 pub static HealBell: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -3464,6 +3892,8 @@ pub static HealBell: MoveData = MoveData {
 pub static Return: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3474,6 +3904,8 @@ pub static Return: MoveData = MoveData {
 pub static Present: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3484,6 +3916,8 @@ pub static Present: MoveData = MoveData {
 pub static Frustration: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3494,6 +3928,8 @@ pub static Frustration: MoveData = MoveData {
 pub static Safeguard: MoveData = MoveData {
     pp: 25,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -3504,6 +3940,8 @@ pub static Safeguard: MoveData = MoveData {
 pub static PainSplit: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -3519,11 +3957,15 @@ pub static SacredFire: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 50)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 50)],
 };
 pub static Magnitude: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Ground,
     contest_type: ContestType::Tough,
@@ -3539,7 +3981,9 @@ pub static DynamicPunch: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 100)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 100)],
 };
 pub static Megahorn: MoveData = MoveData {
     pp: 10,
@@ -3549,7 +3993,9 @@ pub static Megahorn: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static DragonBreath: MoveData = MoveData {
     pp: 20,
@@ -3559,11 +4005,15 @@ pub static DragonBreath: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static BatonPass: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3574,6 +4024,8 @@ pub static BatonPass: MoveData = MoveData {
 pub static Encore: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3589,7 +4041,9 @@ pub static Pursuit: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static RapidSpin: MoveData = MoveData {
     pp: 40,
@@ -3599,11 +4053,15 @@ pub static RapidSpin: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SweetScent: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3619,7 +4077,9 @@ pub static IronTail: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::StatChange(BattleStat::Defense, -1, 30, StatChangeTarget::Target)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Defense, -1, 30, StatChangeTarget::Target)],
 };
 pub static MetalClaw: MoveData = MoveData {
     pp: 35,
@@ -3629,7 +4089,9 @@ pub static MetalClaw: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User)],
 };
 pub static VitalThrow: MoveData = MoveData {
     pp: 10,
@@ -3639,11 +4101,15 @@ pub static VitalThrow: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[],
 };
 pub static MorningSun: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -3654,6 +4120,8 @@ pub static MorningSun: MoveData = MoveData {
 pub static Synthesis: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Grass,
     contest_type: ContestType::Smart,
@@ -3664,6 +4132,8 @@ pub static Synthesis: MoveData = MoveData {
 pub static Moonlight: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Fairy,
     contest_type: ContestType::Beauty,
@@ -3679,7 +4149,9 @@ pub static HiddenPower: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static CrossChop: MoveData = MoveData {
     pp: 5,
@@ -3689,7 +4161,9 @@ pub static CrossChop: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::Critical(1)],
+    power: Power::Base(100),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static Twister: MoveData = MoveData {
     pp: 20,
@@ -3699,11 +4173,15 @@ pub static Twister: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(40), Effect::Flinch(20)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::Flinch(20)],
 };
 pub static RainDance: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Water,
     contest_type: ContestType::Tough,
@@ -3714,6 +4192,8 @@ pub static RainDance: MoveData = MoveData {
 pub static SunnyDay: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Fire,
     contest_type: ContestType::Beauty,
@@ -3729,11 +4209,15 @@ pub static Crunch: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::StatChange(BattleStat::Defense, -1, 20, StatChangeTarget::Target)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Defense, -1, 20, StatChangeTarget::Target)],
 };
 pub static MirrorCoat: MoveData = MoveData {
     pp: 20,
     priority: -5,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Psychic,
     contest_type: ContestType::Beauty,
@@ -3744,6 +4228,8 @@ pub static MirrorCoat: MoveData = MoveData {
 pub static PsychUp: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -3759,7 +4245,9 @@ pub static ExtremeSpeed: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static AncientPower: MoveData = MoveData {
     pp: 5,
@@ -3769,7 +4257,9 @@ pub static AncientPower: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 10, StatChangeTarget::User)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 10, StatChangeTarget::User)],
 };
 pub static ShadowBall: MoveData = MoveData {
     pp: 15,
@@ -3779,7 +4269,9 @@ pub static ShadowBall: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::StatChange(BattleStat::SpecialDefense, -1, 20, StatChangeTarget::Target)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -1, 20, StatChangeTarget::Target)],
 };
 pub static FutureSight: MoveData = MoveData {
     pp: 10,
@@ -3789,7 +4281,9 @@ pub static FutureSight: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static RockSmash: MoveData = MoveData {
     pp: 15,
@@ -3799,7 +4293,9 @@ pub static RockSmash: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40), Effect::StatChange(BattleStat::Defense, -1, 50, StatChangeTarget::Target)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Defense, -1, 50, StatChangeTarget::Target)],
 };
 pub static Whirlpool: MoveData = MoveData {
     pp: 15,
@@ -3809,11 +4305,15 @@ pub static Whirlpool: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(35), Effect::Custom],
+    power: Power::Base(35),
+	crit_rate: None,
+	effects: &[Effect::Custom],
 };
 pub static BeatUp: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Smart,
@@ -3829,7 +4329,9 @@ pub static FakeOut: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40), Effect::Flinch(100)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::Flinch(100)],
 };
 pub static Uproar: MoveData = MoveData {
     pp: 10,
@@ -3839,11 +4341,15 @@ pub static Uproar: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Special,
     target: Target::RandomOpponent,
-    effects: &[Effect::Damage(90)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Stockpile: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -3854,6 +4360,8 @@ pub static Stockpile: MoveData = MoveData {
 pub static SpitUp: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -3864,6 +4372,8 @@ pub static SpitUp: MoveData = MoveData {
 pub static Swallow: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -3879,11 +4389,15 @@ pub static HeatWave: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(95), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+    power: Power::Base(95),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static Hail: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Ice,
     contest_type: ContestType::Beauty,
@@ -3894,6 +4408,8 @@ pub static Hail: MoveData = MoveData {
 pub static Torment: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Tough,
@@ -3904,6 +4420,8 @@ pub static Torment: MoveData = MoveData {
 pub static Flatter: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Smart,
@@ -3914,6 +4432,8 @@ pub static Flatter: MoveData = MoveData {
 pub static WillOWisp: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(85),
     _type: Type::Fire,
     contest_type: ContestType::Beauty,
@@ -3924,6 +4444,8 @@ pub static WillOWisp: MoveData = MoveData {
 pub static Memento: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Tough,
@@ -3939,7 +4461,9 @@ pub static Facade: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FocusPunch: MoveData = MoveData {
     pp: 20,
@@ -3949,7 +4473,9 @@ pub static FocusPunch: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SmellingSalts: MoveData = MoveData {
     pp: 10,
@@ -3959,11 +4485,15 @@ pub static SmellingSalts: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FollowMe: MoveData = MoveData {
     pp: 20,
     priority: 2,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -3974,6 +4504,8 @@ pub static FollowMe: MoveData = MoveData {
 pub static NaturePower: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -3984,6 +4516,8 @@ pub static NaturePower: MoveData = MoveData {
 pub static Charge: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Electric,
     contest_type: ContestType::Smart,
@@ -3994,6 +4528,8 @@ pub static Charge: MoveData = MoveData {
 pub static Taunt: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Smart,
@@ -4004,6 +4540,8 @@ pub static Taunt: MoveData = MoveData {
 pub static HelpingHand: MoveData = MoveData {
     pp: 20,
     priority: 5,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -4014,6 +4552,8 @@ pub static HelpingHand: MoveData = MoveData {
 pub static Trick: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Psychic,
     contest_type: ContestType::Smart,
@@ -4024,6 +4564,8 @@ pub static Trick: MoveData = MoveData {
 pub static RolePlay: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cute,
@@ -4034,6 +4576,8 @@ pub static RolePlay: MoveData = MoveData {
 pub static Wish: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -4044,6 +4588,8 @@ pub static Wish: MoveData = MoveData {
 pub static Assist: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -4054,6 +4600,8 @@ pub static Assist: MoveData = MoveData {
 pub static Ingrain: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Grass,
     contest_type: ContestType::Smart,
@@ -4069,11 +4617,15 @@ pub static Superpower: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::StatChange(BattleStat::Attack, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::User)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Attack, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::User)],
 };
 pub static MagicCoat: MoveData = MoveData {
     pp: 15,
     priority: 4,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Beauty,
@@ -4084,6 +4636,8 @@ pub static MagicCoat: MoveData = MoveData {
 pub static Recycle: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -4099,7 +4653,9 @@ pub static Revenge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static BrickBreak: MoveData = MoveData {
     pp: 15,
@@ -4109,11 +4665,15 @@ pub static BrickBreak: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Yawn: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -4129,11 +4689,15 @@ pub static KnockOff: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Endeavor: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -4149,11 +4713,15 @@ pub static Eruption: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SkillSwap: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Smart,
@@ -4164,6 +4732,8 @@ pub static SkillSwap: MoveData = MoveData {
 pub static Imprison: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Smart,
@@ -4174,6 +4744,8 @@ pub static Imprison: MoveData = MoveData {
 pub static Refresh: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -4184,6 +4756,8 @@ pub static Refresh: MoveData = MoveData {
 pub static Grudge: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Ghost,
     contest_type: ContestType::Tough,
@@ -4194,6 +4768,8 @@ pub static Grudge: MoveData = MoveData {
 pub static Snatch: MoveData = MoveData {
     pp: 10,
     priority: 4,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Dark,
     contest_type: ContestType::Smart,
@@ -4209,7 +4785,9 @@ pub static SecretPower: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Dive: MoveData = MoveData {
     pp: 10,
@@ -4219,7 +4797,9 @@ pub static Dive: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ArmThrust: MoveData = MoveData {
     pp: 20,
@@ -4229,11 +4809,15 @@ pub static ArmThrust: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(15), Effect::MultiHit(2, 5)],
+    power: Power::Base(15),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static Camouflage: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -4244,6 +4828,8 @@ pub static Camouflage: MoveData = MoveData {
 pub static TailGlow: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Bug,
     contest_type: ContestType::Beauty,
@@ -4259,7 +4845,9 @@ pub static LusterPurge: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::StatChange(BattleStat::SpecialDefense, -1, 50, StatChangeTarget::Target)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -1, 50, StatChangeTarget::Target)],
 };
 pub static MistBall: MoveData = MoveData {
     pp: 5,
@@ -4269,11 +4857,15 @@ pub static MistBall: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::StatChange(BattleStat::SpecialAttack, -1, 50, StatChangeTarget::Target)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialAttack, -1, 50, StatChangeTarget::Target)],
 };
 pub static FeatherDance: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Flying,
     contest_type: ContestType::Beauty,
@@ -4284,6 +4876,8 @@ pub static FeatherDance: MoveData = MoveData {
 pub static TeeterDance: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -4299,11 +4893,15 @@ pub static BlazeKick: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(85), Effect::Critical(1), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+    power: Power::Base(85),
+	crit_rate: Some(1),
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static MudSport: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Ground,
     contest_type: ContestType::Cute,
@@ -4319,7 +4917,9 @@ pub static IceBall: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(30)],
+    power: Power::Base(30),
+	crit_rate: None,
+	effects: &[],
 };
 pub static NeedleArm: MoveData = MoveData {
     pp: 15,
@@ -4329,11 +4929,15 @@ pub static NeedleArm: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::Flinch(30)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static SlackOff: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -4349,7 +4953,9 @@ pub static HyperVoice: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(90)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[],
 };
 pub static PoisonFang: MoveData = MoveData {
     pp: 15,
@@ -4359,7 +4965,9 @@ pub static PoisonFang: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 50)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 50)],
 };
 pub static CrushClaw: MoveData = MoveData {
     pp: 10,
@@ -4369,7 +4977,9 @@ pub static CrushClaw: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::StatChange(BattleStat::Defense, -1, 50, StatChangeTarget::Target)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Defense, -1, 50, StatChangeTarget::Target)],
 };
 pub static BlastBurn: MoveData = MoveData {
     pp: 5,
@@ -4379,7 +4989,9 @@ pub static BlastBurn: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static HydroCannon: MoveData = MoveData {
     pp: 5,
@@ -4389,7 +5001,9 @@ pub static HydroCannon: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static MeteorMash: MoveData = MoveData {
     pp: 10,
@@ -4399,7 +5013,9 @@ pub static MeteorMash: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::Attack, 1, 20, StatChangeTarget::User)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Attack, 1, 20, StatChangeTarget::User)],
 };
 pub static Astonish: MoveData = MoveData {
     pp: 15,
@@ -4409,7 +5025,9 @@ pub static Astonish: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(30), Effect::Flinch(30)],
+    power: Power::Base(30),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static WeatherBall: MoveData = MoveData {
     pp: 10,
@@ -4419,11 +5037,15 @@ pub static WeatherBall: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Aromatherapy: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Grass,
     contest_type: ContestType::Smart,
@@ -4434,6 +5056,8 @@ pub static Aromatherapy: MoveData = MoveData {
 pub static FakeTears: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Smart,
@@ -4449,7 +5073,9 @@ pub static AirCutter: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(60), Effect::Critical(1)],
+    power: Power::Base(60),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static Overheat: MoveData = MoveData {
     pp: 5,
@@ -4459,11 +5085,15 @@ pub static Overheat: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(130), Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
+    power: Power::Base(130),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
 };
 pub static OdorSleuth: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -4479,7 +5109,9 @@ pub static RockTomb: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static SilverWind: MoveData = MoveData {
     pp: 5,
@@ -4489,11 +5121,15 @@ pub static SilverWind: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 10, StatChangeTarget::User)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 10, StatChangeTarget::User)],
 };
 pub static MetalSound: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(85),
     _type: Type::Steel,
     contest_type: ContestType::Smart,
@@ -4504,6 +5140,8 @@ pub static MetalSound: MoveData = MoveData {
 pub static GrassWhistle: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(55),
     _type: Type::Grass,
     contest_type: ContestType::Smart,
@@ -4514,6 +5152,8 @@ pub static GrassWhistle: MoveData = MoveData {
 pub static Tickle: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -4524,6 +5164,8 @@ pub static Tickle: MoveData = MoveData {
 pub static CosmicPower: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cool,
@@ -4539,7 +5181,9 @@ pub static WaterSpout: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SignalBeam: MoveData = MoveData {
     pp: 15,
@@ -4549,7 +5193,9 @@ pub static SignalBeam: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10)],
 };
 pub static ShadowPunch: MoveData = MoveData {
     pp: 20,
@@ -4559,7 +5205,9 @@ pub static ShadowPunch: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Extrasensory: MoveData = MoveData {
     pp: 20,
@@ -4569,7 +5217,9 @@ pub static Extrasensory: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Flinch(10)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::Flinch(10)],
 };
 pub static SkyUppercut: MoveData = MoveData {
     pp: 15,
@@ -4579,7 +5229,9 @@ pub static SkyUppercut: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(85)],
+    power: Power::Base(85),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SandTomb: MoveData = MoveData {
     pp: 15,
@@ -4589,17 +5241,21 @@ pub static SandTomb: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(35), Effect::Custom],
+    power: Power::Base(35),
+	crit_rate: None,
+	effects: &[Effect::Custom],
 };
 pub static SheerCold: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::OneHitKnockout,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(30),
     _type: Type::Ice,
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::OneHitKnockout],
+    effects: &[],
 };
 pub static MuddyWater: MoveData = MoveData {
     pp: 10,
@@ -4609,7 +5265,9 @@ pub static MuddyWater: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::Accuracy, -1, 30, StatChangeTarget::Target)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 30, StatChangeTarget::Target)],
 };
 pub static BulletSeed: MoveData = MoveData {
     pp: 30,
@@ -4619,7 +5277,9 @@ pub static BulletSeed: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
+    power: Power::Base(25),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static AerialAce: MoveData = MoveData {
     pp: 20,
@@ -4629,7 +5289,9 @@ pub static AerialAce: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static IcicleSpear: MoveData = MoveData {
     pp: 30,
@@ -4639,11 +5301,15 @@ pub static IcicleSpear: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
+    power: Power::Base(25),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static IronDefense: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Steel,
     contest_type: ContestType::Tough,
@@ -4654,6 +5320,8 @@ pub static IronDefense: MoveData = MoveData {
 pub static Block: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -4664,6 +5332,8 @@ pub static Block: MoveData = MoveData {
 pub static Howl: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cool,
@@ -4679,7 +5349,9 @@ pub static DragonClaw: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FrenzyPlant: MoveData = MoveData {
     pp: 5,
@@ -4689,11 +5361,15 @@ pub static FrenzyPlant: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static BulkUp: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Fighting,
     contest_type: ContestType::Beauty,
@@ -4709,7 +5385,9 @@ pub static Bounce: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(85), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
+    power: Power::Base(85),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static MudShot: MoveData = MoveData {
     pp: 15,
@@ -4719,7 +5397,9 @@ pub static MudShot: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(55), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(55),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static PoisonTail: MoveData = MoveData {
     pp: 25,
@@ -4729,7 +5409,9 @@ pub static PoisonTail: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::Critical(1), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
+    power: Power::Base(50),
+	crit_rate: Some(1),
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
 };
 pub static Covet: MoveData = MoveData {
     pp: 25,
@@ -4739,7 +5421,9 @@ pub static Covet: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static VoltTackle: MoveData = MoveData {
     pp: 15,
@@ -4749,7 +5433,9 @@ pub static VoltTackle: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::Recoil(33), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::Recoil(33), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static MagicalLeaf: MoveData = MoveData {
     pp: 20,
@@ -4759,11 +5445,15 @@ pub static MagicalLeaf: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static WaterSport: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Water,
     contest_type: ContestType::Cute,
@@ -4774,6 +5464,8 @@ pub static WaterSport: MoveData = MoveData {
 pub static CalmMind: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Smart,
@@ -4789,11 +5481,15 @@ pub static LeafBlade: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::Critical(1)],
+    power: Power::Base(90),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static DragonDance: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Dragon,
     contest_type: ContestType::Cool,
@@ -4809,7 +5505,9 @@ pub static RockBlast: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
+    power: Power::Base(25),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static ShockWave: MoveData = MoveData {
     pp: 20,
@@ -4819,7 +5517,9 @@ pub static ShockWave: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static WaterPulse: MoveData = MoveData {
     pp: 20,
@@ -4829,7 +5529,9 @@ pub static WaterPulse: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20)],
 };
 pub static DoomDesire: MoveData = MoveData {
     pp: 5,
@@ -4839,7 +5541,9 @@ pub static DoomDesire: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(140)],
+    power: Power::Base(140),
+	crit_rate: None,
+	effects: &[],
 };
 pub static PsychoBoost: MoveData = MoveData {
     pp: 5,
@@ -4849,11 +5553,15 @@ pub static PsychoBoost: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(140), Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
+    power: Power::Base(140),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
 };
 pub static Roost: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Flying,
     contest_type: ContestType::Cool,
@@ -4864,6 +5572,8 @@ pub static Roost: MoveData = MoveData {
 pub static Gravity: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Beauty,
@@ -4874,6 +5584,8 @@ pub static Gravity: MoveData = MoveData {
 pub static MiracleEye: MoveData = MoveData {
     pp: 40,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cute,
@@ -4889,7 +5601,9 @@ pub static WakeUpSlap: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[],
 };
 pub static HammerArm: MoveData = MoveData {
     pp: 10,
@@ -4899,11 +5613,15 @@ pub static HammerArm: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::User)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::User)],
 };
 pub static GyroBall: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Steel,
     contest_type: ContestType::Beauty,
@@ -4914,6 +5632,8 @@ pub static GyroBall: MoveData = MoveData {
 pub static HealingWish: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cute,
@@ -4929,11 +5649,15 @@ pub static Brine: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[],
 };
 pub static NaturalGift: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Cool,
@@ -4949,7 +5673,9 @@ pub static Feint: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(30)],
+    power: Power::Base(30),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Pluck: MoveData = MoveData {
     pp: 20,
@@ -4959,11 +5685,15 @@ pub static Pluck: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Tailwind: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Flying,
     contest_type: ContestType::Smart,
@@ -4974,6 +5704,8 @@ pub static Tailwind: MoveData = MoveData {
 pub static Acupressure: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cool,
@@ -4984,6 +5716,8 @@ pub static Acupressure: MoveData = MoveData {
 pub static MetalBurst: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Steel,
     contest_type: ContestType::Beauty,
@@ -4999,7 +5733,9 @@ pub static UTurn: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::ForceUserSwitch],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[Effect::ForceUserSwitch],
 };
 pub static CloseCombat: MoveData = MoveData {
     pp: 5,
@@ -5009,7 +5745,9 @@ pub static CloseCombat: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, -1, 100, StatChangeTarget::User)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, -1, 100, StatChangeTarget::User)],
 };
 pub static Payback: MoveData = MoveData {
     pp: 10,
@@ -5019,7 +5757,9 @@ pub static Payback: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Assurance: MoveData = MoveData {
     pp: 10,
@@ -5029,11 +5769,15 @@ pub static Assurance: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Embargo: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Cute,
@@ -5044,6 +5788,8 @@ pub static Embargo: MoveData = MoveData {
 pub static Fling: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Tough,
@@ -5054,6 +5800,8 @@ pub static Fling: MoveData = MoveData {
 pub static PsychoShift: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Psychic,
     contest_type: ContestType::Cool,
@@ -5064,6 +5812,8 @@ pub static PsychoShift: MoveData = MoveData {
 pub static TrumpCard: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cool,
@@ -5074,6 +5824,8 @@ pub static TrumpCard: MoveData = MoveData {
 pub static HealBlock: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Psychic,
     contest_type: ContestType::Cute,
@@ -5084,6 +5836,8 @@ pub static HealBlock: MoveData = MoveData {
 pub static WringOut: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Smart,
@@ -5094,6 +5848,8 @@ pub static WringOut: MoveData = MoveData {
 pub static PowerTrick: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cool,
@@ -5104,6 +5860,8 @@ pub static PowerTrick: MoveData = MoveData {
 pub static GastroAcid: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Poison,
     contest_type: ContestType::Beauty,
@@ -5114,6 +5872,8 @@ pub static GastroAcid: MoveData = MoveData {
 pub static LuckyChant: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -5124,6 +5884,8 @@ pub static LuckyChant: MoveData = MoveData {
 pub static MeFirst: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
@@ -5134,6 +5896,8 @@ pub static MeFirst: MoveData = MoveData {
 pub static Copycat: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Cool,
@@ -5144,6 +5908,8 @@ pub static Copycat: MoveData = MoveData {
 pub static PowerSwap: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Beauty,
@@ -5154,6 +5920,8 @@ pub static PowerSwap: MoveData = MoveData {
 pub static GuardSwap: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cute,
@@ -5164,6 +5932,8 @@ pub static GuardSwap: MoveData = MoveData {
 pub static Punishment: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Smart,
@@ -5179,11 +5949,15 @@ pub static LastResort: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(140)],
+    power: Power::Base(140),
+	crit_rate: None,
+	effects: &[],
 };
 pub static WorrySeed: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Grass,
     contest_type: ContestType::Beauty,
@@ -5199,11 +5973,15 @@ pub static SuckerPunch: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ToxicSpikes: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Poison,
     contest_type: ContestType::Smart,
@@ -5214,6 +5992,8 @@ pub static ToxicSpikes: MoveData = MoveData {
 pub static HeartSwap: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cool,
@@ -5224,6 +6004,8 @@ pub static HeartSwap: MoveData = MoveData {
 pub static AquaRing: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Water,
     contest_type: ContestType::Beauty,
@@ -5234,6 +6016,8 @@ pub static AquaRing: MoveData = MoveData {
 pub static MagnetRise: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Electric,
     contest_type: ContestType::Cute,
@@ -5249,7 +6033,9 @@ pub static FlareBlitz: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::Recoil(33), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::Recoil(33), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static ForcePalm: MoveData = MoveData {
     pp: 10,
@@ -5259,7 +6045,9 @@ pub static ForcePalm: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static AuraSphere: MoveData = MoveData {
     pp: 20,
@@ -5269,11 +6057,15 @@ pub static AuraSphere: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static RockPolish: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Rock,
     contest_type: ContestType::Tough,
@@ -5289,7 +6081,9 @@ pub static PoisonJab: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static DarkPulse: MoveData = MoveData {
     pp: 15,
@@ -5299,7 +6093,9 @@ pub static DarkPulse: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Flinch(20)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::Flinch(20)],
 };
 pub static NightSlash: MoveData = MoveData {
     pp: 15,
@@ -5309,7 +6105,9 @@ pub static NightSlash: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::Critical(1)],
+    power: Power::Base(70),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static AquaTail: MoveData = MoveData {
     pp: 10,
@@ -5319,7 +6117,9 @@ pub static AquaTail: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SeedBomb: MoveData = MoveData {
     pp: 15,
@@ -5329,7 +6129,9 @@ pub static SeedBomb: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static AirSlash: MoveData = MoveData {
     pp: 15,
@@ -5339,7 +6141,9 @@ pub static AirSlash: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::Flinch(30)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static XScissor: MoveData = MoveData {
     pp: 15,
@@ -5349,7 +6153,9 @@ pub static XScissor: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static BugBuzz: MoveData = MoveData {
     pp: 10,
@@ -5359,7 +6165,9 @@ pub static BugBuzz: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static DragonPulse: MoveData = MoveData {
     pp: 10,
@@ -5369,7 +6177,9 @@ pub static DragonPulse: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(85)],
+    power: Power::Base(85),
+	crit_rate: None,
+	effects: &[],
 };
 pub static DragonRush: MoveData = MoveData {
     pp: 10,
@@ -5379,7 +6189,9 @@ pub static DragonRush: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::Flinch(20)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[Effect::Flinch(20)],
 };
 pub static PowerGem: MoveData = MoveData {
     pp: 20,
@@ -5389,7 +6201,9 @@ pub static PowerGem: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static DrainPunch: MoveData = MoveData {
     pp: 10,
@@ -5399,7 +6213,9 @@ pub static DrainPunch: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::Drain(50)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::Drain(50)],
 };
 pub static VacuumWave: MoveData = MoveData {
     pp: 30,
@@ -5409,7 +6225,9 @@ pub static VacuumWave: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FocusBlast: MoveData = MoveData {
     pp: 5,
@@ -5419,7 +6237,9 @@ pub static FocusBlast: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static EnergyBall: MoveData = MoveData {
     pp: 10,
@@ -5429,7 +6249,9 @@ pub static EnergyBall: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static BraveBird: MoveData = MoveData {
     pp: 15,
@@ -5439,7 +6261,9 @@ pub static BraveBird: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::Recoil(33)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::Recoil(33)],
 };
 pub static EarthPower: MoveData = MoveData {
     pp: 10,
@@ -5449,11 +6273,15 @@ pub static EarthPower: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static Switcheroo: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Cool,
@@ -5469,11 +6297,15 @@ pub static GigaImpact: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static NastyPlot: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Dark,
     contest_type: ContestType::Cute,
@@ -5489,7 +6321,9 @@ pub static BulletPunch: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Avalanche: MoveData = MoveData {
     pp: 10,
@@ -5499,7 +6333,9 @@ pub static Avalanche: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static IceShard: MoveData = MoveData {
     pp: 30,
@@ -5509,7 +6345,9 @@ pub static IceShard: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ShadowClaw: MoveData = MoveData {
     pp: 15,
@@ -5519,7 +6357,9 @@ pub static ShadowClaw: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::Critical(1)],
+    power: Power::Base(70),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static ThunderFang: MoveData = MoveData {
     pp: 15,
@@ -5529,7 +6369,9 @@ pub static ThunderFang: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::Flinch(10), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::Flinch(10), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static IceFang: MoveData = MoveData {
     pp: 15,
@@ -5539,7 +6381,9 @@ pub static IceFang: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::Flinch(10), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::Flinch(10), Effect::NonVolatileStatus(NonVolatileBattleAilment::Freeze, 10)],
 };
 pub static FireFang: MoveData = MoveData {
     pp: 15,
@@ -5549,7 +6393,9 @@ pub static FireFang: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::Flinch(10), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::Flinch(10), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static ShadowSneak: MoveData = MoveData {
     pp: 30,
@@ -5559,7 +6405,9 @@ pub static ShadowSneak: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static MudBomb: MoveData = MoveData {
     pp: 10,
@@ -5569,7 +6417,9 @@ pub static MudBomb: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Accuracy, -1, 30, StatChangeTarget::Target)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 30, StatChangeTarget::Target)],
 };
 pub static PsychoCut: MoveData = MoveData {
     pp: 20,
@@ -5579,7 +6429,9 @@ pub static PsychoCut: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::Critical(1)],
+    power: Power::Base(70),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static ZenHeadbutt: MoveData = MoveData {
     pp: 15,
@@ -5589,7 +6441,9 @@ pub static ZenHeadbutt: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Flinch(20)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::Flinch(20)],
 };
 pub static MirrorShot: MoveData = MoveData {
     pp: 10,
@@ -5599,7 +6453,9 @@ pub static MirrorShot: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Accuracy, -1, 30, StatChangeTarget::Target)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 30, StatChangeTarget::Target)],
 };
 pub static FlashCannon: MoveData = MoveData {
     pp: 10,
@@ -5609,7 +6465,9 @@ pub static FlashCannon: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -1, 10, StatChangeTarget::Target)],
 };
 pub static RockClimb: MoveData = MoveData {
     pp: 20,
@@ -5619,11 +6477,15 @@ pub static RockClimb: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20)],
 };
 pub static Defog: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Flying,
     contest_type: ContestType::Beauty,
@@ -5634,6 +6496,8 @@ pub static Defog: MoveData = MoveData {
 pub static TrickRoom: MoveData = MoveData {
     pp: 5,
     priority: -7,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Cute,
@@ -5649,7 +6513,9 @@ pub static DracoMeteor: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(130), Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
+    power: Power::Base(130),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
 };
 pub static Discharge: MoveData = MoveData {
     pp: 15,
@@ -5659,7 +6525,9 @@ pub static Discharge: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(80), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static LavaPlume: MoveData = MoveData {
     pp: 15,
@@ -5669,7 +6537,9 @@ pub static LavaPlume: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(80), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
 };
 pub static LeafStorm: MoveData = MoveData {
     pp: 5,
@@ -5679,7 +6549,9 @@ pub static LeafStorm: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(130), Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
+    power: Power::Base(130),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialAttack, -2, 100, StatChangeTarget::User)],
 };
 pub static PowerWhip: MoveData = MoveData {
     pp: 10,
@@ -5689,7 +6561,9 @@ pub static PowerWhip: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static RockWrecker: MoveData = MoveData {
     pp: 5,
@@ -5699,7 +6573,9 @@ pub static RockWrecker: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static CrossPoison: MoveData = MoveData {
     pp: 20,
@@ -5709,7 +6585,9 @@ pub static CrossPoison: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::Critical(1), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
+    power: Power::Base(70),
+	crit_rate: Some(1),
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
 };
 pub static GunkShot: MoveData = MoveData {
     pp: 5,
@@ -5719,7 +6597,9 @@ pub static GunkShot: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
 };
 pub static IronHead: MoveData = MoveData {
     pp: 15,
@@ -5729,7 +6609,9 @@ pub static IronHead: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Flinch(30)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static MagnetBomb: MoveData = MoveData {
     pp: 20,
@@ -5739,7 +6621,9 @@ pub static MagnetBomb: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static StoneEdge: MoveData = MoveData {
     pp: 5,
@@ -5749,11 +6633,15 @@ pub static StoneEdge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::Critical(1)],
+    power: Power::Base(100),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static Captivate: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Beauty,
@@ -5764,6 +6652,8 @@ pub static Captivate: MoveData = MoveData {
 pub static StealthRock: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Rock,
     contest_type: ContestType::Cool,
@@ -5774,6 +6664,8 @@ pub static StealthRock: MoveData = MoveData {
 pub static GrassKnot: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Grass,
     contest_type: ContestType::Smart,
@@ -5789,7 +6681,9 @@ pub static Chatter: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 100)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 100)],
 };
 pub static Judgment: MoveData = MoveData {
     pp: 10,
@@ -5799,7 +6693,9 @@ pub static Judgment: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[],
 };
 pub static BugBite: MoveData = MoveData {
     pp: 20,
@@ -5809,7 +6705,9 @@ pub static BugBite: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ChargeBeam: MoveData = MoveData {
     pp: 10,
@@ -5819,7 +6717,9 @@ pub static ChargeBeam: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::StatChange(BattleStat::SpecialAttack, 1, 70, StatChangeTarget::User)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialAttack, 1, 70, StatChangeTarget::User)],
 };
 pub static WoodHammer: MoveData = MoveData {
     pp: 15,
@@ -5829,7 +6729,9 @@ pub static WoodHammer: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::Recoil(33)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::Recoil(33)],
 };
 pub static AquaJet: MoveData = MoveData {
     pp: 20,
@@ -5839,7 +6741,9 @@ pub static AquaJet: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static AttackOrder: MoveData = MoveData {
     pp: 15,
@@ -5849,11 +6753,15 @@ pub static AttackOrder: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::Critical(1)],
+    power: Power::Base(90),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static DefendOrder: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Bug,
     contest_type: ContestType::Smart,
@@ -5864,6 +6772,8 @@ pub static DefendOrder: MoveData = MoveData {
 pub static HealOrder: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Bug,
     contest_type: ContestType::Smart,
@@ -5879,7 +6789,9 @@ pub static HeadSmash: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(150), Effect::Recoil(50)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[Effect::Recoil(50)],
 };
 pub static DoubleHit: MoveData = MoveData {
     pp: 10,
@@ -5889,7 +6801,9 @@ pub static DoubleHit: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(35), Effect::MultiHit(2, 2)],
+    power: Power::Base(35),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 2)],
 };
 pub static RoarOfTime: MoveData = MoveData {
     pp: 5,
@@ -5899,7 +6813,9 @@ pub static RoarOfTime: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(150)],
+    power: Power::Base(150),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SpacialRend: MoveData = MoveData {
     pp: 5,
@@ -5909,11 +6825,15 @@ pub static SpacialRend: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::Critical(1)],
+    power: Power::Base(100),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static LunarDance: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Beauty,
@@ -5924,6 +6844,8 @@ pub static LunarDance: MoveData = MoveData {
 pub static CrushGrip: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -5939,11 +6861,15 @@ pub static MagmaStorm: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::Custom],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[Effect::Custom],
 };
 pub static DarkVoid: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(50),
     _type: Type::Dark,
     contest_type: ContestType::Smart,
@@ -5959,7 +6885,9 @@ pub static SeedFlare: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::StatChange(BattleStat::SpecialDefense, -2, 40, StatChangeTarget::Target)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -2, 40, StatChangeTarget::Target)],
 };
 pub static OminousWind: MoveData = MoveData {
     pp: 5,
@@ -5969,7 +6897,9 @@ pub static OminousWind: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 10, StatChangeTarget::User)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Attack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Defense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, 1, 10, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, 1, 10, StatChangeTarget::User)],
 };
 pub static ShadowForce: MoveData = MoveData {
     pp: 5,
@@ -5979,11 +6909,15 @@ pub static ShadowForce: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static HoneClaws: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Dark,
     contest_type: ContestType::Tough,
@@ -5994,6 +6928,8 @@ pub static HoneClaws: MoveData = MoveData {
 pub static WideGuard: MoveData = MoveData {
     pp: 10,
     priority: 3,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Rock,
     contest_type: ContestType::Tough,
@@ -6004,6 +6940,8 @@ pub static WideGuard: MoveData = MoveData {
 pub static GuardSplit: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Tough,
@@ -6014,6 +6952,8 @@ pub static GuardSplit: MoveData = MoveData {
 pub static PowerSplit: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Tough,
@@ -6024,6 +6964,8 @@ pub static PowerSplit: MoveData = MoveData {
 pub static WonderRoom: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Tough,
@@ -6039,7 +6981,9 @@ pub static Psyshock: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Venoshock: MoveData = MoveData {
     pp: 10,
@@ -6049,11 +6993,15 @@ pub static Venoshock: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Autotomize: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Steel,
     contest_type: ContestType::Tough,
@@ -6064,6 +7012,8 @@ pub static Autotomize: MoveData = MoveData {
 pub static RagePowder: MoveData = MoveData {
     pp: 20,
     priority: 2,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Bug,
     contest_type: ContestType::Tough,
@@ -6074,6 +7024,8 @@ pub static RagePowder: MoveData = MoveData {
 pub static Telekinesis: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Tough,
@@ -6084,6 +7036,8 @@ pub static Telekinesis: MoveData = MoveData {
 pub static MagicRoom: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Tough,
@@ -6099,7 +7053,9 @@ pub static SmackDown: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::Custom],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::Custom],
 };
 pub static StormThrow: MoveData = MoveData {
     pp: 10,
@@ -6109,7 +7065,9 @@ pub static StormThrow: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::Critical(6)],
+    power: Power::Base(60),
+	crit_rate: Some(6),
+	effects: &[],
 };
 pub static FlameBurst: MoveData = MoveData {
     pp: 15,
@@ -6119,7 +7077,9 @@ pub static FlameBurst: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SludgeWave: MoveData = MoveData {
     pp: 10,
@@ -6129,11 +7089,15 @@ pub static SludgeWave: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(95), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
+    power: Power::Base(95),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
 };
 pub static QuiverDance: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Bug,
     contest_type: ContestType::Tough,
@@ -6144,6 +7108,8 @@ pub static QuiverDance: MoveData = MoveData {
 pub static HeavySlam: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Steel,
     contest_type: ContestType::Tough,
@@ -6159,11 +7125,15 @@ pub static Synchronoise: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ElectroBall: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Electric,
     contest_type: ContestType::Tough,
@@ -6174,6 +7144,8 @@ pub static ElectroBall: MoveData = MoveData {
 pub static Soak: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Water,
     contest_type: ContestType::Tough,
@@ -6189,11 +7161,15 @@ pub static FlameCharge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::StatChange(BattleStat::Speed, 1, 100, StatChangeTarget::User)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, 1, 100, StatChangeTarget::User)],
 };
 pub static Coil: MoveData = MoveData {
     pp: 20,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Poison,
     contest_type: ContestType::Tough,
@@ -6209,7 +7185,9 @@ pub static LowSweep: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static AcidSpray: MoveData = MoveData {
     pp: 20,
@@ -6219,7 +7197,9 @@ pub static AcidSpray: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40), Effect::StatChange(BattleStat::SpecialDefense, -2, 100, StatChangeTarget::Target)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialDefense, -2, 100, StatChangeTarget::Target)],
 };
 pub static FoulPlay: MoveData = MoveData {
     pp: 15,
@@ -6229,11 +7209,15 @@ pub static FoulPlay: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(95)],
+    power: Power::Base(95),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SimpleBeam: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -6244,6 +7228,8 @@ pub static SimpleBeam: MoveData = MoveData {
 pub static Entrainment: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -6254,6 +7240,8 @@ pub static Entrainment: MoveData = MoveData {
 pub static AfterYou: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -6269,7 +7257,9 @@ pub static Round: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static EchoedVoice: MoveData = MoveData {
     pp: 15,
@@ -6279,7 +7269,9 @@ pub static EchoedVoice: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ChipAway: MoveData = MoveData {
     pp: 20,
@@ -6289,7 +7281,9 @@ pub static ChipAway: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ClearSmog: MoveData = MoveData {
     pp: 15,
@@ -6299,7 +7293,9 @@ pub static ClearSmog: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[],
 };
 pub static StoredPower: MoveData = MoveData {
     pp: 10,
@@ -6309,11 +7305,15 @@ pub static StoredPower: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(20)],
+    power: Power::Base(20),
+	crit_rate: None,
+	effects: &[],
 };
 pub static QuickGuard: MoveData = MoveData {
     pp: 15,
     priority: 3,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Fighting,
     contest_type: ContestType::Tough,
@@ -6324,6 +7324,8 @@ pub static QuickGuard: MoveData = MoveData {
 pub static AllySwitch: MoveData = MoveData {
     pp: 15,
     priority: 2,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Tough,
@@ -6339,11 +7341,15 @@ pub static Scald: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
 };
 pub static ShellSmash: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -6354,6 +7360,8 @@ pub static ShellSmash: MoveData = MoveData {
 pub static HealPulse: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Psychic,
     contest_type: ContestType::Tough,
@@ -6369,7 +7377,9 @@ pub static Hex: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[],
 };
 pub static SkyDrop: MoveData = MoveData {
     pp: 10,
@@ -6379,11 +7389,15 @@ pub static SkyDrop: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ShiftGear: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Steel,
     contest_type: ContestType::Tough,
@@ -6399,7 +7413,9 @@ pub static CircleThrow: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::ForceTargetSwitch],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::ForceTargetSwitch],
 };
 pub static Incinerate: MoveData = MoveData {
     pp: 15,
@@ -6409,11 +7425,15 @@ pub static Incinerate: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(60)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Quash: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Tough,
@@ -6429,11 +7449,15 @@ pub static Acrobatics: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(55)],
+    power: Power::Base(55),
+	crit_rate: None,
+	effects: &[],
 };
 pub static ReflectType: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -6449,11 +7473,15 @@ pub static Retaliate: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70)],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FinalGambit: MoveData = MoveData {
     pp: 5,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,
     contest_type: ContestType::Tough,
@@ -6464,6 +7492,8 @@ pub static FinalGambit: MoveData = MoveData {
 pub static Bestow: MoveData = MoveData {
     pp: 15,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -6479,7 +7509,9 @@ pub static Inferno: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 100)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 100)],
 };
 pub static WaterPledge: MoveData = MoveData {
     pp: 10,
@@ -6489,7 +7521,9 @@ pub static WaterPledge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FirePledge: MoveData = MoveData {
     pp: 10,
@@ -6499,7 +7533,9 @@ pub static FirePledge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static GrassPledge: MoveData = MoveData {
     pp: 10,
@@ -6509,7 +7545,9 @@ pub static GrassPledge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[],
 };
 pub static VoltSwitch: MoveData = MoveData {
     pp: 20,
@@ -6519,7 +7557,9 @@ pub static VoltSwitch: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(70), Effect::ForceUserSwitch],
+    power: Power::Base(70),
+	crit_rate: None,
+	effects: &[Effect::ForceUserSwitch],
 };
 pub static StruggleBug: MoveData = MoveData {
     pp: 20,
@@ -6529,7 +7569,9 @@ pub static StruggleBug: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(50), Effect::StatChange(BattleStat::SpecialAttack, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialAttack, -1, 100, StatChangeTarget::Target)],
 };
 pub static Bulldoze: MoveData = MoveData {
     pp: 20,
@@ -6539,7 +7581,9 @@ pub static Bulldoze: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(60), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static FrostBreath: MoveData = MoveData {
     pp: 10,
@@ -6549,7 +7593,9 @@ pub static FrostBreath: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::Critical(6)],
+    power: Power::Base(60),
+	crit_rate: Some(6),
+	effects: &[],
 };
 pub static DragonTail: MoveData = MoveData {
     pp: 10,
@@ -6559,11 +7605,15 @@ pub static DragonTail: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::ForceTargetSwitch],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::ForceTargetSwitch],
 };
 pub static WorkUp: MoveData = MoveData {
     pp: 30,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Tough,
@@ -6579,7 +7629,9 @@ pub static Electroweb: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(55), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(55),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static WildCharge: MoveData = MoveData {
     pp: 15,
@@ -6589,7 +7641,9 @@ pub static WildCharge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90), Effect::Recoil(25)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[Effect::Recoil(25)],
 };
 pub static DrillRun: MoveData = MoveData {
     pp: 10,
@@ -6599,7 +7653,9 @@ pub static DrillRun: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::Critical(1)],
+    power: Power::Base(80),
+	crit_rate: Some(1),
+	effects: &[],
 };
 pub static DualChop: MoveData = MoveData {
     pp: 15,
@@ -6609,7 +7665,9 @@ pub static DualChop: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(40), Effect::MultiHit(2, 2)],
+    power: Power::Base(40),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 2)],
 };
 pub static HeartStamp: MoveData = MoveData {
     pp: 25,
@@ -6619,7 +7677,9 @@ pub static HeartStamp: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(60), Effect::Flinch(30)],
+    power: Power::Base(60),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static HornLeech: MoveData = MoveData {
     pp: 10,
@@ -6629,7 +7689,9 @@ pub static HornLeech: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::Drain(50)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::Drain(50)],
 };
 pub static SacredSword: MoveData = MoveData {
     pp: 15,
@@ -6639,7 +7701,9 @@ pub static SacredSword: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(90)],
+    power: Power::Base(90),
+	crit_rate: None,
+	effects: &[],
 };
 pub static RazorShell: MoveData = MoveData {
     pp: 10,
@@ -6649,11 +7713,15 @@ pub static RazorShell: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(75), Effect::StatChange(BattleStat::Defense, -1, 50, StatChangeTarget::Target)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Defense, -1, 50, StatChangeTarget::Target)],
 };
 pub static HeatCrash: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fire,
     contest_type: ContestType::Tough,
@@ -6669,7 +7737,9 @@ pub static LeafTornado: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Accuracy, -1, 50, StatChangeTarget::Target)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 50, StatChangeTarget::Target)],
 };
 pub static Steamroller: MoveData = MoveData {
     pp: 20,
@@ -6679,11 +7749,15 @@ pub static Steamroller: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(65), Effect::Flinch(30)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static CottonGuard: MoveData = MoveData {
     pp: 10,
     priority: 0,
+    power: Power::None,
+    crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Grass,
     contest_type: ContestType::Tough,
@@ -6699,7 +7773,9 @@ pub static NightDaze: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(85), Effect::StatChange(BattleStat::Accuracy, -1, 40, StatChangeTarget::Target)],
+    power: Power::Base(85),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Accuracy, -1, 40, StatChangeTarget::Target)],
 };
 pub static Psystrike: MoveData = MoveData {
     pp: 10,
@@ -6709,7 +7785,9 @@ pub static Psystrike: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[],
 };
 pub static TailSlap: MoveData = MoveData {
     pp: 10,
@@ -6719,7 +7797,9 @@ pub static TailSlap: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(25), Effect::MultiHit(2, 5)],
+    power: Power::Base(25),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 5)],
 };
 pub static Hurricane: MoveData = MoveData {
     pp: 10,
@@ -6729,7 +7809,9 @@ pub static Hurricane: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(110), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 30)],
+    power: Power::Base(110),
+	crit_rate: None,
+	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 30)],
 };
 pub static HeadCharge: MoveData = MoveData {
     pp: 15,
@@ -6739,7 +7821,9 @@ pub static HeadCharge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120), Effect::Recoil(25)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[Effect::Recoil(25)],
 };
 pub static GearGrind: MoveData = MoveData {
     pp: 15,
@@ -6749,7 +7833,9 @@ pub static GearGrind: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(50), Effect::MultiHit(2, 2)],
+    power: Power::Base(50),
+	crit_rate: None,
+	effects: &[Effect::MultiHit(2, 2)],
 };
 pub static SearingShot: MoveData = MoveData {
     pp: 5,
@@ -6759,7 +7845,9 @@ pub static SearingShot: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllExceptUser,
-    effects: &[Effect::Damage(100), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
 };
 pub static TechnoBlast: MoveData = MoveData {
     pp: 5,
@@ -6769,7 +7857,9 @@ pub static TechnoBlast: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(120)],
+    power: Power::Base(120),
+	crit_rate: None,
+	effects: &[],
 };
 pub static RelicSong: MoveData = MoveData {
     pp: 10,
@@ -6779,7 +7869,9 @@ pub static RelicSong: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(75), Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 10)],
+    power: Power::Base(75),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Sleep, 10)],
 };
 pub static SecretSword: MoveData = MoveData {
     pp: 10,
@@ -6789,7 +7881,9 @@ pub static SecretSword: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(85)],
+    power: Power::Base(85),
+	crit_rate: None,
+	effects: &[],
 };
 pub static Glaciate: MoveData = MoveData {
     pp: 10,
@@ -6799,7 +7893,9 @@ pub static Glaciate: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(65), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(65),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::Target)],
 };
 pub static BoltStrike: MoveData = MoveData {
     pp: 5,
@@ -6809,7 +7905,9 @@ pub static BoltStrike: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(130), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 20)],
+    power: Power::Base(130),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 20)],
 };
 pub static BlueFlare: MoveData = MoveData {
     pp: 5,
@@ -6819,7 +7917,9 @@ pub static BlueFlare: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(130), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 20)],
+    power: Power::Base(130),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 20)],
 };
 pub static FieryDance: MoveData = MoveData {
     pp: 10,
@@ -6829,7 +7929,9 @@ pub static FieryDance: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(80), Effect::StatChange(BattleStat::SpecialAttack, 1, 50, StatChangeTarget::User)],
+    power: Power::Base(80),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialAttack, 1, 50, StatChangeTarget::User)],
 };
 pub static FreezeShock: MoveData = MoveData {
     pp: 5,
@@ -6839,7 +7941,9 @@ pub static FreezeShock: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(140), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
+    power: Power::Base(140),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30)],
 };
 pub static IceBurn: MoveData = MoveData {
     pp: 5,
@@ -6849,7 +7953,9 @@ pub static IceBurn: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(140), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
+    power: Power::Base(140),
+	crit_rate: None,
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30)],
 };
 pub static Snarl: MoveData = MoveData {
     pp: 15,
@@ -6859,7 +7965,9 @@ pub static Snarl: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    effects: &[Effect::Damage(55), Effect::StatChange(BattleStat::SpecialAttack, -1, 100, StatChangeTarget::Target)],
+    power: Power::Base(55),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::SpecialAttack, -1, 100, StatChangeTarget::Target)],
 };
 pub static IcicleCrash: MoveData = MoveData {
     pp: 10,
@@ -6869,7 +7977,9 @@ pub static IcicleCrash: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(85), Effect::Flinch(30)],
+    power: Power::Base(85),
+	crit_rate: None,
+	effects: &[Effect::Flinch(30)],
 };
 pub static VCreate: MoveData = MoveData {
     pp: 5,
@@ -6879,7 +7989,9 @@ pub static VCreate: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(180), Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::User)],
+    power: Power::Base(180),
+	crit_rate: None,
+	effects: &[Effect::StatChange(BattleStat::Defense, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialDefense, -1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::Speed, -1, 100, StatChangeTarget::User)],
 };
 pub static FusionFlare: MoveData = MoveData {
     pp: 5,
@@ -6889,7 +8001,9 @@ pub static FusionFlare: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[],
 };
 pub static FusionBolt: MoveData = MoveData {
     pp: 5,
@@ -6899,6 +8013,8 @@ pub static FusionBolt: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Damage(100)],
+    power: Power::Base(100),
+	crit_rate: None,
+	effects: &[],
 };
 //endregion

@@ -213,11 +213,17 @@ pub enum Effectiveness {
     Immune,
     Effect(i8)
 }
-
 impl Effectiveness {
     pub const HALF: Effectiveness = Effectiveness::Effect(-1);
     pub const NORMAL: Effectiveness = Effectiveness::Effect(0);
     pub const DOUBLE: Effectiveness = Effectiveness::Effect(1);
+
+    pub fn dont_care(&self) -> Effectiveness {
+        match self {
+            Effectiveness::Immune => Effectiveness::Immune,
+            Effectiveness::Effect(_) => Effectiveness::NORMAL
+        }
+    }
 }
 
 impl Mul for Effectiveness {
