@@ -8,4 +8,5 @@ edition = "2018"
 
 [dependencies]
 rand = "0.8.4"
+either = "1.6.1"
 glazed-data = { path = "../glazed-data" }

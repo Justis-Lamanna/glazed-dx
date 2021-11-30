@@ -2,7 +2,7 @@ use glazed_data::attack::Move;
 use glazed_data::item::Item;
 use glazed_data::pokemon::Pokemon;
 use crate::{Battler, BattleTypeTrait, core, Field, Side, Turn, TurnAction};
-use crate::{BattleData, Battlefield, BattlePokemon, MutBattlePokemon, Party};
+use crate::{BattleData, Battlefield, BattlePokemon, Party};
 
 /// One side of battle in a single battle (one trainer, one pokemon)
 #[derive(Debug)]
@@ -31,10 +31,11 @@ impl From<Party> for SingleBattleSide {
     }
 }
 impl BattleTypeTrait for SingleBattleSide {
-    fn get_by_id(&self, _id: u8) -> Option<BattlePokemon> {
+    fn get_by_id(&self, id: &Battler) -> Option<BattlePokemon> {
         let member = &self.party.members[usize::from(self.current_out)];
         match member {
             Some(p) => Some(BattlePokemon {
+                id: id.clone(),
                 pokemon: p,
                 battle_data: &self.current_inflictions
             }),
@@ -42,7 +43,7 @@ impl BattleTypeTrait for SingleBattleSide {
         }
     }
 
-    fn do_by_id<F>(&mut self, id: u8, func: F) where F: Fn(&mut Pokemon, &mut BattleData) -> () {
+    fn do_by_id<F>(&mut self, _id: &Battler, func: F) where F: Fn(&mut Pokemon, &mut BattleData) -> () {
         let member = self.party.members[usize::from(self.current_out)].as_mut();
         match member {
             Some(p) => {

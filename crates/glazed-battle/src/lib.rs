@@ -4,6 +4,7 @@ pub mod double;
 pub mod tag;
 
 use std::option::Option::Some;
+use either::Either;
 use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, Move, MoveData, NonVolatileBattleAilment, Power, StatChangeTarget};
@@ -15,6 +16,7 @@ use glazed_data::types::{Effectiveness, PokemonType, Type};
 /// Helper structure that assists in retrieving a Pokemon on the field
 #[derive(Debug)]
 pub struct BattlePokemon<'a> {
+    id: Battler,
     pokemon: &'a Pokemon,
     battle_data: &'a BattleData
 }
@@ -92,6 +94,14 @@ impl <'a> BattlePokemon<'a> {
         })
     }
 
+    /// If true, this Pokemon can ignore negative abilities
+    fn is_mold_breaker(&self) -> bool {
+        match *self.get_effective_ability() {
+            Ability::MoldBreaker | Ability::Turboblaze | Ability::Teravolt => true,
+            _ => false
+        }
+    }
+
     /// Get the effective type(s) of this Pokemon. Taks Transform and temporary Type changes into effect
     fn get_effective_type(&self) -> &PokemonType {
         self.battle_data.temp_type.as_ref().unwrap_or_else(|| {
@@ -113,12 +123,6 @@ impl <'a> BattlePokemon<'a> {
         let max = u32::from(self.pokemon.hp.value);
         current * 4u32 <= max
     }
-}
-
-/// Helper structure that assists in retrieving a mutable Pokemon on the field
-pub struct MutBattlePokemon<'a> {
-    pokemon: &'a mut Pokemon,
-    battle_data: &'a mut BattleData
 }
 
 /// Represents one side of a battlefield
@@ -247,8 +251,8 @@ impl Party {
 }
 
 pub trait BattleTypeTrait {
-    fn get_by_id(&self, id: u8) -> Option<BattlePokemon>;
-    fn do_by_id<F>(&mut self, id: u8, func: F) where
+    fn get_by_id(&self, id: &Battler) -> Option<BattlePokemon>;
+    fn do_by_id<F>(&mut self, _id: &Battler, _func: F) where
         F: Fn(&mut Pokemon, &mut BattleData) -> ()
     {
         unimplemented!()
@@ -275,21 +279,21 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     }
 
     fn get_by_id(&self, id: &Battler) -> Option<BattlePokemon> {
-        let Battler(side, id) = id;
+        let Battler(side, _) = id;
         if *side {
-            self.opponent.get_by_id(*id)
+            self.opponent.get_by_id(id)
         } else {
-            self.user.get_by_id(*id)
+            self.user.get_by_id(id)
         }
     }
 
     fn do_by_id<F>(&mut self, id: &Battler, func: F) -> () where
         F: Fn(&mut Pokemon, &mut BattleData) -> () {
-        let Battler(side, id) = id;
+        let Battler(side, _) = id;
         if *side {
-            self.opponent.do_by_id(*id, func)
+            self.opponent.do_by_id(id, func)
         } else {
-            self.user.do_by_id(*id, func)
+            self.user.do_by_id(id, func)
         }
     }
 
@@ -299,6 +303,17 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             self.get_by_id(&Battler(*side, 1))
         } else {
             self.get_by_id(&Battler(*side, 0))
+        }
+    }
+
+    /// Gets the effective current HP of a Pokemon on the field
+    /// Returns the substitute's HP if the battler has one up, otherwise returns the battler's current HP
+    fn get_effective_current_hp(&self, id: &Battler) -> u16 {
+        let data = self.get_by_id(id).unwrap();
+        if data.battle_data.substituted > 0 {
+            data.battle_data.substituted
+        } else {
+            data.pokemon.current_hp
         }
     }
 
@@ -543,7 +558,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
 
         let user_item_modifier = match user.pokemon.held_item {
             Some(Item::WideLens) => 1.1,
-            Some(Item::ZoomLens) if defender.battle_data.used_move_this_turn => 1.2,
+            Some(Item::ZoomLens) if defender.battle_data.move_used_this_turn.is_some() => 1.2,
             _ => 1.0
         };
 
@@ -576,253 +591,22 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         effective_type.defending_against(&move_data._type)
     }
 
-    pub fn do_attack(&mut self, user: Battler, attack: Move, defender: Battler, is_multi: bool) -> Vec<ActionSideEffects> {
-        let data = attack.data();
-        {
-            let defender_data = self.get_by_id(&defender);
-            if defender_data.is_none() {
-                return vec![ActionSideEffects::NoTarget];
-            }
+    fn apply_damage(&mut self, to_hurt: &Battler, hp_drop: u16) -> (u16, u16, bool) {
+        let defender_data = self.get_by_id(to_hurt).unwrap();
+
+        if defender_data.battle_data.substituted > 0 {
+            let target_current_hp = defender_data.battle_data.substituted;
+            let target_end_hp = target_current_hp.saturating_sub(hp_drop);
+            self.do_by_id(to_hurt, |_, data| data.substituted = target_end_hp);
+
+            (target_current_hp, target_end_hp, true)
+        } else {
+            let target_current_hp = defender_data.pokemon.current_hp;
+            let target_end_hp = target_current_hp.saturating_sub(hp_drop);
+            self.do_by_id(to_hurt, |pkmn, _| pkmn.current_hp = target_end_hp);
+
+            (target_current_hp, target_end_hp, false)
         }
-        let mut effects = Vec::new();
-
-        let primary_effect = self.do_primary_damage(&user, &attack, &data, &defender, is_multi);
-        match primary_effect {
-            Some(effect) => {
-                effects.push(effect);
-                let secondary_effects = self.do_secondary_effect(&user, &attack, &data, &defender, true);
-                for se in secondary_effects {
-                    effects.push(se);
-                }
-            },
-            None => {
-                let secondary_effects = self.do_secondary_effect(&user, &attack, &data, &defender, false);
-                for se in secondary_effects {
-                    effects.push(se);
-                }
-            }
-        }
-
-        effects
-    }
-
-    fn calculate_attack_damage(&self, user: &Battler, user_data: &BattlePokemon, attack: &Move, data: &MoveData, base: u8, defender: &Battler, is_multi: bool)
-                               -> (f64, bool, Effectiveness) {
-        // base calculations
-        let mut calc = ((2.0 * f64::from(user_data.pokemon.level)) / 5.0) + 2.0;
-        calc *= f64::from(base) * match data.damage_type {
-            DamageType::Physical => self.get_effective_attack(&user) / self.get_effective_defense(&defender),
-            DamageType::Special => self.get_effective_special_attack(&user) / self.get_effective_special_defense(&defender),
-            DamageType::Status => 0.0
-        };
-        calc = (calc / 50.0) + 2.0;
-
-        // targets
-        if is_multi {
-            calc *= 0.75
-        }
-
-        // weather
-        calc *= match (&self.field.weather, data._type) {
-            (Some(Weather::Sun(_)), Type::Fire) => 1.5,
-            (Some(Weather::Sun(_)), Type::Water) => 0.5,
-            (Some(Weather::Rain(_)), Type::Fire) => 0.5,
-            (Some(Weather::Rain(_)), Type::Water) => 1.5,
-            _ => 1.0
-        };
-
-        // critical
-        let critical_hit = match self.get_effective_crit_rate(&user, &attack) {
-            0 => rand::thread_rng().gen_bool(1.0 / 16.0),
-            1 => rand::thread_rng().gen_bool(1.0 / 8.0),
-            2 => rand::thread_rng().gen_bool(1.0 / 4.0),
-            3 => rand::thread_rng().gen_bool(1.0 / 3.0),
-            _ => rand::thread_rng().gen_bool(0.5)
-        };
-        if critical_hit {
-            calc *= 2.0
-        }
-
-        // random factor - 85% to 100%
-        calc *= rand::thread_rng().gen_range(0.85..=1.0);
-
-        // stab
-        let stab = match user_data.get_effective_type() {
-            PokemonType::Single(t) => *t == data._type,
-            PokemonType::Double(t1, t2) => *t1 == data._type || *t2 == data._type
-        };
-        if stab {
-            calc *= if *user_data.get_effective_ability() == Ability::Adaptability {
-                2.0
-            } else {
-                1.5
-            }
-        }
-
-        // type matchup
-        let effectiveness = self.get_effective_move_effectiveness(attack, defender);
-        calc *= match effectiveness {
-            Effectiveness::Immune => 0.0,
-            Effectiveness::Effect(a) => 2f64.powi(i32::from(a))
-        };
-
-        //burn
-        if data.damage_type == DamageType::Physical && user_data.pokemon.status.burn && *user_data.get_effective_ability() != Ability::Guts {
-            calc *= 0.5;
-        }
-
-        //other
-
-        if calc < 1.0 {
-            calc = 1.0
-        }
-
-        (calc, critical_hit, effectiveness)
-    }
-
-    fn checks_if_hits_immunity(&self, user: &Battler, attack: &Move, defender: &Battler) -> bool {
-        match self.get_effective_move_effectiveness(&attack, &defender).dont_care() {
-            Effectiveness::Immune => false,
-            Effectiveness::Effect(_) => true
-        }
-    }
-
-    fn check_if_hits_accuracy(&self, user: &Battler, attack: &Move, defender: &Battler) -> bool {
-        let user_data = self.get_by_id(&user).unwrap();
-        let defender_data = self.get_by_id(&defender).unwrap();
-
-        match attack.data().accuracy {
-            Accuracy::AlwaysHits => true,
-            Accuracy::Percentage(_) => {
-                let accuracy_factor = self.get_accuracy_factor(user, attack, defender);
-                rand::thread_rng().gen_range(0f64..=100f64) > accuracy_factor
-            }
-            Accuracy::Variable => {
-                match attack {
-                    Move::Fissure | Move::Guillotine | Move::HornDrill | Move::SheerCold => {
-                        if user_data.pokemon.level < defender_data.pokemon.level {
-                            return false
-                        } else {
-                            let number = rand::thread_rng().gen_range(0..=100);
-                            number <= (30 + user_data.pokemon.level - defender_data.pokemon.level)
-                        }
-                    },
-                    _ => panic!("Variable accuracy without programming for a specific move")
-                }
-            }
-        }
-    }
-
-    fn do_primary_damage(&mut self, user: &Battler, attack: &Move, data: &MoveData, defender: &Battler, is_multi: bool) -> Option<ActionSideEffects> {
-        match data.power {
-            Power::None => None,
-            Power::Base(base) => {
-                let user_data = self.get_by_id(user).unwrap();
-                let defender_data = self.get_by_id(defender).unwrap();
-
-                let (calc, critical_hit, effectiveness) = self.calculate_attack_damage(
-                    &user,
-                    &user_data,
-                    &attack,
-                    data,
-                    base,
-                    &defender,
-                    is_multi
-                );
-
-                if defender_data.battle_data.substituted > 0 {
-                    let start_hp = defender_data.battle_data.substituted;
-                    let end_hp = start_hp.saturating_sub(calc as u16);
-                    self.do_by_id(defender, |_, data| data.substituted = end_hp);
-                    Some(ActionSideEffects::DamagedSubstitute {
-                        start_hp, end_hp, critical_hit
-                    })
-                } else {
-                    let start_hp = defender_data.pokemon.current_hp;
-                    let end_hp = start_hp.saturating_sub(calc as u16);
-                    self.do_by_id(defender, |pkmn, _| pkmn.current_hp = end_hp);
-                    Some(ActionSideEffects::DirectDamage {
-                        start_hp, end_hp, critical_hit, effectiveness
-                    })
-                }
-            }
-            Power::OneHitKnockout => {
-                let defender_data = self.get_by_id(&defender).unwrap();
-
-                if defender_data.battle_data.substituted > 0 {
-                    let start_hp = defender_data.battle_data.substituted;
-                    let end_hp = 0;
-                    self.do_by_id(defender, |_, data| data.substituted = end_hp);
-                    Some(ActionSideEffects::DamagedSubstitute {
-                        start_hp,
-                        end_hp,
-                        critical_hit: false
-                    })
-                } else {
-                    self.do_by_id(defender, |pkmn, _| pkmn.current_hp = 0);
-                    Some(ActionSideEffects::OneHitKnockout)
-                }
-            },
-            Power::Exact(drop) => {
-                // These types of moves always do exactly drop HP of damage
-                let defender_data = self.get_by_id(&defender).unwrap();
-
-                if defender_data.battle_data.substituted > 0 {
-                    let start_hp = defender_data.battle_data.substituted;
-                    let end_hp = start_hp.saturating_sub(drop as u16);
-                    self.do_by_id(defender, |_, data| data.substituted = end_hp);
-                    Some(ActionSideEffects::DamagedSubstitute {
-                        start_hp, end_hp, critical_hit: false
-                    })
-                } else {
-                    let start_hp = defender_data.pokemon.current_hp;
-                    let end_hp = start_hp.saturating_sub(drop as u16);
-                    self.do_by_id(defender, |pkmn, _| pkmn.current_hp = end_hp);
-                    Some(ActionSideEffects::DirectDamage {
-                        start_hp, end_hp, critical_hit: false, effectiveness: Effectiveness::NORMAL
-                    })
-                }
-            },
-            Power::SetToUser => {
-                // This move sets the target's HP == user's HP. Fails if user hp > target hp
-                // Documentation is not clear how this works with Substitute.
-                // I've programmed it so it reduces the substitute's HP in the same manner
-                let user_data = self.get_by_id(user).unwrap();
-                let defender_data = self.get_by_id(defender).unwrap();
-
-                let user_current_hp = user_data.pokemon.current_hp;
-                if defender_data.battle_data.substituted > 0 {
-                    let target_current_hp = defender_data.battle_data.substituted;
-                    if user_current_hp > target_current_hp {
-                        Some(ActionSideEffects::NoEffect)
-                    } else {
-                        self.do_by_id(defender, |_, data| data.substituted = user_current_hp);
-                        Some(ActionSideEffects::DamagedSubstitute {
-                            start_hp: target_current_hp,
-                            end_hp: user_current_hp,
-                            critical_hit: false
-                        })
-                    }
-                } else {
-                    let target_current_hp = defender_data.pokemon.current_hp;
-                    if user_current_hp > target_current_hp {
-                        Some(ActionSideEffects::NoEffect)
-                    } else {
-                        self.do_by_id(defender, |pkmn, _| pkmn.current_hp = user_current_hp);
-                        Some(ActionSideEffects::DirectDamage {
-                            start_hp: target_current_hp,
-                            end_hp: user_current_hp,
-                            critical_hit: false,
-                            effectiveness: Effectiveness::NORMAL
-                        })
-                    }
-                }
-            }
-        }
-    }
-
-    fn do_secondary_effect(&mut self, user: &Battler, attack: &Move, data: &MoveData, defender: &Battler, had_primary_damage: bool) -> Vec<ActionSideEffects> {
-        vec![]
     }
 
     /// Pushes this Turn to the Turn Record, to signal it is complete and permanent.
@@ -838,10 +622,10 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
 pub struct BattleData {
     /// The number of turns this Pokemon has been in battle
     turn_count: u8,
-    /// Set to true when this Pokemon has used a turn this move
-    used_move_this_turn: bool,
     /// The last move that this Pokemon used
-    last_used_move: Option<Move>,
+    move_used_this_turn: Option<Move>,
+    /// If present, contains the amount of damage this Pokemon encountered last
+    last_damager: Option<(Battler, Move, u16)>,
 
     attack_stage: i8,
     defense_stage: i8,
@@ -965,10 +749,16 @@ impl BattleData {
 
         *var = clamp(*var + stages);
     }
+
+    pub fn end_of_turn(&mut self) {
+        self.turn_count += 1;
+        self.last_damager = None;
+        self.move_used_this_turn = None;
+    }
 }
 
 /// Identifier of a member on the field
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Battler(bool, u8);
 
 #[derive(Debug)]
@@ -1112,6 +902,8 @@ pub struct ActionRecord {
 /// The cause of some particular action's side effect
 #[derive(Debug)]
 pub enum Cause {
+    /// This is just what normally happens
+    Natural,
     /// A battler's ability caused the side effect
     Ability(Battler, Ability),
     /// A previously used move caused the side effect
@@ -1135,19 +927,33 @@ pub enum ActionSideEffects {
     Missed,
     OneHitKnockout,
     NoEffect,
-    MultiHit(Vec<Vec<ActionSideEffects>>),
     ReceivedNonVolatileStatus {
         status: NonVolatileBattleAilment,
         cause: Cause
-    },
-    DamagedSubstitute {
-        start_hp: u16,
-        end_hp: u16,
-        critical_hit: bool,
     },
     IndirectDamage {
         end_hp: u8,
         cause: Cause
     },
     NoTarget
+}
+
+impl <T> Battlefield<T> where T: BattleTypeTrait {
+    pub fn do_attack(&mut self, user: Battler, attack: Move, defender: Battler, is_multi: bool) -> Vec<ActionSideEffects> {
+        let attacker_data = self.get_by_id(&user).unwrap();
+        let defender_data = self.get_by_id(&defender).unwrap();
+        let attack_data = attack.data();
+
+        // Step 1: Ensure the target exists
+        let defender_data = self.get_by_id(&defender);
+        if defender_data.is_none() {
+            return vec![ActionSideEffects::NoTarget];
+        }
+
+        // Step 2: Check type effectiveness
+
+        // Step 3: Get accuracy check
+
+        vec![]
+    }
 }

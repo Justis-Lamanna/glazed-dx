@@ -1,6 +1,6 @@
 use glazed_data::attack::Move;
 use glazed_data::item::Item;
-use crate::{BattleData, Battlefield, BattlePokemon, BattleTypeTrait, EntryHazard, Field, Party, Side};
+use crate::{BattleData, Battlefield, BattlePokemon, Battler, BattleTypeTrait, EntryHazard, Field, Party, Side};
 
 /// One side of battle in a double battle (one trainer, two pokemon)
 #[derive(Debug)]
@@ -11,14 +11,16 @@ pub struct DoubleBattleSide {
     side: Side
 }
 impl BattleTypeTrait for DoubleBattleSide {
-    fn get_by_id(&self, id: u8) -> Option<BattlePokemon> {
-        match id {
+    fn get_by_id(&self, id: &Battler) -> Option<BattlePokemon> {
+        let Battler(_, slot) = id;
+        match slot {
             0 => {
                 let (idx, _) = self.current_out;
                 let (affl, _) = &self.current_inflictions;
                 let pkmn = self.party.members[usize::from(idx)].as_ref();
                 match pkmn {
                     Some(p) => Some(BattlePokemon {
+                        id: id.clone(),
                         pokemon: p,
                         battle_data: affl
                     }),
@@ -31,6 +33,7 @@ impl BattleTypeTrait for DoubleBattleSide {
                 let pkmn = self.party.members[usize::from(idx)].as_ref();
                 match pkmn {
                     Some(p) => Some(BattlePokemon {
+                        id: id.clone(),
                         pokemon: p,
                         battle_data: affl
                     }),

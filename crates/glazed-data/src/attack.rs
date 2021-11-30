@@ -583,8 +583,7 @@ pub enum Power {
     None,
     Base(u8),
     OneHitKnockout,
-    Exact(u8),
-    SetToUser
+    Exact(u8)
 }
 
 /// Represents the type of Move, for contests

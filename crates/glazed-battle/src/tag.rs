@@ -1,4 +1,4 @@
-use crate::{BattleData, Battlefield, BattlePokemon, BattleTypeTrait, EntryHazard, Field, Party, Side};
+use crate::{BattleData, Battlefield, BattlePokemon, Battler, BattleTypeTrait, EntryHazard, Field, Party, Side};
 use crate::double::DoubleTurnAction;
 
 /// One side of battle in a tag battle (two trainers, one pokemon each)
@@ -25,8 +25,9 @@ impl From<(Party, Party)> for TagBattleSide {
     }
 }
 impl BattleTypeTrait for TagBattleSide {
-    fn get_by_id(&self, id: u8) -> Option<BattlePokemon> {
-        match id {
+    fn get_by_id(&self, id: &Battler) -> Option<BattlePokemon> {
+        let Battler(_, slot) = id;
+        match slot {
             0 => {
                 let (party, _) = &self.party;
                 let (idx, _) = self.current_out;
@@ -34,6 +35,7 @@ impl BattleTypeTrait for TagBattleSide {
                 let pkmn = party.members[usize::from(idx)].as_ref();
                 match pkmn {
                     Some(p) => Some(BattlePokemon {
+                        id: id.clone(),
                         pokemon: p,
                         battle_data: affl
                     }),
@@ -47,6 +49,7 @@ impl BattleTypeTrait for TagBattleSide {
                 let pkmn = party.members[usize::from(idx)].as_ref();
                 match pkmn {
                     Some(p) => Some(BattlePokemon {
+                        id: id.clone(),
                         pokemon: p,
                         battle_data: affl
                     }),
