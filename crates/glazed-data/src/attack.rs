@@ -583,7 +583,8 @@ pub enum Power {
     None,
     Base(u8),
     OneHitKnockout,
-    Exact(u8)
+    Exact(u8),
+    Variable
 }
 
 /// Represents the type of Move, for contests
@@ -1293,6 +1294,46 @@ impl Move {
             Move::VCreate => &VCreate,
             Move::FusionFlare => &FusionFlare,
             Move::FusionBolt => &FusionBolt,
+        }
+    }
+
+    pub fn is_sound_based(&self) -> bool {
+        match self {
+            Move::BugBuzz | Move::Chatter | Move::EchoedVoice | Move::GrassWhistle | Move::Growl |
+                Move::HealBell | Move::Howl | Move::HyperVoice | Move::MetalSound | Move::PerishSong |
+                Move::RelicSong | Move::Roar | Move::Round | Move::Screech | Move::Sing | Move::Snarl |
+                Move::Snore | Move::Supersonic | Move::Uproar => true,
+            _ => false
+        }
+    }
+
+    pub fn is_contact(&self) -> bool {
+        let data = self.data();
+        match data.damage_type {
+            DamageType::Physical => match self {
+                Move::AttackOrder | Move::Barrage | Move::BeatUp | Move::BoneRush | Move::Bonemerang |
+                Move::Bulldoze | Move::BulletSeed | Move::Earthquake | Move::EggBomb | Move::Explosion |
+                Move::Feint | Move::Fissure | Move::Fling | Move::FreezeShock | Move::FusionBolt |
+                Move::GunkShot | Move::IceShard | Move::IcicleCrash | Move::IcicleSpear | Move::MagnetBomb |
+                Move::Magnitude | Move::MetalBurst | Move::NaturalGift | Move::PayDay | Move::PinMissile |
+                Move::PoisonSting | Move::Present | Move::PsychoCut | Move::RazorLeaf | Move::RockBlast |
+                Move::RockSlide | Move::RockThrow | Move::RockTomb | Move::RockWrecker | Move::SacredFire |
+                Move::SandTomb | Move::SecretPower | Move::SeedBomb | Move::SelfDestruct | Move::SkyAttack |
+                Move::SmackDown | Move::SpikeCannon | Move::StoneEdge | Move::Twineedle => false,
+                _ => true
+            },
+            DamageType::Special => match self {
+                Move::PetalDance | Move::TrumpCard | Move::WringOut | Move::GrassKnot => true,
+                _ => false
+            },
+            DamageType::Status => false
+        }
+    }
+
+    pub fn is_powder(&self) -> bool {
+        match self {
+            Move::CottonSpore | Move::PoisonPowder | Move::RagePowder | Move::SleepPowder | Move::Spore | Move::StunSpore => true,
+            _ => false
         }
     }
 

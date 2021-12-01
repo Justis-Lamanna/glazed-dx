@@ -511,7 +511,6 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     /// Gets the factor of accuracy for a user hitting the defender with the move. This is, essentially,
     /// the probability (out of 100) of a hit landing.
     /// Takes into account:
-    /// * Move Accuracy
     /// * User Accuracy and Target Evasion
     /// * Abilities (User and Target)
     /// * Held Items (User and Target)
@@ -522,13 +521,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         let user = self.get_by_id(user_id).unwrap();
         let defender = self.get_by_id(defender_id).unwrap();
         let move_data = attack.data();
-        let move_hit_percent = match move_data.accuracy {
-            Accuracy::AlwaysHits => return 100f64,
-            Accuracy::Percentage(p) => f64::from(p),
-            Accuracy::Variable => panic!("Called get_accuracy_factor for move with variable accuracy")
-        };
 
-        let raw_accuracy = move_hit_percent *
+        let raw_accuracy =
             //Clamping is unnecessary, since it is handled in this method
             core::determine_accuracy_stat_multiplier(user.battle_data.accuracy_stage - defender.battle_data.evasion_stage);
 
@@ -905,13 +899,30 @@ pub enum Cause {
     /// This is just what normally happens
     Natural,
     /// A battler's ability caused the side effect
-    Ability(Battler, Ability),
+    Ability(Battler),
     /// A previously used move caused the side effect
     Move(Battler, Move),
     /// The side effect was the cause of a user's ailment
     Ailment(NonVolatileBattleAilment),
     /// A battler's held item caused the side effect
-    HeldItem(Battler, Item)
+    HeldItem(Battler, Item),
+    /// One cause was about to occur, but another one overwrote it
+    Overwrite{
+        initial: Box<Cause>,
+        overwriter: Box<Cause>
+    }
+}
+impl Cause {
+    pub fn of_ability(battler: &Battler) -> Cause {
+        Cause::Ability(battler.clone())
+    }
+
+    pub fn overwrite(self, cause: Cause) -> Cause {
+        Cause::Overwrite {
+            initial: Box::from(self),
+            overwriter: Box::from(cause)
+        }
+    }
 }
 
 /// Possible consequences of an Action
@@ -941,7 +952,6 @@ pub enum ActionSideEffects {
 impl <T> Battlefield<T> where T: BattleTypeTrait {
     pub fn do_attack(&mut self, user: Battler, attack: Move, defender: Battler, is_multi: bool) -> Vec<ActionSideEffects> {
         let attacker_data = self.get_by_id(&user).unwrap();
-        let defender_data = self.get_by_id(&defender).unwrap();
         let attack_data = attack.data();
 
         // Step 1: Ensure the target exists
@@ -949,11 +959,114 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         if defender_data.is_none() {
             return vec![ActionSideEffects::NoTarget];
         }
+        let defender_data = defender_data.unwrap();
+        let effective_attack_type = if *attacker_data.get_effective_ability() == Ability::Normalize {
+            Type::Normal
+        } else {
+            attack_data._type
+        };
 
-        // Step 2: Check type effectiveness
+        // Step 2: Accuracy Check
+        let accuracy_succeeds =
+            match attack_data.accuracy {
+                Accuracy::AlwaysHits => true,
+                Accuracy::Percentage(bp) => {
+                    if *attacker_data.get_effective_ability() == Ability::NoGuard || *defender_data.get_effective_ability() == Ability::NoGuard {
+                        true
+                    } else if *defender_data.get_effective_ability() == Ability::LightningRod && effective_attack_type == Type::Electric {
+                        true
+                    } else if *defender_data.get_effective_ability() == Ability::StormDrain && effective_attack_type == Type::Water {
+                        true
+                    } else {
+                        let accuracy_factor = self.get_accuracy_factor(&user, &attack, &defender) * f64::from(bp);
+                        rand::thread_rng().gen_range(0f64..=100f64) < accuracy_factor
+                    }
+                }
+                Accuracy::Variable => {
+                    match attack {
+                        Move::Fissure | Move::Guillotine | Move::HornDrill | Move::SheerCold => {
+                            if attacker_data.pokemon.level < defender_data.pokemon.level {
+                                return vec![ActionSideEffects::NoEffect]
+                            } else if *attacker_data.get_effective_ability() == Ability::NoGuard || *defender_data.get_effective_ability() == Ability::NoGuard {
+                                true
+                            } else {
+                                let accuracy_factor = 30 + (attacker_data.pokemon.level - defender_data.pokemon.level);
+                                rand::thread_rng().gen_range(0u8..=100u8) < accuracy_factor
+                            }
+                        },
+                        _ => panic!("Unknown Move with Variable accuracy.")
+                    }
+                }
+            };
 
-        // Step 3: Get accuracy check
+        // Step 3: Effectiveness check
+        let mold_breaker = attacker_data.is_mold_breaker();
+        let effectiveness = defender_data.get_effective_type().defending_against(&effective_attack_type);
+        // 3a: Defender Ability + Held Items
+        let (effectiveness, defender_cause) =
+            match *defender_data.get_effective_ability() {
+                Ability::Levitate if attack_data._type == Type::Ground => {
+                    let cause = Cause::of_ability(&defender);
+                    if mold_breaker {
+                        (effectiveness, cause.overwrite(Cause::of_ability(&user)))
+                    } else {
+                        (Effectiveness::Immune, cause)
+                    }
+                },
+                Ability::WonderGuard => {
+                    match effectiveness {
+                        Effectiveness::Effect(e) if e > 0 => (effectiveness, Cause::Natural),
+                        _ => {
+                            if mold_breaker {
+                                (effectiveness, Cause::of_ability(&defender).overwrite(Cause::of_ability(&user)))
+                            } else {
+                                (Effectiveness::Immune, Cause::of_ability(&defender))
+                            }
+                        }
+                    }
+                },
+                Ability::Soundproof if attack.is_sound_based() => {
+                    let cause = Cause::of_ability(&defender);
+                    if mold_breaker {
+                        (effectiveness, cause.overwrite(Cause::of_ability(&user)))
+                    } else {
+                        (Effectiveness::Immune, cause)
+                    }
+                },
+                Ability::Overcoat if attack.is_powder() => {
+                    let cause = Cause::of_ability(&defender);
+                    if mold_breaker {
+                        (effectiveness, cause.overwrite(Cause::of_ability(&user)))
+                    } else {
+                        (Effectiveness::Immune, cause)
+                    }
+                }
+                _ => (effectiveness, Cause::Natural)
+            };
+
+        // 3b: Attacker Ability + Held Items
+        let (effectiveness, attacker_cause) = match *attacker_data.get_effective_ability() {
+            Ability::Scrappy if effective_attack_type == Type::Normal || effective_attack_type == Type::Fighting => {
+                match effectiveness {
+                    Effectiveness::Immune => (Effectiveness::NORMAL, Cause::of_ability(&user)),
+                    e => (e, Cause::Natural)
+                }
+            },
+            Ability::TintedLens => {
+                match effectiveness {
+                    Effectiveness::Effect(a) if a < 0 => (Effectiveness::Effect(a + 1), Cause::of_ability(&user)),
+                    a => (a, Cause::Natural)
+                }
+            },
+            _ => (effectiveness, Cause::Natural)
+        };
+
+        // Step 4: Suppression check
 
         vec![]
+    }
+
+    fn get_effectiveness_and_cause_defender(&self) -> (Effectiveness, Cause) {
+
     }
 }
