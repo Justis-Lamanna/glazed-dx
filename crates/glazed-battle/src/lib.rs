@@ -1000,47 +1000,19 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             };
 
         // Step 3: Effectiveness check
-        let mold_breaker = attacker_data.is_mold_breaker();
         let effectiveness = defender_data.get_effective_type().defending_against(&effective_attack_type);
         // 3a: Defender Ability + Held Items
         let (effectiveness, defender_cause) =
             match *defender_data.get_effective_ability() {
-                Ability::Levitate if attack_data._type == Type::Ground => {
-                    let cause = Cause::of_ability(&defender);
-                    if mold_breaker {
-                        (effectiveness, cause.overwrite(Cause::of_ability(&user)))
-                    } else {
-                        (Effectiveness::Immune, cause)
-                    }
-                },
+                Ability::Levitate if attack_data._type == Type::Ground => (Effectiveness::Immune, Cause::of_ability(&defender)),
                 Ability::WonderGuard => {
                     match effectiveness {
                         Effectiveness::Effect(e) if e > 0 => (effectiveness, Cause::Natural),
-                        _ => {
-                            if mold_breaker {
-                                (effectiveness, Cause::of_ability(&defender).overwrite(Cause::of_ability(&user)))
-                            } else {
-                                (Effectiveness::Immune, Cause::of_ability(&defender))
-                            }
-                        }
+                        _ => (Effectiveness::Immune, Cause::of_ability(&defender))
                     }
                 },
-                Ability::Soundproof if attack.is_sound_based() => {
-                    let cause = Cause::of_ability(&defender);
-                    if mold_breaker {
-                        (effectiveness, cause.overwrite(Cause::of_ability(&user)))
-                    } else {
-                        (Effectiveness::Immune, cause)
-                    }
-                },
-                Ability::Overcoat if attack.is_powder() => {
-                    let cause = Cause::of_ability(&defender);
-                    if mold_breaker {
-                        (effectiveness, cause.overwrite(Cause::of_ability(&user)))
-                    } else {
-                        (Effectiveness::Immune, cause)
-                    }
-                }
+                Ability::Soundproof if attack.is_sound_based() => (Effectiveness::Immune, Cause::of_ability(&defender)),
+                Ability::Overcoat if attack.is_powder() => (Effectiveness::Immune, Cause::of_ability(&defender)),
                 _ => (effectiveness, Cause::Natural)
             };
 
@@ -1064,9 +1036,5 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         // Step 4: Suppression check
 
         vec![]
-    }
-
-    fn get_effectiveness_and_cause_defender(&self) -> (Effectiveness, Cause) {
-
     }
 }
