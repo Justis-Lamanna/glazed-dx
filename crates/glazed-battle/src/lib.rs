@@ -515,6 +515,17 @@ pub enum ActionSideEffects {
         critical_hit: bool,
         effectiveness: Effectiveness
     },
+    Recoil {
+        damaged: Battler,
+        start_hp: u16,
+        end_hp: u16
+    },
+    BasicDamage {
+        damaged: Battler,
+        start_hp: u16,
+        end_hp: u16,
+        cause: Cause
+    },
     Missed,
     NoEffect(Cause),
     Failed(Cause),
@@ -523,7 +534,7 @@ pub enum ActionSideEffects {
         start_hp: u16,
         end_hp: u16
     },
-    AteBerry(Battler, Berry),
+    ConsumedItem(Battler, Item),
     NoTarget
 }
 

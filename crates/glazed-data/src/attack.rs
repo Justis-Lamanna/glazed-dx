@@ -582,6 +582,8 @@ pub enum Accuracy {
 pub enum Power {
     None,
     Base(u8),
+    BaseWithRecoil(u8, u8),
+    BaseWithMercy(u8),
     OneHitKnockout,
     Exact(u8),
     Variable
@@ -675,7 +677,6 @@ pub enum Effect {
     VolatileStatus(VolatileBattleAilment, u8),
     Heal(u8),
     Drain(u8),
-    Recoil(u8),
     Flinch(u8),
     ChangeWeather(Weather),
     DispelWeather,
@@ -1777,9 +1778,9 @@ pub static TakeDown: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(90),
+    power: Power::BaseWithRecoil(90, 25),
 	crit_rate: None,
-	effects: &[Effect::Recoil(25)],
+	effects: &[],
 };
 pub static Thrash: MoveData = MoveData {
     pp: 10,
@@ -1801,9 +1802,9 @@ pub static DoubleEdge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(120),
+    power: Power::BaseWithRecoil(120, 33),
 	crit_rate: None,
-	effects: &[Effect::Recoil(33)],
+	effects: &[],
 };
 pub static TailWhip: MoveData = MoveData {
     pp: 30,
@@ -2137,9 +2138,9 @@ pub static Submission: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(80),
+    power: Power::BaseWithRecoil(80, 25),
 	crit_rate: None,
-	effects: &[Effect::Recoil(25)],
+	effects: &[],
 };
 pub static LowKick: MoveData = MoveData {
     pp: 20,
@@ -3325,9 +3326,9 @@ pub static Struggle: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::RandomOpponent,
-    power: Power::Base(50),
+    power: Power::BaseWithRecoil(50, 25),
 	crit_rate: None,
-	effects: &[Effect::Recoil(25)],
+	effects: &[],
 };
 pub static Sketch: MoveData = MoveData {
     pp: 1,
@@ -3817,7 +3818,7 @@ pub static FalseSwipe: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(40),
+    power: Power::BaseWithMercy(40),
 	crit_rate: None,
 	effects: &[],
 };
@@ -5473,9 +5474,9 @@ pub static VoltTackle: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(120),
+    power: Power::BaseWithRecoil(120, 33),
 	crit_rate: None,
-	effects: &[Effect::Recoil(33), Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
 pub static MagicalLeaf: MoveData = MoveData {
     pp: 20,
@@ -6073,9 +6074,9 @@ pub static FlareBlitz: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(120),
+    power: Power::BaseWithRecoil(120, 33),
 	crit_rate: None,
-	effects: &[Effect::Recoil(33), Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
 pub static ForcePalm: MoveData = MoveData {
     pp: 10,
@@ -6301,9 +6302,9 @@ pub static BraveBird: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(120),
+    power: Power::BaseWithRecoil(120, 33),
 	crit_rate: None,
-	effects: &[Effect::Recoil(33)],
+	effects: &[],
 };
 pub static EarthPower: MoveData = MoveData {
     pp: 10,
@@ -6769,9 +6770,9 @@ pub static WoodHammer: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(120),
+    power: Power::BaseWithRecoil(120, 33),
 	crit_rate: None,
-	effects: &[Effect::Recoil(33)],
+	effects: &[],
 };
 pub static AquaJet: MoveData = MoveData {
     pp: 20,
@@ -6829,9 +6830,9 @@ pub static HeadSmash: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(150),
+    power: Power::BaseWithRecoil(150, 50),
 	crit_rate: None,
-	effects: &[Effect::Recoil(50)],
+	effects: &[],
 };
 pub static DoubleHit: MoveData = MoveData {
     pp: 10,
@@ -7681,9 +7682,9 @@ pub static WildCharge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(90),
+    power: Power::BaseWithRecoil(90, 25),
 	crit_rate: None,
-	effects: &[Effect::Recoil(25)],
+	effects: &[],
 };
 pub static DrillRun: MoveData = MoveData {
     pp: 10,
@@ -7861,9 +7862,9 @@ pub static HeadCharge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(120),
+    power: Power::BaseWithRecoil(120, 25),
 	crit_rate: None,
-	effects: &[Effect::Recoil(25)],
+	effects: &[],
 };
 pub static GearGrind: MoveData = MoveData {
     pp: 15,

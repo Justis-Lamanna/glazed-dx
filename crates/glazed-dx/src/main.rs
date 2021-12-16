@@ -9,7 +9,7 @@ fn main() {
     let me = Party::create_one(PokemonTemplate::pokemon(Species::Quilava, 20));
     let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 20));
     let mut battlefield = Battlefield::single_battle(me, them);
-    let fx = battlefield.do_damage_from_base_power(SingleBattleSide::USER, Move::Flamethrower, SingleBattleSide::OPPONENT);
+    let fx = battlefield.do_one_off_damage(SingleBattleSide::USER, Move::FinalGambit, SingleBattleSide::OPPONENT);
     // let turn = battlefield.perform_turn(
     //     TurnAction::Attack(Move::Tackle, SingleBattleSide::OPPONENT),
     //     TurnAction::Attack(Move::QuickAttack, SingleBattleSide::USER));

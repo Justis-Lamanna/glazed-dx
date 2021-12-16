@@ -425,7 +425,7 @@ pub enum Item {
     SootheBell, CleanseTag, ChoiceBand, ChoiceScarf, ChoiceSpecs, BlackSludge, LifeOrb, RockyHelmet, StickyBarb,
     GripClaw, LightClay, TerrainExtender, AssaultVest, FlameOrb, IronBall, LaggingTail, MachoBrace,
     RingTarget, ToxicOrb, Leftovers, AbsorbBulb, CellBattery, EjectButton, LuminousMoss,
-    Snowball, WeaknessPolicy, WideLens, ZoomLens, ScopeLens, BrightPowder, ExpertBelt, Metronome
+    Snowball, WeaknessPolicy, WideLens, ZoomLens, ScopeLens, BrightPowder, ExpertBelt, Metronome, FocusSash
 }
 
 #[derive(Debug)]
@@ -730,6 +730,7 @@ impl Item {
             Item::ScopeLens => &ScopeLens,
             Item::ExpertBelt => &ExpertBelt,
             Item::Metronome => &Metronome,
+            Item::FocusSash => &FocusSash,
             Item::TM(_) | Item::HM(_) | Item::KeyItem(_) => panic!("No TM, HM, Key Item data filled in")
         }
     }
@@ -3193,6 +3194,15 @@ pub const ExpertBelt: ItemData = ItemData {
     overworld_usable: false
 };
 pub const Metronome: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
+};
+pub const FocusSash: ItemData = ItemData {
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,
