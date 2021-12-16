@@ -618,7 +618,7 @@ pub enum BattleStat {
 }
 
 /// Represents a persistent status ailment
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum NonVolatileBattleAilment {
     Paralysis,
     Sleep,
@@ -628,14 +628,14 @@ pub enum NonVolatileBattleAilment {
 }
 
 /// Represents a non-persistent status ailment
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum VolatileBattleAilment {
     Confusion,
     Infatuation
 }
 
 /// Represents a weather condition in battle
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Weather {
     HarshSun,
     Rain,

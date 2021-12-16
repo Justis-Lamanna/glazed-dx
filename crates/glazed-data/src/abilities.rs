@@ -2,7 +2,7 @@ use glazed_core::Id;
 use glazed_macro::*;
 
 /// Represents an Ability a Pokemon has
-#[derive(Debug, Id, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Id, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Ability {
     AirLock,
     ArenaTrap,

@@ -4,8 +4,9 @@ use rand::prelude::Distribution;
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::Move;
 use crate::constants::Species;
+use crate::constants::UnownForm::T;
 use crate::item::{Item, Pokeball};
-use crate::types::PokemonType;
+use crate::types::{PokemonType, Type};
 
 /// Represents the probability of a Pokemon being male or female (or neither)
 #[derive(Debug)]
@@ -492,26 +493,66 @@ impl Pokemon {
     /// If pokemon has Hidden:
     ///     If pokemon has a hidden ability, return it
     ///     If pokemon has no hidden ability, return the first standard ability
-    pub fn get_ability(&self) -> &Ability {
+    pub fn get_ability(&self) -> Ability {
         let data = self.species.data();
         match self.ability {
             AbilitySlot::SlotOne => {
                 match &data.ability {
-                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => a
+                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => *a
                 }
             },
             AbilitySlot::SlotTwo => {
                 match &data.ability {
-                    PokemonAbility::One(a) | PokemonAbility::Two(_, a) => a
+                    PokemonAbility::One(a) | PokemonAbility::Two(_, a) => *a
                 }
             },
             AbilitySlot::Hidden => match &data.hidden_ability {
                 None => match &data.ability {
-                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => a
+                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => *a
                 },
-                Some(a) => a
+                Some(a) => *a
             }
         }
+    }
+
+    pub fn get_hidden_power_type(&self) -> Type {
+        let bit = (self.hp.iv & 1) |
+            (self.attack.iv & 1) << 1 |
+            (self.defense.iv & 1) << 2 |
+            (self.speed.iv & 1) << 3 |
+            (self.special_attack.iv & 1) << 4 |
+            (self.special_defense.iv & 1) << 5;
+        let number = u16::from(bit) * 5u16 / 21u16;
+        match number {
+            0 => Type::Fighting,
+            1 => Type::Flying,
+            2 => Type::Poison,
+            3 => Type::Ground,
+            4 => Type::Rock,
+            5 => Type::Bug,
+            6 => Type::Ghost,
+            7 => Type::Steel,
+            8 => Type::Fire,
+            9 => Type::Water,
+            10 => Type::Grass,
+            11 => Type::Electric,
+            12 => Type::Psychic,
+            13 => Type::Ice,
+            14 => Type::Dragon,
+            15 => Type::Dark,
+            _ => panic!("Hidden Value calculation error: >15")
+        }
+    }
+
+    pub fn get_hidden_power_power(&self) -> u8 {
+        let bit = (self.hp.iv & 2) >> 1 |
+            (self.attack.iv & 2) |
+            (self.defense.iv & 2) << 1 |
+            (self.speed.iv & 2) << 2 |
+            (self.special_attack.iv & 2) << 3 |
+            (self.special_defense.iv & 2) << 4;
+        let number = ((u32::from(bit) * 40u32) / 63u32) + 30u32;
+        number as u8
     }
 }
 

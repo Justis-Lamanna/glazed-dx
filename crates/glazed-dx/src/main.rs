@@ -13,8 +13,8 @@ fn main() {
     //     TurnAction::Attack(Move::QuickAttack, SingleBattleSide::USER));
     // battlefield.finish_turn(turn);
     println!("{:#?}", battlefield);
-    for _ in 1..40 {
-        let effects = battlefield.do_attack(SingleBattleSide::USER, Move::Wrap, SingleBattleSide::OPPONENT, false);
-        println!("{:?}", effects);
-    }
+    // for _ in 1..40 {
+    //     let effects = battlefield.do_attack(SingleBattleSide::USER, Move::Wrap, SingleBattleSide::OPPONENT, false);
+    //     println!("{:?}", effects);
+    // }
 }

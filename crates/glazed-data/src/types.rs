@@ -208,7 +208,7 @@ impl Type {
 }
 
 /// Represents the effectiveness of a Move matchup
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Effectiveness {
     Immune,
     Effect(i8)
@@ -239,7 +239,7 @@ impl Mul for Effectiveness {
 }
 
 /// Represents the type(s) for a Pokemon
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum PokemonType {
     Single(Type),
     Double(Type, Type)
