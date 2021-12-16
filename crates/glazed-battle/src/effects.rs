@@ -102,6 +102,26 @@ fn consume_item(pkmn: &mut Pokemon, data: &mut BattleData) {
 }
 
 impl <T> Battlefield<T> where T: BattleTypeTrait {
+    fn apply_side_effects(&mut self, effects: &Vec<ActionSideEffects>) {
+        for effect in effects {
+            match effect {
+                ActionSideEffects::DirectDamage { damaged, end_hp, .. } => {
+                    let mut damaged = self.get_mut_pokemon_by_id(&damaged);
+                    damaged.unwrap().current_hp = *end_hp;
+                },
+                ActionSideEffects::DamagedSubstitute { damaged, end_hp, ..} => {
+                    let mut damaged = self.get_mut_battle_data(&damaged);
+                    damaged.substituted = *end_hp;
+                }
+                ActionSideEffects::AteBerry(battler, _) => {
+                    let mut battler = self.get_mut_pokemon_by_id(&battler);
+                    battler.unwrap().held_item = None;
+                }
+                _ => {}
+            }
+        }
+    }
+
     pub fn do_damage_from_base_power(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
         let attacker_pokemon = self.get_pokemon_by_id(&attacker).unwrap();
         let attacker_data = self.get_battle_data(&attacker);
@@ -331,7 +351,11 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         match &defender_pokemon.held_item {
             Some(Item::Berry(b)) => {
                 match b.get_resistance_berry_type() {
-                    Some(t) if t == effective_move_type => {
+                    Some(Type::Normal) if Type::Normal == effective_move_type => {
+                        damage /= 2;
+                        effects.push(ActionSideEffects::AteBerry(defender, *b));
+                    },
+                    Some(t) if t == effective_move_type && effectiveness.is_super_effective() => {
                         damage /= 2;
                         effects.push(ActionSideEffects::AteBerry(defender, *b));
                     },
@@ -344,20 +368,18 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         let damage = damage as u16;
 
         if defender_data.substituted > 0 {
-            let defender_data = self.get_mut_battle_data(&defender);
             let start_hp = defender_data.substituted;
-            defender_data.substituted = defender_data.substituted.saturating_sub(damage);
             effects.push(ActionSideEffects::DamagedSubstitute {
+                damaged: defender,
                 start_hp,
-                end_hp: defender_data.substituted
+                end_hp: start_hp.saturating_sub(damage)
             });
         } else {
-            let defender_pokemon = self.get_mut_pokemon_by_id(&defender).unwrap();
-            let original_hp = defender_pokemon.current_hp;
-            defender_pokemon.current_hp = defender_pokemon.current_hp.saturating_sub(damage);
+            let start_hp = defender_pokemon.current_hp;
             effects.push(ActionSideEffects::DirectDamage {
-                start_hp: original_hp,
-                end_hp: defender_pokemon.current_hp,
+                damaged: defender,
+                start_hp,
+                end_hp: start_hp.saturating_sub(damage),
                 critical_hit: crit,
                 effectiveness
             });
@@ -365,6 +387,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             // Additional ability effects can go here
         }
 
+        self.apply_side_effects(&effects);
         effects
     }
 }

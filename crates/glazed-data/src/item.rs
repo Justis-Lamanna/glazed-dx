@@ -194,7 +194,27 @@ impl Berry {
     }
 
     pub fn get_resistance_berry_type(&self) -> Option<Type> {
-        None
+        match self {
+            Berry::OccaBerry => Some(Type::Fire),
+            Berry::PasshoBerry => Some(Type::Water),
+            Berry::WacanBerry => Some(Type::Electric),
+            Berry::RindoBerry => Some(Type::Grass),
+            Berry::YacheBerry => Some(Type::Ice),
+            Berry::ChopleBerry => Some(Type::Fighting),
+            Berry::KebiaBerry => Some(Type::Poison),
+            Berry::ShucaBerry => Some(Type::Ground),
+            Berry::CobaBerry => Some(Type::Flying),
+            Berry::PayapaBerry => Some(Type::Psychic),
+            Berry::TangaBerry => Some(Type::Bug),
+            Berry::ChartiBerry => Some(Type::Rock),
+            Berry::KasibBerry => Some(Type::Ghost),
+            Berry::HabanBerry => Some(Type::Dragon),
+            Berry::ColburBerry => Some(Type::Dark),
+            Berry::BabiriBerry => Some(Type::Steel),
+            Berry::ChilanBerry => Some(Type::Normal),
+            Berry::RoseliBerry => Some(Type::Fairy),
+            _ => None
+        }
     }
 }
 

@@ -509,24 +509,17 @@ impl Cause {
 #[derive(Debug)]
 pub enum ActionSideEffects {
     DirectDamage {
+        damaged: Battler,
         start_hp: u16,
         end_hp: u16,
         critical_hit: bool,
         effectiveness: Effectiveness
     },
     Missed,
-    OneHitKnockout,
     NoEffect(Cause),
     Failed(Cause),
-    ReceivedNonVolatileStatus {
-        status: NonVolatileBattleAilment,
-        cause: Cause
-    },
-    IndirectDamage {
-        end_hp: u8,
-        cause: Cause
-    },
     DamagedSubstitute {
+        damaged: Battler,
         start_hp: u16,
         end_hp: u16
     },
