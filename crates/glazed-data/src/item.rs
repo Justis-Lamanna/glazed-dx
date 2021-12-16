@@ -96,7 +96,7 @@ impl From<EvolutionHeldItem> for Item {
 }
 
 /// All berries in the game
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Berry {
     CheriBerry,
     ChestoBerry,
@@ -191,6 +191,10 @@ impl Berry {
             Berry::RazzBerry | Berry::PamtreBerry | Berry::BabiriBerry => Type::Steel,
             Berry::ChestoBerry | Berry::NanabBerry | Berry::DurinBerry | Berry::PasshoBerry => Type::Water
         }
+    }
+
+    pub fn get_resistance_berry_type(&self) -> Option<Type> {
+        None
     }
 }
 
@@ -401,7 +405,7 @@ pub enum Item {
     SootheBell, CleanseTag, ChoiceBand, ChoiceScarf, ChoiceSpecs, BlackSludge, LifeOrb, RockyHelmet, StickyBarb,
     GripClaw, LightClay, TerrainExtender, AssaultVest, FlameOrb, IronBall, LaggingTail, MachoBrace,
     RingTarget, ToxicOrb, Leftovers, AbsorbBulb, CellBattery, EjectButton, LuminousMoss,
-    Snowball, WeaknessPolicy, WideLens, ZoomLens, ScopeLens, BrightPowder
+    Snowball, WeaknessPolicy, WideLens, ZoomLens, ScopeLens, BrightPowder, ExpertBelt, Metronome
 }
 
 #[derive(Debug)]
@@ -704,6 +708,8 @@ impl Item {
             Item::BrightPowder => &BrightPowder,
             Item::ZoomLens => &ZoomLens,
             Item::ScopeLens => &ScopeLens,
+            Item::ExpertBelt => &ExpertBelt,
+            Item::Metronome => &Metronome,
             Item::TM(_) | Item::HM(_) | Item::KeyItem(_) => panic!("No TM, HM, Key Item data filled in")
         }
     }
@@ -3149,6 +3155,24 @@ pub const ScopeLens: ItemData = ItemData {
     overworld_usable: false
 };
 pub const BrightPowder: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
+};
+pub const ExpertBelt: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
+};
+pub const Metronome: ItemData = ItemData {
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,

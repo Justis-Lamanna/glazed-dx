@@ -8,9 +8,9 @@ use std::option::Option::Some;
 use either::Either;
 use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, Move, MoveData, NonVolatileBattleAilment, Power, StatChangeTarget};
+use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, Move, MoveData, NonVolatileBattleAilment, Power, StatChangeTarget, Target};
 use glazed_data::constants::Species;
-use glazed_data::item::{EvolutionHeldItem, Incense, Item};
+use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
@@ -18,7 +18,10 @@ use glazed_data::types::{Effectiveness, PokemonType, Type};
 #[derive(Default, Debug)]
 pub struct Side {
     hazard: Option<EntryHazard>,
-    tailwind: u8
+    tailwind: u8,
+    aurora_veil: u8,
+    light_screen: u8,
+    reflect: u8
 }
 
 /// Represents the entire battlefield
@@ -185,8 +188,14 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
 pub struct BattleData {
     /// The number of turns this Pokemon has been in battle
     turn_count: u8,
-    /// The last move that this Pokemon used
-    move_used_this_turn: Option<Move>,
+    /// If true, the pokemon has acted this turn
+    has_acted_this_turn: bool,
+    /// If true, the pokemon managed to land a hit
+    has_landed_attack_this_turn: bool,
+    /// The last move that this pokemon used
+    last_move_used: Option<Move>,
+    /// The number of times the last move was used
+    last_move_used_counter: u8,
     /// If present, contains the amount of damage this Pokemon encountered last
     last_damager: Option<(Battler, Move, u16)>,
 
@@ -316,7 +325,8 @@ impl BattleData {
     pub fn end_of_turn(&mut self) {
         self.turn_count += 1;
         self.last_damager = None;
-        self.move_used_this_turn = None;
+        self.has_acted_this_turn = false;
+        self.has_landed_attack_this_turn = false;
     }
 }
 
@@ -520,6 +530,7 @@ pub enum ActionSideEffects {
         start_hp: u16,
         end_hp: u16
     },
+    AteBerry(Battler, Berry),
     NoTarget
 }
 

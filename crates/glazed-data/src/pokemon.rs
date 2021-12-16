@@ -554,6 +554,10 @@ impl Pokemon {
         let number = ((u32::from(bit) * 40u32) / 63u32) + 30u32;
         number as u8
     }
+
+    pub fn is_full_health(&self) -> bool {
+        self.current_hp == self.hp.value
+    }
 }
 
 #[derive(Debug, Default)]

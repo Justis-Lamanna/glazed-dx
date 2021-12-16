@@ -224,6 +224,14 @@ impl Effectiveness {
             Effectiveness::Effect(_) => Effectiveness::NORMAL
         }
     }
+
+    pub fn is_super_effective(&self) -> bool {
+        if let Effectiveness::Effect(i) = self {
+            *i > 1
+        } else {
+            false
+        }
+    }
 }
 
 impl Mul for Effectiveness {

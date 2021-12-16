@@ -1,11 +1,11 @@
 use rand::Rng;
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{Move, MoveData};
+use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, Power};
 use glazed_data::constants::Species;
-use glazed_data::item::{EvolutionHeldItem, Item};
+use glazed_data::item::{Berry, EvolutionHeldItem, Item};
 use glazed_data::pokemon::Pokemon;
-use glazed_data::types::{PokemonType, Type};
-use crate::{ActionSideEffects, BattleData, Battlefield, Battler, BattleTypeTrait, Cause, Weather};
+use glazed_data::types::{Effectiveness, PokemonType, Type};
+use crate::{ActionSideEffects, BattleData, Battlefield, Battler, BattleTypeTrait, Cause, SemiInvulnerableLocation, Weather};
 use crate::TurnAction::Attack;
 
 /// Simple utility to drain a vector into another one
@@ -43,6 +43,44 @@ fn get_effective_species(pkmn: &Pokemon, battle_data: &BattleData) -> Species {
     }
 }
 
+fn get_effective_stat(pkmn: &Pokemon, battle_data: &BattleData, stat: BattleStat) -> u16 {
+    let base = match stat {
+        BattleStat::Attack => battle_data.transformed.as_ref().map(|t| t.attack.value).unwrap_or(pkmn.attack.value),
+        BattleStat::Defense => battle_data.transformed.as_ref().map(|t| t.defense.value).unwrap_or(pkmn.defense.value),
+        BattleStat::SpecialAttack => battle_data.transformed.as_ref().map(|t| t.special_attack.value).unwrap_or(pkmn.special_attack.value),
+        BattleStat::SpecialDefense => battle_data.transformed.as_ref().map(|t| t.special_defense.value).unwrap_or(pkmn.special_defense.value),
+        BattleStat::Speed => battle_data.transformed.as_ref().map(|t| t.speed.value).unwrap_or(pkmn.speed.value),
+        BattleStat::Accuracy => 1,
+        BattleStat::Evasion => 1
+    };
+
+    let stage = match stat {
+        BattleStat::Attack => battle_data.attack_stage,
+        BattleStat::Defense => battle_data.defense_stage,
+        BattleStat::SpecialAttack => battle_data.special_attack_stage,
+        BattleStat::SpecialDefense => battle_data.special_defense_stage,
+        BattleStat::Speed => battle_data.speed_stage,
+        BattleStat::Accuracy => 0i8,
+        BattleStat::Evasion => 0i8
+    };
+
+    match stage {
+        i8::MIN..=-6 => base * 2u16 / 8u16,
+        -5 => base * 2u16 / 7u16,
+        -4 => base * 2u16 / 6u16,
+        -3 => base * 2u16 / 5u16,
+        -2 => base * 2u16 / 4u16,
+        -1 => base * 2u16 / 3u16,
+        0 => base,
+        1 => base * 3u16 / 2u16,
+        2 => base * 2u16,
+        3 => base * 5u16 / 2u16,
+        4 => base * 3u16,
+        5 => base * 7u16 / 2u16,
+        6..=i8::MAX => base * 4u16
+    }
+}
+
 fn get_raw_critical_hit(pkmn: &Pokemon, species: Species, ability: Ability) -> u8 {
     let mut value = 0;
     value += match pkmn.held_item {
@@ -59,6 +97,10 @@ fn get_raw_critical_hit(pkmn: &Pokemon, species: Species, ability: Ability) -> u
     value
 }
 
+fn consume_item(pkmn: &mut Pokemon, data: &mut BattleData) {
+    pkmn.held_item = None;
+}
+
 impl <T> Battlefield<T> where T: BattleTypeTrait {
     pub fn do_damage_from_base_power(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
         let attacker_pokemon = self.get_pokemon_by_id(&attacker).unwrap();
@@ -72,8 +114,10 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         let defender_ability = get_effective_ability(defender_pokemon, defender_data);
         let defender_type = get_effective_type(defender_pokemon, defender_data);
         let defender_species = get_effective_species(defender_pokemon, defender_data);
+        let defender_side = self.get_side(&defender);
 
         let move_data = attack.data();
+        let mut effects = Vec::new();
 
         // Effectiveness Calculation
         let effective_move_type = match attacker_ability {
@@ -134,6 +178,12 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 }
             }
         };
+        let effectiveness = defender_type.defending_against(&effective_move_type);
+
+        if let Effectiveness::Immune = effectiveness {
+            return vec![ActionSideEffects::NoEffect(Cause::Natural)]
+        }
+
         let stab = match attacker_type {
             PokemonType::Single(a) => effective_move_type == a,
             PokemonType::Double(a, b) => effective_move_type == a || effective_move_type == b
@@ -148,7 +198,174 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             _ => true
         };
 
-        vec![]
+        let (ea, ed) = match move_data.damage_type {
+            DamageType::Physical => (
+                get_effective_stat(attacker_pokemon, attacker_data, BattleStat::Attack),
+                get_effective_stat(defender_pokemon, defender_data, BattleStat::Defense)),
+            DamageType::Special => (
+                get_effective_stat(attacker_pokemon, attacker_data, BattleStat::SpecialAttack),
+                get_effective_stat(defender_pokemon, defender_data, BattleStat::SpecialDefense)),
+            DamageType::Status => panic!("Status move should not do direct damage??")
+        };
+
+        let base = if let Power::Base(base) = move_data.power {
+            u32::from(base)
+        } else {
+            panic!("do_damage_from_base_power called with attack with no base power")
+        };
+
+        let base_damage_num = (((2 * u32::from(attacker_pokemon.level)) / 5) + 2) * base * u32::from(ea);
+        let base_damage_denom = u32::from(ed) * 50;
+        let mut damage = base_damage_num / base_damage_denom + 2;
+
+        // * weather
+        if effective_move_type == Type::Water {
+            if self.field.is_rain() {
+                damage += (damage / 2);
+            } else if self.field.is_sunny() {
+                damage /= 2;
+            }
+        } else if effective_move_type == Type::Fire {
+            if self.field.is_rain() {
+                damage /= 2;
+            } else if self.field.is_sunny() {
+                damage += (damage / 2);
+            }
+        }
+
+        // * crit
+        if crit {
+            damage += (damage / 2);
+        }
+
+        // * random
+        damage = (f64::from(damage) * rand::thread_rng().gen_range(0.85..=1.0)) as u32;
+
+        // * stab
+        if stab {
+            if attacker_ability == Ability::Adaptability {
+                damage *= 2;
+            } else {
+                // This is a fair approximation of 150%, right?
+                damage += (damage / 2);
+            }
+        }
+
+        // * burn
+        if attacker_pokemon.status.burn &&
+            attacker_ability != Ability::Guts &&
+            move_data.damage_type == DamageType::Physical &&
+            attack != Move::Facade {
+            damage /= 2;
+        }
+
+        // Do: Apply additional multipliers
+        // Specific attacks, interacting with defender state
+        match attack {
+            Move::BodySlam | Move::Stomp | Move::Astonish | Move::Extrasensory |
+            Move::NeedleArm | Move::DragonRush | Move::ShadowForce |
+            Move::Steamroller | Move::HeatCrash | Move::HeavySlam if defender_data.minimized => {
+                damage *= 2;
+            },
+            Move::Magnitude | Move::Earthquake => {
+                if let Some(SemiInvulnerableLocation::Underground) = &defender_data.invulnerable {
+                    damage *= 2;
+                }
+            },
+            Move::Surf | Move::Whirlpool => {
+                if let Some(SemiInvulnerableLocation::Underwater) = &defender_data.invulnerable {
+                    damage *= 2;
+                }
+            },
+            _ => {}
+        }
+        // Broad attack categories interacting with defender state
+        if defender_side.aurora_veil > 0 && !crit && attacker_ability != Ability::Infiltrator {
+            damage /= 2;
+        } else {
+            if defender_side.light_screen > 0 && move_data.damage_type == DamageType::Special && !crit && attacker_ability != Ability::Infiltrator {
+                damage /= 2;
+            } else if defender_side.reflect > 0 && move_data.damage_type == DamageType::Physical && !crit && attacker_ability != Ability::Infiltrator {
+                damage /= 2;
+            }
+        }
+        // Attacker/Defender ability flavors
+        match attacker_ability {
+            Ability::Sniper if crit => {
+                damage += (damage / 2);
+            },
+            Ability::TintedLens if effectiveness.is_super_effective() => {
+                damage *= 2;
+            },
+            _ => {}
+        }
+        match defender_ability {
+            Ability::Filter | Ability::SolidRock if effectiveness.is_super_effective() => {
+                damage = (damage * 3 / 4);
+            },
+            Ability::Multiscale if defender_pokemon.is_full_health() => {
+                damage /= 2;
+            },
+            _ => {}
+        }
+        // Attacker/Defender held item flavors
+        match attacker_pokemon.held_item {
+            Some(Item::ExpertBelt) if effectiveness.is_super_effective() => {
+                damage += (damage * 2 / 10);
+            },
+            Some(Item::LifeOrb) => {
+                damage += (damage * 3 / 10);
+            },
+            Some(Item::Metronome) => {
+                match attacker_data.last_move_used {
+                    Some(m) if m == attack => {
+                        let multiplier = 0.2 * f64::from(attacker_data.last_move_used_counter);
+                        let multiplier = multiplier.clamp(0.0, 1.0);
+                        damage = (f64::from(damage) * multiplier) as u32;
+                    },
+                    None | Some(_) => {}
+                }
+            }
+            _ => {}
+        }
+        match &defender_pokemon.held_item {
+            Some(Item::Berry(b)) => {
+                match b.get_resistance_berry_type() {
+                    Some(t) if t == effective_move_type => {
+                        damage /= 2;
+                        effects.push(ActionSideEffects::AteBerry(defender, *b));
+                    },
+                    None | Some(_) => {}
+                }
+            }
+            _ => {}
+        }
+
+        let damage = damage as u16;
+
+        if defender_data.substituted > 0 {
+            let defender_data = self.get_mut_battle_data(&defender);
+            let start_hp = defender_data.substituted;
+            defender_data.substituted = defender_data.substituted.saturating_sub(damage);
+            effects.push(ActionSideEffects::DamagedSubstitute {
+                start_hp,
+                end_hp: defender_data.substituted
+            });
+        } else {
+            let defender_pokemon = self.get_mut_pokemon_by_id(&defender).unwrap();
+            let original_hp = defender_pokemon.current_hp;
+            defender_pokemon.current_hp = defender_pokemon.current_hp.saturating_sub(damage);
+            effects.push(ActionSideEffects::DirectDamage {
+                start_hp: original_hp,
+                end_hp: defender_pokemon.current_hp,
+                critical_hit: crit,
+                effectiveness
+            });
+
+            // Additional ability effects can go here
+        }
+
+        effects
     }
 }
 
