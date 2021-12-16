@@ -124,12 +124,14 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
 
     pub fn do_damage_from_base_power(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
         let attacker_pokemon = self.get_pokemon_by_id(&attacker).unwrap();
+        println!("{:?}", attacker_pokemon);
         let attacker_data = self.get_battle_data(&attacker);
         let attacker_ability = get_effective_ability(attacker_pokemon, attacker_data);
         let attacker_type = get_effective_type(attacker_pokemon, attacker_data);
         let attacker_species = get_effective_species(attacker_pokemon, attacker_data);
 
         let defender_pokemon = self.get_pokemon_by_id(&defender).unwrap();
+        println!("{:?}", defender_pokemon);
         let defender_data = self.get_battle_data(&defender);
         let defender_ability = get_effective_ability(defender_pokemon, defender_data);
         let defender_type = get_effective_type(defender_pokemon, defender_data);
@@ -204,10 +206,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             return vec![ActionSideEffects::NoEffect(Cause::Natural)]
         }
 
-        let stab = match attacker_type {
-            PokemonType::Single(a) => effective_move_type == a,
-            PokemonType::Double(a, b) => effective_move_type == a || effective_move_type == b
-        };
+        let stab = attacker_type.is_stab(&effective_move_type);
 
         // Critical Hit Calculation
         let crit_stages = get_raw_critical_hit(attacker_pokemon, attacker_species, attacker_ability) + move_data.crit_rate.unwrap_or(0);
@@ -268,6 +267,15 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             } else {
                 // This is a fair approximation of 150%, right?
                 damage += (damage / 2);
+            }
+        }
+
+        // * type
+        if let Effectiveness::Effect(i) = effectiveness {
+            if i < 0 {
+                damage = (damage >> -i);
+            } else {
+                damage = (damage << i);
             }
         }
 

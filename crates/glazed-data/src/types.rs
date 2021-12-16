@@ -227,7 +227,7 @@ impl Effectiveness {
 
     pub fn is_super_effective(&self) -> bool {
         if let Effectiveness::Effect(i) = self {
-            *i > 1
+            *i > 0
         } else {
             false
         }
@@ -258,6 +258,13 @@ impl PokemonType {
         match self {
             PokemonType::Single(t) => attack_type.attacking(t),
             PokemonType::Double(t1, t2) => attack_type.attacking(t1) * attack_type.attacking(t2)
+        }
+    }
+
+    pub fn is_stab(&self, attack_type: &Type) -> bool {
+        match self {
+            PokemonType::Single(t) => t == attack_type,
+            PokemonType::Double(t1, t2) => t1 == attack_type || t2 == attack_type
         }
     }
 }

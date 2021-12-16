@@ -13,8 +13,8 @@ pub struct SingleBattleSide {
     side: Side
 }
 impl SingleBattleSide {
-    pub const USER: Battler = Battler(false, 0);
-    pub const OPPONENT: Battler = Battler(true, 0);
+    pub const USER: Battler = Battler(true, 0);
+    pub const OPPONENT: Battler = Battler(false, 0);
 
     pub fn start(party: Party) -> SingleBattleSide {
         SingleBattleSide {

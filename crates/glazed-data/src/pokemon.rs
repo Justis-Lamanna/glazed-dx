@@ -640,6 +640,8 @@ impl PokemonTemplate {
         PokemonTemplate {
             species,
             level,
+            ivs: IVTemplate::All(31),
+            nature: Some(Nature::Hardy),
             ..Default::default()
         }
     }

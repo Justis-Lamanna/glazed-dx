@@ -2,40 +2,6 @@ use std::cmp::Ordering;
 use rand::Rng;
 use crate::TurnAction;
 
-pub fn determine_stat_multiplier(stage: i8) -> f64 {
-    match stage {
-        -5 => 2f64/ 7f64,
-        -4 => 2f64/ 6f64,
-        -3 => 2f64/ 5f64,
-        -2 => 2f64/ 4f64,
-        -1 => 2f64/ 3f64,
-        0 => 1f64,
-        1 => 3f64 / 2f64,
-        2 => 2f64,
-        3 => 5f64 / 2f64,
-        4 => 3f64,
-        5 => 7f64 / 2f64,
-        a => if a <= -6 { 2f64 / 8f64 } else { 4f64 }
-    }
-}
-
-pub fn determine_accuracy_stat_multiplier(stage: i8) -> f64 {
-    match stage {
-        -5 => 3f64/ 8f64,
-        -4 => 3f64/ 7f64,
-        -3 => 3f64/ 6f64,
-        -2 => 3f64/ 5f64,
-        -1 => 3f64/ 4f64,
-        0 => 1f64,
-        1 => 4f64 / 3f64,
-        2 => 5f64 / 3f64,
-        3 => 2f64,
-        4 => 7f64 / 3f64,
-        5 => 8f64 / 3f64,
-        a => if a <= -6 { 3f64 / 9f64 } else { 3f64 }
-    }
-}
-
 pub fn get_action_order(mut actions: Vec<(TurnAction, f64)>) -> Vec<(TurnAction, f64)> {
     actions.sort_unstable_by(|left, right| {
         let (left_action, left_speed) = left;
