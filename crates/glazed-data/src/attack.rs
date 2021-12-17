@@ -2,8 +2,10 @@
 
 use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
 use crate::types::Type;
-use glazed_core::{Fraction, Id};
+use glazed_core::{Id};
 use glazed_macro::*;
+
+use fraction::Fraction;
 
 /// Represents an Attack a Pokemon can have
 #[derive(Debug, Copy, Clone, PartialEq, Id)]
@@ -577,20 +579,22 @@ pub enum Accuracy {
     Variable
 }
 
+pub type FractionPlaceholder = (u8, u8);
+
 /// Represents the Power of a move
 #[derive(Debug)]
 pub enum Power {
     None,
     Base(u8),
-    BaseWithRecoil(u8, Fraction<u16>),
+    BaseWithRecoil(u8, FractionPlaceholder),
     BaseWithMercy(u8),
     WeightBased,
     WeightRatioBased,
     OneHitKnockout,
     Exact(u8),
-    Percentage(Fraction<u8>),
+    Percentage(FractionPlaceholder),
     Variable,
-    Revenge(Option<DamageType>, Fraction<u8>)
+    Revenge(Option<DamageType>, FractionPlaceholder)
 }
 
 /// Represents the type of Move, for contests
@@ -1782,7 +1786,7 @@ pub static TakeDown: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(90, Fraction::new(1, 4)),
+    power: Power::BaseWithRecoil(90, (1u8, 4u8)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -1806,7 +1810,7 @@ pub static DoubleEdge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(120, Fraction::new(1, 3)),
+    power: Power::BaseWithRecoil(120, (1u8, 3u8)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -2142,7 +2146,7 @@ pub static Submission: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(80, Fraction::new(1, 4)),
+    power: Power::BaseWithRecoil(80, (1u8, 4u8)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -2161,7 +2165,7 @@ pub static LowKick: MoveData = MoveData {
 pub static Counter: MoveData = MoveData {
     pp: 20,
     priority: -5,
-    power: Power::Revenge(Some(DamageType::Physical), Fraction::new(2, 1)),
+    power: Power::Revenge(Some(DamageType::Physical), (2u8, 1u8)),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,
@@ -3289,7 +3293,7 @@ pub static TriAttack: MoveData = MoveData {
 pub static SuperFang: MoveData = MoveData {
     pp: 10,
     priority: 0,
-    power: Power::Percentage(Fraction::new(1, 2)),
+    power: Power::Percentage((1u8, 2u8)),
     crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Normal,
@@ -3330,7 +3334,7 @@ pub static Struggle: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::RandomOpponent,
-    power: Power::BaseWithRecoil(50, Fraction::new(1, 4)),
+    power: Power::BaseWithRecoil(50, (1u8, 4u8)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -4261,7 +4265,7 @@ pub static Crunch: MoveData = MoveData {
 pub static MirrorCoat: MoveData = MoveData {
     pp: 20,
     priority: -5,
-    power: Power::Revenge(Some(DamageType::Special), Fraction::new(2, 1)),
+    power: Power::Revenge(Some(DamageType::Special), (2u8, 1u8)),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Psychic,
@@ -5478,7 +5482,7 @@ pub static VoltTackle: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(120, Fraction::new(1, 3)),
+    power: Power::BaseWithRecoil(120, (1u8, 3u8)),
 	crit_rate: None,
 	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 10)],
 };
@@ -5761,7 +5765,7 @@ pub static Acupressure: MoveData = MoveData {
 pub static MetalBurst: MoveData = MoveData {
     pp: 10,
     priority: 0,
-    power: Power::Revenge(None, Fraction::new(3, 2)),
+    power: Power::Revenge(None, (3u8, 2u8)),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Steel,
@@ -6078,7 +6082,7 @@ pub static FlareBlitz: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(120, Fraction::new(1, 3)),
+    power: Power::BaseWithRecoil(120, (1u8, 3u8)),
 	crit_rate: None,
 	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 10)],
 };
@@ -6306,7 +6310,7 @@ pub static BraveBird: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(120, Fraction::new(1, 3)),
+    power: Power::BaseWithRecoil(120, (1u8, 3u8)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -6774,7 +6778,7 @@ pub static WoodHammer: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(120, Fraction::new(1, 3)),
+    power: Power::BaseWithRecoil(120, (1u8, 3u8)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -6834,7 +6838,7 @@ pub static HeadSmash: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(150, Fraction::new(1, 2)),
+    power: Power::BaseWithRecoil(150, (1u8, 2u8)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -7686,7 +7690,7 @@ pub static WildCharge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(90, Fraction::new(1, 4)),
+    power: Power::BaseWithRecoil(90, (1u8, 4u8)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -7866,7 +7870,7 @@ pub static HeadCharge: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::BaseWithRecoil(120, Fraction::new(1, 4)),
+    power: Power::BaseWithRecoil(120, (1u8, 4u8)),
 	crit_rate: None,
 	effects: &[],
 };

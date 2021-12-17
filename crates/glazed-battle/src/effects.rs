@@ -1,6 +1,7 @@
 use std::convert::TryFrom;
 use std::ops::Mul;
 use either::Either;
+use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, Power};
@@ -600,7 +601,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
 
         if let Power::BaseWithRecoil(_, recoil) = &move_data.power {
             if attacker_ability != Ability::RockHead && attacker_ability != Ability::MagicGuard {
-                let recoil_damage = recoil.mul(damage).resolve();
+                let recoil_damage = Fraction::from(damage) * Fraction::from(*recoil);
+                let recoil_damage = recoil_damage.to_u16().unwrap_or(1);
                 let start_hp = attacker_pokemon.current_hp;
                 effects.push(ActionSideEffects::Recoil {
                     damaged: attacker,
@@ -676,8 +678,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
 
         if let Power::Percentage(fraction) = move_data.power {
-            let damage = u32::from(defender_pokemon.current_hp) * u32::from(fraction.numerator) / u32::from(fraction.denominator);
-            let mut damage = u16::try_from(damage).unwrap_or(u16::MAX);
+            let damage = Fraction::from(defender_pokemon.current_hp) * Fraction::from(fraction);
+            let mut damage = damage.to_u16().unwrap_or(u16::MAX);
             if damage == 0 {
                 damage = 1;
             }
@@ -785,8 +787,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             };
             match to_hit {
                 Some((target, _, damage)) => {
-                    let payback_damage = u32::from(*damage) * u32::from(fraction.numerator) / u32::from(fraction.denominator);
-                    let payback_damage = u16::try_from(payback_damage).unwrap_or(u16::MAX);
+                    let payback_damage = Fraction::from(*damage) * Fraction::from(*fraction);
+                    let payback_damage = payback_damage.to_u16().unwrap_or(0);
                     self.do_standard_basic_damage(self.get_battle_bundle(target), attacker_bundle, attack,
                                                   |start_hp| start_hp.saturating_sub(payback_damage))
                 },
