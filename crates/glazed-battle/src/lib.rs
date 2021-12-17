@@ -197,7 +197,9 @@ pub struct BattleData {
     /// The number of times the last move was used
     last_move_used_counter: u8,
     /// If present, contains the amount of damage this Pokemon encountered last
-    last_damager: Option<(Battler, Move, u16)>,
+    damage_this_turn: Vec<(Battler, Move, u16)>,
+    /// If present, the user is biding (turns left, damage accumulated)
+    bide: Option<(u8, u16)>,
 
     attack_stage: i8,
     defense_stage: i8,
@@ -273,13 +275,14 @@ pub struct BattleData {
     transformed: Option<TransformData>,
     /// This Pokemon is focused, increasing crit ratio
     focused: bool,
-
     /// If true, this Pokemon had a held item + subsequently lost it
     lost_held_item: bool,
     /// If present, this Pokemon has this ability instead of its usual one
     temp_ability: Option<Ability>,
     /// If present, this Pokemon has this type instead of its usual one
     temp_type: Option<PokemonType>,
+    /// If present, this Pokemon has this weight instead of its usual weight
+    temp_weight: Option<u16>,
     /// If true, this Pokemon has been Power Tricked, and its Attack and Defense are swapped
     power_trick: bool
 }
@@ -324,7 +327,7 @@ impl BattleData {
 
     pub fn end_of_turn(&mut self) {
         self.turn_count += 1;
-        self.last_damager = None;
+        self.damage_this_turn = Vec::new();
         self.has_acted_this_turn = false;
         self.has_landed_attack_this_turn = false;
     }
@@ -536,6 +539,11 @@ pub enum ActionSideEffects {
         end_hp: u16
     },
     ConsumedItem(Battler, Item),
+    PainSplit {
+        user: Battler,
+        defender: Battler,
+        split_hp: u16
+    },
     NoTarget
 }
 

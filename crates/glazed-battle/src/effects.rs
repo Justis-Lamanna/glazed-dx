@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+use std::ops::Mul;
 use either::Either;
 use rand::Rng;
 use glazed_data::abilities::Ability;
@@ -45,6 +46,7 @@ fn get_effective_species(pkmn: &Pokemon, battle_data: &BattleData) -> Species {
     }
 }
 
+/// Get the effective stat of this Pokemon. Takes Transform and stages into effect
 fn get_effective_stat(pkmn: &Pokemon, battle_data: &BattleData, stat: BattleStat) -> u16 {
     let base = match stat {
         BattleStat::Attack => battle_data.transformed.as_ref().map(|t| t.attack.value).unwrap_or(pkmn.attack.value),
@@ -83,6 +85,7 @@ fn get_effective_stat(pkmn: &Pokemon, battle_data: &BattleData, stat: BattleStat
     }
 }
 
+/// Get the raw critical hit stage of this Pokemon. Takes held item and ability into account
 fn get_raw_critical_hit(pkmn: &Pokemon, species: Species, ability: Ability) -> u8 {
     let mut value = 0;
     value += match pkmn.held_item {
@@ -99,6 +102,7 @@ fn get_raw_critical_hit(pkmn: &Pokemon, species: Species, ability: Ability) -> u
     value
 }
 
+/// Get the type of the move used. Takes ability and type-changing moves into account
 fn get_effective_move_type(attacker: BattleBundle, field: &Field, attack: Move, move_data: &MoveData) -> Type {
     let (_, attacker_pokemon, _, attacker_ability) = attacker;
     match attacker_ability {
@@ -157,6 +161,24 @@ fn get_effective_move_type(attacker: BattleBundle, field: &Field, attack: Move, 
     }
 }
 
+/// Get the effective weight of this Pokemon. Takes Ability, held item, and Autotomize into account
+fn get_effective_weight(pkmn: BattleBundle) -> u16 {
+    let (_, species, data, ability) = pkmn;
+    let mut weight = data.temp_weight.unwrap_or_else(|| species.species.data().weight);
+
+    if ability == Ability::HeavyMetal {
+        weight = weight.saturating_mul(2);
+    } else if ability == Ability::LightMetal {
+        weight = weight.saturating_div(2);
+    }
+
+    if let Some(Item::FloatStone) = species.held_item {
+        weight = weight.saturating_div(2);
+    }
+
+    if weight == 0 { 1 } else { weight }
+}
+
 type BattleBundle<'a> = (Battler, &'a Pokemon, &'a BattleData, Ability);
 
 impl <T> Battlefield<T> where T: BattleTypeTrait {
@@ -178,7 +200,11 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
 
                     if let Cause::Move(battler, attack) = cause {
                         let data = self.get_mut_battle_data(&damaged);
-                        data.last_damager = Some((*battler, *attack, delta))
+                        data.damage_this_turn.push((*battler, *attack, delta));
+
+                        if let Some((turns_left, damage_acc)) = data.bide {
+                            data.bide = Some((turns_left, damage_acc.saturating_add(delta)));
+                        }
                     }
                 },
                 ActionSideEffects::DirectDamage { damaged, end_hp, damager, attack, .. } => {
@@ -187,7 +213,11 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                     damaged_pkmn.current_hp = *end_hp;
 
                     let data = self.get_mut_battle_data(&damaged);
-                    data.last_damager = Some((*damager, *attack, delta))
+                    data.damage_this_turn.push((*damager, *attack, delta));
+
+                    if let Some((turns_left, damage_acc)) = data.bide {
+                        data.bide = Some((turns_left, damage_acc.saturating_add(delta)));
+                    }
                 },
                 ActionSideEffects::DamagedSubstitute { damaged, end_hp, ..} => {
                     let mut damaged = self.get_mut_battle_data(&damaged);
@@ -201,7 +231,17 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                     let mut damaged = self.get_mut_pokemon_by_id(&damaged);
                     damaged.unwrap().current_hp = *end_hp;
                 }
-                _ => {}
+                ActionSideEffects::Missed(_) => {}
+                ActionSideEffects::NoEffect(_) => {}
+                ActionSideEffects::Failed(_) => {}
+                ActionSideEffects::PainSplit { user, defender, split_hp } => {
+                    let mut first = self.get_mut_pokemon_by_id(user).unwrap();
+                    first.current_hp = (*split_hp).clamp(0, first.hp.value);
+
+                    let mut second = self.get_mut_pokemon_by_id(defender).unwrap();
+                    second.current_hp = (*split_hp).clamp(0, second.hp.value);
+                }
+                ActionSideEffects::NoTarget => {}
             }
         }
     }
@@ -279,7 +319,24 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
     }
 
-    pub fn do_damage_from_base_power(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
+    pub fn do_damage(&mut self, attacker: Battler, attack: Move, defender:Battler) -> Vec<ActionSideEffects> {
+        let move_data = attack.data();
+        let effects = match move_data.power {
+            Power::None => Vec::new(),
+            Power::Base(_) | Power::BaseWithRecoil(_, _) | Power::BaseWithMercy(_) | Power::WeightBased | Power::WeightRatioBased =>
+                self.do_damage_from_base_power(attacker, attack, defender),
+            Power::OneHitKnockout => self.do_ohko(attacker, attack, defender),
+            Power::Exact(_) => self.do_exact_damage(attacker, attack, defender),
+            Power::Variable => self.do_one_off_damage(attacker, attack, defender),
+            Power::Percentage(_) => self.do_percent_damage(attacker, attack, defender),
+            Power::Revenge(_, _) => Vec::new()
+        };
+
+        self.apply_side_effects(&effects);
+        effects
+    }
+
+    fn do_damage_from_base_power(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
         let attacker_bundle = self.get_battle_bundle(&attacker);
         let (attacker, attacker_pokemon, attacker_data, attacker_ability) = attacker_bundle;
         let attacker_type = get_effective_type(attacker_pokemon, attacker_data);
@@ -322,14 +379,30 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             DamageType::Status => panic!("Status move should not do direct damage??")
         };
 
-        let base = if let Power::Base(base) = move_data.power {
-            u32::from(base)
-        } else if let Power::BaseWithRecoil(base, _) = move_data.power {
-            u32::from(base)
-        } else if let Power::BaseWithMercy(base) = move_data.power {
-            u32::from(base)
-        } else {
-            panic!("do_damage_from_base_power called with attack with no base power")
+        let base = match move_data.power {
+            Power::Base(base) | Power::BaseWithRecoil(base, _) | Power::BaseWithMercy(base) => u32::from(base),
+            Power::WeightBased => {
+                let weight = get_effective_weight(defender_bundle);
+                match weight {
+                    0..=99 => 20,
+                    100..=249 => 40,
+                    250..=499 => 60,
+                    500..=999 => 80,
+                    1000..=1999 => 100,
+                    2000..=u16::MAX => 120
+                }
+            },
+            Power::WeightRatioBased => {
+                let attacker_weight = get_effective_weight(attacker_bundle) as f64;
+                let defender_weight = get_effective_weight(defender_bundle) as f64;
+                let ratio = attacker_weight / defender_weight;
+                if ratio > 0.5 { 40 }
+                else if ratio > 0.3335 { 60 }
+                else if ratio > 0.2501 { 80 }
+                else if ratio > 0.2001 { 100 }
+                else { 120 }
+            }
+            _ => panic!("do_damage_from_base_power called with attack with no base power")
         };
 
         let base_damage_num = (((2 * u32::from(attacker_pokemon.level)) / 5) + 2) * base * u32::from(ea);
@@ -525,9 +598,9 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             // Additional ability effects can go here
         }
 
-        if let Power::BaseWithRecoil(_, recoil) = move_data.power {
+        if let Power::BaseWithRecoil(_, recoil) = &move_data.power {
             if attacker_ability != Ability::RockHead && attacker_ability != Ability::MagicGuard {
-                let recoil_damage = damage * u16::from(recoil) / 100;
+                let recoil_damage = recoil.mul(damage).resolve();
                 let start_hp = attacker_pokemon.current_hp;
                 effects.push(ActionSideEffects::Recoil {
                     damaged: attacker,
@@ -538,11 +611,10 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             }
         }
 
-        self.apply_side_effects(&effects);
         effects
     }
 
-    pub fn do_ohko(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
+    fn do_ohko(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
         let attacker_bundle = self.get_battle_bundle(&attacker);
 
         let defender_bundle = self.get_battle_bundle(&defender);
@@ -555,17 +627,14 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         let effective_move_type = get_effective_move_type(attacker_bundle, &self.field, attack, move_data);
         let effectiveness = defender_type.defending_against(&effective_move_type);
 
-        let effects = if let Effectiveness::Immune = effectiveness {
+        if let Effectiveness::Immune = effectiveness {
             vec![ActionSideEffects::NoEffect(Cause::Natural)]
         } else {
             self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| 0)
-        };
-
-        self.apply_side_effects(&effects);
-        effects
+        }
     }
 
-    pub fn do_exact_damage(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
+    fn do_exact_damage(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
         let attacker_bundle: BattleBundle = self.get_battle_bundle(&attacker);
 
         let defender_bundle = self.get_battle_bundle(&defender);
@@ -589,7 +658,36 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
     }
 
-    pub fn do_one_off_damage(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
+    fn do_percent_damage(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
+        let attacker_bundle = self.get_battle_bundle(&attacker);
+
+        let defender_bundle = self.get_battle_bundle(&defender);
+        let (_, defender_pokemon, defender_data, _) = defender_bundle;
+        let defender_type = get_effective_type(defender_pokemon, defender_data);
+
+        let move_data = attack.data();
+
+        // Effectiveness Calculation
+        let effective_move_type = get_effective_move_type(attacker_bundle, &self.field, attack, move_data);
+        let effectiveness = defender_type.defending_against(&effective_move_type);
+
+        if let Effectiveness::Immune = effectiveness {
+            return vec![ActionSideEffects::NoEffect(Cause::Natural)]
+        }
+
+        if let Power::Percentage(fraction) = move_data.power {
+            let damage = u32::from(defender_pokemon.current_hp) * u32::from(fraction.numerator) / u32::from(fraction.denominator);
+            let mut damage = u16::try_from(damage).unwrap_or(u16::MAX);
+            if damage == 0 {
+                damage = 1;
+            }
+            self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
+        } else {
+            panic!("Called do_percent_damage with incorrect power type")
+        }
+    }
+
+    fn do_one_off_damage(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
         let attacker_bundle = self.get_battle_bundle(&attacker);
         let (attacker, attacker_pokemon, _, _) = attacker_bundle;
 
@@ -607,7 +705,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             return vec![ActionSideEffects::NoEffect(Cause::Natural)]
         }
 
-        let effects = match attack {
+        match attack {
             Move::Endeavor => {
                 let user_hp = attacker_pokemon.current_hp;
                 let target_hp = if defender_data.substituted > 0 {
@@ -650,18 +748,53 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 }
                 self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
             },
-            Move::SuperFang => {
-                let mut damage = defender_pokemon.current_hp / 2;
-                if damage == 0 {
-                    damage = 1;
+            Move::PainSplit => {
+                if defender_data.substituted > 0 {
+                    return vec![ActionSideEffects::Failed(Cause::Natural)]
                 }
-                self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
-            },
+                let calc = u32::from(attacker_pokemon.current_hp) + u32::from(defender_pokemon.current_hp);
+                let hp = u16::try_from(calc / 2).unwrap(); // Per the existence of math, we can guarantee this will work fine.
+                vec![ActionSideEffects::PainSplit {
+                    user: attacker,
+                    defender,
+                    split_hp: hp
+                }]
+            }
             a => panic!("{:?} does not have one-off damage associated with it", a)
-        };
+        }
+    }
 
-        self.apply_side_effects(&effects);
-        effects
+    fn do_revenge_damage(&mut self, attacker: Battler, attack: Move) -> Vec<ActionSideEffects> {
+        let attacker_bundle = self.get_battle_bundle(&attacker);
+        let (_, _, attacker_data, _) = attacker_bundle;
+
+        let move_data = attack.data();
+
+        if let Power::Revenge(t, fraction) = &move_data.power {
+            let to_hit = match t {
+                Some(dt) => {
+                    // Find the most recent attack of the correct type that damaged the user
+                    attacker_data.damage_this_turn.iter()
+                        .filter(|(battler, attack, damage)| attack.data().damage_type == *dt)
+                        .last()
+                },
+                None => {
+                    // (Metal Burst) select the last damager
+                    attacker_data.damage_this_turn.last()
+                }
+            };
+            match to_hit {
+                Some((target, _, damage)) => {
+                    let payback_damage = u32::from(*damage) * u32::from(fraction.numerator) / u32::from(fraction.denominator);
+                    let payback_damage = u16::try_from(payback_damage).unwrap_or(u16::MAX);
+                    self.do_standard_basic_damage(self.get_battle_bundle(target), attacker_bundle, attack,
+                                                  |start_hp| start_hp.saturating_sub(payback_damage))
+                },
+                None => vec![ActionSideEffects::Failed(Cause::Natural)]
+            }
+        } else {
+            panic!("Called do_revenge_damage for move without Revenge power type")
+        }
     }
 }
 
