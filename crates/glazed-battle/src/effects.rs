@@ -156,25 +156,51 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
     }
 
-    fn do_damage_side_effect<F>(&self, defender: BattleBundle, attacker: BattleBundle, calc_end_hp: F) -> ActionSideEffects
+    fn do_damage_side_effect<F>(&self, defender: BattleBundle, attacker: BattleBundle, calc_end_hp: F) -> Vec<ActionSideEffects>
         where F: Fn(u16) -> u16 {
         if defender.2.substituted > 0 {
             let start_hp = defender.2.substituted;
             let end_hp = calc_end_hp(start_hp);
-            ActionSideEffects::DamagedSubstitute {
+            vec![ActionSideEffects::DamagedSubstitute {
                 damaged: defender.0,
                 start_hp,
                 end_hp
-            }
+            }]
         } else {
             let start_hp = defender.1.current_hp;
             let end_hp = calc_end_hp(start_hp);
-            ActionSideEffects::BasicDamage {
-                damaged: defender.0,
-                start_hp,
-                end_hp,
-                cause: Cause::Natural
+
+            let hang_on = if end_hp == 0 {
+                self.hang_on(defender, attacker)
+            } else {
+                None
+            };
+
+            let mut effects = Vec::new();
+            match hang_on {
+                Some(c) => {
+                    if let Cause::HeldItem(battler, item) = c {
+                        effects.push(ActionSideEffects::ConsumedItem(battler, item))
+                    }
+                    effects.push(
+                        ActionSideEffects::BasicDamage {
+                            damaged: defender.0,
+                            start_hp,
+                            end_hp: 1,
+                            cause: Cause::Natural
+                        }
+                    );
+                },
+                None => {
+                    effects.push(ActionSideEffects::BasicDamage {
+                        damaged: defender.0,
+                        start_hp,
+                        end_hp,
+                        cause: Cause::Natural
+                    });
+                }
             }
+            effects
         }
     }
 
@@ -467,7 +493,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 effects.push(ActionSideEffects::Recoil {
                     damaged: attacker,
                     start_hp,
-                    end_hp: start_hp.saturating_sub(recoil_damage)
+                    end_hp: start_hp.saturating_sub(recoil_damage),
+                    cause: Cause::Move(attacker, attack)
                 });
             }
         }
@@ -481,10 +508,14 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         let attacker_data = self.get_battle_data(&attacker);
         let attacker_ability = get_effective_ability(attacker_pokemon, attacker_data);
 
+        let attacker_bundle: BattleBundle = (attacker, attacker_pokemon, attacker_data, attacker_ability);
+
         let defender_pokemon = self.get_pokemon_by_id(&defender).unwrap();
         let defender_data = self.get_battle_data(&defender);
         let defender_ability = get_effective_ability(defender_pokemon, defender_data);
         let defender_type = get_effective_type(defender_pokemon, defender_data);
+
+        let defender_bundle: BattleBundle = (defender, defender_pokemon, defender_data, defender_ability);
 
         let move_data = attack.data();
 
@@ -551,40 +582,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
 
         let effects = if let Effectiveness::Immune = effectiveness {
             vec![ActionSideEffects::NoEffect(Cause::Natural)]
-        } else if defender_data.substituted > 0 {
-            vec![ActionSideEffects::DamagedSubstitute {
-                damaged: defender,
-                start_hp: defender_data.substituted,
-                end_hp: 0
-            }]
         } else {
-            if defender_ability == Ability::Sturdy {
-                let sturdy_cause = Cause::Ability(defender, Ability::Sturdy);
-                if attacker_ability == Ability::MoldBreaker || attacker_ability == Ability::Teravolt || attacker_ability == Ability::Turboblaze {
-                    vec![ActionSideEffects::BasicDamage {
-                        damaged: defender,
-                        start_hp: defender_pokemon.current_hp,
-                        end_hp: 0,
-                        cause: sturdy_cause.overwrite(Cause::Ability(attacker, attacker_ability))
-                    }]
-                } else {
-                    vec![ActionSideEffects::NoEffect(sturdy_cause)]
-                }
-            } else if let Some(Item::FocusSash) = defender_pokemon.held_item {
-                vec![ActionSideEffects::BasicDamage {
-                    damaged: defender,
-                    start_hp: defender_pokemon.current_hp,
-                    end_hp: 1,
-                    cause: Cause::HeldItem(defender, Item::FocusSash)
-                }, ActionSideEffects::ConsumedItem(defender, Item::FocusSash)]
-            } else {
-                vec![ActionSideEffects::BasicDamage {
-                    damaged: defender,
-                    start_hp: defender_pokemon.current_hp,
-                    end_hp: 0,
-                    cause: Cause::Natural
-                }]
-            }
+            self.do_damage_side_effect(defender_bundle, attacker_bundle,|start_hp| 0)
         };
 
         self.apply_side_effects(&effects);
@@ -671,9 +670,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         if let Effectiveness::Immune = effectiveness {
             vec![ActionSideEffects::NoEffect(Cause::Natural)]
         } else if let Power::Exact(delta) = move_data.power {
-            let e = self.do_damage_side_effect(defender_bundle, attacker_bundle,
-                                                       |start_hp| start_hp.saturating_sub(u16::from(delta)));
-            vec![e]
+            self.do_damage_side_effect(defender_bundle, attacker_bundle,
+                                                       |start_hp| start_hp.saturating_sub(u16::from(delta)))
         } else {
             panic!("do_exact_damage called with non-exact damage move")
         }
@@ -759,12 +757,12 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         };
         let effectiveness = defender_type.defending_against(&effective_move_type);
 
+        if let Effectiveness::Immune = effectiveness {
+            return vec![ActionSideEffects::NoEffect(Cause::Natural)]
+        }
+
         match attack {
             Move::Endeavor => {
-                if let Effectiveness::Immune = effectiveness {
-                    return vec![ActionSideEffects::NoEffect(Cause::Natural)]
-                }
-
                 let user_hp = attacker_pokemon.current_hp;
                 let target_hp = if defender_data.substituted > 0 {
                     defender_data.substituted
@@ -774,67 +772,34 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 if user_hp >= target_hp {
                     vec![ActionSideEffects::Failed(Cause::Natural)]
                 } else {
-                    vec![self.do_damage_side_effect(defender_bundle, attacker_bundle, |start_hp| user_hp)]
+                    self.do_damage_side_effect(defender_bundle, attacker_bundle, |start_hp| user_hp)
                 }
             },
             Move::FinalGambit => {
-                if let Effectiveness::Immune = effectiveness {
-                    return vec![ActionSideEffects::NoEffect(Cause::Natural)]
-                }
-
                 let damage = attacker_pokemon.current_hp;
+
+                // User Damage technically happens first, so the user would lose in a 1 on 1 if dealing lethal damage
                 let mut effects = vec![ActionSideEffects::BasicDamage {
                     damaged: attacker,
                     start_hp: damage,
                     end_hp: 0,
                     cause: Cause::Natural
                 }];
-                if defender_data.substituted > 0 {
-                    effects.push(
-                        ActionSideEffects::DamagedSubstitute {
-                            damaged: defender,
-                            start_hp: defender_data.substituted,
-                            end_hp: defender_data.substituted.saturating_sub(damage)
-                        }
-                    );
-                } else {
-                    let defender_start_hp = defender_pokemon.current_hp;
-                    let defender_end_hp = defender_start_hp.saturating_sub(damage);
-                    if defender_end_hp == 0 {
-                        let hang_on = self.hang_on(defender_bundle, attacker_bundle);
-                        match hang_on {
-                            Some(c) => {
-                                if let Cause::HeldItem(battler, item) = &c {
-                                    effects.push(ActionSideEffects::ConsumedItem(*battler, item.clone()));
-                                }
-                                effects.push(ActionSideEffects::BasicDamage {
-                                    damaged: defender,
-                                    start_hp: defender_start_hp,
-                                    end_hp: 1,
-                                    cause: c
-                                });
-                            },
-                            None => {
-                                effects.push(ActionSideEffects::BasicDamage {
-                                    damaged: defender,
-                                    start_hp: defender_start_hp,
-                                    end_hp: defender_end_hp,
-                                    cause: Cause::Natural
-                                })
-                            }
-                        }
-                    } else {
-                        effects.push(ActionSideEffects::BasicDamage {
-                            damaged: defender,
-                            start_hp: defender_start_hp,
-                            end_hp: defender_end_hp,
-                            cause: Cause::Natural
-                        })
-                    }
+
+                for fx in self.do_damage_side_effect(defender_bundle, attacker_bundle, |start_hp| start_hp.saturating_sub(damage)) {
+                    effects.push(fx);
                 }
 
                 effects
             },
+            Move::NightShade => {
+                let damage = u16::from(attacker_pokemon.level);
+                self.do_damage_side_effect(defender_bundle, attacker_bundle, |start_hp| start_hp.saturating_sub(damage))
+            },
+            Move::Psywave => {
+                let damage = u32::from(attacker_pokemon.level) * ((10 * rand::thread_rng().gen_range(0..=100)) + 50) / 100;
+                self.do_damage_side_effect(defender_bundle, attacker_bundle, |start_hp| start_hp.saturating_sub(u16::try_from(damage).unwrap_or(u16::MAX)))
+            }
             a => panic!("{:?} does not have one-off damage associated with it", a)
         }
     }

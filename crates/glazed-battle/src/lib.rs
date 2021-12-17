@@ -518,7 +518,8 @@ pub enum ActionSideEffects {
     Recoil {
         damaged: Battler,
         start_hp: u16,
-        end_hp: u16
+        end_hp: u16,
+        cause: Cause
     },
     BasicDamage {
         damaged: Battler,
@@ -526,7 +527,7 @@ pub enum ActionSideEffects {
         end_hp: u16,
         cause: Cause
     },
-    Missed,
+    Missed(Cause),
     NoEffect(Cause),
     Failed(Cause),
     DamagedSubstitute {

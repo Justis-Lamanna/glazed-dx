@@ -7521,7 +7521,7 @@ pub static Retaliate: MoveData = MoveData {
 pub static FinalGambit: MoveData = MoveData {
     pp: 5,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,

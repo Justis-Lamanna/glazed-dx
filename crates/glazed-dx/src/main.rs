@@ -3,13 +3,15 @@ use glazed_battle::single::SingleBattleSide;
 use glazed_data::constants::Species;
 use glazed_data::pokemon::PokemonTemplate;
 use glazed_data::attack::Move;
-use glazed_data::attack::Move::Moonlight;
+use glazed_data::item::Item;
 
 fn main() {
     let me = Party::create_one(PokemonTemplate::pokemon(Species::Quilava, 20));
-    let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 20));
+    let mut ivysaur = PokemonTemplate::pokemon(Species::Ivysaur, 20);
+    ivysaur.held_item = Some(Item::FocusSash);
+    let them = Party::create_one(ivysaur);
     let mut battlefield = Battlefield::single_battle(me, them);
-    let fx = battlefield.do_one_off_damage(SingleBattleSide::USER, Move::FinalGambit, SingleBattleSide::OPPONENT);
+    let fx = battlefield.do_ohko(SingleBattleSide::USER, Move::Guillotine, SingleBattleSide::OPPONENT);
     // let turn = battlefield.perform_turn(
     //     TurnAction::Attack(Move::Tackle, SingleBattleSide::OPPONENT),
     //     TurnAction::Attack(Move::QuickAttack, SingleBattleSide::USER));
