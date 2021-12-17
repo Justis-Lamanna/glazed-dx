@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+use either::Either;
 use rand::Rng;
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, Power};
@@ -6,7 +7,7 @@ use glazed_data::constants::Species;
 use glazed_data::item::{Berry, EvolutionHeldItem, Item};
 use glazed_data::pokemon::Pokemon;
 use glazed_data::types::{Effectiveness, PokemonType, Type};
-use crate::{ActionSideEffects, BattleData, Battlefield, Battler, BattleTypeTrait, Cause, SemiInvulnerableLocation, Weather};
+use crate::{ActionSideEffects, BattleData, Battlefield, Battler, BattleTypeTrait, Cause, Field, SemiInvulnerableLocation, Weather};
 use crate::TurnAction::Attack;
 
 /// Simple utility to drain a vector into another one
@@ -98,23 +99,95 @@ fn get_raw_critical_hit(pkmn: &Pokemon, species: Species, ability: Ability) -> u
     value
 }
 
-fn consume_item(pkmn: &mut Pokemon, data: &mut BattleData) {
-    pkmn.held_item = None;
+fn get_effective_move_type(attacker: BattleBundle, field: &Field, attack: Move, move_data: &MoveData) -> Type {
+    let (_, attacker_pokemon, _, attacker_ability) = attacker;
+    match attacker_ability {
+        Ability::Normalize if attack != Move::HiddenPower ||
+            attack != Move::WeatherBall ||
+            attack != Move::NaturalGift ||
+            attack != Move::Judgment ||
+            attack != Move::TechnoBlast => return Type::Normal,
+        _ => {}
+    };
+
+    match attack {
+        Move::HiddenPower => attacker_pokemon.get_hidden_power_type(),
+        Move::WeatherBall => match field.weather {
+            Some(Weather::Sun(_)) => Type::Fire,
+            Some(Weather::Rain(_)) => Type::Water,
+            Some(Weather::Hail(_)) => Type::Ice,
+            Some(Weather::Sandstorm(_)) => Type::Rock,
+            Some(Weather::Fog) | None => Type::Normal
+        },
+        Move::Judgment => match attacker_pokemon.held_item {
+            Some(Item::DracoPlate) => Type::Dragon,
+            Some(Item::DreadPlate) => Type::Dark,
+            Some(Item::EarthPlate) => Type::Ground,
+            Some(Item::FistPlate) => Type::Fighting,
+            Some(Item::FlamePlate) => Type::Fire,
+            Some(Item::IciclePlate) => Type::Ice,
+            Some(Item::InsectPlate) => Type::Bug,
+            Some(Item::Iron) => Type::Steel,
+            Some(Item::MeadowPlate) => Type::Grass,
+            Some(Item::MindPlate) => Type::Psychic,
+            Some(Item::PixiePlate) => Type::Fairy,
+            Some(Item::SkyPlate) => Type::Flying,
+            Some(Item::SplashPlate) => Type::Water,
+            Some(Item::SpookyPlate) => Type::Ghost,
+            Some(Item::StonePlate) => Type::Rock,
+            Some(Item::ToxicPlate) => Type::Poison,
+            Some(Item::ZapPlate) => Type::Electric,
+            _ => Type::Normal
+        },
+        Move::TechnoBlast => match attacker_pokemon.held_item {
+            Some(Item::DouseDrive) => Type::Water,
+            Some(Item::ShockDrive) => Type::Electric,
+            Some(Item::ChillDrive) => Type::Ice,
+            Some(Item::BurnDrive) => Type::Fire,
+            _ => Type::Normal
+        },
+        Move::NaturalGift => {
+            if let Some(Item::Berry(a)) = &attacker_pokemon.held_item {
+                a.get_natural_gift_type()
+            } else {
+                move_data._type
+            }
+        }
+        _ => move_data._type
+    }
 }
 
 type BattleBundle<'a> = (Battler, &'a Pokemon, &'a BattleData, Ability);
 
 impl <T> Battlefield<T> where T: BattleTypeTrait {
+    fn get_battle_bundle(&self, id: &Battler) -> BattleBundle {
+        let pokemon = self.get_pokemon_by_id(id).unwrap();
+        let data = self.get_battle_data(id);
+        let ability = get_effective_ability(pokemon, data);
+
+        (*id, pokemon, data, ability)
+    }
+
     fn apply_side_effects(&mut self, effects: &Vec<ActionSideEffects>) {
         for effect in effects {
             match effect {
-                ActionSideEffects::BasicDamage {damaged, end_hp, ..} => {
-                    let mut damaged = self.get_mut_pokemon_by_id(&damaged);
-                    damaged.unwrap().current_hp = *end_hp;
+                ActionSideEffects::BasicDamage {damaged, end_hp, cause, ..} => {
+                    let mut damaged_pkmn = self.get_mut_pokemon_by_id(&damaged).unwrap();
+                    let delta = damaged_pkmn.current_hp - *end_hp;
+                    damaged_pkmn.current_hp = *end_hp;
+
+                    if let Cause::Move(battler, attack) = cause {
+                        let data = self.get_mut_battle_data(&damaged);
+                        data.last_damager = Some((*battler, *attack, delta))
+                    }
                 },
-                ActionSideEffects::DirectDamage { damaged, end_hp, .. } => {
-                    let mut damaged = self.get_mut_pokemon_by_id(&damaged);
-                    damaged.unwrap().current_hp = *end_hp;
+                ActionSideEffects::DirectDamage { damaged, end_hp, damager, attack, .. } => {
+                    let damaged_pkmn = self.get_mut_pokemon_by_id(&damaged).unwrap();
+                    let delta = damaged_pkmn.current_hp - *end_hp;
+                    damaged_pkmn.current_hp = *end_hp;
+
+                    let data = self.get_mut_battle_data(&damaged);
+                    data.last_damager = Some((*damager, *attack, delta))
                 },
                 ActionSideEffects::DamagedSubstitute { damaged, end_hp, ..} => {
                     let mut damaged = self.get_mut_battle_data(&damaged);
@@ -156,7 +229,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
     }
 
-    fn do_damage_side_effect<F>(&self, defender: BattleBundle, attacker: BattleBundle, calc_end_hp: F) -> Vec<ActionSideEffects>
+    fn do_standard_basic_damage<F>(&self, defender: BattleBundle, attacker: BattleBundle, attack: Move, calc_end_hp: F) -> Vec<ActionSideEffects>
         where F: Fn(u16) -> u16 {
         if defender.2.substituted > 0 {
             let start_hp = defender.2.substituted;
@@ -179,7 +252,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             let mut effects = Vec::new();
             match hang_on {
                 Some(c) => {
-                    if let Cause::HeldItem(battler, item) = c {
+                    if let Cause::HeldItem(battler, item) = c.clone() {
                         effects.push(ActionSideEffects::ConsumedItem(battler, item))
                     }
                     effects.push(
@@ -187,7 +260,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                             damaged: defender.0,
                             start_hp,
                             end_hp: 1,
-                            cause: Cause::Natural
+                            cause: Cause::Move(attacker.0, attack),
+                            hung_on_cause: Some(c)
                         }
                     );
                 },
@@ -196,7 +270,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                         damaged: defender.0,
                         start_hp,
                         end_hp,
-                        cause: Cause::Natural
+                        cause: Cause::Move(attacker.0, attack),
+                        hung_on_cause: None
                     });
                 }
             }
@@ -205,15 +280,13 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     }
 
     pub fn do_damage_from_base_power(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
-        let attacker_pokemon = self.get_pokemon_by_id(&attacker).unwrap();
-        let attacker_data = self.get_battle_data(&attacker);
-        let attacker_ability = get_effective_ability(attacker_pokemon, attacker_data);
+        let attacker_bundle = self.get_battle_bundle(&attacker);
+        let (attacker, attacker_pokemon, attacker_data, attacker_ability) = attacker_bundle;
         let attacker_type = get_effective_type(attacker_pokemon, attacker_data);
         let attacker_species = get_effective_species(attacker_pokemon, attacker_data);
 
-        let defender_pokemon = self.get_pokemon_by_id(&defender).unwrap();
-        let defender_data = self.get_battle_data(&defender);
-        let defender_ability = get_effective_ability(defender_pokemon, defender_data);
+        let defender_bundle = self.get_battle_bundle(&defender);
+        let (defender, defender_pokemon, defender_data, defender_ability) = defender_bundle;
         let defender_type = get_effective_type(defender_pokemon, defender_data);
         let defender_side = self.get_side(&defender);
 
@@ -221,64 +294,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         let mut effects = Vec::new();
 
         // Effectiveness Calculation
-        let effective_move_type = match attacker_ability {
-            Ability::Normalize if attack != Move::HiddenPower ||
-                attack != Move::WeatherBall ||
-                attack != Move::NaturalGift ||
-                attack != Move::Judgment ||
-                attack != Move::TechnoBlast => Type::Normal,
-            _ => {
-                match attack {
-                    Move::HiddenPower => attacker_pokemon.get_hidden_power_type(),
-                    Move::WeatherBall => match self.field.weather {
-                        Some(Weather::Sun(_)) => Type::Fire,
-                        Some(Weather::Rain(_)) => Type::Water,
-                        Some(Weather::Hail(_)) => Type::Ice,
-                        Some(Weather::Sandstorm(_)) => Type::Rock,
-                        Some(Weather::Fog) | None => Type::Normal
-                    },
-                    Move::Judgment => match attacker_pokemon.held_item {
-                        Some(Item::DracoPlate) => Type::Dragon,
-                        Some(Item::DreadPlate) => Type::Dark,
-                        Some(Item::EarthPlate) => Type::Ground,
-                        Some(Item::FistPlate) => Type::Fighting,
-                        Some(Item::FlamePlate) => Type::Fire,
-                        Some(Item::IciclePlate) => Type::Ice,
-                        Some(Item::InsectPlate) => Type::Bug,
-                        Some(Item::Iron) => Type::Steel,
-                        Some(Item::MeadowPlate) => Type::Grass,
-                        Some(Item::MindPlate) => Type::Psychic,
-                        Some(Item::PixiePlate) => Type::Fairy,
-                        Some(Item::SkyPlate) => Type::Flying,
-                        Some(Item::SplashPlate) => Type::Water,
-                        Some(Item::SpookyPlate) => Type::Ghost,
-                        Some(Item::StonePlate) => Type::Rock,
-                        Some(Item::ToxicPlate) => Type::Poison,
-                        Some(Item::ZapPlate) => Type::Electric,
-                        _ => Type::Normal
-                    },
-                    Move::TechnoBlast => match attacker_pokemon.held_item {
-                        Some(Item::DouseDrive) => Type::Water,
-                        Some(Item::ShockDrive) => Type::Electric,
-                        Some(Item::ChillDrive) => Type::Ice,
-                        Some(Item::BurnDrive) => Type::Fire,
-                        _ => Type::Normal
-                    },
-                    Move::NaturalGift => {
-                        if let Some(Item::Berry(a)) = &attacker_pokemon.held_item {
-                            if attacker_ability != Ability::Klutz && self.field.magic_room == 0 && attacker_data.embargo == 0 {
-                                a.get_natural_gift_type()
-                            } else {
-                                return vec![ActionSideEffects::Failed(Cause::Natural)]
-                            }
-                        } else {
-                            return vec![ActionSideEffects::Failed(Cause::Natural)]
-                        }
-                    }
-                    _ => move_data._type
-                }
-            }
-        };
+        let effective_move_type = get_effective_move_type(attacker_bundle, &self.field, attack, move_data);
         let effectiveness = defender_type.defending_against(&effective_move_type);
 
         if let Effectiveness::Immune = effectiveness {
@@ -475,13 +491,36 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             if let Power::BaseWithMercy(_) = move_data.power {
                 end_hp = end_hp.clamp(1, u16::MAX);
             }
-            effects.push(ActionSideEffects::DirectDamage {
-                damaged: defender,
-                start_hp,
-                end_hp,
-                critical_hit: crit,
-                effectiveness
-            });
+            let hang_on = if end_hp == 0 {
+                self.hang_on(defender_bundle, attacker_bundle)
+            } else {
+                None
+            };
+            match hang_on {
+                None => {
+                    effects.push(ActionSideEffects::DirectDamage {
+                        damaged: defender,
+                        damager: attacker,
+                        attack,
+                        start_hp,
+                        end_hp,
+                        critical_hit: crit,
+                        effectiveness,
+                        hung_on_cause: None
+                    });
+                }, Some(c) => {
+                    effects.push(ActionSideEffects::DirectDamage {
+                        damaged: defender,
+                        damager: attacker,
+                        attack,
+                        start_hp,
+                        end_hp: 1,
+                        critical_hit: crit,
+                        effectiveness,
+                        hung_on_cause: Some(c)
+                    });
+                }
+            }
 
             // Additional ability effects can go here
         }
@@ -504,86 +543,22 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     }
 
     pub fn do_ohko(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
-        let attacker_pokemon = self.get_pokemon_by_id(&attacker).unwrap();
-        let attacker_data = self.get_battle_data(&attacker);
-        let attacker_ability = get_effective_ability(attacker_pokemon, attacker_data);
+        let attacker_bundle = self.get_battle_bundle(&attacker);
 
-        let attacker_bundle: BattleBundle = (attacker, attacker_pokemon, attacker_data, attacker_ability);
-
-        let defender_pokemon = self.get_pokemon_by_id(&defender).unwrap();
-        let defender_data = self.get_battle_data(&defender);
-        let defender_ability = get_effective_ability(defender_pokemon, defender_data);
+        let defender_bundle = self.get_battle_bundle(&defender);
+        let (_, defender_pokemon, defender_data, _) = defender_bundle;
         let defender_type = get_effective_type(defender_pokemon, defender_data);
-
-        let defender_bundle: BattleBundle = (defender, defender_pokemon, defender_data, defender_ability);
 
         let move_data = attack.data();
 
         // Effectiveness Calculation
-        let effective_move_type = match attacker_ability {
-            Ability::Normalize if attack != Move::HiddenPower ||
-                attack != Move::WeatherBall ||
-                attack != Move::NaturalGift ||
-                attack != Move::Judgment ||
-                attack != Move::TechnoBlast => Type::Normal,
-            _ => {
-                match attack {
-                    Move::HiddenPower => attacker_pokemon.get_hidden_power_type(),
-                    Move::WeatherBall => match self.field.weather {
-                        Some(Weather::Sun(_)) => Type::Fire,
-                        Some(Weather::Rain(_)) => Type::Water,
-                        Some(Weather::Hail(_)) => Type::Ice,
-                        Some(Weather::Sandstorm(_)) => Type::Rock,
-                        Some(Weather::Fog) | None => Type::Normal
-                    },
-                    Move::Judgment => match attacker_pokemon.held_item {
-                        Some(Item::DracoPlate) => Type::Dragon,
-                        Some(Item::DreadPlate) => Type::Dark,
-                        Some(Item::EarthPlate) => Type::Ground,
-                        Some(Item::FistPlate) => Type::Fighting,
-                        Some(Item::FlamePlate) => Type::Fire,
-                        Some(Item::IciclePlate) => Type::Ice,
-                        Some(Item::InsectPlate) => Type::Bug,
-                        Some(Item::Iron) => Type::Steel,
-                        Some(Item::MeadowPlate) => Type::Grass,
-                        Some(Item::MindPlate) => Type::Psychic,
-                        Some(Item::PixiePlate) => Type::Fairy,
-                        Some(Item::SkyPlate) => Type::Flying,
-                        Some(Item::SplashPlate) => Type::Water,
-                        Some(Item::SpookyPlate) => Type::Ghost,
-                        Some(Item::StonePlate) => Type::Rock,
-                        Some(Item::ToxicPlate) => Type::Poison,
-                        Some(Item::ZapPlate) => Type::Electric,
-                        _ => Type::Normal
-                    },
-                    Move::TechnoBlast => match attacker_pokemon.held_item {
-                        Some(Item::DouseDrive) => Type::Water,
-                        Some(Item::ShockDrive) => Type::Electric,
-                        Some(Item::ChillDrive) => Type::Ice,
-                        Some(Item::BurnDrive) => Type::Fire,
-                        _ => Type::Normal
-                    },
-                    Move::NaturalGift => {
-                        if let Some(Item::Berry(a)) = &attacker_pokemon.held_item {
-                            if attacker_ability != Ability::Klutz && self.field.magic_room == 0 && attacker_data.embargo == 0 {
-                                a.get_natural_gift_type()
-                            } else {
-                                return vec![ActionSideEffects::Failed(Cause::Natural)]
-                            }
-                        } else {
-                            return vec![ActionSideEffects::Failed(Cause::Natural)]
-                        }
-                    }
-                    _ => move_data._type
-                }
-            }
-        };
+        let effective_move_type = get_effective_move_type(attacker_bundle, &self.field, attack, move_data);
         let effectiveness = defender_type.defending_against(&effective_move_type);
 
         let effects = if let Effectiveness::Immune = effectiveness {
             vec![ActionSideEffects::NoEffect(Cause::Natural)]
         } else {
-            self.do_damage_side_effect(defender_bundle, attacker_bundle,|start_hp| 0)
+            self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| 0)
         };
 
         self.apply_side_effects(&effects);
@@ -591,177 +566,48 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     }
 
     pub fn do_exact_damage(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
-        let attacker_pokemon = self.get_pokemon_by_id(&attacker).unwrap();
-        let attacker_data = self.get_battle_data(&attacker);
-        let attacker_ability = get_effective_ability(attacker_pokemon, attacker_data);
+        let attacker_bundle: BattleBundle = self.get_battle_bundle(&attacker);
 
-        let attacker_bundle: BattleBundle = (attacker, attacker_pokemon, attacker_data, attacker_ability);
-
-        let defender_pokemon = self.get_pokemon_by_id(&defender).unwrap();
-        let defender_data = self.get_battle_data(&defender);
+        let defender_bundle = self.get_battle_bundle(&defender);
+        let (_, defender_pokemon, defender_data, _) = defender_bundle;
         let defender_type = get_effective_type(defender_pokemon, defender_data);
-        let defender_ability = get_effective_ability(defender_pokemon, defender_data);
-
-        let defender_bundle: BattleBundle = (defender, defender_pokemon, defender_data, defender_ability);
 
         let move_data = attack.data();
 
         // Effectiveness Calculation
-        let effective_move_type = match attacker_ability {
-            Ability::Normalize if attack != Move::HiddenPower ||
-                attack != Move::WeatherBall ||
-                attack != Move::NaturalGift ||
-                attack != Move::Judgment ||
-                attack != Move::TechnoBlast => Type::Normal,
-            _ => {
-                match attack {
-                    Move::HiddenPower => attacker_pokemon.get_hidden_power_type(),
-                    Move::WeatherBall => match self.field.weather {
-                        Some(Weather::Sun(_)) => Type::Fire,
-                        Some(Weather::Rain(_)) => Type::Water,
-                        Some(Weather::Hail(_)) => Type::Ice,
-                        Some(Weather::Sandstorm(_)) => Type::Rock,
-                        Some(Weather::Fog) | None => Type::Normal
-                    },
-                    Move::Judgment => match attacker_pokemon.held_item {
-                        Some(Item::DracoPlate) => Type::Dragon,
-                        Some(Item::DreadPlate) => Type::Dark,
-                        Some(Item::EarthPlate) => Type::Ground,
-                        Some(Item::FistPlate) => Type::Fighting,
-                        Some(Item::FlamePlate) => Type::Fire,
-                        Some(Item::IciclePlate) => Type::Ice,
-                        Some(Item::InsectPlate) => Type::Bug,
-                        Some(Item::Iron) => Type::Steel,
-                        Some(Item::MeadowPlate) => Type::Grass,
-                        Some(Item::MindPlate) => Type::Psychic,
-                        Some(Item::PixiePlate) => Type::Fairy,
-                        Some(Item::SkyPlate) => Type::Flying,
-                        Some(Item::SplashPlate) => Type::Water,
-                        Some(Item::SpookyPlate) => Type::Ghost,
-                        Some(Item::StonePlate) => Type::Rock,
-                        Some(Item::ToxicPlate) => Type::Poison,
-                        Some(Item::ZapPlate) => Type::Electric,
-                        _ => Type::Normal
-                    },
-                    Move::TechnoBlast => match attacker_pokemon.held_item {
-                        Some(Item::DouseDrive) => Type::Water,
-                        Some(Item::ShockDrive) => Type::Electric,
-                        Some(Item::ChillDrive) => Type::Ice,
-                        Some(Item::BurnDrive) => Type::Fire,
-                        _ => Type::Normal
-                    },
-                    Move::NaturalGift => {
-                        if let Some(Item::Berry(a)) = &attacker_pokemon.held_item {
-                            if attacker_ability != Ability::Klutz && self.field.magic_room == 0 && attacker_data.embargo == 0 {
-                                a.get_natural_gift_type()
-                            } else {
-                                return vec![ActionSideEffects::Failed(Cause::Natural)]
-                            }
-                        } else {
-                            return vec![ActionSideEffects::Failed(Cause::Natural)]
-                        }
-                    }
-                    _ => move_data._type
-                }
-            }
-        };
+        let effective_move_type = get_effective_move_type(attacker_bundle, &self.field, attack, move_data);
         let effectiveness = defender_type.defending_against(&effective_move_type);
 
         if let Effectiveness::Immune = effectiveness {
             vec![ActionSideEffects::NoEffect(Cause::Natural)]
         } else if let Power::Exact(delta) = move_data.power {
-            self.do_damage_side_effect(defender_bundle, attacker_bundle,
-                                                       |start_hp| start_hp.saturating_sub(u16::from(delta)))
+            self.do_standard_basic_damage(defender_bundle, attacker_bundle,
+                                          attack,
+                                          |start_hp| start_hp.saturating_sub(u16::from(delta)))
         } else {
             panic!("do_exact_damage called with non-exact damage move")
         }
     }
 
     pub fn do_one_off_damage(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
-        let attacker_pokemon = self.get_pokemon_by_id(&attacker).unwrap();
-        let attacker_data = self.get_battle_data(&attacker);
-        let attacker_ability = get_effective_ability(attacker_pokemon, attacker_data);
-        let attacker_type = get_effective_type(attacker_pokemon, attacker_data);
-        let attacker_species = get_effective_species(attacker_pokemon, attacker_data);
+        let attacker_bundle = self.get_battle_bundle(&attacker);
+        let (attacker, attacker_pokemon, _, _) = attacker_bundle;
 
-        let attacker_bundle: BattleBundle = (attacker, attacker_pokemon, attacker_data, attacker_ability);
-
-        let defender_pokemon = self.get_pokemon_by_id(&defender).unwrap();
-        let defender_data = self.get_battle_data(&defender);
-        let defender_ability = get_effective_ability(defender_pokemon, defender_data);
+        let defender_bundle = self.get_battle_bundle(&defender);
+        let (_, defender_pokemon, defender_data, _) = defender_bundle;
         let defender_type = get_effective_type(defender_pokemon, defender_data);
-        let defender_side = self.get_side(&defender);
-
-        let defender_bundle: BattleBundle = (defender, defender_pokemon, defender_data, defender_ability);
 
         let move_data = attack.data();
 
         // Effectiveness Calculation
-        let effective_move_type = match attacker_ability {
-            Ability::Normalize if attack != Move::HiddenPower ||
-                attack != Move::WeatherBall ||
-                attack != Move::NaturalGift ||
-                attack != Move::Judgment ||
-                attack != Move::TechnoBlast => Type::Normal,
-            _ => {
-                match attack {
-                    Move::HiddenPower => attacker_pokemon.get_hidden_power_type(),
-                    Move::WeatherBall => match self.field.weather {
-                        Some(Weather::Sun(_)) => Type::Fire,
-                        Some(Weather::Rain(_)) => Type::Water,
-                        Some(Weather::Hail(_)) => Type::Ice,
-                        Some(Weather::Sandstorm(_)) => Type::Rock,
-                        Some(Weather::Fog) | None => Type::Normal
-                    },
-                    Move::Judgment => match attacker_pokemon.held_item {
-                        Some(Item::DracoPlate) => Type::Dragon,
-                        Some(Item::DreadPlate) => Type::Dark,
-                        Some(Item::EarthPlate) => Type::Ground,
-                        Some(Item::FistPlate) => Type::Fighting,
-                        Some(Item::FlamePlate) => Type::Fire,
-                        Some(Item::IciclePlate) => Type::Ice,
-                        Some(Item::InsectPlate) => Type::Bug,
-                        Some(Item::Iron) => Type::Steel,
-                        Some(Item::MeadowPlate) => Type::Grass,
-                        Some(Item::MindPlate) => Type::Psychic,
-                        Some(Item::PixiePlate) => Type::Fairy,
-                        Some(Item::SkyPlate) => Type::Flying,
-                        Some(Item::SplashPlate) => Type::Water,
-                        Some(Item::SpookyPlate) => Type::Ghost,
-                        Some(Item::StonePlate) => Type::Rock,
-                        Some(Item::ToxicPlate) => Type::Poison,
-                        Some(Item::ZapPlate) => Type::Electric,
-                        _ => Type::Normal
-                    },
-                    Move::TechnoBlast => match attacker_pokemon.held_item {
-                        Some(Item::DouseDrive) => Type::Water,
-                        Some(Item::ShockDrive) => Type::Electric,
-                        Some(Item::ChillDrive) => Type::Ice,
-                        Some(Item::BurnDrive) => Type::Fire,
-                        _ => Type::Normal
-                    },
-                    Move::NaturalGift => {
-                        if let Some(Item::Berry(a)) = &attacker_pokemon.held_item {
-                            if attacker_ability != Ability::Klutz && self.field.magic_room == 0 && attacker_data.embargo == 0 {
-                                a.get_natural_gift_type()
-                            } else {
-                                return vec![ActionSideEffects::Failed(Cause::Natural)]
-                            }
-                        } else {
-                            return vec![ActionSideEffects::Failed(Cause::Natural)]
-                        }
-                    }
-                    _ => move_data._type
-                }
-            }
-        };
+        let effective_move_type = get_effective_move_type(attacker_bundle, &self.field, attack, move_data);
         let effectiveness = defender_type.defending_against(&effective_move_type);
 
         if let Effectiveness::Immune = effectiveness {
             return vec![ActionSideEffects::NoEffect(Cause::Natural)]
         }
 
-        match attack {
+        let effects = match attack {
             Move::Endeavor => {
                 let user_hp = attacker_pokemon.current_hp;
                 let target_hp = if defender_data.substituted > 0 {
@@ -772,7 +618,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 if user_hp >= target_hp {
                     vec![ActionSideEffects::Failed(Cause::Natural)]
                 } else {
-                    self.do_damage_side_effect(defender_bundle, attacker_bundle, |start_hp| user_hp)
+                    self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| user_hp)
                 }
             },
             Move::FinalGambit => {
@@ -783,25 +629,39 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                     damaged: attacker,
                     start_hp: damage,
                     end_hp: 0,
-                    cause: Cause::Natural
+                    cause: Cause::Natural,
+                    hung_on_cause: None
                 }];
 
-                for fx in self.do_damage_side_effect(defender_bundle, attacker_bundle, |start_hp| start_hp.saturating_sub(damage)) {
-                    effects.push(fx);
-                }
+                copy_all(&mut effects,
+                         self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage)));
 
                 effects
             },
-            Move::NightShade => {
+            Move::NightShade | Move::SeismicToss => {
                 let damage = u16::from(attacker_pokemon.level);
-                self.do_damage_side_effect(defender_bundle, attacker_bundle, |start_hp| start_hp.saturating_sub(damage))
+                self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
             },
             Move::Psywave => {
-                let damage = u32::from(attacker_pokemon.level) * ((10 * rand::thread_rng().gen_range(0..=100)) + 50) / 100;
-                self.do_damage_side_effect(defender_bundle, attacker_bundle, |start_hp| start_hp.saturating_sub(u16::try_from(damage).unwrap_or(u16::MAX)))
-            }
+                let damage = u32::from(attacker_pokemon.level) * (rand::thread_rng().gen_range(0..=100) + 50) / 100;
+                let mut damage = u16::try_from(damage).unwrap_or(u16::MAX);
+                if damage == 0 {
+                    damage = 1;
+                }
+                self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
+            },
+            Move::SuperFang => {
+                let mut damage = defender_pokemon.current_hp / 2;
+                if damage == 0 {
+                    damage = 1;
+                }
+                self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
+            },
             a => panic!("{:?} does not have one-off damage associated with it", a)
-        }
+        };
+
+        self.apply_side_effects(&effects);
+        effects
     }
 }
 

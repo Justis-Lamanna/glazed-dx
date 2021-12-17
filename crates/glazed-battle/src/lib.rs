@@ -492,10 +492,6 @@ pub enum Cause {
     }
 }
 impl Cause {
-    pub fn of_ability(battler: &Battler, ability: Ability) -> Cause {
-        Cause::Ability(battler.clone(), ability)
-    }
-
     pub fn overwrite(self, cause: Cause) -> Cause {
         Cause::Overwrite {
             initial: Box::from(self),
@@ -510,8 +506,11 @@ impl Cause {
 pub enum ActionSideEffects {
     DirectDamage {
         damaged: Battler,
+        damager: Battler,
+        attack: Move,
         start_hp: u16,
         end_hp: u16,
+        hung_on_cause: Option<Cause>,
         critical_hit: bool,
         effectiveness: Effectiveness
     },
@@ -525,7 +524,8 @@ pub enum ActionSideEffects {
         damaged: Battler,
         start_hp: u16,
         end_hp: u16,
-        cause: Cause
+        cause: Cause,
+        hung_on_cause: Option<Cause>
     },
     Missed(Cause),
     NoEffect(Cause),

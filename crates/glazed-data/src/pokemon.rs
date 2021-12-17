@@ -4,7 +4,6 @@ use rand::prelude::Distribution;
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::Move;
 use crate::constants::Species;
-use crate::constants::UnownForm::T;
 use crate::item::{Item, Pokeball};
 use crate::types::{PokemonType, Type};
 

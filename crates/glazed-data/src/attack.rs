@@ -2169,7 +2169,7 @@ pub static Counter: MoveData = MoveData {
 pub static SeismicToss: MoveData = MoveData {
     pp: 20,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,
@@ -2553,7 +2553,7 @@ pub static Teleport: MoveData = MoveData {
 pub static NightShade: MoveData = MoveData {
     pp: 15,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Ghost,
@@ -3129,7 +3129,7 @@ pub static Flash: MoveData = MoveData {
 pub static Psywave: MoveData = MoveData {
     pp: 15,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Psychic,
@@ -3285,7 +3285,7 @@ pub static TriAttack: MoveData = MoveData {
 pub static SuperFang: MoveData = MoveData {
     pp: 10,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Normal,
@@ -4737,7 +4737,7 @@ pub static KnockOff: MoveData = MoveData {
 pub static Endeavor: MoveData = MoveData {
     pp: 5,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,

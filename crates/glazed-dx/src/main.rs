@@ -11,7 +11,7 @@ fn main() {
     ivysaur.held_item = Some(Item::FocusSash);
     let them = Party::create_one(ivysaur);
     let mut battlefield = Battlefield::single_battle(me, them);
-    let fx = battlefield.do_ohko(SingleBattleSide::USER, Move::Guillotine, SingleBattleSide::OPPONENT);
+    let fx = battlefield.do_one_off_damage(SingleBattleSide::USER, Move::SuperFang, SingleBattleSide::OPPONENT);
     // let turn = battlefield.perform_turn(
     //     TurnAction::Attack(Move::Tackle, SingleBattleSide::OPPONENT),
     //     TurnAction::Attack(Move::QuickAttack, SingleBattleSide::USER));
