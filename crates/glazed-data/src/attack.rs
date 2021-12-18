@@ -1,5 +1,6 @@
 #![allow(non_upper_case_globals)]
 
+use std::ops::Range;
 use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
 use crate::types::Type;
 use glazed_core::{Id};
@@ -590,11 +591,21 @@ pub enum Power {
     BaseWithMercy(u8),
     WeightBased,
     WeightRatioBased,
+    MultiHit(MultiHitFlavor),
     OneHitKnockout,
     Exact(u8),
     Percentage(FractionPlaceholder),
     Variable,
     Revenge(Option<DamageType>, FractionPlaceholder)
+}
+
+/// The potential types of Multi Hit
+#[derive(Debug)]
+pub enum MultiHitFlavor {
+    Variable(u8),
+    Accumulating(u8, u8, u8),
+    Fixed(u8, u8),
+    BeatUp
 }
 
 /// Represents the type of Move, for contests
@@ -608,7 +619,7 @@ pub enum ContestType {
 }
 
 /// Represents the type of Move, for which attack/defense is used
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum DamageType {
     Physical,
     Special,
@@ -690,7 +701,6 @@ pub enum Effect {
     DispelWeather,
     ForceTargetSwitch,
     ForceUserSwitch,
-    MultiHit(u8, u8),
     MultiTurn(u8, u8),
     Custom
 }
@@ -1357,6 +1367,11 @@ impl Move {
         self.data().crit_rate
     }
 }
+impl Into<&'static MoveData> for Move {
+    fn into(self) -> &'static MoveData {
+        self.data()
+    }
+}
 
 pub static Pound: MoveData = MoveData {
     pp: 35,
@@ -1390,9 +1405,9 @@ pub static DoubleSlap: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(15),
+    power: Power::MultiHit(MultiHitFlavor::Variable(15)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static CometPunch: MoveData = MoveData {
     pp: 15,
@@ -1402,9 +1417,9 @@ pub static CometPunch: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(18),
+    power: Power::MultiHit(MultiHitFlavor::Variable(18)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static MegaPunch: MoveData = MoveData {
     pp: 20,
@@ -1642,9 +1657,9 @@ pub static DoubleKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(30),
+    power: Power::MultiHit(MultiHitFlavor::Fixed(2, 30)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 2)],
+	effects: &[],
 };
 pub static MegaKick: MoveData = MoveData {
     pp: 5,
@@ -1726,9 +1741,9 @@ pub static FuryAttack: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(15),
+    power: Power::MultiHit(MultiHitFlavor::Variable(15)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static HornDrill: MoveData = MoveData {
     pp: 5,
@@ -1846,9 +1861,9 @@ pub static Twineedle: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(25),
+    power: Power::MultiHit(MultiHitFlavor::Fixed(2, 25)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 2), Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 20)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 20)],
 };
 pub static PinMissile: MoveData = MoveData {
     pp: 20,
@@ -1858,9 +1873,9 @@ pub static PinMissile: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(25),
+    power: Power::MultiHit(MultiHitFlavor::Variable(25)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static Leer: MoveData = MoveData {
     pp: 30,
@@ -2926,9 +2941,9 @@ pub static SpikeCannon: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(20),
+    power: Power::MultiHit(MultiHitFlavor::Variable(20)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static Constrict: MoveData = MoveData {
     pp: 35,
@@ -3034,9 +3049,9 @@ pub static Barrage: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(15),
+    power: Power::MultiHit(MultiHitFlavor::Variable(15)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static LeechLife: MoveData = MoveData {
     pp: 10,
@@ -3202,9 +3217,9 @@ pub static FurySwipes: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(18),
+    power: Power::MultiHit(MultiHitFlavor::Variable(18)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static Bonemerang: MoveData = MoveData {
     pp: 10,
@@ -3214,9 +3229,9 @@ pub static Bonemerang: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(50),
+    power: Power::MultiHit(MultiHitFlavor::Fixed(2, 50)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 2)],
+	effects: &[],
 };
 pub static Rest: MoveData = MoveData {
     pp: 10,
@@ -3358,9 +3373,9 @@ pub static TripleKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(10),
+    power: Power::MultiHit(MultiHitFlavor::Accumulating(10, 20, 30)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(3, 3)],
+	effects: &[],
 };
 pub static Thief: MoveData = MoveData {
     pp: 25,
@@ -3730,9 +3745,9 @@ pub static BoneRush: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(25),
+    power: Power::MultiHit(MultiHitFlavor::Variable(25)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static LockOn: MoveData = MoveData {
     pp: 5,
@@ -4361,14 +4376,14 @@ pub static Whirlpool: MoveData = MoveData {
 pub static BeatUp: MoveData = MoveData {
     pp: 10,
     priority: 0,
-    power: Power::None,
+    power: Power::MultiHit(MultiHitFlavor::BeatUp),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Dark,
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::MultiHit(6, 6)],
+    effects: &[],
 };
 pub static FakeOut: MoveData = MoveData {
     pp: 10,
@@ -4858,9 +4873,9 @@ pub static ArmThrust: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(15),
+    power: Power::MultiHit(MultiHitFlavor::Variable(15)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static Camouflage: MoveData = MoveData {
     pp: 20,
@@ -5326,9 +5341,9 @@ pub static BulletSeed: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(25),
+    power: Power::MultiHit(MultiHitFlavor::Variable(25)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static AerialAce: MoveData = MoveData {
     pp: 20,
@@ -5350,9 +5365,9 @@ pub static IcicleSpear: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(25),
+    power: Power::MultiHit(MultiHitFlavor::Variable(25)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static IronDefense: MoveData = MoveData {
     pp: 15,
@@ -5554,9 +5569,9 @@ pub static RockBlast: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(25),
+    power: Power::MultiHit(MultiHitFlavor::Variable(25)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static ShockWave: MoveData = MoveData {
     pp: 20,
@@ -6850,9 +6865,9 @@ pub static DoubleHit: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(35),
+    power: Power::MultiHit(MultiHitFlavor::Fixed(2, 35)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 2)],
+	effects: &[],
 };
 pub static RoarOfTime: MoveData = MoveData {
     pp: 5,
@@ -7714,9 +7729,9 @@ pub static DualChop: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(40),
+    power: Power::MultiHit(MultiHitFlavor::Fixed(2, 40)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 2)],
+	effects: &[],
 };
 pub static HeartStamp: MoveData = MoveData {
     pp: 25,
@@ -7846,9 +7861,9 @@ pub static TailSlap: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(25),
+    power: Power::MultiHit(MultiHitFlavor::Variable(25)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 5)],
+	effects: &[],
 };
 pub static Hurricane: MoveData = MoveData {
     pp: 10,
@@ -7882,9 +7897,9 @@ pub static GearGrind: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(50),
+    power: Power::MultiHit(MultiHitFlavor::Fixed(2, 50)),
 	crit_rate: None,
-	effects: &[Effect::MultiHit(2, 2)],
+	effects: &[],
 };
 pub static SearingShot: MoveData = MoveData {
     pp: 5,

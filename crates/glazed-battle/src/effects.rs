@@ -4,10 +4,10 @@ use either::Either;
 use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, Power};
+use glazed_data::attack::{BattleStat, DamageType, Effect, Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::constants::Species;
 use glazed_data::item::{Berry, EvolutionHeldItem, Item};
-use glazed_data::pokemon::Pokemon;
+use glazed_data::pokemon::{Pokemon, Stat};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 use crate::{ActionSideEffects, BattleData, Battlefield, Battler, BattleTypeTrait, Cause, Field, SemiInvulnerableLocation, Weather};
 use crate::TurnAction::Attack;
@@ -196,7 +196,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             match effect {
                 ActionSideEffects::BasicDamage {damaged, end_hp, cause, ..} => {
                     let mut damaged_pkmn = self.get_mut_pokemon_by_id(&damaged).unwrap();
-                    let delta = damaged_pkmn.current_hp - *end_hp;
+                    let delta = damaged_pkmn.current_hp.saturating_sub(*end_hp);
                     damaged_pkmn.current_hp = *end_hp;
 
                     if let Cause::Move(battler, attack) = cause {
@@ -210,7 +210,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 },
                 ActionSideEffects::DirectDamage { damaged, end_hp, damager, attack, .. } => {
                     let damaged_pkmn = self.get_mut_pokemon_by_id(&damaged).unwrap();
-                    let delta = damaged_pkmn.current_hp - *end_hp;
+                    let delta = damaged_pkmn.current_hp.saturating_sub(*end_hp);
                     damaged_pkmn.current_hp = *end_hp;
 
                     let data = self.get_mut_battle_data(&damaged);
@@ -243,6 +243,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                     second.current_hp = (*split_hp).clamp(0, second.hp.value);
                 }
                 ActionSideEffects::NoTarget => {}
+                ActionSideEffects::HitCount(_) => {}
             }
         }
     }
@@ -320,49 +321,36 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
     }
 
-    pub fn do_damage(&mut self, attacker: Battler, attack: Move, defender:Battler) -> Vec<ActionSideEffects> {
-        let move_data = attack.data();
-        let effects = match move_data.power {
-            Power::None => Vec::new(),
-            Power::Base(_) | Power::BaseWithRecoil(_, _) | Power::BaseWithMercy(_) | Power::WeightBased | Power::WeightRatioBased =>
-                self.do_damage_from_base_power(attacker, attack, defender),
-            Power::OneHitKnockout => self.do_ohko(attacker, attack, defender),
-            Power::Exact(_) => self.do_exact_damage(attacker, attack, defender),
-            Power::Variable => self.do_one_off_damage(attacker, attack, defender),
-            Power::Percentage(_) => self.do_percent_damage(attacker, attack, defender),
-            Power::Revenge(_, _) => Vec::new()
-        };
-
-        self.apply_side_effects(&effects);
-        effects
-    }
-
-    fn do_damage_from_base_power(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
-        let attacker_bundle = self.get_battle_bundle(&attacker);
+    // Run the raw damage calculations, without considering an exact move
+    // Exact formula: base_damage * weather * crit * random * STAB * Type * Burn
+    // Any other multipliers have to be done in addition.
+    fn calculate_raw_damage_from_base(&self, defender_bundle: BattleBundle, attacker_bundle: BattleBundle,
+                                      base: u16, _type: Option<Type>, damage_type: DamageType, crit_rate: u8) -> ActionSideEffects {
         let (attacker, attacker_pokemon, attacker_data, attacker_ability) = attacker_bundle;
         let attacker_type = get_effective_type(attacker_pokemon, attacker_data);
         let attacker_species = get_effective_species(attacker_pokemon, attacker_data);
 
-        let defender_bundle = self.get_battle_bundle(&defender);
-        let (defender, defender_pokemon, defender_data, defender_ability) = defender_bundle;
+        let (defender, defender_pokemon, defender_data, _) = defender_bundle;
         let defender_type = get_effective_type(defender_pokemon, defender_data);
-        let defender_side = self.get_side(&defender);
-
-        let move_data = attack.data();
-        let mut effects = Vec::new();
 
         // Effectiveness Calculation
-        let effective_move_type = get_effective_move_type(attacker_bundle, &self.field, attack, move_data);
-        let effectiveness = defender_type.defending_against(&effective_move_type);
+        let effective_move_type = _type;
+        let effectiveness = match effective_move_type {
+            Some(t) => defender_type.defending_against(&t),
+            None => Effectiveness::NORMAL
+        };
 
         if let Effectiveness::Immune = effectiveness {
-            return vec![ActionSideEffects::NoEffect(Cause::Natural)]
+            return ActionSideEffects::NoEffect(Cause::Natural)
         }
 
-        let stab = attacker_type.is_stab(&effective_move_type);
+        let stab = match effective_move_type {
+            Some(t) => attacker_type.is_stab(&t),
+            None => false
+        };
 
         // Critical Hit Calculation
-        let crit_stages = get_raw_critical_hit(attacker_pokemon, attacker_species, attacker_ability) + move_data.crit_rate.unwrap_or(0);
+        let crit_stages = get_raw_critical_hit(attacker_pokemon, attacker_species, attacker_ability) + crit_rate;
         let crit = match crit_stages {
             0 => rand::thread_rng().gen_bool(0.0625),
             1 => rand::thread_rng().gen_bool(0.125),
@@ -370,7 +358,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             _ => true
         };
 
-        let (ea, ed) = match move_data.damage_type {
+        let (ea, ed) = match damage_type {
             DamageType::Physical => (
                 get_effective_stat(attacker_pokemon, attacker_data, BattleStat::Attack),
                 get_effective_stat(defender_pokemon, defender_data, BattleStat::Defense)),
@@ -380,48 +368,24 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             DamageType::Status => panic!("Status move should not do direct damage??")
         };
 
-        let base = match move_data.power {
-            Power::Base(base) | Power::BaseWithRecoil(base, _) | Power::BaseWithMercy(base) => u32::from(base),
-            Power::WeightBased => {
-                let weight = get_effective_weight(defender_bundle);
-                match weight {
-                    0..=99 => 20,
-                    100..=249 => 40,
-                    250..=499 => 60,
-                    500..=999 => 80,
-                    1000..=1999 => 100,
-                    2000..=u16::MAX => 120
-                }
-            },
-            Power::WeightRatioBased => {
-                let attacker_weight = get_effective_weight(attacker_bundle) as f64;
-                let defender_weight = get_effective_weight(defender_bundle) as f64;
-                let ratio = attacker_weight / defender_weight;
-                if ratio > 0.5 { 40 }
-                else if ratio > 0.3335 { 60 }
-                else if ratio > 0.2501 { 80 }
-                else if ratio > 0.2001 { 100 }
-                else { 120 }
-            }
-            _ => panic!("do_damage_from_base_power called with attack with no base power")
-        };
-
-        let base_damage_num = (((2 * u32::from(attacker_pokemon.level)) / 5) + 2) * base * u32::from(ea);
+        let base_damage_num = (((2 * u32::from(attacker_pokemon.level)) / 5) + 2) * u32::from(base) * u32::from(ea);
         let base_damage_denom = u32::from(ed) * 50;
         let mut damage = base_damage_num / base_damage_denom + 2;
 
         // * weather
-        if effective_move_type == Type::Water {
-            if self.field.is_rain() {
-                damage += (damage / 2);
-            } else if self.field.is_sunny() {
-                damage /= 2;
-            }
-        } else if effective_move_type == Type::Fire {
-            if self.field.is_rain() {
-                damage /= 2;
-            } else if self.field.is_sunny() {
-                damage += (damage / 2);
+        if let Some(t) = effective_move_type {
+            if t == Type::Water {
+                if self.field.is_rain() {
+                    damage += (damage / 2);
+                } else if self.field.is_sunny() {
+                    damage /= 2;
+                }
+            } else if t == Type::Fire {
+                if self.field.is_rain() {
+                    damage /= 2;
+                } else if self.field.is_sunny() {
+                    damage += (damage / 2);
+                }
             }
         }
 
@@ -455,164 +419,306 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         // * burn
         if attacker_pokemon.status.burn &&
             attacker_ability != Ability::Guts &&
-            move_data.damage_type == DamageType::Physical &&
-            attack != Move::Facade {
+            damage_type == DamageType::Physical {
             damage /= 2;
         }
 
-        // Do: Apply additional multipliers
-        // Specific attacks, interacting with defender state
-        match attack {
-            Move::BodySlam | Move::Stomp | Move::Astonish | Move::Extrasensory |
-            Move::NeedleArm | Move::DragonRush | Move::ShadowForce |
-            Move::Steamroller | Move::HeatCrash | Move::HeavySlam if defender_data.minimized => {
-                damage *= 2;
-            },
-            Move::Magnitude | Move::Earthquake => {
-                if let Some(SemiInvulnerableLocation::Underground) = &defender_data.invulnerable {
-                    damage *= 2;
-                }
-            },
-            Move::Surf | Move::Whirlpool => {
-                if let Some(SemiInvulnerableLocation::Underwater) = &defender_data.invulnerable {
-                    damage *= 2;
-                }
-            },
-            _ => {}
+        ActionSideEffects::DirectDamage {
+            damaged: defender,
+            damager: attacker,
+            attack: Move::Pound,
+            start_hp: defender_pokemon.current_hp,
+            end_hp: defender_pokemon.current_hp.saturating_sub(damage as u16),
+            hung_on_cause: None,
+            critical_hit: crit,
+            effectiveness
         }
-        // Broad attack categories interacting with defender state
-        if defender_side.aurora_veil > 0 && !crit && attacker_ability != Ability::Infiltrator {
-            damage /= 2;
-        } else {
-            if defender_side.light_screen > 0 && move_data.damage_type == DamageType::Special && !crit && attacker_ability != Ability::Infiltrator {
-                damage /= 2;
-            } else if defender_side.reflect > 0 && move_data.damage_type == DamageType::Physical && !crit && attacker_ability != Ability::Infiltrator {
-                damage /= 2;
+    }
+
+    pub fn do_damage(&mut self, attacker: Battler, attack: Move, defender:Battler) -> Vec<ActionSideEffects> {
+        let move_data = attack.data();
+        let effects = match &move_data.power {
+            Power::None => Vec::new(),
+            Power::Base(_) | Power::BaseWithRecoil(_, _) | Power::BaseWithMercy(_) | Power::WeightBased | Power::WeightRatioBased =>
+                self.do_damage_from_base_power(attacker, attack, defender),
+            Power::OneHitKnockout => self.do_ohko(attacker, attack, defender),
+            Power::Exact(_) => self.do_exact_damage(attacker, attack, defender),
+            Power::Variable => self.do_one_off_damage(attacker, attack, defender),
+            Power::Percentage(_) => self.do_percent_damage(attacker, attack, defender),
+            Power::Revenge(_, _) => self.do_revenge_damage(attacker, attack),
+            Power::MultiHit(MultiHitFlavor::Variable(_)) => {
+                let attacker_bundle = self.get_battle_bundle(&attacker);
+                let n = if attacker_bundle.3 == Ability::SkillLink {
+                    5
+                } else {
+                    let n = rand::thread_rng().gen_range(0u8..100u8);
+                    if n < 35 { 2 } else if n < 70 { 3 } else if n < 85 { 4 } else { 5 }
+                };
+
+                let mut effects = Vec::new();
+                for i in 0..n {
+                    let turn_effects = self.do_damage_from_base_power(attacker, attack, defender);
+                    self.apply_side_effects(&turn_effects);
+                    let end_turn = turn_effects.iter().any(|e| e.is_multi_hit_end());
+                    copy_all(&mut effects, turn_effects);
+                    if end_turn {
+                        if i != 0 {
+                            effects.push(ActionSideEffects::HitCount(i));
+                        }
+                        return effects;
+                    }
+                }
+                effects.push(ActionSideEffects::HitCount(n));
+                effects
+            },
+            Power::MultiHit(MultiHitFlavor::Fixed(n, _)) => {
+                let mut effects = Vec::new();
+                for i in 0..*n {
+                    let turn_effects = self.do_damage_from_base_power(attacker, attack, defender);
+                    self.apply_side_effects(&turn_effects);
+                    let end_turn = turn_effects.iter().any(|e| e.is_multi_hit_end());
+                    copy_all(&mut effects, turn_effects);
+                    if end_turn {
+                        if i != 0 {
+                            effects.push(ActionSideEffects::HitCount(i));
+                        }
+                        return effects;
+                    }
+                }
+                effects.push(ActionSideEffects::HitCount(*n));
+                effects
+            },
+            Power::MultiHit(MultiHitFlavor::Accumulating(first, second, third)) => {
+                let attacker_bundle = self.get_battle_bundle(&attacker);
+                let defender_bundle = self.get_battle_bundle(&defender);
+                vec![]
+            },
+            Power::MultiHit(MultiHitFlavor::BeatUp) => {
+                let attacker_bundle = self.get_battle_bundle(&attacker);
+                let defender_bundle = self.get_battle_bundle(&defender);
+
+                for p in &self.get_party(&attacker).members {
+                    if let Some(p) = p {
+                        let base = p.species.data().stats.1.base_stat;
+                        let bp = (base / 10) + 5;
+                    }
+                }
+
+                vec![]
             }
-        }
-        // Attacker/Defender ability flavors
-        match attacker_ability {
-            Ability::Sniper if crit => {
-                damage += (damage / 2);
-            },
-            Ability::TintedLens if effectiveness.is_super_effective() => {
-                damage *= 2;
-            },
-            _ => {}
-        }
-        match defender_ability {
-            Ability::Filter | Ability::SolidRock if effectiveness.is_super_effective() => {
-                damage = (damage * 3 / 4);
-            },
-            Ability::Multiscale if defender_pokemon.is_full_health() => {
-                damage /= 2;
-            },
-            _ => {}
-        }
-        // Attacker/Defender held item flavors
-        match attacker_pokemon.held_item {
-            Some(Item::ExpertBelt) if effectiveness.is_super_effective() => {
-                damage += (damage * 2 / 10);
-            },
-            Some(Item::LifeOrb) => {
-                damage += (damage * 3 / 10);
-            },
-            Some(Item::Metronome) => {
-                match attacker_data.last_move_used {
-                    Some(m) if m == attack => {
-                        let multiplier = 0.2 * f64::from(attacker_data.last_move_used_counter);
-                        let multiplier = multiplier.clamp(0.0, 1.0);
-                        damage = (f64::from(damage) * multiplier) as u32;
-                    },
-                    None | Some(_) => {}
+        };
+
+        self.apply_side_effects(&effects);
+        effects
+    }
+
+    fn do_damage_from_base_power(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects>
+    {
+        let attacker_bundle = self.get_battle_bundle(&attacker);
+        let (attacker, attacker_pokemon, attacker_data, attacker_ability) = attacker_bundle;
+
+        let defender_bundle = self.get_battle_bundle(&defender);
+        let (defender, defender_pokemon, defender_data, defender_ability) = defender_bundle;
+        let defender_side = self.get_side(&defender);
+
+        let move_data = attack.data();
+        let mut effects = Vec::new();
+
+        let base = match move_data.power {
+            Power::Base(base) | Power::BaseWithRecoil(base, _) | Power::BaseWithMercy(base) => u16::from(base),
+            Power::WeightBased => {
+                let weight = get_effective_weight(defender_bundle);
+                match weight {
+                    0..=99 => 20,
+                    100..=249 => 40,
+                    250..=499 => 60,
+                    500..=999 => 80,
+                    1000..=1999 => 100,
+                    2000..=u16::MAX => 120
                 }
-            }
-            _ => {}
-        }
-        match &defender_pokemon.held_item {
-            Some(Item::Berry(b)) => {
-                match b.get_resistance_berry_type() {
-                    Some(Type::Normal) if Type::Normal == effective_move_type => {
-                        damage /= 2;
-                        effects.push(ActionSideEffects::ConsumedItem(defender, Item::Berry(*b)));
-                    },
-                    Some(t) if t == effective_move_type && effectiveness.is_super_effective() => {
-                        damage /= 2;
-                        effects.push(ActionSideEffects::ConsumedItem(defender, Item::from(*b)));
-                    },
-                    None | Some(_) => {}
-                }
-            }
-            _ => {}
+            },
+            Power::WeightRatioBased => {
+                let attacker_weight = get_effective_weight(attacker_bundle) as f64;
+                let defender_weight = get_effective_weight(defender_bundle) as f64;
+                let ratio = attacker_weight / defender_weight;
+                if ratio > 0.5 { 40 }
+                else if ratio > 0.3335 { 60 }
+                else if ratio > 0.2501 { 80 }
+                else if ratio > 0.2001 { 100 }
+                else { 120 }
+            },
+            Power::MultiHit(MultiHitFlavor::Variable(b)) => u16::from(b),
+            Power::MultiHit(MultiHitFlavor::Fixed(_, b)) => u16::from(b),
+            _ => panic!("do_damage_from_base_power called with attack with no fixed base power")
+        };
+
+        let damage = self.calculate_raw_damage_from_base(defender_bundle, attacker_bundle, base,
+                                                         Some(move_data._type), move_data.damage_type, move_data.crit_rate.unwrap_or(0));
+
+        if let ActionSideEffects::NoEffect(_) = damage {
+            return vec![damage]
         }
 
-        let damage =  u16::try_from(damage).unwrap_or(u16::MAX); //No rollover today
+        if let ActionSideEffects::DirectDamage {
+            start_hp, end_hp, critical_hit, effectiveness, ..
+        } = damage {
+            let mut damage = start_hp - end_hp;
 
-        if defender_data.substituted > 0 {
-            let start_hp = defender_data.substituted;
-            let mut end_hp = start_hp.saturating_sub(damage);
-            if let Power::BaseWithMercy(_) = move_data.power {
-                end_hp = end_hp.clamp(1, u16::MAX);
+            // Do: Apply additional multipliers
+            // Specific attacks, interacting with defender state
+            match attack {
+                Move::BodySlam | Move::Stomp | Move::Astonish | Move::Extrasensory |
+                Move::NeedleArm | Move::DragonRush | Move::ShadowForce |
+                Move::Steamroller | Move::HeatCrash | Move::HeavySlam if defender_data.minimized => {
+                    damage *= 2;
+                },
+                Move::Magnitude | Move::Earthquake => {
+                    if let Some(SemiInvulnerableLocation::Underground) = &defender_data.invulnerable {
+                        damage *= 2;
+                    }
+                },
+                Move::Surf | Move::Whirlpool => {
+                    if let Some(SemiInvulnerableLocation::Underwater) = &defender_data.invulnerable {
+                        damage *= 2;
+                    }
+                },
+                _ => {}
             }
-            effects.push(ActionSideEffects::DamagedSubstitute {
-                damaged: defender,
-                start_hp,
-                end_hp
-            });
-        } else {
-            let start_hp = defender_pokemon.current_hp;
-            let mut end_hp = start_hp.saturating_sub(damage);
-            if let Power::BaseWithMercy(_) = move_data.power {
-                end_hp = end_hp.clamp(1, u16::MAX);
-            }
-            let hang_on = if end_hp == 0 {
-                self.hang_on(defender_bundle, attacker_bundle)
+            // Broad attack categories interacting with defender state
+            if defender_side.aurora_veil > 0 && !critical_hit && attacker_ability != Ability::Infiltrator {
+                damage /= 2;
             } else {
-                None
-            };
-            match hang_on {
-                None => {
-                    effects.push(ActionSideEffects::DirectDamage {
-                        damaged: defender,
-                        damager: attacker,
-                        attack,
+                if defender_side.light_screen > 0 && move_data.damage_type == DamageType::Special && !critical_hit && attacker_ability != Ability::Infiltrator {
+                    damage /= 2;
+                } else if defender_side.reflect > 0 && move_data.damage_type == DamageType::Physical && !critical_hit && attacker_ability != Ability::Infiltrator {
+                    damage /= 2;
+                }
+            }
+            // Attacker/Defender ability flavors
+            match attacker_ability {
+                Ability::Sniper if critical_hit => {
+                    damage += (damage / 2);
+                },
+                Ability::TintedLens if effectiveness.is_super_effective() => {
+                    damage *= 2;
+                },
+                _ => {}
+            }
+            match defender_ability {
+                Ability::Filter | Ability::SolidRock if effectiveness.is_super_effective() => {
+                    damage = (damage * 3 / 4);
+                },
+                Ability::Multiscale if defender_pokemon.is_full_health() => {
+                    damage /= 2;
+                },
+                _ => {}
+            }
+            // Attacker/Defender held item flavors
+            match attacker_pokemon.held_item {
+                Some(Item::ExpertBelt) if effectiveness.is_super_effective() => {
+                    damage += (damage * 2 / 10);
+                },
+                Some(Item::LifeOrb) => {
+                    damage += (damage * 3 / 10);
+                },
+                Some(Item::Metronome) => {
+                    match attacker_data.last_move_used {
+                        Some(m) if m == attack => {
+                            let multiplier = 0.2 * f64::from(attacker_data.last_move_used_counter);
+                            let multiplier = multiplier.clamp(0.0, 1.0);
+                            damage = (f64::from(damage) * multiplier) as u16;
+                        },
+                        None | Some(_) => {}
+                    }
+                }
+                _ => {}
+            }
+            match &defender_pokemon.held_item {
+                Some(Item::Berry(b)) => {
+                    let effective_move_type = get_effective_move_type(attacker_bundle, &self.field, attack, move_data);
+                    match b.get_resistance_berry_type() {
+                        Some(Type::Normal) if Type::Normal == effective_move_type => {
+                            damage /= 2;
+                            effects.push(ActionSideEffects::ConsumedItem(defender, Item::Berry(*b)));
+                        },
+                        Some(t) if t == effective_move_type && effectiveness.is_super_effective() => {
+                            damage /= 2;
+                            effects.push(ActionSideEffects::ConsumedItem(defender, Item::from(*b)));
+                        },
+                        None | Some(_) => {}
+                    }
+                }
+                _ => {}
+            }
+
+            let damage = u16::try_from(damage).unwrap_or(u16::MAX); //No rollover today
+
+            if defender_data.substituted > 0 {
+                let start_hp = defender_data.substituted;
+                let mut end_hp = start_hp.saturating_sub(damage);
+                if let Power::BaseWithMercy(_) = move_data.power {
+                    end_hp = end_hp.clamp(1, u16::MAX);
+                }
+                effects.push(ActionSideEffects::DamagedSubstitute {
+                    damaged: defender,
+                    start_hp,
+                    end_hp
+                });
+            } else {
+                let start_hp = defender_pokemon.current_hp;
+                let mut end_hp = start_hp.saturating_sub(damage);
+                if let Power::BaseWithMercy(_) = move_data.power {
+                    end_hp = end_hp.clamp(1, u16::MAX);
+                }
+                let hang_on = if end_hp == 0 {
+                    self.hang_on(defender_bundle, attacker_bundle)
+                } else {
+                    None
+                };
+                match hang_on {
+                    None => {
+                        effects.push(ActionSideEffects::DirectDamage {
+                            damaged: defender,
+                            damager: attacker,
+                            attack,
+                            start_hp,
+                            end_hp,
+                            critical_hit,
+                            effectiveness,
+                            hung_on_cause: None
+                        });
+                    },
+                    Some(c) => {
+                        effects.push(ActionSideEffects::DirectDamage {
+                            damaged: defender,
+                            damager: attacker,
+                            attack,
+                            start_hp,
+                            end_hp: 1,
+                            critical_hit,
+                            effectiveness,
+                            hung_on_cause: Some(c)
+                        });
+                    }
+                }
+
+                // Additional ability effects can go here
+            }
+
+            if let Power::BaseWithRecoil(_, recoil) = &move_data.power {
+                if attacker_ability != Ability::RockHead && attacker_ability != Ability::MagicGuard {
+                    let recoil_damage = Fraction::from(damage) * Fraction::from(*recoil);
+                    let recoil_damage = recoil_damage.to_u16().unwrap_or(1);
+                    let start_hp = attacker_pokemon.current_hp;
+                    effects.push(ActionSideEffects::Recoil {
+                        damaged: attacker,
                         start_hp,
-                        end_hp,
-                        critical_hit: crit,
-                        effectiveness,
-                        hung_on_cause: None
-                    });
-                }, Some(c) => {
-                    effects.push(ActionSideEffects::DirectDamage {
-                        damaged: defender,
-                        damager: attacker,
-                        attack,
-                        start_hp,
-                        end_hp: 1,
-                        critical_hit: crit,
-                        effectiveness,
-                        hung_on_cause: Some(c)
+                        end_hp: start_hp.saturating_sub(recoil_damage),
+                        cause: Cause::Move(attacker, attack)
                     });
                 }
             }
-
-            // Additional ability effects can go here
         }
-
-        if let Power::BaseWithRecoil(_, recoil) = &move_data.power {
-            if attacker_ability != Ability::RockHead && attacker_ability != Ability::MagicGuard {
-                let recoil_damage = Fraction::from(damage) * Fraction::from(*recoil);
-                let recoil_damage = recoil_damage.to_u16().unwrap_or(1);
-                let start_hp = attacker_pokemon.current_hp;
-                effects.push(ActionSideEffects::Recoil {
-                    damaged: attacker,
-                    start_hp,
-                    end_hp: start_hp.saturating_sub(recoil_damage),
-                    cause: Cause::Move(attacker, attack)
-                });
-            }
-        }
-
         effects
     }
 

@@ -54,6 +54,10 @@ impl BattleTypeTrait for SingleBattleSide {
     fn get_side(&self) -> &Side {
         return &self.side;
     }
+
+    fn get_party(&self, id: &Battler) -> &Party {
+        return &self.party
+    }
 }
 
 impl Battlefield<SingleBattleSide> {

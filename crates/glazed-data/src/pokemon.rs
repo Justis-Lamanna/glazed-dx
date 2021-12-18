@@ -122,7 +122,7 @@ pub struct Stats(pub Stat,pub Stat,pub Stat,pub Stat,pub Stat,pub Stat);
 /// Represents data tied to a Stat for a Pokemon species as a whole
 #[derive(Debug)]
 pub struct Stat {
-    base_stat: u8,
+    pub base_stat: u8,
     ev: u8
 }
 impl Stat {
@@ -556,6 +556,10 @@ impl Pokemon {
 
     pub fn is_full_health(&self) -> bool {
         self.current_hp == self.hp.value
+    }
+
+    pub fn is_fainted(&self) -> bool {
+        self.current_hp == 0
     }
 }
 

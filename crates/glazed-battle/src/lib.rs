@@ -149,6 +149,7 @@ pub trait BattleTypeTrait {
     fn get_battle_data(&self, id: &Battler) -> &BattleData;
     fn get_mut_battle_data(&mut self, id: &Battler) -> &mut BattleData;
     fn get_side(&self) -> &Side;
+    fn get_party(&self, id: &Battler) -> &Party;
 }
 
 /// Represents the current battlefield
@@ -174,6 +175,9 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     }
     fn get_side(&self, id: &Battler) -> &Side{
         if id.0 { self.user.get_side() } else { self.opponent.get_side() }
+    }
+    fn get_party(&self, id: &Battler) -> &Party {
+        if id.0 { self.user.get_party(id) } else { self.opponent.get_party(id) }
     }
     /// Pushes this Turn to the Turn Record, to signal it is complete and permanent.
     /// Intentionally eats the passed-in turn...it belongs to the battlefield now
@@ -533,6 +537,7 @@ pub enum ActionSideEffects {
     Missed(Cause),
     NoEffect(Cause),
     Failed(Cause),
+    HitCount(u8),
     DamagedSubstitute {
         damaged: Battler,
         start_hp: u16,
@@ -545,6 +550,15 @@ pub enum ActionSideEffects {
         split_hp: u16
     },
     NoTarget
+}
+impl ActionSideEffects {
+    pub fn is_multi_hit_end(&self) -> bool {
+        match self {
+            ActionSideEffects::Missed(_) | ActionSideEffects::NoEffect(_) | ActionSideEffects::Failed(_) | ActionSideEffects::NoTarget => true,
+            ActionSideEffects::DirectDamage {end_hp, ..} | ActionSideEffects::BasicDamage {end_hp, ..} if *end_hp == 0 => true,
+            _ => false
+        }
+    }
 }
 
 impl <T> Battlefield<T> where T: BattleTypeTrait {
