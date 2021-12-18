@@ -10,7 +10,7 @@ fn main() {
     let mut ivysaur = PokemonTemplate::pokemon(Species::Ivysaur, 20);
     let them = Party::create_one(ivysaur);
     let mut battlefield = Battlefield::single_battle(me, them);
-    let fx = battlefield.do_damage(SingleBattleSide::USER, Move::Twineedle, SingleBattleSide::OPPONENT);
+    let fx = battlefield.do_damage(SingleBattleSide::USER, Move::TripleKick, SingleBattleSide::OPPONENT);
     println!("{:#?}", fx);
     //println!("{:#?}", battlefield);
 }

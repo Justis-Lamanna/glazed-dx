@@ -182,6 +182,19 @@ fn get_effective_weight(pkmn: BattleBundle) -> u16 {
 
 type BattleBundle<'a> = (Battler, &'a Pokemon, &'a BattleData, Ability);
 
+struct MoveContext {
+    attack: Move,
+    metadata: u8
+}
+impl From<Move> for MoveContext {
+    fn from(m: Move) -> Self {
+        MoveContext {
+            attack: m,
+            metadata: 0
+        }
+    }
+}
+
 impl <T> Battlefield<T> where T: BattleTypeTrait {
     fn get_battle_bundle(&self, id: &Battler) -> BattleBundle {
         let pokemon = self.get_pokemon_by_id(id).unwrap();
@@ -324,8 +337,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
     // Run the raw damage calculations, without considering an exact move
     // Exact formula: base_damage * weather * crit * random * STAB * Type * Burn
     // Any other multipliers have to be done in addition.
-    fn calculate_raw_damage_from_base(&self, defender_bundle: BattleBundle, attacker_bundle: BattleBundle,
-                                      base: u16, _type: Option<Type>, damage_type: DamageType, crit_rate: u8) -> ActionSideEffects {
+    fn calculate_raw_damage_from_base(&self, defender_bundle: BattleBundle, attacker_bundle: BattleBundle, base: u16, _type: Option<Type>, damage_type: DamageType, crit_rate: u8) -> ActionSideEffects {
         let (attacker, attacker_pokemon, attacker_data, attacker_ability) = attacker_bundle;
         let attacker_type = get_effective_type(attacker_pokemon, attacker_data);
         let attacker_species = get_effective_species(attacker_pokemon, attacker_data);
@@ -491,7 +503,14 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             Power::MultiHit(MultiHitFlavor::Accumulating(first, second, third)) => {
                 let attacker_bundle = self.get_battle_bundle(&attacker);
                 let defender_bundle = self.get_battle_bundle(&defender);
-                vec![]
+
+                let mut effects = Vec::new();
+                let mut counter = 0;
+
+                if counter != 0 {
+                    effects.push(ActionSideEffects::HitCount(counter));
+                }
+                effects
             },
             Power::MultiHit(MultiHitFlavor::BeatUp) => {
                 let attacker_bundle = self.get_battle_bundle(&attacker);
@@ -512,7 +531,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         effects
     }
 
-    fn do_damage_from_base_power(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects>
+    fn do_damage_from_base_power<F>(&mut self, attacker: Battler, attack: F, defender: Battler) -> Vec<ActionSideEffects>
+        where F: Into<MoveContext>
     {
         let attacker_bundle = self.get_battle_bundle(&attacker);
         let (attacker, attacker_pokemon, attacker_data, attacker_ability) = attacker_bundle;
@@ -521,6 +541,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         let (defender, defender_pokemon, defender_data, defender_ability) = defender_bundle;
         let defender_side = self.get_side(&defender);
 
+        let MoveContext{ attack, metadata } = attack.into();
         let move_data = attack.data();
         let mut effects = Vec::new();
 
@@ -549,6 +570,14 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             },
             Power::MultiHit(MultiHitFlavor::Variable(b)) => u16::from(b),
             Power::MultiHit(MultiHitFlavor::Fixed(_, b)) => u16::from(b),
+            Power::MultiHit(MultiHitFlavor::Accumulating(one, two, three)) => {
+                u16::from(match metadata {
+                    1 => one,
+                    2 => two,
+                    3 => three,
+                    _ => 0
+                })
+            }
             _ => panic!("do_damage_from_base_power called with attack with no fixed base power")
         };
 
