@@ -4,6 +4,7 @@ use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
 use crate::types::Type;
 use glazed_core::{Id};
 use glazed_macro::*;
+use crate::pokemon::PoisonType;
 
 /// Represents an Attack a Pokemon can have
 #[derive(Debug, Copy, Clone, PartialEq, Id)]
@@ -568,6 +569,21 @@ pub enum Move {
     FusionFlare,
     FusionBolt
 }
+impl Move {
+    pub fn can_thaw_user(&self) -> bool {
+        match self {
+            Move::FlameWheel | Move::FlareBlitz | Move::FusionFlare | Move::SacredFire | Move::Scald => true,
+            _ => false
+        }
+    }
+
+    pub fn can_be_used_while_sleeping(&self) -> bool {
+        match self {
+            Move::SleepTalk | Move::Snore => true,
+            _ => false
+        }
+    }
+}
 
 /// Represents the Accuracy of a move
 #[derive(Debug)]
@@ -642,7 +658,7 @@ pub enum NonVolatileBattleAilment {
     Sleep,
     Freeze,
     Burn,
-    Poison(bool)
+    Poison(PoisonType)
 }
 
 /// Represents a non-persistent status ailment
@@ -1848,7 +1864,7 @@ pub static PoisonSting: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(15),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 30)],
 };
 pub static Twineedle: MoveData = MoveData {
     pp: 20,
@@ -1860,7 +1876,7 @@ pub static Twineedle: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::MultiHit(MultiHitFlavor::Fixed(2, 25)),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 20)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 20)],
 };
 pub static PinMissile: MoveData = MoveData {
     pp: 20,
@@ -2292,7 +2308,7 @@ pub static PoisonPowder: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 0)],
+    effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 0)],
 };
 pub static StunSpore: MoveData = MoveData {
     pp: 30,
@@ -2472,7 +2488,7 @@ pub static Toxic: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(true), 0)],
+    effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::BadlyPoisoned), 0)],
 };
 pub static Confusion: MoveData = MoveData {
     pp: 25,
@@ -2844,7 +2860,7 @@ pub static Smog: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(30),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 40)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 40)],
 };
 pub static Sludge: MoveData = MoveData {
     pp: 20,
@@ -2856,7 +2872,7 @@ pub static Sludge: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(65),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 30)],
 };
 pub static BoneClub: MoveData = MoveData {
     pp: 20,
@@ -3036,7 +3052,7 @@ pub static PoisonGas: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::Opponents,
-    effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 0)],
+    effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 0)],
 };
 pub static Barrage: MoveData = MoveData {
     pp: 20,
@@ -3624,7 +3640,7 @@ pub static SludgeBomb: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(90),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 30)],
 };
 pub static MudSlap: MoveData = MoveData {
     pp: 10,
@@ -5028,7 +5044,7 @@ pub static PoisonFang: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(50),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 50)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 50)],
 };
 pub static CrushClaw: MoveData = MoveData {
     pp: 10,
@@ -5472,7 +5488,7 @@ pub static PoisonTail: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(50),
 	crit_rate: Some(1),
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 10)],
 };
 pub static Covet: MoveData = MoveData {
     pp: 25,
@@ -6144,7 +6160,7 @@ pub static PoisonJab: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(80),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 30)],
 };
 pub static DarkPulse: MoveData = MoveData {
     pp: 15,
@@ -6648,7 +6664,7 @@ pub static CrossPoison: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(70),
 	crit_rate: Some(1),
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 10)],
 };
 pub static GunkShot: MoveData = MoveData {
     pp: 5,
@@ -6660,7 +6676,7 @@ pub static GunkShot: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(120),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 30)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 30)],
 };
 pub static IronHead: MoveData = MoveData {
     pp: 15,
@@ -7152,7 +7168,7 @@ pub static SludgeWave: MoveData = MoveData {
     target: Target::AllExceptUser,
     power: Power::Base(95),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(false), 10)],
+	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Poison(PoisonType::Poison), 10)],
 };
 pub static QuiverDance: MoveData = MoveData {
     pp: 20,

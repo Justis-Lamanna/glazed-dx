@@ -214,16 +214,21 @@ pub struct PokemonContestStats {
 #[derive(Debug, Default)]
 pub struct PokemonStatusCondition {
     pub sleep: u8,
-    pub poison: bool,
-    pub bad_poison: bool,
+    pub poison: Option<PoisonType>,
     pub burn: bool,
     pub freeze: bool,
     pub paralysis: bool
 }
 impl PokemonStatusCondition {
     pub fn has_status_condition(&self) -> bool {
-        self.sleep > 0 || self.poison || self.bad_poison || self.burn || self.freeze || self.paralysis
+        self.sleep > 0 || self.poison.is_some() || self.burn || self.freeze || self.paralysis
     }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum PoisonType {
+    Poison,
+    BadlyPoisoned
 }
 
 /// Represents the values tied to a given moveslot

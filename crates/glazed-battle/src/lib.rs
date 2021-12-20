@@ -1,15 +1,16 @@
-pub mod single;
-pub mod double;
-pub mod tag;
-mod effects;
+pub mod effects;
+mod core;
+mod damage;
 
 use std::option::Option::Some;
+use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, StatChangeTarget, Target};
 use glazed_data::constants::Species;
 use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
+use crate::effects::{BattleBundle, MAX_STAGE, MIN_STAGE};
 
 /// Represents one side of a battlefield
 #[derive(Default, Debug)]
@@ -73,8 +74,8 @@ impl Field {
 /// A group of between 1 and 6 Pokemon, which a trainer owns
 #[derive(Debug)]
 pub struct Party {
-    number_of_members: usize,
-    members: [Option<Pokemon>; 6]
+    pub number_of_members: usize,
+    pub members: [Option<Pokemon>; 6]
 }
 impl Party {
     pub fn create<PKMN, ITER>(party: ITER) -> Party
@@ -107,46 +108,6 @@ impl Party {
         }
     }
 
-    pub fn create_two<T>(one: T, two: T) -> Party
-        where T: Into<Pokemon> {
-        Party {
-            number_of_members: 2,
-            members: [Some(one.into()), Some(two.into()), None, None, None, None]
-        }
-    }
-
-    pub fn create_three<T>(one: T, two: T, three: T) -> Party
-        where T: Into<Pokemon> {
-        Party {
-            number_of_members: 3,
-            members: [Some(one.into()), Some(two.into()), Some(three.into()), None, None, None]
-        }
-    }
-
-    pub fn create_four<T>(one: T, two: T, three: T, four: T) -> Party
-        where T: Into<Pokemon> {
-        Party {
-            number_of_members: 4,
-            members: [Some(one.into()), Some(two.into()), Some(three.into()), Some(four.into()), None, None]
-        }
-    }
-
-    pub fn create_five<T>(one: T, two: T, three: T, four: T, five: T) -> Party
-        where T: Into<Pokemon> {
-        Party {
-            number_of_members: 5,
-            members: [Some(one.into()), Some(two.into()), Some(three.into()), Some(four.into()), Some(five.into()), None]
-        }
-    }
-
-    pub fn create_six<T>(one: T, two: T, three: T, four: T, five: T, six: T) -> Party
-        where T: Into<Pokemon> {
-        Party {
-            number_of_members: 6,
-            members: [Some(one.into()), Some(two.into()), Some(three.into()), Some(four.into()), Some(five.into()), Some(six.into())]
-        }
-    }
-
     pub fn len(&self) -> usize {
         self.number_of_members
     }
@@ -161,44 +122,276 @@ impl Party {
             }
         })
     }
+
+    pub fn single(self) -> BattleType {
+        BattleType::Single(self, 0, BattleData::default())
+    }
+
+    pub fn double(self) -> BattleType {
+        BattleType::Double(self, (0, 1), (BattleData::default(), BattleData::default()))
+    }
+
+    pub fn paired_with(self, other: Party) -> BattleType {
+        BattleType::Tag(self, 0, BattleData::default(), other, 0, BattleData::default())
+    }
 }
 
-pub trait BattleTypeTrait {
-    fn get_pokemon_by_id(&self, id: &Battler) -> Option<&Pokemon>;
-    fn get_mut_pokemon_by_id(&mut self, id: &Battler) -> Option<&mut Pokemon>;
-    fn get_battle_data(&self, id: &Battler) -> &BattleData;
-    fn get_mut_battle_data(&mut self, id: &Battler) -> &mut BattleData;
-    fn get_side(&self) -> &Side;
-    fn get_party(&self, id: &Battler) -> &Party;
+#[derive(Debug)]
+pub enum BattleType {
+    Single(Party, usize, BattleData),
+    Double(Party, (usize, usize), (BattleData, BattleData)),
+    Tag(Party, usize, BattleData, Party, usize, BattleData)
+}
+impl From<Party> for BattleType {
+    fn from(p: Party) -> Self {
+        BattleType::Single(p, 0, BattleData::default())
+    }
 }
 
 /// Represents the current battlefield
 #[derive(Debug)]
-pub struct Battlefield<T> where T: BattleTypeTrait {
-    user: T,
-    opponent: T,
+pub struct Battlefield {
+    user: BattleType,
+    user_side: Side,
+    opponent: BattleType,
+    opponent_side: Side,
     field: Field,
     turn_record: Vec<Turn>
 }
-impl <T> Battlefield<T> where T: BattleTypeTrait {
-    fn get_pokemon_by_id(&self, id: &Battler) -> Option<&Pokemon> {
-        if id.0 { self.user.get_pokemon_by_id(id) } else { self.opponent.get_pokemon_by_id(id) }
+impl Battlefield {
+    pub const USER: Battler = Battler(true, 0);
+    pub const ALLY: Battler = Battler(true, 1);
+    pub const OPPONENT: Battler = Battler(false, 0);
+    pub const OPPONENT_TWO: Battler = Battler(false, 1);
+
+    /// Standard 1v1 battle
+    pub fn single_battle(player: Party, opponent: Party) -> Battlefield {
+        Battlefield {
+            user: player.single(),
+            user_side: Side::default(),
+            opponent: opponent.single(),
+            opponent_side: Side::default(),
+            field: Field::default(),
+            turn_record: Vec::new()
+        }
     }
-    fn get_mut_pokemon_by_id(&mut self, id: &Battler) -> Option<&mut Pokemon>{
-        if id.0 { self.user.get_mut_pokemon_by_id(id) } else { self.opponent.get_mut_pokemon_by_id(id) }
+
+    /// Battlefield for 1v1, but each fighter uses 2 pokemon
+    /// Example: fighting pairs (Twins, Young Couple, etc)
+    pub fn double_battle(player: Party, opponent: Party) -> Battlefield {
+        Battlefield {
+            user: player.double(),
+            user_side: Side::default(),
+            opponent: opponent.double(),
+            opponent_side: Side::default(),
+            field: Field::default(),
+            turn_record: Vec::new()
+        }
     }
-    fn get_battle_data(&self, id: &Battler) -> &BattleData{
-        if id.0 { self.user.get_battle_data(id) } else { self.opponent.get_battle_data(id) }
+
+    /// Battlefield for 1v2
+    /// Example: two individual trainers see you at the same time
+    pub fn single_vs_double(player: Party, opponent_one: Party, opponent_two: Party) -> Battlefield {
+        Battlefield {
+            user: player.double(),
+            user_side: Side::default(),
+            opponent: opponent_one.paired_with(opponent_two),
+            opponent_side: Side::default(),
+            field: Field::default(),
+            turn_record: Vec::new()
+        }
     }
-    fn get_mut_battle_data(&mut self, id: &Battler) -> &mut BattleData{
-        if id.0 { self.user.get_mut_battle_data(id) } else { self.opponent.get_mut_battle_data(id) }
+
+    /// Battle for 2v2,
+    /// Example: when Steven fights alongside you against Team Magma
+    pub fn tag(player: Party, ally: Party, opponent_one: Party, opponent_two: Party) -> Battlefield {
+        Battlefield {
+            user: player.paired_with(ally),
+            user_side: Side::default(),
+            opponent: opponent_one.paired_with(opponent_two),
+            opponent_side: Side::default(),
+            field: Field::default(),
+            turn_record: Vec::new()
+        }
     }
-    fn get_side(&self, id: &Battler) -> &Side{
-        if id.0 { self.user.get_side() } else { self.opponent.get_side() }
+
+    fn get_battle_bundle(&self, id: &Battler) -> BattleBundle {
+        let Battler(side, idx) = id;
+        let (party, current, data) = match if *side { &self.user } else { &self.opponent } {
+            BattleType::Single(party, current, data) => (party, current, data),
+            BattleType::Double(party, (one, two), (dataOne, dataTwo)) => {
+                let (current, data) = if *idx == 0 { (one, dataOne) } else { (two, dataTwo) };
+                (party, current, data)
+            }
+            BattleType::Tag(partyOne, outOne, dataOne, partyTwo, outTwo, dataTwo) => {
+                if *idx == 0 { (partyOne, outOne, dataOne) } else { (partyTwo, outTwo, dataTwo) }
+            }
+        };
+        let pokemon = party.members[*current].as_ref().unwrap();
+        let ability = core::get_effective_ability(pokemon, data);
+
+        (*id, pokemon, data, ability)
     }
+
+    fn apply_side_effect(&mut self, effect: &ActionSideEffects) {
+        match effect {
+            ActionSideEffects::BasicDamage {damaged, end_hp, cause, ..} => {
+                let mut damaged_pkmn = self.get_mut_pokemon_by_id(&damaged);
+                let delta = damaged_pkmn.current_hp.saturating_sub(*end_hp);
+                damaged_pkmn.current_hp = *end_hp;
+
+                if let Cause::Move(battler, attack) = cause {
+                    let data = self.get_mut_battle_data(&damaged);
+                    data.damage_this_turn.push((*battler, *attack, delta));
+
+                    if let Some((turns_left, damage_acc)) = data.bide {
+                        data.bide = Some((turns_left, damage_acc.saturating_add(delta)));
+                    }
+                }
+            },
+            ActionSideEffects::DirectDamage { damaged, end_hp, damager, attack, .. } => {
+                let damaged_pkmn = self.get_mut_pokemon_by_id(&damaged);
+                let delta = damaged_pkmn.current_hp.saturating_sub(*end_hp);
+                damaged_pkmn.current_hp = *end_hp;
+
+                let data = self.get_mut_battle_data(&damaged);
+                data.damage_this_turn.push((*damager, *attack, delta));
+
+                if let Some((turns_left, damage_acc)) = data.bide {
+                    data.bide = Some((turns_left, damage_acc.saturating_add(delta)));
+                }
+            },
+            ActionSideEffects::DamagedSubstitute { damaged, end_hp, ..} => {
+                let mut damaged = self.get_mut_battle_data(&damaged);
+                damaged.substituted = *end_hp;
+            },
+            ActionSideEffects::ConsumedItem(battler, _) => {
+                let mut battler = self.get_mut_pokemon_by_id(&battler);
+                battler.held_item = None;
+            },
+            ActionSideEffects::Recoil {damaged, end_hp, .. } => {
+                let mut damaged = self.get_mut_pokemon_by_id(&damaged);
+                damaged.current_hp = *end_hp;
+            }
+            ActionSideEffects::Missed(_) => {}
+            ActionSideEffects::NoEffect(_) => {}
+            ActionSideEffects::Failed(_) => {}
+            ActionSideEffects::PainSplit { user, defender, split_hp } => {
+                let mut first = self.get_mut_pokemon_by_id(user);
+                first.current_hp = (*split_hp).clamp(0, first.hp.value);
+
+                let mut second = self.get_mut_pokemon_by_id(defender);
+                second.current_hp = (*split_hp).clamp(0, second.hp.value);
+            }
+            ActionSideEffects::NoTarget => {}
+            ActionSideEffects::MultiStrike {..} => {}
+            ActionSideEffects::StatChanged { affected, stat, end, .. } => {
+                let mut data = self.get_mut_battle_data(affected);
+                let stat_to_mod = match stat {
+                    BattleStat::Attack => &mut data.attack_stage,
+                    BattleStat::Defense => &mut data.defense_stage,
+                    BattleStat::SpecialAttack => &mut data.special_attack_stage,
+                    BattleStat::SpecialDefense => &mut data.special_defense_stage,
+                    BattleStat::Speed => &mut data.speed_stage,
+                    BattleStat::Accuracy => &mut data.accuracy_stage,
+                    BattleStat::Evasion => &mut data.evasion_stage
+                };
+
+                *stat_to_mod = (*end).clamp(MIN_STAGE, MAX_STAGE);
+            }
+            ActionSideEffects::NoEffectSecondary(_) => {}
+            ActionSideEffects::NothingHappened => {}
+            ActionSideEffects::NonVolatileStatusAilment { affected, status } => {
+                let mut pkmn = self.get_mut_pokemon_by_id(affected);
+                match status {
+                    NonVolatileBattleAilment::Paralysis => {
+                        pkmn.status.paralysis = true;
+                    }
+                    NonVolatileBattleAilment::Sleep => {
+                        pkmn.status.sleep = rand::thread_rng().gen_range(1..=3);
+                    }
+                    NonVolatileBattleAilment::Freeze => {
+                        pkmn.status.freeze = true;
+                    }
+                    NonVolatileBattleAilment::Burn => {
+                        pkmn.status.burn = true;
+                    }
+                    NonVolatileBattleAilment::Poison(poison_type) => {
+                        pkmn.status.poison = Some(*poison_type);
+                    }
+                }
+            }
+            ActionSideEffects::Thawed(affected) => {
+                let mut pkmn = self.get_mut_pokemon_by_id(affected);
+                pkmn.status.freeze = false;
+            }
+            ActionSideEffects::WasFrozen(_) => {}
+            ActionSideEffects::Sleep(affected) => {
+                let mut pkmn = self.get_mut_pokemon_by_id(affected);
+                pkmn.status.sleep = pkmn.status.sleep - 1;
+            }
+            ActionSideEffects::WokeUp(affected) => {
+                let mut pkmn = self.get_mut_pokemon_by_id(affected);
+                pkmn.status.sleep = 0;
+            }
+            ActionSideEffects::IsFullyParalyzed(_) => {}
+        }
+    }
+
+    fn apply_side_effects(&mut self, effects: &Vec<ActionSideEffects>) {
+        for effect in effects {
+            self.apply_side_effect(effect);
+        }
+    }
+
+    fn get_mut_pokemon_by_id(&mut self, id: &Battler) -> &mut Pokemon {
+        let Battler(side, idx) = id;
+        let (party, current) = match if *side { &mut self.user } else { &mut self.opponent } {
+            BattleType::Single(party, current, _) => (party, current),
+            BattleType::Double(party, (one, two), _) => {
+                let current = if *idx == 0 { one } else { two };
+                (party, current)
+            }
+            BattleType::Tag(partyOne, outOne, _, partyTwo, outTwo, _) => {
+                if *idx == 0 { (partyOne, outOne) } else { (partyTwo, outTwo) }
+            }
+        };
+        party.members[*current].as_mut().unwrap()
+    }
+
+    fn get_mut_battle_data(&mut self, id: &Battler) -> &mut BattleData {
+        let Battler(side, idx) = id;
+        match if *side { &mut self.user } else { &mut self.opponent } {
+            BattleType::Single(_, _, data) => data,
+            BattleType::Double(_, _, (one, two)) => {
+                if *idx == 0 { one } else { two }
+            }
+            BattleType::Tag(_, _, one, _, _, two) => {
+                if *idx == 0 { one } else { two }
+            }
+        }
+    }
+
     fn get_party(&self, id: &Battler) -> &Party {
-        if id.0 { self.user.get_party(id) } else { self.opponent.get_party(id) }
+        let Battler(side, idx) = id;
+        match if *side { &self.user } else { &self.opponent } {
+            BattleType::Single(party, _, _) => party,
+            BattleType::Double(party, _, _) => party,
+            BattleType::Tag(one, _, _, two, _, _) => {
+                if *idx == 0 { one } else { two }
+            }
+        }
     }
+
+    fn get_side(&self, id: &Battler) -> &Side {
+        let Battler(side, idx) = id;
+        if *side {
+            &self.user_side
+        } else {
+            &self.opponent_side
+        }
+    }
+
     /// Pushes this Turn to the Turn Record, to signal it is complete and permanent.
     /// Intentionally eats the passed-in turn...it belongs to the battlefield now
     pub fn finish_turn(&mut self, turn: Turn) {
@@ -574,6 +767,15 @@ pub enum ActionSideEffects {
         start: i8,
         end: i8
     },
+    NonVolatileStatusAilment {
+        affected: Battler,
+        status: NonVolatileBattleAilment
+    },
+    Thawed(Battler),
+    WasFrozen(Battler),
+    Sleep(Battler),
+    WokeUp(Battler),
+    IsFullyParalyzed(Battler),
 
     NothingHappened
 }
@@ -585,127 +787,4 @@ impl ActionSideEffects {
             _ => false
         }
     }
-}
-
-impl <T> Battlefield<T> where T: BattleTypeTrait {
-    // pub fn do_attack(&mut self, user: Battler, attack: Move, defender: Battler, is_multi: bool) -> Vec<ActionSideEffects> {
-    //     let attacker_data = self.get_by_id(&user).unwrap();
-    //     let attack_data = attack.data();
-    //
-    //     // Step 1: Ensure the target exists
-    //     let defender_data = self.get_by_id(&defender);
-    //     if defender_data.is_none() {
-    //         return vec![ActionSideEffects::NoTarget];
-    //     }
-    //     let defender_data = defender_data.unwrap();
-    //     let effective_attack_type = if *attacker_data.get_effective_ability() == Ability::Normalize {
-    //         Type::Normal
-    //     } else {
-    //         attack_data._type
-    //     };
-    //
-    //     //region Suppression
-    //     let (suppressed, supression_cause) = match (*attacker_data.get_effective_ability(), *defender_data.get_effective_ability()) {
-    //         (Ability::Damp, _) if attack == Move::Explosion || attack == Move::SelfDestruct => (true, Cause::of_ability(&user, Ability::Damp)),
-    //         (_, Ability::Damp) if attack == Move::Explosion || attack == Move::SelfDestruct => (true, Cause::of_ability(&defender, Ability::Damp)),
-    //         _ => (false, Cause::Natural)
-    //     };
-    //
-    //     if suppressed {
-    //         return vec![ActionSideEffects::Failed(supression_cause)]
-    //     }
-    //     //endregion
-    //
-    //     //region Accuracy
-    //     let accuracy_succeeds =
-    //         match attack_data.accuracy {
-    //             Accuracy::AlwaysHits => true,
-    //             Accuracy::Percentage(bp) => {
-    //                 if *attacker_data.get_effective_ability() == Ability::NoGuard || *defender_data.get_effective_ability() == Ability::NoGuard {
-    //                     true
-    //                 } else if *defender_data.get_effective_ability() == Ability::LightningRod && effective_attack_type == Type::Electric {
-    //                     true
-    //                 } else if *defender_data.get_effective_ability() == Ability::StormDrain && effective_attack_type == Type::Water {
-    //                     true
-    //                 } else {
-    //                     let accuracy_factor = self.get_accuracy_factor(&user, &attack, &defender) * f64::from(bp);
-    //                     rand::thread_rng().gen_range(0f64..=100f64) < accuracy_factor
-    //                 }
-    //             }
-    //             Accuracy::Variable => {
-    //                 match attack {
-    //                     Move::Fissure | Move::Guillotine | Move::HornDrill | Move::SheerCold => {
-    //                         if *attacker_data.get_effective_ability() == Ability::NoGuard || *defender_data.get_effective_ability() == Ability::NoGuard {
-    //                             true
-    //                         } else {
-    //                             let accuracy_factor = 30 + (attacker_data.pokemon.level - defender_data.pokemon.level);
-    //                             rand::thread_rng().gen_range(0u8..=100u8) < accuracy_factor
-    //                         }
-    //                     },
-    //                     _ => panic!("Unknown Move with Variable accuracy.")
-    //                 }
-    //             }
-    //         };
-    //
-    //     if !accuracy_succeeds {
-    //         return vec![ActionSideEffects::Missed]
-    //     }
-    //     //endregion
-    //
-    //     //region Effectiveness
-    //     let default_effectiveness = || defender_data.get_effective_type().defending_against(&effective_attack_type);
-    //     let effectiveness = default_effectiveness();
-    //     // 3a: Defender Ability + Held Items
-    //     let (effectiveness, defender_cause) =
-    //         match *defender_data.get_effective_ability() {
-    //             Ability::Levitate if attack_data._type == Type::Ground => (Effectiveness::Immune, Cause::of_ability(&defender, Ability::Levitate)),
-    //             Ability::WonderGuard => {
-    //                 match effectiveness {
-    //                     Effectiveness::Effect(e) if e > 0 => (Effectiveness::Effect(e), Cause::Natural),
-    //                     _ => (Effectiveness::Immune, Cause::of_ability(&defender, Ability::WonderGuard))
-    //                 }
-    //             },
-    //             Ability::Soundproof if attack.is_sound_based() => (Effectiveness::Immune, Cause::of_ability(&defender, Ability::Soundproof)),
-    //             Ability::Overcoat if attack.is_powder() => (Effectiveness::Immune, Cause::of_ability(&defender, Ability::Overcoat)),
-    //             _ => (effectiveness, Cause::Natural)
-    //         };
-    //
-    //     // 3b: Attacker Ability + Held Items
-    //     let (effectiveness, attacker_cause) = match *attacker_data.get_effective_ability() {
-    //         Ability::Scrappy if effective_attack_type == Type::Normal || effective_attack_type == Type::Fighting => {
-    //             match effectiveness {
-    //                 Effectiveness::Immune => (Effectiveness::NORMAL, Cause::of_ability(&user, Ability::Scrappy)),
-    //                 e => (e, Cause::Natural)
-    //             }
-    //         },
-    //         Ability::TintedLens => {
-    //             match effectiveness {
-    //                 Effectiveness::Effect(a) if a < 0 => (Effectiveness::Effect(a + 1), Cause::of_ability(&user, Ability::TintedLens)),
-    //                 a => (a, Cause::Natural)
-    //             }
-    //         },
-    //         Ability::MoldBreaker | Ability::Turboblaze | Ability::Teravolt => {
-    //             match (&effectiveness, &defender_cause) {
-    //                 (Effectiveness::Immune, Cause::Ability(_, _)) => (default_effectiveness(), Cause::of_ability(&user, *attacker_data.get_effective_ability())),
-    //                 _ => (effectiveness, Cause::Natural)
-    //             }
-    //         }
-    //         _ => (effectiveness, Cause::Natural)
-    //     };
-    //
-    //     if let Effectiveness::Immune = effectiveness {
-    //         let final_cause = match (attacker_cause, defender_cause) {
-    //             (Cause::Natural, Cause::Natural) => Cause::Natural,
-    //             (Cause::Natural, defender) => defender,
-    //             (attacker, Cause::Natural) => attacker,
-    //             (attacker, defender) => attacker.overwrite(defender)
-    //         };
-    //         return vec![ActionSideEffects::NoEffect(final_cause)]
-    //     }
-    //     //endregion
-    //
-    //     // Beyond this point, we *will* hit the attacker. We just need to figure out how and why
-    //
-    //     vec![]
-    // }
 }
