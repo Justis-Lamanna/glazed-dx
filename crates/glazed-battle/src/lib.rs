@@ -18,7 +18,8 @@ pub struct Side {
     tailwind: u8,
     aurora_veil: u8,
     light_screen: u8,
-    reflect: u8
+    reflect: u8,
+    mist: u8
 }
 
 /// Represents the entire battlefield
@@ -314,38 +315,16 @@ impl BattleData {
         self.confused > 0
     }
 
-    pub fn get_net_stages(&self, stat:BattleStat, stages: i8) -> i8 {
-        let clamp = |v: i8| v.clamp(-6, 6);
-
-        let var = match stat {
-            BattleStat::Attack => &self.attack_stage,
-            BattleStat::Defense => &self.defense_stage,
-            BattleStat::SpecialAttack => &self.special_attack_stage,
-            BattleStat::SpecialDefense => &self.special_defense_stage,
-            BattleStat::Speed => &self.speed_stage,
-            BattleStat::Accuracy => &self.accuracy_stage,
-            BattleStat::Evasion => &self.evasion_stage
-        };
-
-        let before = *var;
-        let after = clamp(before + stages);
-        after - before
-    }
-
-    pub fn add_stages(&mut self, stat: BattleStat, stages: i8) {
-        let clamp = |v: i8| v.clamp(-6, 6);
-
-        let var = match stat {
-            BattleStat::Attack => &mut self.attack_stage,
-            BattleStat::Defense => &mut self.defense_stage,
-            BattleStat::SpecialAttack => &mut self.special_attack_stage,
-            BattleStat::SpecialDefense => &mut self.special_defense_stage,
-            BattleStat::Speed => &mut self.speed_stage,
-            BattleStat::Accuracy => &mut self.accuracy_stage,
-            BattleStat::Evasion => &mut self.evasion_stage
-        };
-
-        *var = clamp(*var + stages);
+    pub fn get_stage(&self, stat: BattleStat) -> i8 {
+        match stat {
+            BattleStat::Attack => self.attack_stage,
+            BattleStat::Defense => self.defense_stage,
+            BattleStat::SpecialAttack => self.special_attack_stage,
+            BattleStat::SpecialDefense => self.special_defense_stage,
+            BattleStat::Speed => self.speed_stage,
+            BattleStat::Accuracy => self.accuracy_stage,
+            BattleStat::Evasion => self.evasion_stage
+        }
     }
 
     pub fn end_of_turn(&mut self) {
@@ -515,7 +494,11 @@ pub enum Cause {
     Overwrite{
         initial: Box<Cause>,
         overwriter: Box<Cause>
-    }
+    },
+    /// Failed because the stats were maxed out
+    StatsMaxed(StatsCause),
+    /// Failed because of something on the field
+    Field(FieldCause)
 }
 impl Cause {
     pub fn overwrite(self, cause: Cause) -> Cause {
@@ -524,6 +507,16 @@ impl Cause {
             overwriter: Box::from(cause.clone())
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum StatsCause {
+    TooHigh, TooLow
+}
+
+#[derive(Debug, Clone)]
+pub enum FieldCause {
+    Mist
 }
 
 /// Possible consequences of an Action
@@ -571,7 +564,16 @@ pub enum ActionSideEffects {
         defender: Battler,
         split_hp: u16
     },
-    NoTarget
+    NoTarget,
+
+    NoEffectSecondary(Cause),
+    StatChanged {
+        affected: Battler,
+        stat: BattleStat,
+        cause: Cause,
+        start: i8,
+        end: i8
+    }
 }
 impl ActionSideEffects {
     pub fn is_multi_hit_end(&self) -> bool {

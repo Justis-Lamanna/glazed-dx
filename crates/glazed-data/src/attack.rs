@@ -624,7 +624,7 @@ pub enum DamageType {
 }
 
 /// Represents the stats that are maintained in battle
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum BattleStat {
     Attack,
     Defense,
@@ -1507,7 +1507,7 @@ pub static Guillotine: MoveData = MoveData {
     priority: 0,
     power: Power::OneHitKnockout,
     crit_rate: None,
-    accuracy: Accuracy::Percentage(30),
+    accuracy: Accuracy::Variable,
     _type: Type::Normal,
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,

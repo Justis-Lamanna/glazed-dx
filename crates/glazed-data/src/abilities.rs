@@ -173,6 +173,14 @@ pub enum Ability {
     SlushRush,
     Protean
 }
+impl Ability {
+    pub fn is_ignore_ability_ability(&self) -> bool {
+        match self {
+            Ability::MoldBreaker | Ability::Teravolt | Ability::Turboblaze => true,
+            _ => false
+        }
+    }
+}
 
 /// Represents the ability(s) for a Pokemon
 #[derive(Debug)]

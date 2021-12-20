@@ -7,7 +7,11 @@ use glazed_data::constants::Species;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::{Pokemon};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
-use crate::{ActionSideEffects, BattleData, Battlefield, Battler, BattleTypeTrait, Cause, Field, SemiInvulnerableLocation, Weather};
+use crate::{ActionSideEffects, BattleData, Battlefield, Battler, BattleTypeTrait, Cause, Field, FieldCause, SemiInvulnerableLocation, StatsCause, Weather};
+
+// Constants
+pub const MAX_STAGE: i8 = 6;
+pub const MIN_STAGE: i8 = -6;
 
 /// Simple utility to drain a vector into another one
 fn copy_all<T>(vec: &mut Vec<T>, vec_to_add: Vec<T>) {
@@ -67,7 +71,7 @@ fn get_effective_stat(pkmn: &Pokemon, battle_data: &BattleData, stat: BattleStat
     };
 
     match stage {
-        i8::MIN..=-6 => base * 2u16 / 8u16,
+        i8::MIN..=MIN_STAGE => base * 2u16 / 8u16,
         -5 => base * 2u16 / 7u16,
         -4 => base * 2u16 / 6u16,
         -3 => base * 2u16 / 5u16,
@@ -79,7 +83,7 @@ fn get_effective_stat(pkmn: &Pokemon, battle_data: &BattleData, stat: BattleStat
         3 => base * 5u16 / 2u16,
         4 => base * 3u16,
         5 => base * 7u16 / 2u16,
-        6..=i8::MAX => base * 4u16
+        MAX_STAGE..=i8::MAX => base * 4u16
     }
 }
 
@@ -262,11 +266,26 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 }
                 ActionSideEffects::NoTarget => {}
                 ActionSideEffects::MultiStrike {..} => {}
+                ActionSideEffects::StatChanged { affected, stat, end, .. } => {
+                    let mut data = self.get_mut_battle_data(affected);
+                    let stat_to_mod = match stat {
+                        BattleStat::Attack => &mut data.attack_stage,
+                        BattleStat::Defense => &mut data.defense_stage,
+                        BattleStat::SpecialAttack => &mut data.special_attack_stage,
+                        BattleStat::SpecialDefense => &mut data.special_defense_stage,
+                        BattleStat::Speed => &mut data.speed_stage,
+                        BattleStat::Accuracy => &mut data.accuracy_stage,
+                        BattleStat::Evasion => &mut data.evasion_stage
+                    };
+
+                    *stat_to_mod = (*end).clamp(MIN_STAGE, MAX_STAGE);
+                }
+                ActionSideEffects::NoEffectSecondary(_) => {}
             }
         }
     }
 
-    fn hang_on(&self, defender: BattleBundle, attacker: BattleBundle) -> Option<Cause> {
+    fn hangs_on(&self, defender: BattleBundle, attacker: BattleBundle) -> Option<Cause> {
         if defender.1.is_full_health() {
             match defender.3 {
                 Ability::Sturdy => {
@@ -289,7 +308,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
     }
 
-    fn do_standard_basic_damage<F>(&self, defender: BattleBundle, attacker: BattleBundle, attack: Move, calc_end_hp: F) -> Vec<ActionSideEffects>
+    fn calculate_standard_basic_damage<F>(&self, defender: BattleBundle, attacker: BattleBundle, attack: Move, calc_end_hp: F) -> Vec<ActionSideEffects>
         where F: Fn(u16) -> u16 {
         if defender.2.substituted > 0 {
             let start_hp = defender.2.substituted;
@@ -304,7 +323,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             let end_hp = calc_end_hp(start_hp);
 
             let hang_on = if end_hp == 0 {
-                self.hang_on(defender, attacker)
+                self.hangs_on(defender, attacker)
             } else {
                 None
             };
@@ -657,6 +676,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         effects
     }
 
+    //region Damage
+
     fn do_damage_from_base_power<F>(&mut self, attacker: Battler, attack: F, defender: Battler) -> Vec<ActionSideEffects>
         where F: Into<MoveContext>
     {
@@ -792,7 +813,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                     end_hp = end_hp.clamp(1, u16::MAX);
                 }
                 let hang_on = if end_hp == 0 {
-                    self.hang_on(defender_bundle, attacker_bundle)
+                    self.hangs_on(defender_bundle, attacker_bundle)
                 } else {
                     None
                 };
@@ -859,7 +880,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         if let Effectiveness::Immune = effectiveness {
             vec![ActionSideEffects::NoEffect(Cause::Natural)]
         } else {
-            self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| 0)
+            self.calculate_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| 0)
         }
     }
 
@@ -879,9 +900,9 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         if let Effectiveness::Immune = effectiveness {
             vec![ActionSideEffects::NoEffect(Cause::Natural)]
         } else if let Power::Exact(delta) = move_data.power {
-            self.do_standard_basic_damage(defender_bundle, attacker_bundle,
-                                          attack,
-                                          |start_hp| start_hp.saturating_sub(u16::from(delta)))
+            self.calculate_standard_basic_damage(defender_bundle, attacker_bundle,
+                                                 attack,
+                                                 |start_hp| start_hp.saturating_sub(u16::from(delta)))
         } else {
             panic!("do_exact_damage called with non-exact damage move")
         }
@@ -910,7 +931,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             if damage == 0 {
                 damage = 1;
             }
-            self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
+            self.calculate_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
         } else {
             panic!("Called do_percent_damage with incorrect power type")
         }
@@ -945,7 +966,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 if user_hp >= target_hp {
                     vec![ActionSideEffects::Failed(Cause::Natural)]
                 } else {
-                    self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| user_hp)
+                    self.calculate_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| user_hp)
                 }
             },
             Move::FinalGambit => {
@@ -961,13 +982,13 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 }];
 
                 copy_all(&mut effects,
-                         self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage)));
+                         self.calculate_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage)));
 
                 effects
             },
             Move::NightShade | Move::SeismicToss => {
                 let damage = u16::from(attacker_pokemon.level);
-                self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
+                self.calculate_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
             },
             Move::Psywave => {
                 let damage = u32::from(attacker_pokemon.level) * (rand::thread_rng().gen_range(0..=100) + 50) / 100;
@@ -975,7 +996,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 if damage == 0 {
                     damage = 1;
                 }
-                self.do_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
+                self.calculate_standard_basic_damage(defender_bundle, attacker_bundle, attack, |start_hp| start_hp.saturating_sub(damage))
             },
             Move::PainSplit => {
                 if defender_data.substituted > 0 {
@@ -1016,8 +1037,8 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 Some((target, _, damage)) => {
                     let payback_damage = Fraction::from(*damage) * Fraction::from(*fraction);
                     let payback_damage = payback_damage.to_u16().unwrap_or(0);
-                    self.do_standard_basic_damage(self.get_battle_bundle(target), attacker_bundle, attack,
-                                                  |start_hp| start_hp.saturating_sub(payback_damage))
+                    self.calculate_standard_basic_damage(self.get_battle_bundle(target), attacker_bundle, attack,
+                                                         |start_hp| start_hp.saturating_sub(payback_damage))
                 },
                 None => vec![ActionSideEffects::Failed(Cause::Natural)]
             }
@@ -1025,6 +1046,77 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             panic!("Called do_revenge_damage for move without Revenge power type")
         }
     }
+
+    // endregion
+
+    //region Non-Damage
+
+    fn _change_stat(&self, affected: BattleBundle, stat: BattleStat, stages: i8, cause: Cause) -> Vec<ActionSideEffects> {
+        let (affected, _, data, _) = affected;
+
+        let current = data.get_stage(stat);
+        let next = current + stages;
+        return if next > MAX_STAGE {
+            vec![ActionSideEffects::NoEffect(Cause::StatsMaxed(StatsCause::TooHigh))]
+        } else if next < MIN_STAGE {
+            vec![ActionSideEffects::NoEffect(Cause::StatsMaxed(StatsCause::TooLow))]
+        } else {
+            vec![ActionSideEffects::StatChanged {
+                stat,
+                affected,
+                cause,
+                start: current,
+                end: next
+            }]
+        }
+    }
+
+    fn change_self_stat(&mut self, affected: Battler, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+        let bundle = self.get_battle_bundle(&affected);
+        let (affected, pkmn, data, ability) = bundle;
+
+        let (ability_cause, stages) = match ability {
+            Ability::Simple => (Cause::Ability(affected, Ability::Simple), stages * 2),
+            Ability::Contrary => (Cause::Ability(affected, Ability::Contrary), -stages),
+            _ => (Cause::Natural, stages)
+        };
+
+        self._change_stat(bundle, stat, stages, ability_cause)
+    }
+
+    fn change_opponent_stat(&mut self, affecter: Battler, affected: Battler, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+        let (affecter, _, _, affecting_ability) = self.get_battle_bundle(&affecter);
+        let bundle = self.get_battle_bundle(&affected);
+        let (affected, _, _, affected_ability) = bundle;
+        let affected_side = self.get_side(&affected);
+
+        if affected_side.mist > 0 {
+            return vec![ActionSideEffects::NoEffectSecondary(Cause::Field(FieldCause::Mist))]
+        }
+
+        let (ability_cause, stages) = match affected_ability {
+            Ability::Simple => (Cause::Ability(affected, Ability::Simple), stages * 2),
+            Ability::Contrary  => {
+                let cause = Cause::Ability(affected, Ability::Contrary);
+                match affecting_ability {
+                    oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter, oc)), -stages),
+                    _ => (cause, stages)
+                }
+            },
+            oc@ (Ability::ClearBody | Ability::WhiteSmoke) => {
+                let cause = Cause::Ability(affected, oc);
+                match affecting_ability {
+                    oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter, oc)), stages),
+                    _ => return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(affected, oc))]
+                }
+            }
+            _ => (Cause::Natural, stages)
+        };
+
+        self._change_stat(bundle, stat, stages, ability_cause)
+    }
+
+    //endregion
 }
 
 //region oldstuff
