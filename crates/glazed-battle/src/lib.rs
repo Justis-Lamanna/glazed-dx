@@ -573,7 +573,9 @@ pub enum ActionSideEffects {
         cause: Cause,
         start: i8,
         end: i8
-    }
+    },
+
+    NothingHappened
 }
 impl ActionSideEffects {
     pub fn is_multi_hit_end(&self) -> bool {

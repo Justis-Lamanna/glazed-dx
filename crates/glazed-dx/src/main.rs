@@ -14,7 +14,7 @@ fn main() {
     let them = Party::create_one(PokemonTemplate::pokemon(Species::Bastiodon, 20));
 
     let mut battlefield = Battlefield::single_battle(me, them);
-    let fx = battlefield.do_damage(SingleBattleSide::USER, Move::BeatUp, SingleBattleSide::OPPONENT);
+    let fx = battlefield.do_attack(SingleBattleSide::USER, Move::SwordsDance, SingleBattleSide::OPPONENT);
 
     println!("{:#?}", fx);
     //println!("{:#?}", battlefield);

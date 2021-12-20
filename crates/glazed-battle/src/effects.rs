@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
+use glazed_data::attack::{BattleStat, DamageType, Effect, Move, MoveData, MultiHitFlavor, Power, StatChangeTarget};
 use glazed_data::constants::Species;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::{Pokemon};
@@ -281,6 +281,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                     *stat_to_mod = (*end).clamp(MIN_STAGE, MAX_STAGE);
                 }
                 ActionSideEffects::NoEffectSecondary(_) => {}
+                ActionSideEffects::NothingHappened => {}
             }
         }
     }
@@ -471,7 +472,43 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
     }
 
-    pub fn do_damage(&mut self, attacker: Battler, attack: Move, defender:Battler) -> Vec<ActionSideEffects> {
+    pub fn do_attack(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
+        let move_data = attack.data();
+        let does_damage = if let Power::None = move_data.power { true } else { false };
+        let mut effects = Vec::new();
+
+        if does_damage {
+            copy_all(&mut effects, self.do_damage(attacker, attack, defender));
+        }
+
+        for secondary_effect in move_data.effects {
+            let secondary_effects = match secondary_effect {
+                Effect::StatChange(stat, stages, probability, target) => {
+                    let triggers = rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                    if triggers {
+                        match target {
+                            StatChangeTarget::User => self.change_self_stat(attacker, *stat, *stages),
+                            StatChangeTarget::Target => self.change_opponent_stat(attacker, defender, *stat, *stages)
+                        }
+                    } else {
+                        Vec::new()
+                    }
+                }
+                _ => {Vec::new()}
+            };
+            self.apply_side_effects(&secondary_effects);
+            copy_all(&mut effects, secondary_effects);
+        }
+
+        if effects.is_empty() {
+            effects.push(ActionSideEffects::NothingHappened)
+        }
+
+        effects
+    }
+
+    //region Damage
+    fn do_damage(&mut self, attacker: Battler, attack: Move, defender:Battler) -> Vec<ActionSideEffects> {
         let move_data = attack.data();
         let effects = match &move_data.power {
             Power::None => Vec::new(),
@@ -675,8 +712,6 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         self.apply_side_effects(&effects);
         effects
     }
-
-    //region Damage
 
     fn do_damage_from_base_power<F>(&mut self, attacker: Battler, attack: F, defender: Battler) -> Vec<ActionSideEffects>
         where F: Into<MoveContext>
@@ -1071,7 +1106,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         }
     }
 
-    fn change_self_stat(&mut self, affected: Battler, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+    pub fn change_self_stat(&mut self, affected: Battler, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
         let bundle = self.get_battle_bundle(&affected);
         let (affected, pkmn, data, ability) = bundle;
 
@@ -1084,7 +1119,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         self._change_stat(bundle, stat, stages, ability_cause)
     }
 
-    fn change_opponent_stat(&mut self, affecter: Battler, affected: Battler, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+    pub fn change_opponent_stat(&mut self, affecter: Battler, affected: Battler, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
         let (affecter, _, _, affecting_ability) = self.get_battle_bundle(&affecter);
         let bundle = self.get_battle_bundle(&affected);
         let (affected, _, _, affected_ability) = bundle;
