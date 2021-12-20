@@ -573,29 +573,83 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 }]
             },
             Power::MultiHit(MultiHitFlavor::Accumulating(first, second, third)) => {
-                let attacker_bundle = self.get_battle_bundle(&attacker);
-                let defender_bundle = self.get_battle_bundle(&defender);
-
                 let mut effects = Vec::new();
                 let mut counter = 0;
+                let strike_powers = vec![first, second, third];
+                for base in strike_powers {
+                    let move_context = MoveContext {
+                        attack,
+                        data: move_data,
+                        base_power: u16::from(*base)
+                    };
 
-                // if counter != 0 {
-                //     effects.push(ActionSideEffects::HitCount(counter));
-                // }
-                effects
-            },
-            Power::MultiHit(MultiHitFlavor::BeatUp) => {
-                let attacker_bundle = self.get_battle_bundle(&attacker);
-                let defender_bundle = self.get_battle_bundle(&defender);
+                    let turn_effects = self.do_damage_from_base_power(attacker, move_context, defender);
+                    self.apply_side_effects(&turn_effects);
 
-                for p in &self.get_party(&attacker).members {
-                    if let Some(p) = p {
-                        let base = p.species.data().stats.1.base_stat;
-                        let bp = (base / 10) + 5;
+                    let end_turn = turn_effects.iter().any(|e| e.is_multi_hit_end());
+                    let got_hit = turn_effects.iter().any(|e| match e {
+                        ActionSideEffects::DirectDamage { .. } => true,
+                        _ => false
+                    });
+                    effects.push(turn_effects);
+
+                    if got_hit {
+                        counter += 1;
+                    }
+                    if end_turn {
+                        break;
                     }
                 }
 
-                vec![]
+                vec![ActionSideEffects::MultiStrike {
+                    actions: effects,
+                    hits: counter
+                }]
+            },
+            Power::MultiHit(MultiHitFlavor::BeatUp) => {
+                let mut effects = Vec::new();
+                let mut counter = 0;
+                let base_powers = self.get_party(&attacker).members
+                    .iter()
+                    .filter_map(|p| {
+                        match p {
+                            Some(p) if !p.is_fainted() && !p.status.has_status_condition() && !p.egg => {
+                                Some(p.species.data().stats.1.base_stat)
+                            },
+                            _ => None
+                        }
+                    })
+                    .collect::<Vec<u8>>();
+
+                for base in base_powers {
+                    let move_context = MoveContext {
+                        attack,
+                        data: move_data,
+                        base_power: u16::from(base)
+                    };
+
+                    let turn_effects = self.do_damage_from_base_power(attacker, move_context, defender);
+                    self.apply_side_effects(&turn_effects);
+
+                    let end_turn = turn_effects.iter().any(|e| e.is_multi_hit_end());
+                    let got_hit = turn_effects.iter().any(|e| match e {
+                        ActionSideEffects::DirectDamage { .. } => true,
+                        _ => false
+                    });
+                    effects.push(turn_effects);
+
+                    if got_hit {
+                        counter += 1;
+                    }
+                    if end_turn {
+                        break;
+                    }
+                }
+
+                vec![ActionSideEffects::MultiStrike {
+                    actions: effects,
+                    hits: counter
+                }]
             }
         };
 

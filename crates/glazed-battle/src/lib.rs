@@ -76,6 +76,28 @@ pub struct Party {
     members: [Option<Pokemon>; 6]
 }
 impl Party {
+    pub fn create<PKMN, ITER>(party: ITER) -> Party
+        where ITER: IntoIterator<Item=PKMN>, PKMN: Into<Pokemon>
+    {
+        let mut members = [None, None, None, None, None, None];
+        let mut counter = 0;
+        let mut party = party.into_iter();
+        for idx in 0..6usize {
+            match party.next() {
+                None => { break; }
+                Some(template) => {
+                    members[idx] = Some(template.into());
+                    counter += 1;
+                }
+            }
+        }
+
+        Party {
+            number_of_members: counter,
+            members
+        }
+    }
+
     pub fn create_one<T>(one: T) -> Party
         where T: Into<Pokemon> {
         Party {
