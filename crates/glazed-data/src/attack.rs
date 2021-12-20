@@ -1,12 +1,9 @@
 #![allow(non_upper_case_globals)]
 
-use std::ops::Range;
 use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
 use crate::types::Type;
 use glazed_core::{Id};
 use glazed_macro::*;
-
-use fraction::Fraction;
 
 /// Represents an Attack a Pokemon can have
 #[derive(Debug, Copy, Clone, PartialEq, Id)]

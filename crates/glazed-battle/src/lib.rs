@@ -1,14 +1,11 @@
-mod core;
 pub mod single;
 pub mod double;
 pub mod tag;
 mod effects;
 
 use std::option::Option::Some;
-use either::Either;
-use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, Move, MoveData, NonVolatileBattleAilment, Power, StatChangeTarget, Target};
+use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, StatChangeTarget, Target};
 use glazed_data::constants::Species;
 use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
@@ -537,7 +534,10 @@ pub enum ActionSideEffects {
     Missed(Cause),
     NoEffect(Cause),
     Failed(Cause),
-    HitCount(u8),
+    MultiStrike {
+        actions: Vec<Vec<ActionSideEffects>>,
+        hits: u8
+    },
     DamagedSubstitute {
         damaged: Battler,
         start_hp: u16,

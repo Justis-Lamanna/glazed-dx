@@ -1,16 +1,13 @@
 use std::convert::TryFrom;
-use std::ops::Mul;
-use either::Either;
 use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, DamageType, Effect, Move, MoveData, MultiHitFlavor, Power};
+use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::constants::Species;
-use glazed_data::item::{Berry, EvolutionHeldItem, Item};
-use glazed_data::pokemon::{Pokemon, Stat};
+use glazed_data::item::{EvolutionHeldItem, Item};
+use glazed_data::pokemon::{Pokemon};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 use crate::{ActionSideEffects, BattleData, Battlefield, Battler, BattleTypeTrait, Cause, Field, SemiInvulnerableLocation, Weather};
-use crate::TurnAction::Attack;
 
 /// Simple utility to drain a vector into another one
 fn copy_all<T>(vec: &mut Vec<T>, vec_to_add: Vec<T>) {
@@ -184,13 +181,21 @@ type BattleBundle<'a> = (Battler, &'a Pokemon, &'a BattleData, Ability);
 
 struct MoveContext {
     attack: Move,
-    metadata: u8
+    data: &'static MoveData,
+    base_power: u16
 }
 impl From<Move> for MoveContext {
-    fn from(m: Move) -> Self {
+    fn from(attack: Move) -> Self {
+        let data = attack.data();
+        let base_power = match data.power {
+            Power::Base(base) | Power::BaseWithRecoil(base, _) | Power::BaseWithMercy(base) |
+                Power::MultiHit(MultiHitFlavor::Variable(base)) | Power::MultiHit(MultiHitFlavor::Fixed(_, base)) => u16::from(base),
+            _ => panic!("Can't derive base power, must be specified")
+        };
         MoveContext {
-            attack: m,
-            metadata: 0
+            attack,
+            data,
+            base_power
         }
     }
 }
@@ -256,7 +261,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                     second.current_hp = (*split_hp).clamp(0, second.hp.value);
                 }
                 ActionSideEffects::NoTarget => {}
-                ActionSideEffects::HitCount(_) => {}
+                ActionSideEffects::MultiStrike {..} => {}
             }
         }
     }
@@ -388,7 +393,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         if let Some(t) = effective_move_type {
             if t == Type::Water {
                 if self.field.is_rain() {
-                    damage += (damage / 2);
+                    damage += damage / 2;
                 } else if self.field.is_sunny() {
                     damage /= 2;
                 }
@@ -396,14 +401,14 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 if self.field.is_rain() {
                     damage /= 2;
                 } else if self.field.is_sunny() {
-                    damage += (damage / 2);
+                    damage += damage / 2;
                 }
             }
         }
 
         // * crit
         if crit {
-            damage += (damage / 2);
+            damage += damage / 2;
         }
 
         // * random
@@ -415,16 +420,16 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 damage *= 2;
             } else {
                 // This is a fair approximation of 150%, right?
-                damage += (damage / 2);
+                damage += damage / 2;
             }
         }
 
         // * type
         if let Effectiveness::Effect(i) = effectiveness {
             if i < 0 {
-                damage = (damage >> -i);
+                damage = damage >> -i;
             } else {
-                damage = (damage << i);
+                damage = damage << i;
             }
         }
 
@@ -451,14 +456,49 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         let move_data = attack.data();
         let effects = match &move_data.power {
             Power::None => Vec::new(),
-            Power::Base(_) | Power::BaseWithRecoil(_, _) | Power::BaseWithMercy(_) | Power::WeightBased | Power::WeightRatioBased =>
+            Power::Base(_) | Power::BaseWithRecoil(_, _) | Power::BaseWithMercy(_) =>
                 self.do_damage_from_base_power(attacker, attack, defender),
+            Power::WeightBased => {
+                let defender_bundle= self.get_battle_bundle(&defender);
+                let weight = get_effective_weight(defender_bundle);
+                let base = match weight {
+                    0..=99 => 20,
+                    100..=249 => 40,
+                    250..=499 => 60,
+                    500..=999 => 80,
+                    1000..=1999 => 100,
+                    2000..=u16::MAX => 120
+                };
+                self.do_damage_from_base_power(attacker, MoveContext {
+                    attack,
+                    data: move_data,
+                    base_power: base
+                }, defender)
+            },
+            Power::WeightRatioBased => {
+                let attacker_bundle = self.get_battle_bundle(&attacker);
+                let defender_bundle = self.get_battle_bundle(&defender);
+                let attacker_weight = get_effective_weight(attacker_bundle) as f64;
+                let defender_weight = get_effective_weight(defender_bundle) as f64;
+                let ratio = attacker_weight / defender_weight;
+                let base = if ratio > 0.5 { 40 }
+                else if ratio > 0.3335 { 60 }
+                else if ratio > 0.2501 { 80 }
+                else if ratio > 0.2001 { 100 }
+                else { 120 };
+
+                self.do_damage_from_base_power(attacker, MoveContext {
+                    attack,
+                    data: move_data,
+                    base_power: base
+                }, defender)
+            },
             Power::OneHitKnockout => self.do_ohko(attacker, attack, defender),
             Power::Exact(_) => self.do_exact_damage(attacker, attack, defender),
             Power::Variable => self.do_one_off_damage(attacker, attack, defender),
             Power::Percentage(_) => self.do_percent_damage(attacker, attack, defender),
             Power::Revenge(_, _) => self.do_revenge_damage(attacker, attack),
-            Power::MultiHit(MultiHitFlavor::Variable(_)) => {
+            Power::MultiHit(MultiHitFlavor::Variable(base)) => {
                 let attacker_bundle = self.get_battle_bundle(&attacker);
                 let n = if attacker_bundle.3 == Ability::SkillLink {
                     5
@@ -468,37 +508,69 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 };
 
                 let mut effects = Vec::new();
-                for i in 0..n {
-                    let turn_effects = self.do_damage_from_base_power(attacker, attack, defender);
+                let mut counter = 0;
+                for _ in 0..n {
+                    let move_context = MoveContext {
+                        attack,
+                        data: move_data,
+                        base_power: u16::from(*base)
+                    };
+
+                    let turn_effects = self.do_damage_from_base_power(attacker, move_context, defender);
                     self.apply_side_effects(&turn_effects);
+
                     let end_turn = turn_effects.iter().any(|e| e.is_multi_hit_end());
-                    copy_all(&mut effects, turn_effects);
+                    let got_hit = turn_effects.iter().any(|e| match e {
+                        ActionSideEffects::DirectDamage { .. } => true,
+                        _ => false
+                    });
+                    effects.push(turn_effects);
+
+                    if got_hit {
+                        counter += 1;
+                    }
                     if end_turn {
-                        if i != 0 {
-                            effects.push(ActionSideEffects::HitCount(i));
-                        }
-                        return effects;
+                        break;
                     }
                 }
-                effects.push(ActionSideEffects::HitCount(n));
-                effects
+
+                vec![ActionSideEffects::MultiStrike {
+                    actions: effects,
+                    hits: counter
+                }]
             },
-            Power::MultiHit(MultiHitFlavor::Fixed(n, _)) => {
+            Power::MultiHit(MultiHitFlavor::Fixed(n, base)) => {
                 let mut effects = Vec::new();
-                for i in 0..*n {
-                    let turn_effects = self.do_damage_from_base_power(attacker, attack, defender);
+                let mut counter = 0;
+                for _ in 0..*n {
+                    let move_context = MoveContext {
+                        attack,
+                        data: move_data,
+                        base_power: u16::from(*base)
+                    };
+
+                    let turn_effects = self.do_damage_from_base_power(attacker, move_context, defender);
                     self.apply_side_effects(&turn_effects);
+
                     let end_turn = turn_effects.iter().any(|e| e.is_multi_hit_end());
-                    copy_all(&mut effects, turn_effects);
+                    let got_hit = turn_effects.iter().any(|e| match e {
+                        ActionSideEffects::DirectDamage { .. } => true,
+                        _ => false
+                    });
+                    effects.push(turn_effects);
+
+                    if got_hit {
+                        counter += 1;
+                    }
                     if end_turn {
-                        if i != 0 {
-                            effects.push(ActionSideEffects::HitCount(i));
-                        }
-                        return effects;
+                        break;
                     }
                 }
-                effects.push(ActionSideEffects::HitCount(*n));
-                effects
+
+                vec![ActionSideEffects::MultiStrike {
+                    actions: effects,
+                    hits: counter
+                }]
             },
             Power::MultiHit(MultiHitFlavor::Accumulating(first, second, third)) => {
                 let attacker_bundle = self.get_battle_bundle(&attacker);
@@ -507,9 +579,9 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
                 let mut effects = Vec::new();
                 let mut counter = 0;
 
-                if counter != 0 {
-                    effects.push(ActionSideEffects::HitCount(counter));
-                }
+                // if counter != 0 {
+                //     effects.push(ActionSideEffects::HitCount(counter));
+                // }
                 effects
             },
             Power::MultiHit(MultiHitFlavor::BeatUp) => {
@@ -541,45 +613,11 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
         let (defender, defender_pokemon, defender_data, defender_ability) = defender_bundle;
         let defender_side = self.get_side(&defender);
 
-        let MoveContext{ attack, metadata } = attack.into();
-        let move_data = attack.data();
+        let MoveContext{ attack, data, base_power } = attack.into();
+        let move_data = data;
         let mut effects = Vec::new();
 
-        let base = match move_data.power {
-            Power::Base(base) | Power::BaseWithRecoil(base, _) | Power::BaseWithMercy(base) => u16::from(base),
-            Power::WeightBased => {
-                let weight = get_effective_weight(defender_bundle);
-                match weight {
-                    0..=99 => 20,
-                    100..=249 => 40,
-                    250..=499 => 60,
-                    500..=999 => 80,
-                    1000..=1999 => 100,
-                    2000..=u16::MAX => 120
-                }
-            },
-            Power::WeightRatioBased => {
-                let attacker_weight = get_effective_weight(attacker_bundle) as f64;
-                let defender_weight = get_effective_weight(defender_bundle) as f64;
-                let ratio = attacker_weight / defender_weight;
-                if ratio > 0.5 { 40 }
-                else if ratio > 0.3335 { 60 }
-                else if ratio > 0.2501 { 80 }
-                else if ratio > 0.2001 { 100 }
-                else { 120 }
-            },
-            Power::MultiHit(MultiHitFlavor::Variable(b)) => u16::from(b),
-            Power::MultiHit(MultiHitFlavor::Fixed(_, b)) => u16::from(b),
-            Power::MultiHit(MultiHitFlavor::Accumulating(one, two, three)) => {
-                u16::from(match metadata {
-                    1 => one,
-                    2 => two,
-                    3 => three,
-                    _ => 0
-                })
-            }
-            _ => panic!("do_damage_from_base_power called with attack with no fixed base power")
-        };
+        let base = base_power;
 
         let damage = self.calculate_raw_damage_from_base(defender_bundle, attacker_bundle, base,
                                                          Some(move_data._type), move_data.damage_type, move_data.crit_rate.unwrap_or(0));
@@ -626,7 +664,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             // Attacker/Defender ability flavors
             match attacker_ability {
                 Ability::Sniper if critical_hit => {
-                    damage += (damage / 2);
+                    damage += damage / 2;
                 },
                 Ability::TintedLens if effectiveness.is_super_effective() => {
                     damage *= 2;
@@ -635,7 +673,7 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             }
             match defender_ability {
                 Ability::Filter | Ability::SolidRock if effectiveness.is_super_effective() => {
-                    damage = (damage * 3 / 4);
+                    damage = damage * 3 / 4;
                 },
                 Ability::Multiscale if defender_pokemon.is_full_health() => {
                     damage /= 2;
@@ -645,10 +683,10 @@ impl <T> Battlefield<T> where T: BattleTypeTrait {
             // Attacker/Defender held item flavors
             match attacker_pokemon.held_item {
                 Some(Item::ExpertBelt) if effectiveness.is_super_effective() => {
-                    damage += (damage * 2 / 10);
+                    damage += damage * 2 / 10;
                 },
                 Some(Item::LifeOrb) => {
-                    damage += (damage * 3 / 10);
+                    damage += damage * 3 / 10;
                 },
                 Some(Item::Metronome) => {
                     match attacker_data.last_move_used {

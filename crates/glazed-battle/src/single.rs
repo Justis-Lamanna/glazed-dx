@@ -1,7 +1,5 @@
-use glazed_data::attack::Move;
-use glazed_data::item::Item;
 use glazed_data::pokemon::Pokemon;
-use crate::{Battler, BattleTypeTrait, core, Field, Side, Turn, TurnAction};
+use crate::{Battler, BattleTypeTrait, Field, Side, Turn, TurnAction};
 use crate::{BattleData, Battlefield, Party};
 
 /// One side of battle in a single battle (one trainer, one pokemon)
@@ -55,7 +53,7 @@ impl BattleTypeTrait for SingleBattleSide {
         return &self.side;
     }
 
-    fn get_party(&self, id: &Battler) -> &Party {
+    fn get_party(&self, _id: &Battler) -> &Party {
         return &self.party
     }
 }
@@ -75,7 +73,7 @@ impl Battlefield<SingleBattleSide> {
 
     /// Perform a turn, given everyone's attempted action
     pub fn perform_turn(&mut self, user_action: TurnAction, opponent_action: TurnAction) -> Turn {
-        let mut turn = Turn::new();
+        let turn = Turn::new();
 
         // let user_pokemon_speed = self.get_effective_speed(&SingleBattleSide::USER);
         // let opponent_pokemon_speed = self.get_effective_speed(&SingleBattleSide::OPPONENT);
