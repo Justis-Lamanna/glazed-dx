@@ -1,6 +1,6 @@
-use glazed_battle::{Battlefield, Party};
+use glazed_battle::{Battlefield, Battler, BattleSide, Party};
 use glazed_data::constants::Species;
-use glazed_data::pokemon::{PokemonStatusCondition, PokemonTemplate};
+use glazed_data::pokemon::{Gender, PokemonTemplate};
 use glazed_data::attack::Move;
 
 fn main() {
@@ -10,13 +10,15 @@ fn main() {
         PokemonTemplate::pokemon(Species::Buizel, 20),
         PokemonTemplate::pokemon(Species::Furret, 20)]
     );
-    let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 20));
+    let mut them = PokemonTemplate::pokemon(Species::Ivysaur, 20);
+    them.gender = Some(Gender::Female);
+    let them = Party::create_one(them);
 
     let mut battlefield = Battlefield::single_battle(me, them);
-    // for _ in 1..=10 {
-        let fx = battlefield.do_attack(Battlefield::USER, Move::Tackle, Battlefield::OPPONENT);
+    for _ in 1..=40 {
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::ThunderWave, Battler::single(BattleSide::Back));
 
         println!("{:#?}", fx);
-    // }
+    }
     //println!("{:#?}", battlefield);
 }

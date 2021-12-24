@@ -8,7 +8,7 @@ use crate::item::{Item, Pokeball};
 use crate::types::{PokemonType, Type};
 
 /// Represents the probability of a Pokemon being male or female (or neither)
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum GenderRatio {
     None,
     Proportion(u8, u8)
@@ -21,6 +21,13 @@ impl GenderRatio {
     pub const ONE_TO_SEVEN: GenderRatio = GenderRatio::Proportion(1, 7);
     pub const THREE_TO_ONE: GenderRatio = GenderRatio::Proportion(3, 1);
     pub const SEVEN_TO_ONE: GenderRatio = GenderRatio::Proportion(7, 1);
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum Gender {
+    Male,
+    Female,
+    None
 }
 
 /// Represents an Egg Group, i.e. the Compatibility of two Pokemon
@@ -158,6 +165,7 @@ pub struct PokemonData {
 #[derive(Debug)]
 pub struct Pokemon {
     pub species: Species,
+    pub gender: Gender,
     pub egg: bool,
     pub level_met: u8,
     pub nature: Nature,
@@ -571,6 +579,7 @@ impl Pokemon {
 #[derive(Debug, Default)]
 pub struct PokemonTemplate {
     pub species: Species,
+    pub gender: Option<Gender>,
     pub level_met: Option<u8>,
     pub nature: Option<Nature>,
     pub ability: Option<AbilitySlot>,
@@ -700,6 +709,18 @@ impl PokemonTemplate {
             StatSlot {value: 0, iv: ivs[5], ev: evs[5] }
         )
     }
+
+    fn create_gender(ratio: GenderRatio) -> Gender {
+        match ratio {
+            GenderRatio::None | GenderRatio::Proportion(0, 0) => Gender::None,
+            GenderRatio::Proportion(0, _) => Gender::Female,
+            GenderRatio::Proportion(_, 0) => Gender::Male,
+            GenderRatio::Proportion(m, f) => {
+                let male = rand::thread_rng().gen_bool(f64::from(m) / f64::from(m + f));
+                if male { Gender::Male } else { Gender::Female }
+            }
+        }
+    }
 }
 impl From<PokemonTemplate> for Pokemon {
     fn from(template: PokemonTemplate) -> Self {
@@ -710,6 +731,7 @@ impl From<PokemonTemplate> for Pokemon {
         let mut moves = moves.drain(..);
         let mut p = Pokemon {
             species: template.species,
+            gender: template.gender.unwrap_or_else(|| PokemonTemplate::create_gender(data.gender_ratio)),
             egg: template.level == 0,
             level_met: template.level_met.unwrap_or(template.level),
             nature: template.nature.unwrap_or_else(|| rand::thread_rng().gen()),
