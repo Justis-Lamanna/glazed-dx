@@ -7,6 +7,8 @@ use crate::constants::Species;
 use crate::item::{Item, Pokeball};
 use crate::types::{PokemonType, Type};
 
+pub const SHININESS_CHANCE: u16 = 16;
+
 /// Represents the probability of a Pokemon being male or female (or neither)
 #[derive(Debug, Copy, Clone)]
 pub enum GenderRatio {
@@ -180,6 +182,7 @@ pub struct Pokemon {
     pub personality: u32,
     pub friendship: u8,
     pub original_trainer_id: u16,
+    pub original_trainer_secret_id: u16,
     pub original_trainer_name: String,
     pub nickname: Option<String>,
     pub level: u8,
@@ -574,6 +577,19 @@ impl Pokemon {
     pub fn is_fainted(&self) -> bool {
         self.current_hp == 0
     }
+
+    pub fn is_shiny(&self) -> bool {
+        let hb = (self.personality >> 16) as u16;
+        let lb = self.personality as u16;
+        self.original_trainer_id ^ self.original_trainer_secret_id ^ hb ^ lb < SHININESS_CHANCE
+    }
+}
+
+#[derive(Debug)]
+pub struct TemplateTrainer {
+    pub trainer_id: u16,
+    pub secret_id: u16,
+    pub name: String
 }
 
 #[derive(Debug, Default)]
@@ -591,8 +607,7 @@ pub struct PokemonTemplate {
     pub move_4: MoveTemplate,
     pub personality: Option<u32>,
     pub friendship: Option<u8>,
-    pub original_trainer_id: Option<u16>,
-    pub original_trainer_name: Option<String>,
+    pub original_trainer: Option<TemplateTrainer>,
     pub nickname: Option<String>,
     pub level: u8,
     pub markings: [bool; 6],
@@ -663,6 +678,47 @@ impl PokemonTemplate {
         }
     }
 
+    /// Force this Pokemon to be shiny
+    /// This is done by setting the Personality value to a specific value based on the original
+    /// trainer values. If there are no original trainer values, they will be generated at random.
+    /// This algorithm is relatively naive, but works as follows:
+    /// 1. Generate a random 16 bit value. This will be the high bytes of the personality value
+    /// 2. Calculate trainer_id xor secret_id xor value from step 1. This will be the low bytes of the personality value
+    /// Eventually I may tweak this to offer some further variance.
+    ///
+    /// Note that, if you change the trainer or personality values after this, the Pokemon will
+    /// lose its shininess.
+    pub fn shiny(mut self) -> PokemonTemplate {
+        // trainer ID xor secret ID xor personality hb xor personality lb < 16
+        let (trainer_id, secret_id) = match self.original_trainer {
+            Some(TemplateTrainer { trainer_id, secret_id, ..}) => (trainer_id, secret_id),
+            None => {
+                let trainer_id = rand::thread_rng().gen();
+                let secret_id = rand::thread_rng().gen();
+                let trainer = TemplateTrainer {
+                    trainer_id,
+                    secret_id,
+                    name: "Trainer".to_string()
+                };
+                self.original_trainer = Some(trainer);
+                (trainer_id, secret_id)
+            }
+        };
+
+        // The simplest way to generate a Pokemon is to create a personality value which, when
+        // the first half is xor'ed with the second, is equal to trainer_portion. This will cause the
+        // full expression to equal 0, which matches as a shiny
+        let personality_hb = rand::thread_rng().gen::<u16>();
+        let personality_lb = trainer_id ^ secret_id ^ personality_hb;
+
+        let personality_hb = personality_hb as u32;
+        let personality_lb = personality_lb as u32;
+
+        self.personality = Some((personality_hb << 16) | personality_lb);
+
+        self
+    }
+
     fn create_stats(ivs: IVTemplate, evs: EVTemplate) -> (StatSlot, StatSlot, StatSlot, StatSlot, StatSlot, StatSlot) {
         let ivs = match ivs {
             IVTemplate::Random => [
@@ -727,6 +783,10 @@ impl From<PokemonTemplate> for Pokemon {
         let data = template.species.data();
         let (hp, atk, def, spa, spd, spe)
             = PokemonTemplate::create_stats(template.ivs, template.evs);
+        let (trainer_id, secret_id, name) = match template.original_trainer {
+            Some(TemplateTrainer { trainer_id, secret_id, name }) => (trainer_id, secret_id, name),
+            None => (rand::thread_rng().gen(), rand::thread_rng().gen(), "Trainer".to_string())
+        };
         let mut moves = Pokemon::determine_moves_by_level(data, template.level);
         let mut moves = moves.drain(..);
         let mut p = Pokemon {
@@ -761,8 +821,9 @@ impl From<PokemonTemplate> for Pokemon {
             experience: data.level_rate.experience_for_level(template.level),
             personality: template.personality.unwrap_or_else(|| rand::thread_rng().gen()),
             friendship: template.friendship.unwrap_or(data.base_friendship),
-            original_trainer_id: template.original_trainer_id.unwrap_or_else(|| rand::thread_rng().gen()),
-            original_trainer_name: template.original_trainer_name.unwrap_or(String::from("Trainer")),
+            original_trainer_id: trainer_id,
+            original_trainer_secret_id: secret_id,
+            original_trainer_name: name,
             nickname: template.nickname,
             level: template.level,
             markings: template.markings,
