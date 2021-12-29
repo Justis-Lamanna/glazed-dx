@@ -10,7 +10,7 @@ use std::option::Option::Some;
 use std::rc::Rc;
 use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, StatChangeTarget, Target};
+use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
@@ -34,7 +34,8 @@ pub struct Side {
 pub struct Field {
     weather: Option<Weather>,
     gravity: u8,
-    magic_room: u8
+    magic_room: u8,
+    coins_on_ground: u16
 }
 impl Field {
     /// Return if harsh sunlight is present on the field
@@ -74,6 +75,10 @@ impl Field {
             Some(Weather::Fog) => true,
             _ => false
         }
+    }
+
+    pub fn drop_coins(&mut self, coins: u16) {
+        self.coins_on_ground = self.coins_on_ground.saturating_add(coins);
     }
 }
 
@@ -141,6 +146,18 @@ impl BattleParty {
     pub fn right(&self) -> &ActivePokemon {
         match self {
             BattleParty::Single(p) | BattleParty::Double(_, p) | BattleParty::Tag(_, p) => p
+        }
+    }
+    pub fn both(&self) -> Vec<&ActivePokemon> {
+        match self {
+            BattleParty::Single(p) => vec![p],
+            BattleParty::Double(a, b) | BattleParty::Tag(a, b) => vec![a, b]
+        }
+    }
+    pub fn ally_of(&self, me: &DoubleBattleSide) -> &ActivePokemon {
+        match me {
+            DoubleBattleSide::Left => self.right(),
+            DoubleBattleSide::Right => self.left()
         }
     }
 
@@ -212,25 +229,28 @@ impl ActivePokemon {
     }
 
     pub fn get_stat_stage(&self, stat: BattleStat) -> i8 {
+        let data = self.data.borrow();
         match stat {
-            BattleStat::Attack => self.data.borrow().attack_stage,
-            BattleStat::Defense => self.data.borrow().defense_stage,
-            BattleStat::SpecialAttack => self.data.borrow().special_attack_stage,
-            BattleStat::SpecialDefense => self.data.borrow().special_defense_stage,
-            BattleStat::Speed => self.data.borrow().speed_stage,
-            BattleStat::Accuracy => self.data.borrow().accuracy_stage,
-            BattleStat::Evasion => self.data.borrow().evasion_stage
+            BattleStat::Attack => data.attack_stage,
+            BattleStat::Defense => data.defense_stage,
+            BattleStat::SpecialAttack => data.special_attack_stage,
+            BattleStat::SpecialDefense => data.special_defense_stage,
+            BattleStat::Speed => data.speed_stage,
+            BattleStat::Accuracy => data.accuracy_stage,
+            BattleStat::Evasion => data.evasion_stage
         }
     }
 
     /// Get the effective stat of this Pokemon. Takes Transform and stages into effect
     pub fn get_effective_stat(&self, stat: BattleStat) -> u16 {
+        let pkmn = self.borrow();
+        let data = self.data.borrow();
         let base = match stat {
-            BattleStat::Attack => self.data.borrow().transformed.as_ref().map(|t| t.attack.value).unwrap_or(self.borrow().attack.value),
-            BattleStat::Defense => self.data.borrow().transformed.as_ref().map(|t| t.defense.value).unwrap_or(self.borrow().defense.value),
-            BattleStat::SpecialAttack => self.data.borrow().transformed.as_ref().map(|t| t.special_attack.value).unwrap_or(self.borrow().special_attack.value),
-            BattleStat::SpecialDefense => self.data.borrow().transformed.as_ref().map(|t| t.special_defense.value).unwrap_or(self.borrow().special_defense.value),
-            BattleStat::Speed => self.data.borrow().transformed.as_ref().map(|t| t.speed.value).unwrap_or(self.borrow().speed.value),
+            BattleStat::Attack => data.transformed.as_ref().map(|t| t.attack.value).or(data.temp_attack).unwrap_or(pkmn.attack.value),
+            BattleStat::Defense => data.transformed.as_ref().map(|t| t.defense.value).or(data.temp_defense).unwrap_or(pkmn.defense.value),
+            BattleStat::SpecialAttack => data.transformed.as_ref().map(|t| t.special_attack.value).or(data.temp_special_attack).unwrap_or(pkmn.special_attack.value),
+            BattleStat::SpecialDefense => data.transformed.as_ref().map(|t| t.special_defense.value).or(data.temp_special_defense).unwrap_or(pkmn.special_defense.value),
+            BattleStat::Speed => data.transformed.as_ref().map(|t| t.speed.value).unwrap_or(pkmn.speed.value),
             BattleStat::Accuracy => 1,
             BattleStat::Evasion => 1
         };
@@ -289,6 +309,13 @@ impl ActivePokemon {
         if weight == 0 { 1 } else { weight }
     }
 
+    pub fn is_grounded(&self) -> (bool, Cause) {
+        if let Some(Item::IronBall) = self.borrow().held_item {
+            return (true, Cause::HeldItem(self.id, Item::IronBall))
+        }
+        (false, Cause::Natural)
+    }
+
     pub fn lower_hp(&mut self, amount: u16) -> Vec<ActionSideEffects> {
         let start_hp = self.borrow().current_hp;
         let end_hp = start_hp.saturating_sub(amount);
@@ -336,7 +363,8 @@ pub struct Battlefield {
     user_side: Side,
     opponent: BattleParty,
     opponent_side: Side,
-    field: Field,
+    field: RefCell<Field>,
+    wild_battle: bool,
     turn_record: Vec<Turn>
 }
 impl Battlefield {
@@ -351,14 +379,22 @@ impl Battlefield {
             }),
             user_side: Side::default(),
             opponent: BattleParty::Single(ActivePokemon {
-                id: Battler { side: BattleSide::Forward, individual: DoubleBattleSide::Left },
+                id: Battler { side: BattleSide::Back, individual: DoubleBattleSide::Left },
                 party: Rc::new(opponent),
                 pokemon: 0,
                 data: Default::default()
             }),
             opponent_side: Side::default(),
-            field: Field::default(),
+            field: RefCell::from(Field::default()),
+            wild_battle: false,
             turn_record: Vec::new()
+        }
+    }
+
+    fn opposite_of(&self, side: &BattleSide) -> &BattleParty {
+        match side {
+            BattleSide::Forward => &self.opponent,
+            BattleSide::Back => &self.user
         }
     }
 
@@ -558,6 +594,16 @@ impl Battlefield {
         self.turn_record.push(turn);
     }
 }
+impl Index<BattleSide> for Battlefield {
+    type Output = BattleParty;
+
+    fn index(&self, index: BattleSide) -> &Self::Output {
+        match index {
+            BattleSide::Forward => &self.user,
+            BattleSide::Back => &self.opponent
+        }
+    }
+}
 
 #[derive(Default, Debug)]
 /// Really, anything that needs to be tracked during the course of the battle
@@ -585,6 +631,12 @@ pub struct BattleData {
     speed_stage: i8,
     accuracy_stage: i8,
     evasion_stage: i8,
+
+    /// Manipulated stats (Power Trick, Power Split, Guard Split)
+    temp_attack: Option<u16>,
+    temp_defense: Option<u16>,
+    temp_special_attack: Option<u16>,
+    temp_special_defense: Option<u16>,
 
     /// Turns remaining bound (0 == not bound)
     bound: u8,
@@ -857,8 +909,10 @@ pub enum Cause {
     Ability(Battler, Ability),
     /// A previously used move caused the side effect
     Move(Battler, Move),
-    /// The side effect was the cause of a user's ailment
+    /// The side effect was the cause of a user's non-volatile ailment
     Ailment(NonVolatileBattleAilment),
+    /// The side effect was the cause of a user's volatile ailment
+    Ailment2(VolatileBattleAilment),
     /// A battler's held item caused the side effect
     HeldItem(Battler, Item),
     /// One cause was about to occur, but another one overwrote it
@@ -873,9 +927,12 @@ pub enum Cause {
 }
 impl Cause {
     pub fn overwrite(self, cause: Cause) -> Cause {
-        Cause::Overwrite {
-            initial: Box::from(self),
-            overwriter: Box::from(cause.clone())
+        match self {
+            Cause::Natural => cause,
+            _ => Cause::Overwrite {
+                initial: Box::from(self),
+                overwriter: Box::from(cause.clone())
+            }
         }
     }
 }
@@ -917,7 +974,7 @@ pub enum ActionSideEffects {
         cause: Cause,
         hung_on_cause: Option<Cause>
     },
-    Missed(Cause),
+    Missed(Battler, Cause),
     NoEffect(Cause),
     Failed(Cause),
     MultiStrike {
@@ -965,23 +1022,9 @@ pub enum ActionSideEffects {
     SnappedOutOfConfusion(Battler),
     Infatuated(Battler),
     TooInfatuatedToAttack(Battler),
-
+    ForcePokemonSwap {
+        must_leave: Battler
+    },
+    DroppedCoins,
     NothingHappened
-}
-impl ActionSideEffects {
-    pub fn is_multi_hit_end(&self) -> bool {
-        match self {
-            ActionSideEffects::Missed(_) | ActionSideEffects::NoEffect(_) | ActionSideEffects::Failed(_) | ActionSideEffects::NoTarget => true,
-            ActionSideEffects::DirectDamage {end_hp, ..} | ActionSideEffects::BasicDamage {end_hp, ..} if *end_hp == 0 => true,
-            _ => false
-        }
-    }
-
-    pub fn is_primary_failure(&self) -> bool {
-        match self {
-            ActionSideEffects::NoEffect(_) | ActionSideEffects::Missed(_) | ActionSideEffects::DamagedSubstitute {..} |
-            ActionSideEffects::NoTarget | ActionSideEffects::Failed(_) => true,
-            _ => false
-        }
-    }
 }

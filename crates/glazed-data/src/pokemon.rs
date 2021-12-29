@@ -578,6 +578,10 @@ impl Pokemon {
         self.current_hp == 0
     }
 
+    pub fn has_health(&self) -> bool {
+        self.current_hp > 0
+    }
+
     pub fn is_shiny(&self) -> bool {
         let hb = (self.personality >> 16) as u16;
         let lb = self.personality as u16;

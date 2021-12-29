@@ -609,7 +609,7 @@ pub enum Power {
     Exact(u8),
     Percentage(FractionPlaceholder),
     Variable,
-    Revenge(Option<DamageType>, FractionPlaceholder)
+    Revenge(FractionPlaceholder)
 }
 
 /// The potential types of Multi Hit
@@ -665,7 +665,8 @@ pub enum NonVolatileBattleAilment {
 #[derive(Debug, Copy, Clone)]
 pub enum VolatileBattleAilment {
     Confusion,
-    Infatuation
+    Infatuation,
+    Levitation
 }
 
 /// Represents a weather condition in battle
@@ -679,7 +680,7 @@ pub enum Weather {
 }
 
 /// Represents a target, or targets of an attack
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Target {
     User,
     Ally,
@@ -689,6 +690,7 @@ pub enum Target {
     Opponents,
     AllyOrOpponent,
     RandomOpponent,
+    LastAttacker(Option<DamageType>),
     Any,
     AllExceptUser,
     All
@@ -712,9 +714,8 @@ pub enum Effect {
     Flinch(u8),
     ChangeWeather(Weather),
     DispelWeather,
-    ForceTargetSwitch,
-    ForceUserSwitch,
-    MultiTurn(u8, u8),
+    ForceSwitch(StatChangeTarget),
+    DropCoins,
     Custom
 }
 
@@ -1456,7 +1457,7 @@ pub static PayDay: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(40),
 	crit_rate: None,
-	effects: &[],
+	effects: &[Effect::DropCoins],
 };
 pub static FirePunch: MoveData = MoveData {
     pp: 15,
@@ -1600,7 +1601,7 @@ pub static Whirlwind: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::ForceTargetSwitch],
+    effects: &[Effect::ForceSwitch(StatChangeTarget::Target)],
 };
 pub static Fly: MoveData = MoveData {
     pp: 15,
@@ -1936,7 +1937,7 @@ pub static Roar: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::ForceTargetSwitch],
+    effects: &[Effect::ForceSwitch(StatChangeTarget::Target)],
 };
 pub static Sing: MoveData = MoveData {
     pp: 15,
@@ -2193,13 +2194,13 @@ pub static LowKick: MoveData = MoveData {
 pub static Counter: MoveData = MoveData {
     pp: 20,
     priority: -5,
-    power: Power::Revenge(Some(DamageType::Physical), (2u8, 1u8)),
+    power: Power::Revenge((2u8, 1u8)),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
-    target: Target::User,
+    target: Target::LastAttacker(Some(DamageType::Physical)),
     effects: &[],
 };
 pub static SeismicToss: MoveData = MoveData {
@@ -4293,13 +4294,13 @@ pub static Crunch: MoveData = MoveData {
 pub static MirrorCoat: MoveData = MoveData {
     pp: 20,
     priority: -5,
-    power: Power::Revenge(Some(DamageType::Special), (2u8, 1u8)),
+    power: Power::Revenge((2u8, 1u8)),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Psychic,
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
-    target: Target::User,
+    target: Target::LastAttacker(Some(DamageType::Special)),
     effects: &[],
 };
 pub static PsychUp: MoveData = MoveData {
@@ -5793,13 +5794,13 @@ pub static Acupressure: MoveData = MoveData {
 pub static MetalBurst: MoveData = MoveData {
     pp: 10,
     priority: 0,
-    power: Power::Revenge(None, (3u8, 2u8)),
+    power: Power::Revenge((3u8, 2u8)),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Steel,
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
-    target: Target::User,
+    target: Target::LastAttacker(None),
     effects: &[],
 };
 pub static UTurn: MoveData = MoveData {
@@ -5812,7 +5813,7 @@ pub static UTurn: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(70),
 	crit_rate: None,
-	effects: &[Effect::ForceUserSwitch],
+	effects: &[Effect::ForceSwitch(StatChangeTarget::User)],
 };
 pub static CloseCombat: MoveData = MoveData {
     pp: 5,
@@ -7492,7 +7493,7 @@ pub static CircleThrow: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(60),
 	crit_rate: None,
-	effects: &[Effect::ForceTargetSwitch],
+	effects: &[Effect::ForceSwitch(StatChangeTarget::Target)],
 };
 pub static Incinerate: MoveData = MoveData {
     pp: 15,
@@ -7636,7 +7637,7 @@ pub static VoltSwitch: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(70),
 	crit_rate: None,
-	effects: &[Effect::ForceUserSwitch],
+	effects: &[Effect::ForceSwitch(StatChangeTarget::User)],
 };
 pub static StruggleBug: MoveData = MoveData {
     pp: 20,
@@ -7684,7 +7685,7 @@ pub static DragonTail: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(60),
 	crit_rate: None,
-	effects: &[Effect::ForceTargetSwitch],
+	effects: &[Effect::ForceSwitch(StatChangeTarget::Target)],
 };
 pub static WorkUp: MoveData = MoveData {
     pp: 30,

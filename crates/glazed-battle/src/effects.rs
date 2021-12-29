@@ -1,11 +1,11 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::convert::TryFrom;
-use std::ops::{Deref, Index, IndexMut};
+use std::ops::{Deref, Index, IndexMut, RangeInclusive};
 use std::pin::Pin;
 use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, StatChangeTarget, VolatileBattleAilment};
+use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::constants::UnownForm::P;
 use glazed_data::item::{EvolutionHeldItem, Item};
@@ -19,124 +19,266 @@ pub const MAX_STAGE: i8 = 6;
 pub const MIN_STAGE: i8 = -6;
 pub const THAW_CHANCE: f64 = 0.2;
 pub const FULL_PARALYSIS_CHANCE: f64 = 0.25;
+pub const SLEEP_TURNS_RANGE: RangeInclusive<u8> = 1..=3;
 pub const CONFUSION_HIT_CHANCE: f64 = 0.5;
+pub const CONFUSION_POWER: u16 = 40;
 pub const INFATUATION_INACTION_CHANCE: f64 = 0.5;
 
+pub enum SelectedTarget {
+    Implied,
+    One(Battler)
+}
+
 impl Battlefield {
-    pub fn do_attack(&mut self, attacker: Battler, attack: Move, defender: Battler) -> Vec<ActionSideEffects> {
+    fn get_targets(&self, attacker: Battler, attack: Move, selected: SelectedTarget) -> Vec<&ActivePokemon> {
+        let selected_default_opponent = || match selected {
+            SelectedTarget::Implied => self.opposite_of(&attacker.side).left(), // Default is opponent on the left, although this shouldn't be called normally
+            SelectedTarget::One(b) => &self[b.side][b.individual]
+        };
+        let user = || &self[attacker.side][attacker.individual];
+        let ally = || self[attacker.side].ally_of(&attacker.individual);
+
+        let move_data = attack.data();
+
+        match move_data.target {
+            Target::User => vec![user()],
+            Target::Ally => vec![ally()],
+            Target::UserAndAlly => vec![user(), ally()],
+            Target::UserOrAlly => {
+                match selected {
+                    SelectedTarget::Implied => vec![user()],
+                    SelectedTarget::One(b) => vec![&self[b.side][b.individual]]
+                }
+            },
+            Target::Opponent => vec![selected_default_opponent()],
+            Target::Opponents => self.opposite_of(&attacker.side).both(),
+            Target::AllyOrOpponent => vec![selected_default_opponent()],
+            Target::RandomOpponent => {
+                let p = match self.opposite_of(&attacker.side) {
+                    BattleParty::Single(p) => p,
+                    BattleParty::Double(a, b) |
+                    BattleParty::Tag(a, b) => if rand::thread_rng().gen_bool(0.5) { a } else { b }
+                };
+                vec![p]
+            }
+            Target::Any => vec![selected_default_opponent()],
+            Target::AllExceptUser => vec![selected_default_opponent()],
+            Target::All => {
+                let mut vec = vec![user(), ally()];
+                vec.append(&mut self.opposite_of(&attacker.side).both());
+                vec
+            }
+            Target::LastAttacker(pred) => {
+                let u = user();
+                let data = u.data.borrow();
+                let target = match pred {
+                    None => data.damage_this_turn.last(),
+                    Some(dt) => {
+                        data.damage_this_turn
+                            .iter()
+                            .filter(|(_, attack, _)| attack.data().damage_type == dt)
+                            .last()
+                    }
+                };
+                match target {
+                    None => vec![],
+                    Some((battler, _, _)) => vec![&self[battler.side][battler.individual]]
+                }
+            }
+        }
+    }
+
+    pub fn do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
-        let attacker = &self[attacker.side][attacker.individual];
-        let defender = &self[defender.side][defender.individual];
+        let attacker = &self[attacker_id.side][attacker_id.individual];
 
         let move_data = attack.data();
 
         // Check for reasons this Pokemon can't perform this move
+        {
+            let mut data = attacker.data.borrow_mut();
+            let mut pkmn = attacker.borrow_mut();
+            if pkmn.status.freeze {
+                let thaw = attack.can_thaw_user() || rand::thread_rng().gen_bool(THAW_CHANCE);
+                if thaw {
+                    pkmn.status.freeze = false;
+                    effects.push(ActionSideEffects::Thawed(attacker_id));
+                } else {
+                    let froze = ActionSideEffects::WasFrozen(attacker_id);
+                    effects.push(froze);
+                    return effects;
+                }
+            }
 
-        //region Pre-attack
-        if attacker.borrow().status.freeze {
-            let thaw = attack.can_thaw_user() || rand::thread_rng().gen_bool(THAW_CHANCE);
-            if thaw {
-                attacker.borrow_mut().status.freeze = false;
-                effects.push(ActionSideEffects::Thawed(attacker.id));
-            } else {
-                let froze = ActionSideEffects::WasFrozen(attacker.id);
-                effects.push(froze);
-                return effects;
+            if pkmn.status.sleep > 0 {
+                pkmn.status.sleep -= 1;
+                if pkmn.status.sleep == 0 {
+                    effects.push(ActionSideEffects::WokeUp(attacker_id));
+                } else if !attack.can_be_used_while_sleeping() {
+                    effects.push(ActionSideEffects::Sleep(attacker_id));
+                    return effects;
+                }
+            }
+
+            if pkmn.status.paralysis {
+                if rand::thread_rng().gen_bool(FULL_PARALYSIS_CHANCE) {
+                    effects.push(ActionSideEffects::IsFullyParalyzed(attacker_id));
+                    return effects
+                }
+            }
+
+            if data.confused > 0 {
+                data.confused -= 1;
+                if data.confused == 0 {
+                    // Snapped out of confusion
+                    effects.push(ActionSideEffects::SnappedOutOfConfusion(attacker_id));
+                } else if rand::thread_rng().gen_bool(CONFUSION_HIT_CHANCE) {
+                    // Hit itself in confusion
+                    let delta = core::calculate_confusion_damage(attacker);
+                    let start_hp = pkmn.current_hp;
+                    let end_hp = start_hp.saturating_sub(delta);
+
+                    pkmn.current_hp = end_hp;
+                    effects.push(ActionSideEffects::HurtInConfusion {
+                        affected: attacker_id,
+                        start: start_hp,
+                        end: end_hp,
+                        hang_on_cause: None
+                    });
+                    return effects;
+                }
             }
         }
 
-        if attacker.deref().borrow().status.sleep > 0 {
-            attacker.borrow_mut().status.sleep -= 1;
-            if attacker.borrow().status.sleep == 0 {
-                effects.push(ActionSideEffects::WokeUp(attacker.id));
-            } else if !attack.can_be_used_while_sleeping() {
-                effects.push(ActionSideEffects::Sleep(attacker.id));
-                return effects;
-            }
-        }
-
-        if attacker.borrow().status.paralysis {
-            if rand::thread_rng().gen_bool(FULL_PARALYSIS_CHANCE) {
-                effects.push(ActionSideEffects::IsFullyParalyzed(attacker.id));
-                return effects
-            }
-        }
-
-        if attacker.data.borrow().confused > 0 {
-            attacker.data.borrow_mut().confused -= 1;
-            if attacker.data.borrow().confused == 0 {
-                // Snapped out of confusion
-                effects.push(ActionSideEffects::SnappedOutOfConfusion(attacker.id));
-            } else if rand::thread_rng().gen_bool(CONFUSION_HIT_CHANCE) {
-                // Hit itself in confusion
-                //let delta = self.calculate_confusion_damage(attacker);
-                let delta = 20;
-                let start_hp = attacker.borrow().current_hp;
-                let end_hp = start_hp.saturating_sub(delta);
-
-                attacker.borrow_mut().current_hp = end_hp;
-                effects.push(ActionSideEffects::HurtInConfusion {
-                    affected: attacker.id,
-                    start: start_hp,
-                    end: end_hp,
-                    hang_on_cause: None
-                });
-                return effects;
-            }
-        }
-
-        let hit = match move_data.accuracy {
-            Accuracy::AlwaysHits => true,
-            Accuracy::Percentage(p) => {
-                //let evasion_accuracy = core::get_accuracy_factor(attacker, defender);
-                let evasion_accuracy = 1.0;
-                let move_accuracy = f64::from(p) / 100f64;
-                rand::thread_rng().gen_bool(evasion_accuracy * move_accuracy)
-            },
-            Accuracy::Variable => unimplemented!("Unknown accuracy")
-        };
-
-        if !hit {
-            effects.push(ActionSideEffects::Missed(Cause::Natural));
-            return effects
-        }
-        //endregion
-
-        //region Primary damage (if applicable)
-        // core::copy_all(&mut effects, self.do_damage(attacker, attack, defender));
-
-        if effects.iter().any(|e| e.is_primary_failure()) {
-            // If the move failed, don't execute the secondary effects
+        // 1. Get the target(s)
+        let targets = self.get_targets(attacker.id, attack, defender);
+        if targets.is_empty() {
+            effects.push(ActionSideEffects::NoTarget);
             return effects;
         }
-        let primary_damage_hit = effects.len() > 0;
+
+        // 2. For each target, determine if the move hits
+        //region Accuracy Check
+        let mut targets_hit = Vec::new();
+        for defender in targets {
+            let hit = match move_data.accuracy {
+                Accuracy::AlwaysHits => true,
+                Accuracy::Percentage(p) => {
+                    let evasion_accuracy = core::get_accuracy_factor(attacker, defender);
+                    let move_accuracy = f64::from(p) / 100f64;
+                    rand::thread_rng().gen_bool(evasion_accuracy * move_accuracy)
+                },
+                Accuracy::Variable => match attack {
+                    Move::Guillotine | Move::Fissure | Move::HornDrill | Move::SheerCold => {
+                        let level_user = attacker.borrow().level;
+                        let level_target = defender.borrow().level;
+                        if level_user < level_target {
+                            effects.push(ActionSideEffects::Failed(Cause::Natural));
+                            return effects
+                        } else {
+                            let acc = (level_user - level_target + 30) as f64 / 100f64;
+                            if acc > 1f64 { true } else {rand::thread_rng().gen_bool(acc)}
+                        }
+                    },
+                    _ => unimplemented!("Unknown accuracy for {:?}", attack)
+                }
+            };
+
+            if hit {
+                targets_hit.push(defender);
+            } else {
+                effects.push(ActionSideEffects::Missed(defender.id, Cause::Natural));
+            }
+        }
+
+        if targets_hit.is_empty() {
+            return effects;
+        }
         //endregion
 
+        let is_multi_target = targets_hit.len() > 1;
+
+        // 3. For each hit target, perform damage
+        // For non-damaging moves, "damaged" becomes everyone from Step 2.
+        //region Primary Strike
+        let targets_for_secondary_damage = if let Power::None = move_data.power {
+            targets_hit
+        } else {
+            let mut damaged = Vec::new();
+            for defender in targets_hit {
+                let attacker = &self[attacker_id.side][attacker_id.individual];
+                effects.append(&mut self.do_damage(attacker, attack, defender, is_multi_target));
+
+                if defender.borrow().has_health() {
+                    damaged.push(defender);
+                }
+            }
+            damaged
+        };
+        //endregion
+
+        // 4. Perform secondary effects.
+        // Effects to the user happen regardless.
+        // Effects to the target happen only to those hit in step 3.
         //region Secondary effects
-        // for secondary_effect in move_data.effects {
-        //     let secondary_effects = match secondary_effect {
-        //         Effect::StatChange(stat, stages, probability, target) => {
-        //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
-        //             if triggers {
-        //                 match target {
-        //                     StatChangeTarget::User => self.change_self_stat(attacker, *stat, *stages),
-        //                     StatChangeTarget::Target => self.change_opponent_stat(attacker, defender, *stat, *stages)
-        //                 }
-        //             } else {
-        //                 Vec::new()
-        //             }
-        //         },
-        //         Effect::NonVolatileStatus(ailment, probability, target) => {
-        //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
-        //             if triggers {
-        //                 match target {
-        //                     StatChangeTarget::User => self.inflict_non_volatile_status(attacker, *ailment),
-        //                     StatChangeTarget::Target => self.inflict_non_volatile_status(defender, *ailment)
-        //                 }
-        //             } else {
-        //                 Vec::new()
-        //             }
-        //         },
+        for secondary_effect in move_data.effects {
+            let mut secondary_effects = match secondary_effect {
+                Effect::StatChange(stat, stages, probability, StatChangeTarget::User) => {
+                    let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                    if triggers {
+                        self.change_self_stat(attacker, *stat, *stages)
+                    } else {
+                        Vec::new()
+                    }
+                },
+                Effect::StatChange(stat, stages, probability, StatChangeTarget::Target) => {
+                    let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                    if triggers {
+                        targets_for_secondary_damage.iter()
+                            .flat_map(|defender| self.change_opponent_stat(attacker, defender, *stat, *stages))
+                            .collect()
+                    } else {
+                        Vec::new()
+                    }
+                },
+                Effect::NonVolatileStatus(ailment, probability, StatChangeTarget::User) => {
+                    let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                    if triggers {
+                        self.inflict_non_volatile_status(attacker, *ailment)
+                    } else {
+                        Vec::new()
+                    }
+                },
+                Effect::NonVolatileStatus(ailment, probability, StatChangeTarget::Target) => {
+                    let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                    if triggers {
+                        targets_for_secondary_damage.iter()
+                            .flat_map(|defender| self.inflict_non_volatile_status(defender, *ailment))
+                            .collect()
+                    } else {
+                        Vec::new()
+                    }
+                },
+                Effect::ForceSwitch(StatChangeTarget::User) => {
+                    vec![ActionSideEffects::ForcePokemonSwap { must_leave: attacker_id }]
+                },
+                Effect::ForceSwitch(StatChangeTarget::Target) => {
+                    targets_for_secondary_damage.iter()
+                        .map(|defender| {
+                            if defender.get_effective_ability() == Ability::SuctionCups {
+                                ActionSideEffects::NoEffectSecondary(Cause::Ability(defender.id, Ability::SuctionCups))
+                            } else if defender.data.borrow().rooted {
+                                ActionSideEffects::NoEffectSecondary(Cause::Move(defender.id, Move::Ingrain))
+                            } else {
+                                ActionSideEffects::ForcePokemonSwap { must_leave: defender.id }
+                            }
+                        })
+                        .collect()
+                },
+                Effect::DropCoins => {
+                    self.field.borrow_mut().drop_coins(attacker.borrow().level as u16 * 5);
+                    vec![ActionSideEffects::DroppedCoins]
+                }
         //         Effect::VolatileStatus(ailment, probability, _) => {
         //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
         //             if triggers {
@@ -145,10 +287,10 @@ impl Battlefield {
         //                 Vec::new()
         //             }
         //         }
-        //         _ => unimplemented!("Secondary effect not yet created")
-        //     };
-        //     core::copy_all(&mut effects, secondary_effects);
-        // }
+                _ => unimplemented!("Secondary effect not yet created")
+            };
+            effects.append(&mut secondary_effects);
+        }
         //endregion
 
         if effects.is_empty() {
@@ -159,7 +301,7 @@ impl Battlefield {
     }
 
     //region Non-Damage
-    fn _change_stat(&self, affected: &mut ActivePokemon, stat: BattleStat, stages: i8, cause: Cause) -> Vec<ActionSideEffects> {
+    fn _change_stat(&self, affected: &ActivePokemon, stat: BattleStat, stages: i8, cause: Cause) -> Vec<ActionSideEffects> {
         let current = affected.get_stat_stage(stat);
         let next = current + stages;
         return if next > MAX_STAGE {
@@ -187,7 +329,7 @@ impl Battlefield {
         }
     }
 
-    fn change_self_stat(&self, affected: &mut ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+    fn change_self_stat(&self, affected: &ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
         let (ability_cause, stages) = match affected.get_effective_ability() {
             Ability::Simple => (Cause::Ability(affected.id, Ability::Simple), stages * 2),
             Ability::Contrary => (Cause::Ability(affected.id, Ability::Contrary), -stages),
@@ -197,7 +339,7 @@ impl Battlefield {
         self._change_stat(affected, stat, stages, ability_cause)
     }
 
-    fn change_opponent_stat(&self, affecter: &mut ActivePokemon, affected: &mut ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+    fn change_opponent_stat(&self, affecter: &ActivePokemon, affected: &ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
         let affected_side = self.get_side(&affected.id);
 
         if affected_side.mist > 0 {
@@ -226,13 +368,16 @@ impl Battlefield {
         self._change_stat(affected, stat, stages, ability_cause)
     }
 
-    fn inflict_non_volatile_status(&self, affected: &mut ActivePokemon, status: NonVolatileBattleAilment) -> Vec<ActionSideEffects> {
-        match status {
-            NonVolatileBattleAilment::Paralysis => affected.borrow_mut().status.paralysis = true,
-            NonVolatileBattleAilment::Sleep => affected.borrow_mut().status.sleep = rand::thread_rng().gen_range(1..=3),
-            NonVolatileBattleAilment::Freeze => affected.borrow_mut().status.freeze = true,
-            NonVolatileBattleAilment::Burn => affected.borrow_mut().status.burn = true,
-            NonVolatileBattleAilment::Poison(a) => affected.borrow_mut().status.poison = Some(a)
+    fn inflict_non_volatile_status(&self, affected: &ActivePokemon, status: NonVolatileBattleAilment) -> Vec<ActionSideEffects> {
+        {
+            let mut affected = affected.borrow_mut();
+            match status {
+                NonVolatileBattleAilment::Paralysis => affected.status.paralysis = true,
+                NonVolatileBattleAilment::Sleep => affected.status.sleep = rand::thread_rng().gen_range(SLEEP_TURNS_RANGE),
+                NonVolatileBattleAilment::Freeze => affected.status.freeze = true,
+                NonVolatileBattleAilment::Burn => affected.status.burn = true,
+                NonVolatileBattleAilment::Poison(a) => affected.status.poison = Some(a)
+            }
         }
         vec![ActionSideEffects::NonVolatileStatusAilment {
             affected: affected.id,
@@ -260,18 +405,12 @@ impl Battlefield {
                     vec![ActionSideEffects::Infatuated(affected.id)]
                 }
             }
+            VolatileBattleAilment::Levitation => {
+                affected.data.borrow_mut().levitating = 5;
+                vec![]
+            }
         }
     }
 
     //endregion
-}
-impl Index<BattleSide> for Battlefield {
-    type Output = BattleParty;
-
-    fn index(&self, index: BattleSide) -> &Self::Output {
-        match index {
-            BattleSide::Forward => &self.user,
-            BattleSide::Back => &self.opponent
-        }
-    }
 }
