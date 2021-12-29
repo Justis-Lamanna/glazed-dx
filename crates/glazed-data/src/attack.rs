@@ -602,6 +602,7 @@ pub enum Power {
     Base(u8),
     BaseWithRecoil(u8, FractionPlaceholder),
     BaseWithMercy(u8),
+    BaseWithCharge(u8, Option<SemiInvulnerableLocation>),
     WeightBased,
     WeightRatioBased,
     MultiHit(MultiHitFlavor),
@@ -732,6 +733,31 @@ pub struct MoveData {
     pub target: Target,
     pub crit_rate: Option<u8>,
     pub effects: &'static[Effect]
+}
+impl MoveData {
+    pub fn is_no_power_move(&self) -> bool {
+        if let Power::None = self.power {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_charging_move(&self) -> bool {
+        if let Power::BaseWithCharge(_, _) = self.power {
+            true
+        } else {
+            false
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum SemiInvulnerableLocation {
+    Underground,
+    Underwater,
+    InAir,
+    Vanished
 }
 
 impl Item {
@@ -1539,7 +1565,7 @@ pub static RazorWind: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::Opponents,
-    power: Power::Base(80),
+    power: Power::BaseWithCharge(80, None),
 	crit_rate: Some(1),
 	effects: &[],
 };
@@ -1611,7 +1637,7 @@ pub static Fly: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(90),
+    power: Power::BaseWithCharge(90, Some(SemiInvulnerableLocation::InAir)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -2295,7 +2321,7 @@ pub static SolarBeam: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    power: Power::Base(120),
+    power: Power::BaseWithCharge(120, None),
 	crit_rate: None,
 	effects: &[],
 };
@@ -2475,7 +2501,7 @@ pub static Dig: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(80),
+    power: Power::BaseWithCharge(80, Some(SemiInvulnerableLocation::Underground)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -2943,7 +2969,7 @@ pub static SkullBash: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(130),
+    power: Power::BaseWithCharge(130, None),
 	crit_rate: None,
 	effects: &[],
 };
@@ -3099,7 +3125,7 @@ pub static SkyAttack: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(140),
+    power: Power::BaseWithCharge(140, None),
 	crit_rate: Some(1),
 	effects: &[Effect::Flinch(30)],
 };
@@ -4875,7 +4901,7 @@ pub static Dive: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(80),
+    power: Power::BaseWithCharge(80, Some(SemiInvulnerableLocation::Underwater)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -5463,9 +5489,9 @@ pub static Bounce: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(85),
+    power: Power::BaseWithCharge(85, Some(SemiInvulnerableLocation::InAir)),
 	crit_rate: None,
-	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30, StatChangeTarget::Target)],
+    effects: &[],
 };
 pub static MudShot: MoveData = MoveData {
     pp: 15,
@@ -6987,7 +7013,7 @@ pub static ShadowForce: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(120),
+    power: Power::BaseWithCharge(120, Some(SemiInvulnerableLocation::Vanished)),
 	crit_rate: None,
 	effects: &[],
 };
@@ -8019,7 +8045,7 @@ pub static FreezeShock: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(140),
+    power: Power::BaseWithCharge(140, None),
 	crit_rate: None,
 	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Paralysis, 30, StatChangeTarget::Target)],
 };
@@ -8031,7 +8057,7 @@ pub static IceBurn: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    power: Power::Base(140),
+    power: Power::BaseWithCharge(140, None),
 	crit_rate: None,
 	effects: &[Effect::NonVolatileStatus(NonVolatileBattleAilment::Burn, 30, StatChangeTarget::Target)],
 };

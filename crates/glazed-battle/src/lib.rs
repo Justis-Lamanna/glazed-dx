@@ -10,13 +10,13 @@ use std::option::Option::Some;
 use std::rc::Rc;
 use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, StatChangeTarget, Target, VolatileBattleAilment};
+use glazed_data::attack::{BattleStat, DamageType, Effect, Move, NonVolatileBattleAilment, SemiInvulnerableLocation, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
-use crate::effects::{MAX_STAGE, MIN_STAGE};
+use crate::effects::{MAX_STAGE, MIN_STAGE, SelectedTarget};
 
 /// Represents one side of a battlefield
 #[derive(Default, Debug)]
@@ -398,187 +398,63 @@ impl Battlefield {
         }
     }
 
-    // /// Battlefield for 1v1, but each fighter uses 2 pokemon
-    // /// Example: fighting pairs (Twins, Young Couple, etc)
-    // pub fn double_battle(player: Party, opponent: Party) -> Battlefield {
-    //     Battlefield {
-    //         user: RwLock::from(player.double(BattleSide::Forward)),
-    //         user_side: Side::default(),
-    //         opponent: RwLock::from(opponent.double(BattleSide::Back)),
-    //         opponent_side: Side::default(),
-    //         field: Field::default(),
-    //         turn_record: Vec::new()
-    //     }
-    // }
-    //
-    // /// Battlefield for 1v2
-    // /// Example: two individual trainers see you at the same time
-    // pub fn single_vs_double(player: Party, opponent_one: Party, opponent_two: Party) -> Battlefield {
-    //     Battlefield {
-    //         user: RwLock::from(player.double(BattleSide::Forward)),
-    //         user_side: Side::default(),
-    //         opponent: RwLock::from(opponent_one.paired_with(opponent_two, BattleSide::Back)),
-    //         opponent_side: Side::default(),
-    //         field: Field::default(),
-    //         turn_record: Vec::new()
-    //     }
-    // }
-    //
-    // /// Battle for 2v2,
-    // /// Example: when Steven fights alongside you against Team Magma
-    // pub fn tag(player: Party, ally: Party, opponent_one: Party, opponent_two: Party) -> Battlefield {
-    //     Battlefield {
-    //         user: RwLock::from(player.paired_with(ally, BattleSide::Forward)),
-    //         user_side: Side::default(),
-    //         opponent: RwLock::from(opponent_one.paired_with(opponent_two, BattleSide::Back)),
-    //         opponent_side: Side::default(),
-    //         field: Field::default(),
-    //         turn_record: Vec::new()
-    //     }
-    // }
+    pub fn get_targets(&self, attacker: Battler, attack: Move, selected: SelectedTarget) -> Vec<&ActivePokemon> {
+        let selected_default_opponent = || match selected {
+            SelectedTarget::Implied => self.opposite_of(&attacker.side).left(), // Default is opponent on the left, although this shouldn't be called normally
+            SelectedTarget::One(b) => &self[b.side][b.individual]
+        };
+        let user = || &self[attacker.side][attacker.individual];
+        let ally = || self[attacker.side].ally_of(&attacker.individual);
 
-    // pub fn get_mut_active_pokemon(&self, id: &Battler) -> &mut ActivePokemon {
-    //     unimplemented!("...")
-    // }
+        let move_data = attack.data();
 
-    // fn apply_side_effect(&mut self, effect: &ActionSideEffects) {
-    //     match effect {
-    //         ActionSideEffects::BasicDamage {damaged, end_hp, cause, ..} => {
-    //             let mut damaged_pkmn = self.get_mut_pokemon_by_id(&damaged);
-    //             let delta = damaged_pkmn.current_hp.saturating_sub(*end_hp);
-    //             damaged_pkmn.current_hp = *end_hp;
-    //
-    //             if let Cause::Move(battler, attack) = cause {
-    //                 let data = self.get_mut_battle_data(&damaged);
-    //                 data.damage_this_turn.push((*battler, *attack, delta));
-    //
-    //                 if let Some((turns_left, damage_acc)) = data.bide {
-    //                     data.bide = Some((turns_left, damage_acc.saturating_add(delta)));
-    //                 }
-    //             }
-    //         },
-    //         ActionSideEffects::DirectDamage { damaged, end_hp, damager, attack, .. } => {
-    //             let damaged_pkmn = self.get_mut_pokemon_by_id(&damaged);
-    //             let delta = damaged_pkmn.current_hp.saturating_sub(*end_hp);
-    //             damaged_pkmn.current_hp = *end_hp;
-    //
-    //             let data = self.get_mut_battle_data(&damaged);
-    //             data.damage_this_turn.push((*damager, *attack, delta));
-    //
-    //             if let Some((turns_left, damage_acc)) = data.bide {
-    //                 data.bide = Some((turns_left, damage_acc.saturating_add(delta)));
-    //             }
-    //         },
-    //         ActionSideEffects::DamagedSubstitute { damaged, end_hp, ..} => {
-    //             let mut damaged = self.get_mut_battle_data(&damaged);
-    //             damaged.substituted = *end_hp;
-    //         },
-    //         ActionSideEffects::ConsumedItem(battler, _) => {
-    //             let mut battler = self.get_mut_pokemon_by_id(&battler);
-    //             battler.held_item = None;
-    //         },
-    //         ActionSideEffects::Recoil {damaged, end_hp, .. } => {
-    //             let mut damaged = self.get_mut_pokemon_by_id(&damaged);
-    //             damaged.current_hp = *end_hp;
-    //         }
-    //         ActionSideEffects::Missed(_) => {}
-    //         ActionSideEffects::NoEffect(_) => {}
-    //         ActionSideEffects::Failed(_) => {}
-    //         ActionSideEffects::PainSplit { user, defender, split_hp } => {
-    //             let mut first = self.get_mut_pokemon_by_id(user);
-    //             first.current_hp = (*split_hp).clamp(0, first.hp.value);
-    //
-    //             let mut second = self.get_mut_pokemon_by_id(defender);
-    //             second.current_hp = (*split_hp).clamp(0, second.hp.value);
-    //         }
-    //         ActionSideEffects::NoTarget => {}
-    //         ActionSideEffects::MultiStrike {..} => {}
-    //         ActionSideEffects::StatChanged { affected, stat, end, .. } => {
-    //             let mut data = self.get_mut_battle_data(affected);
-    //             let stat_to_mod = match stat {
-    //                 BattleStat::Attack => &mut data.attack_stage,
-    //                 BattleStat::Defense => &mut data.defense_stage,
-    //                 BattleStat::SpecialAttack => &mut data.special_attack_stage,
-    //                 BattleStat::SpecialDefense => &mut data.special_defense_stage,
-    //                 BattleStat::Speed => &mut data.speed_stage,
-    //                 BattleStat::Accuracy => &mut data.accuracy_stage,
-    //                 BattleStat::Evasion => &mut data.evasion_stage
-    //             };
-    //
-    //             *stat_to_mod = (*end).clamp(MIN_STAGE, MAX_STAGE);
-    //         }
-    //         ActionSideEffects::NoEffectSecondary(_) => {}
-    //         ActionSideEffects::NothingHappened => {}
-    //         ActionSideEffects::NonVolatileStatusAilment { affected, status } => {
-    //             let mut pkmn = self.get_mut_pokemon_by_id(affected);
-    //             match status {
-    //                 NonVolatileBattleAilment::Paralysis => {
-    //                     pkmn.status.paralysis = true;
-    //                 }
-    //                 NonVolatileBattleAilment::Sleep => {
-    //                     pkmn.status.sleep = rand::thread_rng().gen_range(1..=3);
-    //                 }
-    //                 NonVolatileBattleAilment::Freeze => {
-    //                     pkmn.status.freeze = true;
-    //                 }
-    //                 NonVolatileBattleAilment::Burn => {
-    //                     pkmn.status.burn = true;
-    //                 }
-    //                 NonVolatileBattleAilment::Poison(poison_type) => {
-    //                     pkmn.status.poison = Some(*poison_type);
-    //                 }
-    //             }
-    //         }
-    //         ActionSideEffects::Thawed(affected) => {
-    //             let mut pkmn = self.get_mut_pokemon_by_id(affected);
-    //             pkmn.status.freeze = false;
-    //         }
-    //         ActionSideEffects::WasFrozen(_) => {}
-    //         ActionSideEffects::Sleep(affected) => {
-    //             let mut pkmn = self.get_mut_pokemon_by_id(affected);
-    //             pkmn.status.sleep = pkmn.status.sleep - 1;
-    //         }
-    //         ActionSideEffects::WokeUp(affected) => {
-    //             let mut pkmn = self.get_mut_pokemon_by_id(affected);
-    //             pkmn.status.sleep = 0;
-    //         }
-    //         ActionSideEffects::IsFullyParalyzed(_) => {}
-    //         ActionSideEffects::Confuse(affected) => {
-    //             let mut data = self.get_mut_battle_data(affected);
-    //             data.confused = rand::thread_rng().gen_range(2..=5);
-    //         }
-    //         ActionSideEffects::ConfusionTurn(affected) => {
-    //             let mut data = self.get_mut_battle_data(affected);
-    //             data.confused = data.confused - 1;
-    //         }
-    //         ActionSideEffects::HurtInConfusion { affected, end, .. } => {
-    //             let mut pkmn = self.get_mut_pokemon_by_id(affected);
-    //             pkmn.current_hp = *end;
-    //         }
-    //         ActionSideEffects::SnappedOutOfConfusion(affected) => {
-    //             let mut data = self.get_mut_battle_data(affected);
-    //             data.confused = 0;
-    //         }
-    //         ActionSideEffects::Infatuated(affected) => {
-    //             let mut data = self.get_mut_battle_data(affected);
-    //             data.infatuated = true;
-    //         }
-    //         ActionSideEffects::TooInfatuatedToAttack(_) => {}
-    //     }
-    // }
-    //
-    // fn apply_side_effects(&mut self, effects: &Vec<ActionSideEffects>) {
-    //     for effect in effects {
-    //         self.apply_side_effect(effect);
-    //     }
-    // }
-    //
-    // fn apply_and_return_side_effects(&mut self, effects: Vec<ActionSideEffects>) -> Vec<ActionSideEffects> {
-    //     for effect in effects.iter() {
-    //         self.apply_side_effect(effect);
-    //     }
-    //     effects
-    // }
+        match move_data.target {
+            Target::User => vec![user()],
+            Target::Ally => vec![ally()],
+            Target::UserAndAlly => vec![user(), ally()],
+            Target::UserOrAlly => {
+                match selected {
+                    SelectedTarget::Implied => vec![user()],
+                    SelectedTarget::One(b) => vec![&self[b.side][b.individual]]
+                }
+            },
+            Target::Opponent => vec![selected_default_opponent()],
+            Target::Opponents => self.opposite_of(&attacker.side).both(),
+            Target::AllyOrOpponent => vec![selected_default_opponent()],
+            Target::RandomOpponent => {
+                let p = match self.opposite_of(&attacker.side) {
+                    BattleParty::Single(p) => p,
+                    BattleParty::Double(a, b) |
+                    BattleParty::Tag(a, b) => if rand::thread_rng().gen_bool(0.5) { a } else { b }
+                };
+                vec![p]
+            }
+            Target::Any => vec![selected_default_opponent()],
+            Target::AllExceptUser => vec![selected_default_opponent()],
+            Target::All => {
+                let mut vec = vec![user(), ally()];
+                vec.append(&mut self.opposite_of(&attacker.side).both());
+                vec
+            }
+            Target::LastAttacker(pred) => {
+                let u = user();
+                let data = u.data.borrow();
+                let target = match pred {
+                    None => data.damage_this_turn.last(),
+                    Some(dt) => {
+                        data.damage_this_turn
+                            .iter()
+                            .filter(|(_, attack, _)| attack.data().damage_type == dt)
+                            .last()
+                    }
+                };
+                match target {
+                    None => vec![],
+                    Some((battler, _, _)) => vec![&self[battler.side][battler.individual]]
+                }
+            }
+        }
+    }
 
     /// Get the side associated with a battler
     fn get_side(&self, id: &Battler) -> &Side {
@@ -677,7 +553,7 @@ pub struct BattleData {
     /// Number of times braced. (0 == not tried)
     braced: u8,
     /// If present, this Pokemon is charging, and will use Move on the next turn
-    charging: Option<Move>,
+    charging: Option<(SelectedTarget, Move)>,
     /// If true, this Pokemon is the center of attention, and all moves target it
     center_of_attention: bool,
     /// If true, this Pokemon used Defense Curl. Certain moves are more powerful
@@ -841,13 +717,6 @@ enum EntryHazard {
     ToxicSpikes(u8),
     StickyWeb,
     PointedStones
-}
-
-#[derive(Debug)]
-enum SemiInvulnerableLocation {
-    Underground,
-    Underwater,
-    InAir
 }
 
 // Turn Recording (for use by UIs)
@@ -1026,5 +895,6 @@ pub enum ActionSideEffects {
         must_leave: Battler
     },
     DroppedCoins,
+    Charging(Battler, Move),
     NothingHappened
 }

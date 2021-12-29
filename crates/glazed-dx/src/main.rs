@@ -15,7 +15,7 @@ fn main() {
 
     let mut battlefield = Battlefield::single_battle(me, them);
     //for _ in 1..=40 {
-        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::PayDay, SelectedTarget::Implied);
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::SolarBeam, SelectedTarget::Implied);
 
         println!("{:#?}", fx);
     //}

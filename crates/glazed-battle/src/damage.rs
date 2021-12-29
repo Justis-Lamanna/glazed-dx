@@ -7,7 +7,7 @@ use glazed_data::item::Item;
 use glazed_data::types::{Effectiveness, Type};
 use fraction::{Fraction, ToPrimitive};
 use glazed_data::pokemon::Pokemon;
-use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause, SemiInvulnerableLocation};
+use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause};
 use crate::core;
 use crate::core::MoveContext;
 use crate::effects::SelectedTarget;
@@ -89,7 +89,7 @@ impl Battlefield { //region Damage
         let effectiveness = || core::get_type_effectiveness(&self, attacker, attack, defender);
         match &move_data.power {
             Power::None => Vec::new(),
-            Power::Base(_) => {
+            Power::Base(_) | Power::BaseWithCharge(_, _) => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
                     vec![ActionSideEffects::NoEffect(cause)]
@@ -128,7 +128,7 @@ impl Battlefield { //region Damage
 
                     effects
                 }
-            }
+            },
         //     Power::WeightBased => {
         //         let weight = attacker.get_effective_weight();
         //         let base = match weight {

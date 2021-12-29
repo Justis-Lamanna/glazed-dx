@@ -19,7 +19,8 @@ impl From<Move> for MoveContext {
         let data = attack.data();
         let base_power = match data.power {
             Power::Base(base) | Power::BaseWithRecoil(base, _) | Power::BaseWithMercy(base) |
-            Power::MultiHit(MultiHitFlavor::Variable(base)) | Power::MultiHit(MultiHitFlavor::Fixed(_, base)) => u16::from(base),
+            Power::MultiHit(MultiHitFlavor::Variable(base)) | Power::MultiHit(MultiHitFlavor::Fixed(_, base)) |
+            Power::BaseWithCharge(base, _) => u16::from(base),
             _ => 0
         };
         MoveContext {

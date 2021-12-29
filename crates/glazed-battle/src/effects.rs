@@ -11,7 +11,7 @@ use glazed_data::constants::UnownForm::P;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::{Gender, Pokemon};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
-use crate::{ActionSideEffects, BattleData, Battlefield, Battler, Cause, Field, FieldCause, Party, SemiInvulnerableLocation, Side, StatsCause, Weather, core, ActivePokemon, BattleSide, DoubleBattleSide, BattleParty};
+use crate::*;
 use crate::core::{MoveContext};
 
 // Constants
@@ -24,71 +24,46 @@ pub const CONFUSION_HIT_CHANCE: f64 = 0.5;
 pub const CONFUSION_POWER: u16 = 40;
 pub const INFATUATION_INACTION_CHANCE: f64 = 0.5;
 
+#[derive(Debug, Copy, Clone)]
 pub enum SelectedTarget {
     Implied,
     One(Battler)
 }
 
 impl Battlefield {
-    fn get_targets(&self, attacker: Battler, attack: Move, selected: SelectedTarget) -> Vec<&ActivePokemon> {
-        let selected_default_opponent = || match selected {
-            SelectedTarget::Implied => self.opposite_of(&attacker.side).left(), // Default is opponent on the left, although this shouldn't be called normally
-            SelectedTarget::One(b) => &self[b.side][b.individual]
-        };
-        let user = || &self[attacker.side][attacker.individual];
-        let ally = || self[attacker.side].ally_of(&attacker.individual);
-
+    /// Perform a regular attack
+    pub fn do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let move_data = attack.data();
 
-        match move_data.target {
-            Target::User => vec![user()],
-            Target::Ally => vec![ally()],
-            Target::UserAndAlly => vec![user(), ally()],
-            Target::UserOrAlly => {
-                match selected {
-                    SelectedTarget::Implied => vec![user()],
-                    SelectedTarget::One(b) => vec![&self[b.side][b.individual]]
-                }
-            },
-            Target::Opponent => vec![selected_default_opponent()],
-            Target::Opponents => self.opposite_of(&attacker.side).both(),
-            Target::AllyOrOpponent => vec![selected_default_opponent()],
-            Target::RandomOpponent => {
-                let p = match self.opposite_of(&attacker.side) {
-                    BattleParty::Single(p) => p,
-                    BattleParty::Double(a, b) |
-                    BattleParty::Tag(a, b) => if rand::thread_rng().gen_bool(0.5) { a } else { b }
-                };
-                vec![p]
+        if let Power::BaseWithCharge(_, place) = move_data.power {
+            let attacker = &self[attacker_id.side][attacker_id.individual];
+            let mut data = attacker.data.borrow_mut();
+
+            if let Some(s) = place {
+                data.invulnerable = Some(s);
             }
-            Target::Any => vec![selected_default_opponent()],
-            Target::AllExceptUser => vec![selected_default_opponent()],
-            Target::All => {
-                let mut vec = vec![user(), ally()];
-                vec.append(&mut self.opposite_of(&attacker.side).both());
-                vec
-            }
-            Target::LastAttacker(pred) => {
-                let u = user();
-                let data = u.data.borrow();
-                let target = match pred {
-                    None => data.damage_this_turn.last(),
-                    Some(dt) => {
-                        data.damage_this_turn
-                            .iter()
-                            .filter(|(_, attack, _)| attack.data().damage_type == dt)
-                            .last()
-                    }
-                };
-                match target {
-                    None => vec![],
-                    Some((battler, _, _)) => vec![&self[battler.side][battler.individual]]
-                }
-            }
+
+            data.charging = Some((defender, attack));
+
+            vec![ActionSideEffects::Charging(attacker_id, attack)]
+        } else {
+            self._do_attack(attacker_id, attack, defender)
         }
     }
 
-    pub fn do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
+    /// Complete a charge attack
+    pub fn complete_charge(&mut self, attacker_id: Battler) -> Vec<ActionSideEffects> {
+        let attacker = &self[attacker_id.side][attacker_id.individual];
+        let data = attacker.data.borrow();
+        if let Some((defender, attack)) = &data.charging {
+            self._do_attack(attacker_id, *attack, *defender)
+        } else {
+            vec![]
+        }
+    }
+
+    /// Internal method to perform an attack
+    fn _do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
         let attacker = &self[attacker_id.side][attacker_id.individual];
 
@@ -201,7 +176,7 @@ impl Battlefield {
         // 3. For each hit target, perform damage
         // For non-damaging moves, "damaged" becomes everyone from Step 2.
         //region Primary Strike
-        let targets_for_secondary_damage = if let Power::None = move_data.power {
+        let targets_for_secondary_damage = if move_data.is_no_power_move() {
             targets_hit
         } else {
             let mut damaged = Vec::new();
@@ -278,7 +253,7 @@ impl Battlefield {
                 Effect::DropCoins => {
                     self.field.borrow_mut().drop_coins(attacker.borrow().level as u16 * 5);
                     vec![ActionSideEffects::DroppedCoins]
-                }
+                },
         //         Effect::VolatileStatus(ailment, probability, _) => {
         //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
         //             if triggers {
