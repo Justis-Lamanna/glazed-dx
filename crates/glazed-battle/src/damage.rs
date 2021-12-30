@@ -23,10 +23,12 @@ impl Battlefield { //region Damage
     }
 
     fn lower_hp(attacker: Battler, defender: &ActivePokemon, attack: Move, damage: u16, is_crit: bool, effectiveness: Effectiveness) -> Vec<ActionSideEffects> {
-        let defender_data = defender.data.borrow_mut();
-        if defender_data.substituted > 0 {
+        if defender.is_behind_substitute() {
+            let mut defender_data = defender.data.borrow_mut();
             let start_hp = defender_data.substituted;
             let end_hp = start_hp.saturating_sub(damage);
+
+            defender_data.substituted = end_hp;
 
             vec![ActionSideEffects::DamagedSubstitute {
                 damaged: defender.id,
@@ -55,10 +57,12 @@ impl Battlefield { //region Damage
     }
 
     fn lower_hp_basic(attacker: Battler, defender: &ActivePokemon, attack: Move, damage: u16, cause: Cause) -> Vec<ActionSideEffects> {
-        let defender_data = defender.data.borrow_mut();
-        if defender_data.substituted > 0 {
+        if defender.is_behind_substitute() {
+            let mut defender_data = defender.data.borrow_mut();
             let start_hp = defender_data.substituted;
             let end_hp = start_hp.saturating_sub(damage);
+
+            defender_data.substituted = end_hp;
 
             vec![ActionSideEffects::DamagedSubstitute {
                 damaged: defender.id,
@@ -114,7 +118,7 @@ impl Battlefield { //region Damage
                 data.charging = None;
                 data.invulnerable = None;
                 effects
-            }
+            },
             Power::BaseWithRecoil(_, recoil) => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
@@ -145,6 +149,16 @@ impl Battlefield { //region Damage
                     effects
                 }
             },
+            Power::BaseWithCrash(_) => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    vec![ActionSideEffects::NoEffect(cause), attacker.take_crash_damage()]
+                } else {
+                    let is_crit = crit();
+                    let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
+                    Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness)
+                }
+            }
         //     Power::WeightBased => {
         //         let weight = attacker.get_effective_weight();
         //         let base = match weight {
@@ -333,7 +347,7 @@ impl Battlefield { //region Damage
         }
     }
 
-    fn calculate_full_damage<F>(&self, attacker: &ActivePokemon, attack: F, defender: &ActivePokemon, is_multi_target: bool, is_crit: bool, effectiveness: Effectiveness) -> u16
+    pub fn calculate_full_damage<F>(&self, attacker: &ActivePokemon, attack: F, defender: &ActivePokemon, is_multi_target: bool, is_crit: bool, effectiveness: Effectiveness) -> u16
         where F: Into<MoveContext>
     {
         let MoveContext{ attack, data, base_power} = attack.into();

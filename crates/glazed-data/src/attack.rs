@@ -603,6 +603,7 @@ pub enum Power {
     BaseWithRecoil(u8, FractionPlaceholder),
     BaseWithMercy(u8),
     BaseWithCharge(u8, Option<SemiInvulnerableLocation>),
+    BaseWithCrash(u8),
     WeightBased,
     WeightRatioBased,
     MultiHit(MultiHitFlavor),
@@ -1722,7 +1723,7 @@ pub static JumpKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(100),
+    power: Power::BaseWithCrash(100),
 	crit_rate: None,
 	effects: &[],
 };
@@ -3042,7 +3043,7 @@ pub static HighJumpKick: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(130),
+    power: Power::BaseWithCrash(130),
 	crit_rate: None,
 	effects: &[],
 };

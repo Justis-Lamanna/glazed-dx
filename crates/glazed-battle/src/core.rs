@@ -22,7 +22,7 @@ impl From<Move> for MoveContext {
         let base_power = match data.power {
             Power::Base(base) | Power::BaseWithRecoil(base, _) | Power::BaseWithMercy(base) |
             Power::MultiHit(MultiHitFlavor::Variable(base)) | Power::MultiHit(MultiHitFlavor::Fixed(_, base)) |
-            Power::BaseWithCharge(base, _) => u16::from(base),
+            Power::BaseWithCharge(base, _) | Power::BaseWithCrash(base) => u16::from(base),
             _ => 0
         };
         MoveContext {

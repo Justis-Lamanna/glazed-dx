@@ -184,6 +184,9 @@ impl Battlefield {
                 targets_hit.push(defender);
             } else {
                 effects.push(ActionSideEffects::Missed(defender.id, Cause::Natural));
+                if let Power::BaseWithCrash(_) = move_data.power {
+                    effects.push(attacker.take_crash_damage());
+                }
             }
         }
 
@@ -203,9 +206,14 @@ impl Battlefield {
             let mut damaged = Vec::new();
             for defender in targets_hit {
                 let attacker = &self[attacker_id.side][attacker_id.individual];
-                effects.append(&mut self.do_damage(attacker, attack, defender, is_multi_target));
+                let mut individual_effects = self.do_damage(attacker, attack, defender, is_multi_target);
 
-                if defender.borrow().has_health() {
+                let hit_substitute = individual_effects.iter().any(|e| e.hit_substitute());
+                let defender_fainted = defender.borrow().is_fainted();
+
+                effects.append(&mut individual_effects);
+
+                if !defender_fainted && !hit_substitute {
                     damaged.push(defender);
                 }
             }
@@ -231,7 +239,13 @@ impl Battlefield {
                     let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
                     if triggers {
                         targets_for_secondary_damage.iter()
-                            .flat_map(|defender| self.change_opponent_stat(attacker, defender, *stat, *stages))
+                            .flat_map(|defender| {
+                                if defender.is_behind_substitute() {
+                                    vec![ActionSideEffects::NoEffectSecondary(Cause::Substitute(defender.id))]
+                                } else {
+                                    self.change_opponent_stat(attacker, defender, *stat, *stages)
+                                }
+                            })
                             .collect()
                     } else {
                         Vec::new()
@@ -249,7 +263,13 @@ impl Battlefield {
                     let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
                     if triggers {
                         targets_for_secondary_damage.iter()
-                            .flat_map(|defender| self.inflict_non_volatile_status(defender, *ailment))
+                            .flat_map(|defender| {
+                                if defender.is_behind_substitute() {
+                                    vec![ActionSideEffects::Failed(Cause::Substitute(defender.id))]
+                                } else {
+                                    self.inflict_non_volatile_status(defender, *ailment)
+                                }
+                            })
                             .collect()
                     } else {
                         Vec::new()
@@ -261,7 +281,9 @@ impl Battlefield {
                 Effect::ForceSwitch(StatChangeTarget::Target) => {
                     targets_for_secondary_damage.iter()
                         .map(|defender| {
-                            if defender.get_effective_ability() == Ability::SuctionCups {
+                            if defender.is_behind_substitute() {
+                                ActionSideEffects::NoEffectSecondary(Cause::Substitute(defender.id))
+                            } else if defender.get_effective_ability() == Ability::SuctionCups {
                                 ActionSideEffects::NoEffectSecondary(Cause::Ability(defender.id, Ability::SuctionCups))
                             } else if defender.data.borrow().rooted {
                                 ActionSideEffects::NoEffectSecondary(Cause::Move(defender.id, Move::Ingrain))
@@ -300,12 +322,16 @@ impl Battlefield {
                 Effect::Flinch(probability) => {
                     targets_for_secondary_damage.iter()
                         .filter_map(|defender| {
-                            let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
-                            if triggers {
-                                defender.data.borrow_mut().flinch = true;
-                                Some(ActionSideEffects::WillFlinch(defender.id))
-                            } else {
+                            if defender.is_behind_substitute() {
                                 None
+                            } else {
+                                let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                                if triggers {
+                                    defender.data.borrow_mut().flinch = true;
+                                    Some(ActionSideEffects::WillFlinch(defender.id))
+                                } else {
+                                    None
+                                }
                             }
                         })
                         .collect()

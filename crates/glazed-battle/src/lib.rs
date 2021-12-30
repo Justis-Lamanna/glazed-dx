@@ -318,6 +318,10 @@ impl ActivePokemon {
         (false, Cause::Natural)
     }
 
+    pub fn is_behind_substitute(&self) -> bool {
+        self.data.borrow().substituted > 0
+    }
+
     pub fn lower_hp(&mut self, amount: u16) -> Vec<ActionSideEffects> {
         let start_hp = self.borrow().current_hp;
         let end_hp = start_hp.saturating_sub(amount);
@@ -329,6 +333,20 @@ impl ActivePokemon {
             cause: Cause::Natural,
             hung_on_cause: None
         }]
+    }
+
+    pub fn take_crash_damage(&self) -> ActionSideEffects {
+        let mut pkmn = self.borrow_mut();
+        let crash = pkmn.hp.value / 2;
+        let start_hp = pkmn.current_hp;
+        let end_hp = start_hp.saturating_sub(crash);
+        pkmn.current_hp = end_hp;
+
+        ActionSideEffects::Crash {
+            damaged: self.id,
+            start_hp,
+            end_hp
+        }
     }
 }
 impl Deref for ActivePokemon {
@@ -800,7 +818,9 @@ pub enum Cause {
     /// Failed because the stats were maxed out
     StatsMaxed(StatsCause),
     /// Failed because of something on the field
-    Field(FieldCause)
+    Field(FieldCause),
+    /// Failed because the user is behind a substitute
+    Substitute(Battler)
 }
 impl Cause {
     pub fn overwrite(self, cause: Cause) -> Cause {
@@ -843,6 +863,11 @@ pub enum ActionSideEffects {
         start_hp: u16,
         end_hp: u16,
         cause: Cause
+    },
+    Crash {
+        damaged: Battler,
+        start_hp: u16,
+        end_hp: u16
     },
     BasicDamage {
         damaged: Battler,
@@ -919,4 +944,13 @@ pub enum ActionSideEffects {
     WillFlinch(Battler),
     Flinched(Battler),
     NothingHappened
+}
+impl ActionSideEffects {
+    pub fn hit_substitute(&self) -> bool {
+        if let ActionSideEffects::DamagedSubstitute {..} = self {
+            true
+        } else {
+            false
+        }
+    }
 }
