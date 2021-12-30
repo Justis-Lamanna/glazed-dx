@@ -15,7 +15,7 @@ fn main() {
 
     let mut battlefield = Battlefield::single_battle(me, them);
     //for _ in 1..=40 {
-        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Bind, SelectedTarget::Implied);
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::FakeOut, SelectedTarget::Implied);
         println!("{:#?}", fx);
 
         let fx = battlefield.end_of_turn();

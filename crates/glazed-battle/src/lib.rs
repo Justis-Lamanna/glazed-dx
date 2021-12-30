@@ -916,5 +916,7 @@ pub enum ActionSideEffects {
         end_hp: u16
     },
     Unbound(Battler),
+    WillFlinch(Battler),
+    Flinched(Battler),
     NothingHappened
 }

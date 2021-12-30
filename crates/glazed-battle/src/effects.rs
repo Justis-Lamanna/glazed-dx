@@ -117,6 +117,12 @@ impl Battlefield {
                 }
             }
 
+            if data.flinch {
+                data.flinch = false;
+                effects.push(ActionSideEffects::Flinched(attacker_id));
+                return effects;
+            }
+
             if data.confused > 0 {
                 data.confused -= 1;
                 if data.confused == 0 {
@@ -291,6 +297,19 @@ impl Battlefield {
                         })
                         .collect()
                 }
+                Effect::Flinch(probability) => {
+                    targets_for_secondary_damage.iter()
+                        .filter_map(|defender| {
+                            let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                            if triggers {
+                                defender.data.borrow_mut().flinch = true;
+                                Some(ActionSideEffects::WillFlinch(defender.id))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect()
+                },
         //         Effect::VolatileStatus(ailment, probability, _) => {
         //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
         //             if triggers {
