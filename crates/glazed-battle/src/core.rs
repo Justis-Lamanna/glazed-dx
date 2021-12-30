@@ -9,6 +9,8 @@ use glazed_data::types::{Effectiveness, PokemonType, Type};
 use crate::{ActionSideEffects, ActivePokemon, BattleData, Battlefield, Cause, Field, Weather};
 use crate::effects::{MAX_STAGE, MIN_STAGE, CONFUSION_POWER};
 
+pub type ActionResult<T> = Result<T, Cause>;
+
 pub struct MoveContext {
     pub attack: Move,
     pub data: &'static MoveData,

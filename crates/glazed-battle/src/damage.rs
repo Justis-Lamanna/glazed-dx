@@ -99,6 +99,22 @@ impl Battlefield { //region Damage
                     Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness)
                 }
             },
+            Power::BaseWithCharge(_, _) => {
+                let (effectiveness, cause) = effectiveness();
+                let effects = if let Effectiveness::Immune = effectiveness {
+                    vec![ActionSideEffects::NoEffect(cause)]
+                } else {
+                    let is_crit = crit();
+                    let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
+                    Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness)
+                };
+
+                // Clear charging data
+                let mut data = attacker.data.borrow_mut();
+                data.charging = None;
+                data.invulnerable = None;
+                effects
+            }
             Power::BaseWithRecoil(_, recoil) => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {

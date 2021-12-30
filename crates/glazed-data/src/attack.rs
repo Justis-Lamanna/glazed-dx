@@ -717,6 +717,7 @@ pub enum Effect {
     DispelWeather,
     ForceSwitch(StatChangeTarget),
     DropCoins,
+    Bind,
     Custom
 }
 
@@ -1651,7 +1652,7 @@ pub static Bind: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(15),
 	crit_rate: None,
-	effects: &[Effect::Custom],
+	effects: &[Effect::Bind],
 };
 pub static Slam: MoveData = MoveData {
     pp: 20,
@@ -1831,7 +1832,7 @@ pub static Wrap: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(15),
 	crit_rate: None,
-	effects: &[Effect::Custom],
+	effects: &[Effect::Bind],
 };
 pub static TakeDown: MoveData = MoveData {
     pp: 20,
@@ -2407,7 +2408,7 @@ pub static FireSpin: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(35),
 	crit_rate: None,
-	effects: &[Effect::Custom],
+	effects: &[Effect::Bind],
 };
 pub static ThunderShock: MoveData = MoveData {
     pp: 30,
@@ -2947,7 +2948,7 @@ pub static Clamp: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(35),
 	crit_rate: None,
-	effects: &[Effect::Custom],
+	effects: &[Effect::Bind],
 };
 pub static Swift: MoveData = MoveData {
     pp: 20,
@@ -4411,7 +4412,7 @@ pub static Whirlpool: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(35),
 	crit_rate: None,
-	effects: &[Effect::Custom],
+	effects: &[Effect::Bind],
 };
 pub static BeatUp: MoveData = MoveData {
     pp: 10,
@@ -5347,7 +5348,7 @@ pub static SandTomb: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(35),
 	crit_rate: None,
-	effects: &[Effect::Custom],
+	effects: &[Effect::Bind],
 };
 pub static SheerCold: MoveData = MoveData {
     pp: 5,
@@ -6967,7 +6968,7 @@ pub static MagmaStorm: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(100),
 	crit_rate: None,
-	effects: &[Effect::Custom],
+	effects: &[Effect::Bind],
 };
 pub static DarkVoid: MoveData = MoveData {
     pp: 10,

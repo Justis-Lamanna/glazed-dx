@@ -4,7 +4,7 @@ use crate::attack::Move;
 use crate::types::Type;
 
 /// All Pokeballs in the game
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Pokeball {
     PokeBall,
     GreatBall,
@@ -38,7 +38,7 @@ impl From<Pokeball> for Item {
 }
 
 /// All Evolution Stones in the game
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum EvolutionStone {
     FireStone,
     WaterStone,
@@ -56,7 +56,7 @@ impl From<EvolutionStone> for Item {
 }
 
 /// All incenses in the game
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Incense {
     FullIncense,
     LaxIncense,
@@ -73,7 +73,7 @@ impl From<Incense> for Item {
 }
 
 /// All Evolution-inducing held items in the game
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum EvolutionHeldItem {
     DeepSeaTooth,
     DeepSeaScale,
@@ -96,7 +96,7 @@ impl From<EvolutionHeldItem> for Item {
 }
 
 /// All berries in the game
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Berry {
     CheriBerry,
     ChestoBerry,
@@ -220,7 +220,7 @@ impl Berry {
 
 //region TMs and HMs
 /// All TMs in the game, and their mappings
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum TM {
     TM01, TM02, TM03, TM04, TM05, TM06, TM07, TM08, TM09, TM10, TM11, TM12, TM13, TM14, TM15, TM16, TM17, TM18, TM19, TM20, TM21, TM22, TM23, TM24, TM25, TM26, TM27, TM28, TM29, TM30, TM31, TM32, TM33, TM34, TM35, TM36, TM37, TM38, TM39, TM40, TM41, TM42, TM43, TM44, TM45, TM46, TM47, TM48, TM49, TM50, TM51, TM52, TM53, TM54, TM55, TM56, TM57, TM58, TM59, TM60, TM61, TM62, TM63, TM64, TM65, TM66, TM67, TM68, TM69, TM70, TM71, TM72, TM73, TM74, TM75, TM76, TM77, TM78, TM79, TM80, TM81, TM82, TM83, TM84, TM85, TM86, TM87, TM88, TM89, TM90, TM91, TM92, TM93, TM94, TM95, TM96, TM97
 }
@@ -332,7 +332,7 @@ impl From<TM> for Item {
 }
 
 /// All HMs in the game, and their mappings
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum HM {
     HM01, HM02, HM03, HM04, HM05, HM06, HM07, HM08
 }
@@ -357,7 +357,7 @@ impl From<HM> for Item {
 
 /// All Mail in the game
 /// Messages are attached via the included String
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Mail {
     AirMail(String),
     BloomMail(String),
@@ -377,7 +377,7 @@ impl From<Mail> for Item {
 }
 
 /// All Key items in the game
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum KeyItem {
 
 }
@@ -387,7 +387,7 @@ impl From<KeyItem> for Item {
 
 /// All Items in the game
 /// Items from the above lists are wrapped, so they can still be considered items
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Item {
     Pokeball(Pokeball),
     Stone(EvolutionStone),
@@ -426,7 +426,7 @@ pub enum Item {
     GripClaw, LightClay, TerrainExtender, AssaultVest, FlameOrb, IronBall, LaggingTail, MachoBrace,
     RingTarget, ToxicOrb, Leftovers, AbsorbBulb, CellBattery, EjectButton, LuminousMoss,
     Snowball, WeaknessPolicy, WideLens, ZoomLens, ScopeLens, BrightPowder, ExpertBelt, Metronome, FocusSash,
-    FloatStone
+    FloatStone, BindingBand
 }
 
 #[derive(Debug)]
@@ -733,6 +733,7 @@ impl Item {
             Item::Metronome => &Metronome,
             Item::FocusSash => &FocusSash,
             Item::FloatStone => &FloatStone,
+            Item::BindingBand => &BindingBand,
             Item::TM(_) | Item::HM(_) | Item::KeyItem(_) => panic!("No TM, HM, Key Item data filled in")
         }
     }
@@ -3214,6 +3215,15 @@ pub const FocusSash: ItemData = ItemData {
     overworld_usable: false
 };
 pub const FloatStone: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
+};
+pub const BindingBand: ItemData = ItemData {
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,

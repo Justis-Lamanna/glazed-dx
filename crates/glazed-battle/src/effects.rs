@@ -23,6 +23,10 @@ pub const SLEEP_TURNS_RANGE: RangeInclusive<u8> = 1..=3;
 pub const CONFUSION_HIT_CHANCE: f64 = 0.5;
 pub const CONFUSION_POWER: u16 = 40;
 pub const INFATUATION_INACTION_CHANCE: f64 = 0.5;
+pub const BOUND_TURN_RANGE: RangeInclusive<u8> = 4..=5;
+pub const BOUND_TURN_GRIP_CLAW: u8 = 7;
+pub const BOUND_HP: u8 = 8;
+pub const BOUND_HP_BINDING_BAND: u8 = 6;
 
 #[derive(Debug, Copy, Clone)]
 pub enum SelectedTarget {
@@ -55,15 +59,26 @@ impl Battlefield {
     pub fn complete_charge(&mut self, attacker_id: Battler) -> Vec<ActionSideEffects> {
         let attacker = &self[attacker_id.side][attacker_id.individual];
         let data = attacker.data.borrow();
-        if let Some((defender, attack)) = &data.charging {
-            self._do_attack(attacker_id, *attack, *defender)
+        if let Some((defender, attack)) = data.charging {
+            drop(data);
+            self._do_attack(attacker_id, attack, defender)
         } else {
             vec![]
         }
     }
 
+    /// Do all the end-of-turn things
+    pub fn end_of_turn(&mut self) -> Vec<ActionSideEffects> {
+        let everyone = self.get_everyone();
+        let mut effects = Vec::new();
+        for pokemon in everyone {
+            effects.append(&mut turn::do_binding_damage(pokemon))
+        }
+        effects
+    }
+
     /// Internal method to perform an attack
-    fn _do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
+    fn _do_attack(&self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
         let attacker = &self[attacker_id.side][attacker_id.individual];
 
@@ -254,6 +269,28 @@ impl Battlefield {
                     self.field.borrow_mut().drop_coins(attacker.borrow().level as u16 * 5);
                     vec![ActionSideEffects::DroppedCoins]
                 },
+                Effect::Bind => {
+                    let has_grip_claw = if let Some(Item::GripClaw) = attacker.borrow().held_item { true } else { false };
+                    let has_binding_band = if let Some(Item::BindingBand) = attacker.borrow().held_item { true } else { false };
+
+                    targets_for_secondary_damage.iter()
+                        .map(|defender| {
+                            let mut data = defender.data.borrow_mut();
+                            let turns_bound = if has_grip_claw {
+                                BOUND_TURN_GRIP_CLAW
+                            } else {
+                                rand::thread_rng().gen_range(BOUND_TURN_RANGE)
+                            };
+                            data.bound = Some((turns_bound, has_binding_band));
+                            ActionSideEffects::Bound {
+                                binder: attacker_id,
+                                bound: defender.id,
+                                turns: turns_bound,
+                                attack
+                            }
+                        })
+                        .collect()
+                }
         //         Effect::VolatileStatus(ailment, probability, _) => {
         //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
         //             if triggers {

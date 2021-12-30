@@ -3,11 +3,13 @@
 pub mod effects;
 mod core;
 mod damage;
+mod turn;
 
 use std::cell::{Ref, RefCell, RefMut};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::option::Option::Some;
 use std::rc::Rc;
+use fraction::Fraction;
 use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{BattleStat, DamageType, Effect, Move, NonVolatileBattleAilment, SemiInvulnerableLocation, StatChangeTarget, Target, VolatileBattleAilment};
@@ -464,6 +466,12 @@ impl Battlefield {
         }
     }
 
+    fn get_everyone(&self) -> Vec<&ActivePokemon> {
+        let mut active = self.user.both();
+        active.append(&mut self.opponent.both());
+        active
+    }
+
     /// Pushes this Turn to the Turn Record, to signal it is complete and permanent.
     /// Intentionally eats the passed-in turn...it belongs to the battlefield now
     pub fn finish_turn(&mut self, turn: Turn) {
@@ -514,8 +522,8 @@ pub struct BattleData {
     temp_special_attack: Option<u16>,
     temp_special_defense: Option<u16>,
 
-    /// Turns remaining bound (0 == not bound)
-    bound: u8,
+    /// If present, the turns remaining bound, and whether a Binding Band was used
+    bound: Option<(u8, bool)>,
     /// If true, this Pokemon can't run away or switch out
     cant_flee: bool,
     /// If true, this Pokemon loses 25% HP at the end of the turn
@@ -896,5 +904,17 @@ pub enum ActionSideEffects {
     },
     DroppedCoins,
     Charging(Battler, Move),
+    Bound {
+        binder: Battler,
+        bound: Battler,
+        turns: u8,
+        attack: Move
+    },
+    HurtByBound {
+        bound: Battler,
+        start_hp: u16,
+        end_hp: u16
+    },
+    Unbound(Battler),
     NothingHappened
 }

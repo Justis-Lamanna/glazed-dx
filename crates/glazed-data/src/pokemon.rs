@@ -587,6 +587,14 @@ impl Pokemon {
         let lb = self.personality as u16;
         self.original_trainer_id ^ self.original_trainer_secret_id ^ hb ^ lb < SHININESS_CHANCE
     }
+
+    pub fn is_holding(&self, item: Item) -> bool {
+        if let Some(i) = &self.held_item {
+            *i == item
+        } else {
+            false
+        }
+    }
 }
 
 #[derive(Debug)]
