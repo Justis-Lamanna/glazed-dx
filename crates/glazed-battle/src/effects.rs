@@ -2,8 +2,10 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::convert::TryFrom;
 use std::ops::{Deref, Index, IndexMut, RangeInclusive};
 use std::pin::Pin;
+
 use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
+
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
@@ -11,8 +13,9 @@ use glazed_data::constants::UnownForm::P;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::{Gender, Pokemon};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
+
 use crate::*;
-use crate::core::{MoveContext};
+use crate::core::MoveContext;
 
 // Constants
 pub const MAX_STAGE: i8 = 6;

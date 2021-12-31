@@ -1,8 +1,8 @@
 use glazed_battle::{Battlefield, Battler, BattleSide, Party};
 use glazed_battle::effects::SelectedTarget;
+use glazed_data::attack::Move;
 use glazed_data::constants::Species;
 use glazed_data::pokemon::{Gender, PokemonTemplate};
-use glazed_data::attack::Move;
 
 fn main() {
     let me = Party::create(vec![

@@ -1,16 +1,13 @@
 #![feature(get_mut_unchecked)]
 
-pub mod effects;
-mod core;
-mod damage;
-mod turn;
-
 use std::cell::{Ref, RefCell, RefMut};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::option::Option::Some;
 use std::rc::Rc;
+
 use fraction::Fraction;
 use rand::Rng;
+
 use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{BattleStat, DamageType, Effect, Move, NonVolatileBattleAilment, SemiInvulnerableLocation, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
@@ -19,6 +16,11 @@ use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
 use crate::effects::{MAX_STAGE, MIN_STAGE, SelectedTarget};
+
+pub mod effects;
+mod core;
+mod damage;
+mod turn;
 
 /// Represents one side of a battlefield
 #[derive(Default, Debug)]

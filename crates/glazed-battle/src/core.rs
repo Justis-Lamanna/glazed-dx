@@ -1,13 +1,16 @@
 use std::cell::{Ref, RefCell, RefMut};
+
 use rand::Rng;
+
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, DamageType, Effect, Move, MoveData, MultiHitFlavor, Power, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::Pokemon;
 use glazed_data::types::{Effectiveness, PokemonType, Type};
+
 use crate::{ActionSideEffects, ActivePokemon, BattleData, Battlefield, Cause, Field, Weather};
-use crate::effects::{MAX_STAGE, MIN_STAGE, CONFUSION_POWER};
+use crate::effects::{CONFUSION_POWER, MAX_STAGE, MIN_STAGE};
 
 pub type ActionResult<T> = Result<T, Cause>;
 

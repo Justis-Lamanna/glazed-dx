@@ -1,10 +1,11 @@
 #![allow(non_upper_case_globals)]
 
-use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
-use crate::types::Type;
-use glazed_core::{Id};
+use glazed_core::Id;
 use glazed_macro::*;
+
+use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
 use crate::pokemon::PoisonType;
+use crate::types::Type;
 
 /// Represents an Attack a Pokemon can have
 #[derive(Debug, Copy, Clone, PartialEq, Id)]

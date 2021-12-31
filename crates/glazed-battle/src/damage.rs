@@ -1,12 +1,15 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::convert::TryFrom;
+
+use fraction::{Fraction, ToPrimitive};
 use rand::{random, Rng};
+
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{DamageType, Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::item::Item;
-use glazed_data::types::{Effectiveness, Type};
-use fraction::{Fraction, ToPrimitive};
 use glazed_data::pokemon::Pokemon;
+use glazed_data::types::{Effectiveness, Type};
+
 use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause};
 use crate::core;
 use crate::core::MoveContext;

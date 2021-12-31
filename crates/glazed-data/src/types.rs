@@ -1,4 +1,5 @@
 use std::ops::Mul;
+
 use glazed_core::Id;
 use glazed_macro::*;
 
@@ -222,6 +223,14 @@ impl Effectiveness {
         match self {
             Effectiveness::Immune => Effectiveness::Immune,
             Effectiveness::Effect(_) => Effectiveness::NORMAL
+        }
+    }
+
+    pub fn is_immune(&self) -> bool {
+        if let Effectiveness::Immune = self {
+            true
+        } else {
+            false
         }
     }
 

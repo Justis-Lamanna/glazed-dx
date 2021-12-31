@@ -3,13 +3,15 @@
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
+
+use glazed_core::Id;
+use glazed_macro::*;
+
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::Move;
 use crate::core::Season;
 use crate::pokemon::{EggGroup, GenderRatio, LevelRate, PokemonData, PokemonEggGroup, Stat, Stats};
 use crate::types::{PokemonType, Type};
-use glazed_core::Id;
-use glazed_macro::*;
 
 //region Pokemon Species Enums
 #[derive(Debug, Copy, Clone, PartialEq, Id)]

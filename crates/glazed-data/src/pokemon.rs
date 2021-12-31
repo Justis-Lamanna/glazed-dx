@@ -1,6 +1,7 @@
-use rand::Rng;
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
+use rand::Rng;
+
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::Move;
 use crate::constants::Species;

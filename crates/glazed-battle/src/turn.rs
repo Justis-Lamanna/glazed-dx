@@ -1,4 +1,5 @@
 use fraction::{Fraction, ToPrimitive};
+
 use crate::{ActionSideEffects, ActivePokemon};
 use crate::effects::{BOUND_HP, BOUND_HP_BINDING_BAND};
 
