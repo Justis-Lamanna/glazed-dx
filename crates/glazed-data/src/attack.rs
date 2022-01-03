@@ -753,6 +753,32 @@ impl MoveData {
             false
         }
     }
+
+    /// Check whether this attack is affected by Kings Rock or Razor Fang
+    /// All damage-dealing attacks which don't already cause flinching are affected.
+    pub fn is_affected_by_flinch_items(&self) -> bool {
+        if let Power::None = self.power {
+            false
+        } else {
+            self.effects.iter().all(|e| {
+                if let Effect::Flinch(_) = e {
+                    false
+                } else {
+                    true
+                }
+            })
+        }
+    }
+
+    /// Check whether this attack is affected by Serene Grace
+    /// All damage-dealing attacks with secondary effects are affected.
+    pub fn is_affected_by_serene_grace(&self) -> bool {
+        if let Power::None = self.power {
+            false
+        } else {
+            self.effects.len() > 0
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]

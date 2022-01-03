@@ -5,15 +5,43 @@ use fraction::{Fraction, ToPrimitive};
 use rand::{random, Rng};
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{DamageType, Move, MoveData, MultiHitFlavor, Power};
+use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::item::Item;
 use glazed_data::pokemon::Pokemon;
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause};
+use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause, damage};
 use crate::core;
 use crate::core::MoveContext;
-use crate::effects::SelectedTarget;
+use crate::constants::{*};
+
+/// Perform raw damage calculation
+/// Nothing related to types (such as Weather, STAB, or Effectiveness) or ailments (Burn) is applied here.
+/// Randomness is also not applied here. All additional multipliers should be handled externally.
+pub fn calculate_raw_damage(attacker: &ActivePokemon, base_power: u16, damage_type: DamageType, defender: &ActivePokemon) -> u16 {
+    let (ea, ed) = match damage_type {
+        DamageType::Physical => (
+            attacker.get_effective_stat(BattleStat::Attack),
+            defender.get_effective_stat(BattleStat::Defense)
+        ),
+        DamageType::Special => (
+            attacker.get_effective_stat(BattleStat::SpecialAttack),
+            defender.get_effective_stat(BattleStat::SpecialDefense)
+        ),
+        DamageType::Status => (1, 1) // Shouldn't happen, but if it does, pokemon stats have no part in the calculation
+    };
+
+    let calc = ((2u16 * attacker.borrow().level as u16) / 5) + 2;
+    let calc = calc * base_power * ea;
+    (calc / (ed * 50)) + 2
+}
+
+/// Calculate confusion damage
+/// Confusion damage is equivalent to a typeless physical move of power 40.
+pub fn calculate_confusion_damage(pkmn: &ActivePokemon) -> u16 {
+    let raw = calculate_raw_damage(pkmn, CONFUSION_POWER, DamageType::Physical, pkmn);
+    (f64::from(raw) * rand::thread_rng().gen_range(0.85..=1.0)) as u16
+}
 
 impl Battlefield { //region Damage
     fn determine_crit(attacker: &ActivePokemon, move_data: &MoveData) -> bool {
@@ -213,10 +241,9 @@ impl Battlefield { //region Damage
                 }
 
                 let n = if attacker.get_effective_ability() == Ability::SkillLink {
-                    5
+                    MULTI_HIT_SKILL_LINK
                 } else {
-                    let n = rand::thread_rng().gen_range(0u8..100u8);
-                    if n < 35 { 2 } else if n < 70 { 3 } else if n < 85 { 4 } else { 5 }
+                    rand::thread_rng().sample(MULTI_HIT_RANGE)
                 };
 
                 let mut effects = Vec::new();
@@ -356,7 +383,7 @@ impl Battlefield { //region Damage
         let MoveContext{ attack, data, base_power} = attack.into();
         let attack_type = core::get_effective_move_type(attacker, &self.field, attack);
 
-        let mut calc = core::calculate_raw_damage(attacker, base_power, data.damage_type, defender) as u32;
+        let mut calc = damage::calculate_raw_damage(attacker, base_power, data.damage_type, defender) as u32;
 
         // *targets
         if is_multi_target {

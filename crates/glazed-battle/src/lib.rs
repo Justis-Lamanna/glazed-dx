@@ -15,12 +15,20 @@ use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
-use crate::effects::{MAX_STAGE, MIN_STAGE, SelectedTarget};
+use crate::constants::{*};
 
-pub mod effects;
+mod effects;
 mod core;
 mod damage;
 mod turn;
+mod accuracy;
+mod constants;
+
+#[derive(Debug, Copy, Clone)]
+pub enum SelectedTarget {
+    Implied,
+    One(Battler)
+}
 
 /// Represents one side of a battlefield
 #[derive(Default, Debug)]
@@ -367,13 +375,13 @@ impl Deref for ActivePokemon {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum BattleSide {
     Forward,
     Back
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum DoubleBattleSide {
     Left, Right
 }
@@ -421,52 +429,210 @@ impl Battlefield {
     }
 
     pub fn get_targets(&self, attacker: Battler, attack: Move, selected: SelectedTarget) -> Vec<&ActivePokemon> {
-        let selected_default_opponent = || match selected {
-            SelectedTarget::Implied => self.opposite_of(&attacker.side).left(), // Default is opponent on the left, although this shouldn't be called normally
-            SelectedTarget::One(b) => &self[b.side][b.individual]
+        let implied_opponent = || {
+            let default_target = self.opposite_of(&attacker.side).index(attacker.individual);
+            if default_target.borrow().is_fainted() {
+                let default_target = self.opposite_of(&attacker.side).ally_of(&attacker.individual);
+                if default_target.borrow().is_fainted() {
+                    None
+                } else {
+                    Some(default_target)
+                }
+            } else {
+                Some(default_target)
+            }
+        };
+        let unimplied_opponent = |b: Battler| {
+            let default_target = &self[b.side][b.individual];
+            if default_target.borrow().is_fainted() {
+                let default_target = self.opposite_of(&attacker.side).ally_of(&attacker.individual);
+                if default_target.borrow().is_fainted() {
+                    None
+                } else {
+                    Some(default_target)
+                }
+            } else {
+                Some(default_target)
+            }
         };
         let user = || &self[attacker.side][attacker.individual];
-        let ally = || self[attacker.side].ally_of(&attacker.individual);
+        let ally = || {
+            match self.user {
+                BattleParty::Single(_) => None,
+                BattleParty::Double(_, _) | BattleParty::Tag(_, _) => {
+                    let ally = self[attacker.side].ally_of(&attacker.individual);
+                    if ally.borrow().is_fainted() {
+                        Some(ally)
+                    } else {
+                        None
+                    }
+                }
+            }
+        };
 
         let move_data = attack.data();
 
         match move_data.target {
             Target::User => vec![user()],
-            Target::Ally => vec![ally()],
-            Target::UserAndAlly => vec![user(), ally()],
+            Target::Ally => {
+                match ally() {
+                    None => vec![],
+                    Some(a) => vec![a]
+                }
+            },
+            Target::UserAndAlly => {
+                match ally() {
+                    None => vec![user()],
+                    Some(a) => vec![user(), a]
+                }
+            },
             Target::UserOrAlly => {
                 match selected {
                     SelectedTarget::Implied => vec![user()],
-                    SelectedTarget::One(b) => vec![&self[b.side][b.individual]]
+                    SelectedTarget::One(b) => {
+                        let pkmn = &self[b.side][b.individual];
+                        if pkmn.borrow().is_fainted() { vec![] } else { vec![pkmn] }
+                    }
                 }
             },
-            Target::Opponent => vec![selected_default_opponent()],
-            Target::Opponents => self.opposite_of(&attacker.side).both(),
-            Target::AllyOrOpponent => vec![selected_default_opponent()],
+            Target::Opponent => {
+                match selected {
+                    SelectedTarget::Implied => {
+                        match implied_opponent() {
+                            None => vec![],
+                            Some(a) => vec![a]
+                        }
+                    },
+                    SelectedTarget::One(b) => {
+                        match unimplied_opponent(b) {
+                            None => vec![],
+                            Some(a) => vec![a]
+                        }
+                    }
+                }
+            },
+            Target::Opponents => {
+                self.opposite_of(&attacker.side).both()
+                    .iter()
+                    .map(|p| *p)
+                    .filter(|p| p.borrow().has_health())
+                    .collect()
+            },
+            Target::AllyOrOpponent => {
+                match selected {
+                    SelectedTarget::Implied => {
+                        match implied_opponent() {
+                            None => vec![],
+                            Some(a) => vec![a]
+                        }
+                    }
+                    SelectedTarget::One(b) => {
+                        if attacker.is_ally(&b) {
+                            match ally() {
+                                None => vec![],
+                                Some(a) => vec![a]
+                            }
+                        } else {
+                            match unimplied_opponent(b) {
+                                None => vec![],
+                                Some(a) => vec![a]
+                            }
+                        }
+                    }
+                }
+            },
             Target::RandomOpponent => {
-                let p = match self.opposite_of(&attacker.side) {
-                    BattleParty::Single(p) => p,
+                match self.opposite_of(&attacker.side) {
+                    BattleParty::Single(p) => {
+                        if p.borrow().is_fainted() { vec![p] } else { vec![] }
+                    },
                     BattleParty::Double(a, b) |
-                    BattleParty::Tag(a, b) => if rand::thread_rng().gen_bool(0.5) { a } else { b }
-                };
-                vec![p]
+                    BattleParty::Tag(a, b) => {
+                        let a_fainted = a.borrow().is_fainted();
+                        let b_fainted = b.borrow().is_fainted();
+                        if a_fainted && b_fainted {
+                            vec![]
+                        } else if a_fainted {
+                            vec![b]
+                        } else if b_fainted {
+                            vec![a]
+                        } else {
+                            vec![if rand::thread_rng().gen_bool(0.5) { a } else { b }]
+                        }
+                    }
+                }
             }
-            Target::Any => vec![selected_default_opponent()],
-            Target::AllExceptUser => vec![selected_default_opponent()],
+            Target::Any => {
+                match selected {
+                    SelectedTarget::Implied => {
+                        match implied_opponent() {
+                            None => vec![],
+                            Some(a) => vec![a]
+                        }
+                    }
+                    SelectedTarget::One(a) => {
+                        if attacker == a {
+                            vec![user()]
+                        } else if attacker.is_ally(&a) {
+                            match ally() {
+                                None => vec![],
+                                Some(a) => vec![a]
+                            }
+                        } else {
+                            match unimplied_opponent(a) {
+                                None => vec![],
+                                Some(a) => vec![a]
+                            }
+                        }
+                    }
+                }
+            },
+            Target::AllExceptUser => {
+                let mut targets: Vec<&ActivePokemon> = self.opposite_of(&attacker.side).both()
+                    .iter()
+                    .map(|p| *p)
+                    .filter(|p| p.borrow().has_health())
+                    .collect();
+                match ally() {
+                    None => {}
+                    Some(a) => targets.push(a)
+                }
+                targets
+            },
             Target::All => {
-                let mut vec = vec![user(), ally()];
-                vec.append(&mut self.opposite_of(&attacker.side).both());
-                vec
+                let mut targets: Vec<&ActivePokemon> = self[attacker.side].both()
+                    .iter()
+                    .map(|p| *p)
+                    .filter(|a| a.borrow().has_health())
+                    .collect();
+                let mut opponent_side: Vec<&ActivePokemon> = self.opposite_of(&attacker.side).both()
+                    .iter()
+                    .map(|p| *p)
+                    .filter(|a| a.borrow().has_health())
+                    .collect();
+                targets.append(&mut opponent_side);
+                targets
             }
             Target::LastAttacker(pred) => {
                 let u = user();
                 let data = u.data.borrow();
                 let target = match pred {
-                    None => data.damage_this_turn.last(),
+                    None => data.damage_this_turn
+                        .iter()
+                        .filter(|(battler, _, _)| {
+                            let potential_target = &self[battler.side][battler.individual];
+                            potential_target.borrow().has_health()
+                        })
+                        .last()
+                    ,
                     Some(dt) => {
                         data.damage_this_turn
                             .iter()
                             .filter(|(_, attack, _)| attack.data().damage_type == dt)
+                            .filter(|(battler, _, _)| {
+                                let potential_target = &self[battler.side][battler.individual];
+                                potential_target.borrow().has_health()
+                            })
                             .last()
                     }
                 };
@@ -645,7 +811,7 @@ impl BattleData {
 }
 
 /// Identifier of a member on the field
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Battler {
     side: BattleSide,
     individual: DoubleBattleSide
@@ -663,6 +829,12 @@ impl Battler {
             side,
             individual: side2
         }
+    }
+
+    /// Test if other battler and this battler are allies
+    /// Note that this returns false if self == other!
+    pub fn is_ally(&self, other: &Battler) -> bool {
+        self.side == other.side && self.individual != other.individual
     }
 }
 

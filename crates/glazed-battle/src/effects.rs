@@ -15,27 +15,8 @@ use glazed_data::pokemon::{Gender, Pokemon};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
 use crate::*;
-use crate::core::MoveContext;
-
-// Constants
-pub const MAX_STAGE: i8 = 6;
-pub const MIN_STAGE: i8 = -6;
-pub const THAW_CHANCE: f64 = 0.2;
-pub const FULL_PARALYSIS_CHANCE: f64 = 0.25;
-pub const SLEEP_TURNS_RANGE: RangeInclusive<u8> = 1..=3;
-pub const CONFUSION_HIT_CHANCE: f64 = 0.5;
-pub const CONFUSION_POWER: u16 = 40;
-pub const INFATUATION_INACTION_CHANCE: f64 = 0.5;
-pub const BOUND_TURN_RANGE: RangeInclusive<u8> = 4..=5;
-pub const BOUND_TURN_GRIP_CLAW: u8 = 7;
-pub const BOUND_HP: u8 = 8;
-pub const BOUND_HP_BINDING_BAND: u8 = 6;
-
-#[derive(Debug, Copy, Clone)]
-pub enum SelectedTarget {
-    Implied,
-    One(Battler)
-}
+use crate::core::{ActionCheck, MoveContext};
+use crate::core::CheckResult;
 
 impl Battlefield {
     /// Perform a regular attack
@@ -88,66 +69,13 @@ impl Battlefield {
         let move_data = attack.data();
 
         // Check for reasons this Pokemon can't perform this move
-        {
-            let mut data = attacker.data.borrow_mut();
-            let mut pkmn = attacker.borrow_mut();
-            if pkmn.status.freeze {
-                let thaw = attack.can_thaw_user() || rand::thread_rng().gen_bool(THAW_CHANCE);
-                if thaw {
-                    pkmn.status.freeze = false;
-                    effects.push(ActionSideEffects::Thawed(attacker_id));
-                } else {
-                    let froze = ActionSideEffects::WasFrozen(attacker_id);
-                    effects.push(froze);
-                    return effects;
-                }
-            }
-
-            if pkmn.status.sleep > 0 {
-                pkmn.status.sleep -= 1;
-                if pkmn.status.sleep == 0 {
-                    effects.push(ActionSideEffects::WokeUp(attacker_id));
-                } else if !attack.can_be_used_while_sleeping() {
-                    effects.push(ActionSideEffects::Sleep(attacker_id));
-                    return effects;
-                }
-            }
-
-            if pkmn.status.paralysis {
-                if rand::thread_rng().gen_bool(FULL_PARALYSIS_CHANCE) {
-                    effects.push(ActionSideEffects::IsFullyParalyzed(attacker_id));
-                    return effects
-                }
-            }
-
-            if data.flinch {
-                data.flinch = false;
-                effects.push(ActionSideEffects::Flinched(attacker_id));
-                return effects;
-            }
-
-            if data.confused > 0 {
-                data.confused -= 1;
-                if data.confused == 0 {
-                    // Snapped out of confusion
-                    effects.push(ActionSideEffects::SnappedOutOfConfusion(attacker_id));
-                } else if rand::thread_rng().gen_bool(CONFUSION_HIT_CHANCE) {
-                    // Hit itself in confusion
-                    let delta = core::calculate_confusion_damage(attacker);
-                    let start_hp = pkmn.current_hp;
-                    let end_hp = start_hp.saturating_sub(delta);
-
-                    pkmn.current_hp = end_hp;
-                    effects.push(ActionSideEffects::HurtInConfusion {
-                        affected: attacker_id,
-                        start: start_hp,
-                        end: end_hp,
-                        hang_on_cause: None
-                    });
-                    return effects;
-                }
-            }
-        }
+        //region start-of-turn checks
+        if turn::do_freeze_check(attacker, attack).add(&mut effects) { return effects; }
+        if turn::do_sleep_check(attacker, attack).add(&mut effects) { return effects; }
+        if turn::do_paralysis_check(attacker).add(&mut effects) { return effects; }
+        if turn::do_flinch_check(attacker).add(&mut effects) { return effects; }
+        if turn::do_confusion_check(attacker).add(&mut effects) { return effects; }
+        //endregion
 
         // 1. Get the target(s)
         let targets = self.get_targets(attacker.id, attack, defender);
@@ -160,35 +88,20 @@ impl Battlefield {
         //region Accuracy Check
         let mut targets_hit = Vec::new();
         for defender in targets {
-            let hit = match move_data.accuracy {
-                Accuracy::AlwaysHits => true,
-                Accuracy::Percentage(p) => {
-                    let evasion_accuracy = core::get_accuracy_factor(attacker, defender);
-                    let move_accuracy = f64::from(p) / 100f64;
-                    rand::thread_rng().gen_bool(evasion_accuracy * move_accuracy)
-                },
-                Accuracy::Variable => match attack {
-                    Move::Guillotine | Move::Fissure | Move::HornDrill | Move::SheerCold => {
-                        let level_user = attacker.borrow().level;
-                        let level_target = defender.borrow().level;
-                        if level_user < level_target {
-                            effects.push(ActionSideEffects::Failed(Cause::Natural));
-                            return effects
-                        } else {
-                            let acc = (level_user - level_target + 30) as f64 / 100f64;
-                            if acc > 1f64 { true } else {rand::thread_rng().gen_bool(acc)}
+            let hit = accuracy::do_accuracy_check(attacker, attack, defender);
+            match hit {
+                Ok(b) => {
+                    if b {
+                        targets_hit.push(defender);
+                    } else {
+                        effects.push(ActionSideEffects::Missed(defender.id, Cause::Natural));
+                        if let Power::BaseWithCrash(_) = move_data.power {
+                            effects.push(attacker.take_crash_damage());
                         }
-                    },
-                    _ => unimplemented!("Unknown accuracy for {:?}", attack)
+                    }
                 }
-            };
-
-            if hit {
-                targets_hit.push(defender);
-            } else {
-                effects.push(ActionSideEffects::Missed(defender.id, Cause::Natural));
-                if let Power::BaseWithCrash(_) = move_data.power {
-                    effects.push(attacker.take_crash_damage());
+                Err(a) => {
+                    effects.push(a);
                 }
             }
         }
