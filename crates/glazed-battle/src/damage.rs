@@ -80,7 +80,6 @@ impl Battlefield { //region Damage
                 attack,
                 start_hp,
                 end_hp,
-                hung_on_cause: None,
                 critical_hit: is_crit,
                 effectiveness
             }]
@@ -112,8 +111,7 @@ impl Battlefield { //region Damage
                 damaged: defender_id,
                 start_hp,
                 end_hp,
-                cause,
-                hung_on_cause: None
+                cause
             }]
         }
     }
@@ -249,15 +247,7 @@ impl Battlefield { //region Damage
                 let mut effects = Vec::new();
                 let mut counter = 0;
                 for _ in 0..n {
-                    let move_context = MoveContext {
-                        attack,
-                        data: move_data,
-                        base_power: u16::from(*base)
-                    };
-
-                    let is_crit = crit();
-                    let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
-                    let damage_action = Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness);
+                    let damage_action = self._do_damage_and_effects(attacker, vec![defender], attack, move_data);
 
                     effects.push(damage_action);
                     counter += 1;
@@ -289,6 +279,10 @@ impl Battlefield { //region Damage
                     let is_crit = crit();
                     let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
                     let damage_action = Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness);
+
+                    if damage_action.iter().any(|e| e.did_damage()) {
+
+                    }
 
                     effects.push(damage_action);
                     counter += 1;

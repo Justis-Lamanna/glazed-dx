@@ -340,8 +340,7 @@ impl ActivePokemon {
             damaged: self.id,
             start_hp,
             end_hp,
-            cause: Cause::Natural,
-            hung_on_cause: None
+            cause: Cause::Natural
         }]
     }
 
@@ -544,7 +543,7 @@ impl Battlefield {
             Target::RandomOpponent => {
                 match self.opposite_of(&attacker.side) {
                     BattleParty::Single(p) => {
-                        if p.borrow().is_fainted() { vec![p] } else { vec![] }
+                        if p.borrow().is_fainted() { vec![] } else { vec![p] }
                     },
                     BattleParty::Double(a, b) |
                     BattleParty::Tag(a, b) => {
@@ -710,80 +709,32 @@ pub struct BattleData {
 
     /// If present, the turns remaining bound, and whether a Binding Band was used
     bound: Option<(u8, bool)>,
-    /// If true, this Pokemon can't run away or switch out
-    cant_flee: bool,
-    /// If true, this Pokemon loses 25% HP at the end of the turn
-    cursed: bool,
-    /// If true, this Pokemon falls asleep at turn end
-    drowsy: bool,
-    /// Turns remaining where this Pokemon can't use items (0 == no embargo)
-    embargo: u8,
-    /// Turns remaining where this Pokemon has to use the last_used_move (0 == no encore)
-    encore: u8,
     /// Turns remaining where this Pokemon is confused (0 == no confusion)
     confused: u8,
     /// If true, this Pokemon is infatuated
     infatuated: bool,
     /// If true, this Pokemon will flinch instead of attack this turn
     flinch: bool,
-    /// Turns remaining where this Pokemon is unable to heal
-    unable_to_heal: u8,
-    /// If true, this Pokemon was identified and has evasion checks revoked
-    identified: bool,
-    /// Turns left before Perish Song KOs this Pokemon
-    perish_song: u8,
-    /// If true, this Pokemon is having a nightmare
-    nightmare: bool,
-    /// If true, this Pokemon cannot use Status moves
-    taunted: u8,
-    /// If true, this Pokemon is levitating
-    levitating: u8,
-    /// If true, this Pokemon can use any move except last_used_move
-    tormented: bool,
-    /// If true, this Pokemon gains 1/16 HP at the end of each turn
-    aqua_ringed: bool,
-    /// If present, this Pokemon will lose HP and the referred Battler will gain it
-    leeched: Option<Battler>,
-    /// Number of times braced. (0 == not tried)
-    braced: u8,
     /// If present, this Pokemon is charging, and will use Move on the next turn
     charging: Option<(SelectedTarget, Move)>,
-    /// If true, this Pokemon is the center of attention, and all moves target it
-    center_of_attention: bool,
-    /// If true, this Pokemon used Defense Curl. Certain moves are more powerful
-    curled: bool,
-    /// If true, this Pokemon is rooted to the ground. Gains HP at the end of each turn
+    /// If present, this Pokemon is thrashing.
+    thrashing: Option<(Move, u8)>,
+    /// If true, this user is rooted
     rooted: bool,
-    /// If true, any status moves used against this Pokemon are rebounded
-    magic_coated: bool,
-    /// If true, the Pokemon is shrunk
-    minimized: bool,
-    /// Number of times protected. (0 == not tried)
-    protected: u8,
-    /// If true, the Pokemon is exhausted from its last attack, and cannot do anything
-    recharging: bool,
+    /// If >0, levitating. Decrement after each turn
+    levitating: u8,
     /// If present, the Pokemon is semi-invulnerable
     invulnerable: Option<SemiInvulnerableLocation>,
-    /// If present, the Pokemon is carrying another (Sky Drop)
-    carrying: Option<Battler>,
     /// The Pokemon has a substitute out, with this much HP remaining
     substituted: u16,
-    /// This Pokemon is thrashing, and must continue using last_used_move.
-    thrashing: u8,
     /// This Pokemon is transformed into another.
     transformed: Option<TransformData>,
-    /// This Pokemon is focused, increasing crit ratio
-    focused: bool,
-    /// If true, this Pokemon had a held item + subsequently lost it
-    lost_held_item: bool,
     /// If present, this Pokemon has this ability instead of its usual one
     temp_ability: Option<Ability>,
     /// If present, this Pokemon has this type instead of its usual one
     temp_type: Option<PokemonType>,
     /// If present, this Pokemon has this weight instead of its usual weight
     temp_weight: Option<u16>,
-    /// If true, this Pokemon has been Power Tricked, and its Attack and Defense are swapped
-    power_trick: bool
 }
 impl BattleData {
     pub fn is_confused(&self) -> bool {
@@ -1028,7 +979,6 @@ pub enum ActionSideEffects {
         attack: Move,
         start_hp: u16,
         end_hp: u16,
-        hung_on_cause: Option<Cause>,
         critical_hit: bool,
         effectiveness: Effectiveness
     },
@@ -1047,8 +997,7 @@ pub enum ActionSideEffects {
         damaged: Battler,
         start_hp: u16,
         end_hp: u16,
-        cause: Cause,
-        hung_on_cause: Option<Cause>
+        cause: Cause
     },
     Missed(Battler, Cause),
     NoEffect(Cause),
@@ -1125,6 +1074,13 @@ impl ActionSideEffects {
             true
         } else {
             false
+        }
+    }
+
+    pub fn did_damage(&self) -> bool {
+        match self {
+            ActionSideEffects::BasicDamage {..} | ActionSideEffects::DirectDamage {..} => true,
+            _ => false
         }
     }
 }

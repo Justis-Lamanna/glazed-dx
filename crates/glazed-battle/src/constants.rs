@@ -12,6 +12,8 @@ pub const THAW_CHANCE: f64 = 0.2;
 pub const FULL_PARALYSIS_CHANCE: f64 = 0.25;
 /// Number of turns a Pokemon can sleep for, equally distributed
 pub const SLEEP_TURNS_RANGE: RangeInclusive<u8> = 1..=3;
+/// Number of turns a Pokemon can be confused for
+pub const CONFUSION_TURN_RANGE: RangeInclusive<u8> = 2..=5;
 /// Chance a confused Pokemon will hit itself
 pub const CONFUSION_HIT_CHANCE: f64 = 0.5;
 /// Power of a self-inflicted hit from confusion
@@ -30,6 +32,8 @@ pub const BOUND_HP_BINDING_BAND: u8 = 6;
 pub const MULTI_HIT_RANGE: MultiHitDistribution = MultiHitDistribution;
 /// Number of turns for a multi-strike move, if the user has Skill Link
 pub const MULTI_HIT_SKILL_LINK: u8 = 5;
+/// Number of turns a Pokemon may thrash for
+pub const THRASH_RANGE: RangeInclusive<u8> = 2..=3;
 
 /// One-off structure to allow configuration of the Multi-Hit Distribution
 pub struct MultiHitDistribution;

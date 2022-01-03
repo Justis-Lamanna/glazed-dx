@@ -18,6 +18,11 @@ use crate::*;
 use crate::core::{ActionCheck, MoveContext};
 use crate::core::CheckResult;
 
+pub fn inflict_confusion(afflicted: &ActivePokemon) {
+    let mut data = afflicted.data.borrow_mut();
+    data.confused = rand::thread_rng().gen_range(CONFUSION_TURN_RANGE);
+}
+
 impl Battlefield {
     /// Perform a regular attack
     pub fn do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
@@ -39,13 +44,30 @@ impl Battlefield {
         }
     }
 
-    /// Complete a charge attack
-    pub fn complete_charge(&mut self, attacker_id: Battler) -> Vec<ActionSideEffects> {
+    /// Do an attack a Pokemon is locked in to (example: charge attack selected the previous turn)
+    pub fn do_implicit_attack(&mut self, attacker_id: Battler) -> Vec<ActionSideEffects> {
         let attacker = &self[attacker_id.side][attacker_id.individual];
         let data = attacker.data.borrow();
         if let Some((defender, attack)) = data.charging {
             drop(data);
             self._do_attack(attacker_id, attack, defender)
+        } else if let Some((attack, counter)) = data.thrashing {
+            drop(data);
+            let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
+            let counter = counter - 1;
+            let damaged = effects.iter().any(|e| e.did_damage());
+            if counter == 0 {
+                inflict_confusion(&self[attacker_id.side][attacker_id.individual]);
+                effects.push(ActionSideEffects::Confuse(attacker_id));
+            }
+
+            let mut data = attacker.data.borrow_mut();
+            if !damaged {
+                data.thrashing = None
+            } else {
+                data.thrashing = Some((attack, counter))
+            }
+            effects
         } else {
             vec![]
         }
@@ -88,6 +110,14 @@ impl Battlefield {
         //region Accuracy Check
         let mut targets_hit = Vec::new();
         for defender in targets {
+            match defender.get_effective_ability() {
+                Ability::Soundproof if attack.is_sound_based() && !attacker.get_effective_ability().is_ignore_ability_ability() => {
+                    effects.push(ActionSideEffects::NoEffect(Cause::Ability(defender.id, Ability::Soundproof)));
+                    continue;
+                },
+                _ => {}
+            }
+
             let hit = accuracy::do_accuracy_check(attacker, attack, defender);
             match hit {
                 Ok(b) => {
@@ -111,7 +141,18 @@ impl Battlefield {
         }
         //endregion
 
+        effects.append(&mut self._do_damage_and_effects(attacker, targets_hit, attack, move_data));
+
+        if effects.is_empty() {
+            effects.push(ActionSideEffects::NothingHappened)
+        }
+
+        effects
+    }
+
+    pub(crate) fn _do_damage_and_effects(&self, attacker: &ActivePokemon, targets_hit: Vec<&ActivePokemon>, attack: Move, move_data: &MoveData) -> Vec<ActionSideEffects> {
         let is_multi_target = targets_hit.len() > 1;
+        let mut effects = Vec::new();
 
         // 3. For each hit target, perform damage
         // For non-damaging moves, "damaged" becomes everyone from Step 2.
@@ -121,7 +162,7 @@ impl Battlefield {
         } else {
             let mut damaged = Vec::new();
             for defender in targets_hit {
-                let attacker = &self[attacker_id.side][attacker_id.individual];
+                let attacker = &self[attacker.id.side][attacker.id.individual];
                 let mut individual_effects = self.do_damage(attacker, attack, defender, is_multi_target);
 
                 let hit_substitute = individual_effects.iter().any(|e| e.hit_substitute());
@@ -192,7 +233,7 @@ impl Battlefield {
                     }
                 },
                 Effect::ForceSwitch(StatChangeTarget::User) => {
-                    vec![ActionSideEffects::ForcePokemonSwap { must_leave: attacker_id }]
+                    vec![ActionSideEffects::ForcePokemonSwap { must_leave: attacker.id }]
                 },
                 Effect::ForceSwitch(StatChangeTarget::Target) => {
                     targets_for_secondary_damage.iter()
@@ -227,7 +268,7 @@ impl Battlefield {
                             };
                             data.bound = Some((turns_bound, has_binding_band));
                             ActionSideEffects::Bound {
-                                binder: attacker_id,
+                                binder: attacker.id,
                                 bound: defender.id,
                                 turns: turns_bound,
                                 attack
@@ -252,23 +293,26 @@ impl Battlefield {
                         })
                         .collect()
                 },
-        //         Effect::VolatileStatus(ailment, probability, _) => {
-        //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
-        //             if triggers {
-        //                 self.inflict_volatile_status(defender, attacker, *ailment)
-        //             } else {
-        //                 Vec::new()
-        //             }
-        //         }
+                Effect::Thrash => {
+                    let mut data = attacker.data.borrow_mut();
+                    if data.thrashing.is_none() {
+                        data.thrashing = Some((attack, rand::thread_rng().gen_range(THRASH_RANGE)))
+                    }
+                    vec![]
+                }
+                //         Effect::VolatileStatus(ailment, probability, _) => {
+                //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                //             if triggers {
+                //                 self.inflict_volatile_status(defender, attacker, *ailment)
+                //             } else {
+                //                 Vec::new()
+                //             }
+                //         }
                 _ => unimplemented!("Secondary effect not yet created")
             };
             effects.append(&mut secondary_effects);
         }
         //endregion
-
-        if effects.is_empty() {
-            effects.push(ActionSideEffects::NothingHappened)
-        }
 
         effects
     }

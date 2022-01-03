@@ -720,6 +720,7 @@ pub enum Effect {
     ForceSwitch(StatChangeTarget),
     DropCoins,
     Bind,
+    Thrash,
     Custom
 }
 
@@ -1884,7 +1885,7 @@ pub static Thrash: MoveData = MoveData {
     target: Target::RandomOpponent,
     power: Power::Base(120),
 	crit_rate: None,
-	effects: &[],
+	effects: &[Effect::Thrash],
 };
 pub static DoubleEdge: MoveData = MoveData {
     pp: 15,
