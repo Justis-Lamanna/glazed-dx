@@ -54,7 +54,7 @@ impl Battlefield { //region Damage
     }
 
     fn lower_hp(attacker: Battler, defender: &ActivePokemon, attack: Move, damage: u16, is_crit: bool, effectiveness: Effectiveness) -> Vec<ActionSideEffects> {
-        if defender.is_behind_substitute() {
+        if defender.is_behind_substitute() && !attack.bypasses_substitute() {
             let mut defender_data = defender.data.borrow_mut();
             let start_hp = defender_data.substituted;
             let end_hp = start_hp.saturating_sub(damage);
@@ -228,7 +228,14 @@ impl Battlefield { //region Damage
                     Battlefield::lower_hp_basic(attacker.id, defender, attack, u16::MAX, Cause::Move(attacker.id, attack))
                 }
             },
-        //     Power::Exact(_) => self.do_exact_damage(attacker, attack, defender),
+            Power::Exact(damage) => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    vec![ActionSideEffects::NoEffect(cause)]
+                } else {
+                    Battlefield::lower_hp_basic(attacker.id, defender, attack, *damage as u16, Cause::Move(attacker.id, attack))
+                }
+            }
         //     Power::Variable => self.do_one_off_damage(attacker, attack, defender),
         //     Power::Percentage(_) => self.do_percent_damage(attacker, attack, defender),
         //     Power::Revenge(_) => self.do_revenge_damage(attacker, attack),

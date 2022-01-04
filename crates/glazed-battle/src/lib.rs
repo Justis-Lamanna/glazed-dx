@@ -398,6 +398,7 @@ pub struct Battlefield {
 }
 impl Battlefield {
     /// Standard 1v1 battle
+    /// This should only be used for trainer battles
     pub fn single_battle(player: Party, opponent: Party) -> Battlefield {
         Battlefield {
             user: BattleParty::Single(ActivePokemon {
@@ -417,6 +418,30 @@ impl Battlefield {
             field: RefCell::from(Field::default()),
             wild_battle: false,
             turn_record: Vec::new()
+        }
+    }
+
+    /// Wild battle - Functionally, a 1v1 battle against a one-member party
+    /// This should only be used for wild battles
+    pub fn wild_battle<P: Into<Pokemon>>(player: Party, opponent: P) -> Battlefield {
+        Battlefield {
+            user: BattleParty::Single(ActivePokemon {
+                id: Battler { side: BattleSide::Forward, individual: DoubleBattleSide::Left },
+                party: Rc::new(player),
+                pokemon: 0,
+                data: Default::default()
+            }),
+            user_side: Default::default(),
+            opponent: BattleParty::Single(ActivePokemon {
+                id: Battler { side: BattleSide::Back, individual: DoubleBattleSide::Left },
+                party: Rc::new(Party::create_one(opponent)),
+                pokemon: 0,
+                data: Default::default()
+            }),
+            opponent_side: Default::default(),
+            field: RefCell::new(Default::default()),
+            wild_battle: true,
+            turn_record: vec![]
         }
     }
 

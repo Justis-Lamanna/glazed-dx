@@ -1426,15 +1426,15 @@ impl Move {
         }
     }
 
+    pub fn bypasses_substitute(&self) -> bool {
+        self.is_sound_based()
+    }
+
     pub fn get_power(&self) -> Option<u8> {
         match self.data().power {
             Power::Base(a) => Some(a),
             _ => None
         }
-    }
-
-    pub fn get_crit_rate(&self) -> Option<u8> {
-        self.data().crit_rate
     }
 }
 impl Into<&'static MoveData> for Move {

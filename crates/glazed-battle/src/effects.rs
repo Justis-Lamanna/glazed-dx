@@ -18,9 +18,10 @@ use crate::*;
 use crate::core::{ActionCheck, MoveContext};
 use crate::core::CheckResult;
 
-pub fn inflict_confusion(afflicted: &ActivePokemon) {
+pub fn inflict_confusion(afflicted: &ActivePokemon) -> Vec<ActionSideEffects> {
     let mut data = afflicted.data.borrow_mut();
     data.confused = rand::thread_rng().gen_range(CONFUSION_TURN_RANGE);
+    vec![ActionSideEffects::Confuse(afflicted.id)]
 }
 
 impl Battlefield {
@@ -57,8 +58,7 @@ impl Battlefield {
             let counter = counter - 1;
             let damaged = effects.iter().any(|e| e.did_damage());
             if counter == 0 {
-                inflict_confusion(&self[attacker_id.side][attacker_id.individual]);
-                effects.push(ActionSideEffects::Confuse(attacker_id));
+                effects.append(&mut inflict_confusion(&self[attacker_id.side][attacker_id.individual]));
             }
 
             let mut data = attacker.data.borrow_mut();
@@ -185,7 +185,7 @@ impl Battlefield {
         for secondary_effect in move_data.effects {
             let mut secondary_effects = match secondary_effect {
                 Effect::StatChange(stat, stages, probability, StatChangeTarget::User) => {
-                    let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                    let triggers = self.activates_secondary_effect(attacker, *probability);
                     if triggers {
                         self.change_self_stat(attacker, *stat, *stages)
                     } else {
@@ -193,23 +193,19 @@ impl Battlefield {
                     }
                 },
                 Effect::StatChange(stat, stages, probability, StatChangeTarget::Target) => {
-                    let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
-                    if triggers {
-                        targets_for_secondary_damage.iter()
-                            .flat_map(|defender| {
-                                if defender.is_behind_substitute() {
-                                    vec![ActionSideEffects::NoEffectSecondary(Cause::Substitute(defender.id))]
-                                } else {
-                                    self.change_opponent_stat(attacker, defender, *stat, *stages)
-                                }
-                            })
-                            .collect()
-                    } else {
-                        Vec::new()
-                    }
+                    targets_for_secondary_damage.iter()
+                        .filter(|_| self.activates_secondary_effect(attacker, *probability))
+                        .flat_map(|defender| {
+                            if defender.is_behind_substitute() {
+                                vec![ActionSideEffects::NoEffectSecondary(Cause::Substitute(defender.id))]
+                            } else {
+                                self.change_opponent_stat(attacker, defender, *stat, *stages)
+                            }
+                        })
+                        .collect()
                 },
                 Effect::NonVolatileStatus(ailment, probability, StatChangeTarget::User) => {
-                    let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                    let triggers = self.activates_secondary_effect(attacker, *probability);
                     if triggers {
                         self.inflict_non_volatile_status(attacker, *ailment)
                     } else {
@@ -217,20 +213,36 @@ impl Battlefield {
                     }
                 },
                 Effect::NonVolatileStatus(ailment, probability, StatChangeTarget::Target) => {
-                    let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
+                    targets_for_secondary_damage.iter()
+                        .filter(|_| self.activates_secondary_effect(attacker, *probability))
+                        .flat_map(|defender| {
+                            if defender.is_behind_substitute() {
+                                vec![ActionSideEffects::Failed(Cause::Substitute(defender.id))]
+                            } else {
+                                self.inflict_non_volatile_status(defender, *ailment)
+                            }
+                        })
+                        .collect()
+                },
+                Effect::VolatileStatus(VolatileBattleAilment::Confusion, probability, StatChangeTarget::User) => {
+                    let triggers = self.activates_secondary_effect(attacker, *probability);
                     if triggers {
-                        targets_for_secondary_damage.iter()
-                            .flat_map(|defender| {
-                                if defender.is_behind_substitute() {
-                                    vec![ActionSideEffects::Failed(Cause::Substitute(defender.id))]
-                                } else {
-                                    self.inflict_non_volatile_status(defender, *ailment)
-                                }
-                            })
-                            .collect()
+                        inflict_confusion(attacker)
                     } else {
                         Vec::new()
                     }
+                },
+                Effect::VolatileStatus(VolatileBattleAilment::Confusion, probability, StatChangeTarget::Target) => {
+                    targets_for_secondary_damage.iter()
+                        .filter(|_| self.activates_secondary_effect(attacker, *probability))
+                        .flat_map(|defender| {
+                            if defender.is_behind_substitute() {
+                                vec![ActionSideEffects::Failed(Cause::Substitute(defender.id))]
+                            } else {
+                                inflict_confusion(attacker)
+                            }
+                        })
+                        .collect()
                 },
                 Effect::ForceSwitch(StatChangeTarget::User) => {
                     vec![ActionSideEffects::ForcePokemonSwap { must_leave: attacker.id }]
@@ -315,6 +327,19 @@ impl Battlefield {
         //endregion
 
         effects
+    }
+
+    fn activates_secondary_effect(&self, attacker: &ActivePokemon, probability: u8) -> bool {
+        let probability = if let Ability::SereneGrace = attacker.get_effective_ability() {
+            probability * 2
+        } else {
+            probability
+        };
+        if probability == 0 || probability > 100 {
+            true
+        } else {
+            rand::thread_rng().gen_bool(f64::from(probability) / 100f64)
+        }
     }
 
     //region Non-Damage
