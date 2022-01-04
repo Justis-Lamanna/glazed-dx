@@ -721,6 +721,7 @@ pub enum Effect {
     DropCoins,
     Bind,
     Thrash,
+    Disable,
     Custom
 }
 

@@ -744,6 +744,8 @@ pub struct BattleData {
     charging: Option<(SelectedTarget, Move)>,
     /// If present, this Pokemon is thrashing.
     thrashing: Option<(Move, u8)>,
+    /// A list of disabled moves, and the amount of time left before they are enabled
+    disabled: Vec<(Move, u8)>,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -776,6 +778,28 @@ impl BattleData {
             BattleStat::Accuracy => self.accuracy_stage,
             BattleStat::Evasion => self.evasion_stage
         }
+    }
+
+    /// Check if a move is disabled
+    pub fn is_disabled(&self, attack: Move) -> bool {
+        self.disabled
+            .iter()
+            .any(|(a, _)| *a == attack)
+    }
+
+    /// Drop all disable counters by 1, removing and returning the ones that are no longer disabled
+    pub fn lower_disable_counters(&mut self) -> Vec<Move> {
+        let mut disabled = Vec::new();
+        let mut undisabled = Vec::new();
+        for (m, c) in self.disabled.iter() {
+            if *c == 1 {
+                undisabled.push(*m);
+            } else {
+                disabled.push((*m, *c - 1));
+            }
+        }
+        self.disabled = disabled;
+        undisabled
     }
 
     pub fn end_of_turn(&mut self) {
@@ -1091,6 +1115,8 @@ pub enum ActionSideEffects {
     Unbound(Battler),
     WillFlinch(Battler),
     Flinched(Battler),
+    Disabled(Battler, Move),
+    NoLongerDisabled(Battler, Move),
     NothingHappened
 }
 impl ActionSideEffects {

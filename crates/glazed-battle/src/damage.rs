@@ -53,8 +53,8 @@ impl Battlefield { //region Damage
         }
     }
 
-    fn lower_hp(attacker: Battler, defender: &ActivePokemon, attack: Move, damage: u16, is_crit: bool, effectiveness: Effectiveness) -> Vec<ActionSideEffects> {
-        if defender.is_behind_substitute() && !attack.bypasses_substitute() {
+    fn lower_hp(attacker: &ActivePokemon, defender: &ActivePokemon, attack: Move, damage: u16, is_crit: bool, effectiveness: Effectiveness) -> Vec<ActionSideEffects> {
+        if defender.is_behind_substitute() && !attack.bypasses_substitute() && attacker.get_effective_ability() != Ability::Infiltrator {
             let mut defender_data = defender.data.borrow_mut();
             let start_hp = defender_data.substituted;
             let end_hp = start_hp.saturating_sub(damage);
@@ -76,7 +76,7 @@ impl Battlefield { //region Damage
 
             vec![ActionSideEffects::DirectDamage {
                 damaged: defender_id,
-                damager: attacker,
+                damager: attacker.id,
                 attack,
                 start_hp,
                 end_hp,
@@ -86,8 +86,8 @@ impl Battlefield { //region Damage
         }
     }
 
-    fn lower_hp_basic(attacker: Battler, defender: &ActivePokemon, attack: Move, damage: u16, cause: Cause) -> Vec<ActionSideEffects> {
-        if defender.is_behind_substitute() {
+    fn lower_hp_basic(attacker: &ActivePokemon, defender: &ActivePokemon, attack: Move, damage: u16, cause: Cause) -> Vec<ActionSideEffects> {
+        if defender.is_behind_substitute() && !attack.bypasses_substitute() && attacker.get_effective_ability() != Ability::Infiltrator {
             let mut defender_data = defender.data.borrow_mut();
             let start_hp = defender_data.substituted;
             let end_hp = start_hp.saturating_sub(damage);
@@ -129,7 +129,7 @@ impl Battlefield { //region Damage
                 } else {
                     let is_crit = crit();
                     let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
-                    Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness)
+                    Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
                 }
             },
             Power::BaseWithCharge(_, _) => {
@@ -139,7 +139,7 @@ impl Battlefield { //region Damage
                 } else {
                     let is_crit = crit();
                     let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
-                    Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness)
+                    Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
                 };
 
                 // Clear charging data
@@ -155,7 +155,7 @@ impl Battlefield { //region Damage
                 } else {
                     let is_crit = crit();
                     let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
-                    let mut effects = Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness);
+                    let mut effects = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
 
                     {
                         let attacker_ability = attacker.get_effective_ability();
@@ -185,7 +185,7 @@ impl Battlefield { //region Damage
                 } else {
                     let is_crit = crit();
                     let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
-                    Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness)
+                    Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
                 }
             }
         //     Power::WeightBased => {
@@ -225,7 +225,7 @@ impl Battlefield { //region Damage
                 if let Effectiveness::Immune = effectiveness {
                     vec![ActionSideEffects::NoEffect(cause)]
                 } else {
-                    Battlefield::lower_hp_basic(attacker.id, defender, attack, u16::MAX, Cause::Move(attacker.id, attack))
+                    Battlefield::lower_hp_basic(attacker, defender, attack, u16::MAX, Cause::Move(attacker.id, attack))
                 }
             },
             Power::Exact(damage) => {
@@ -233,7 +233,7 @@ impl Battlefield { //region Damage
                 if let Effectiveness::Immune = effectiveness {
                     vec![ActionSideEffects::NoEffect(cause)]
                 } else {
-                    Battlefield::lower_hp_basic(attacker.id, defender, attack, *damage as u16, Cause::Move(attacker.id, attack))
+                    Battlefield::lower_hp_basic(attacker, defender, attack, *damage as u16, Cause::Move(attacker.id, attack))
                 }
             }
         //     Power::Variable => self.do_one_off_damage(attacker, attack, defender),
@@ -285,7 +285,7 @@ impl Battlefield { //region Damage
 
                     let is_crit = crit();
                     let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
-                    let damage_action = Battlefield::lower_hp(attacker.id, defender, attack, damage, is_crit, effectiveness);
+                    let damage_action = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
 
                     if damage_action.iter().any(|e| e.did_damage()) {
 

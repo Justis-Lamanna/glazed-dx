@@ -147,6 +147,14 @@ impl Battlefield {
             effects.push(ActionSideEffects::NothingHappened)
         }
 
+        //region end-of-turn checks
+        let mut data = attacker.data.borrow_mut();
+        effects.append(&mut data.lower_disable_counters()
+            .iter()
+            .map(|m| ActionSideEffects::NoLongerDisabled(attacker_id, *m))
+            .collect());
+        //endregion
+
         effects
     }
 
@@ -311,6 +319,20 @@ impl Battlefield {
                         data.thrashing = Some((attack, rand::thread_rng().gen_range(THRASH_RANGE)))
                     }
                     vec![]
+                },
+                Effect::Disable => {
+                    targets_for_secondary_damage.iter()
+                        .map(|defender| {
+                            let mut data = defender.data.borrow_mut();
+                            match data.last_move_used {
+                                None => ActionSideEffects::Failed(Cause::Natural),
+                                Some(m) => {
+                                    data.disabled.push((m, DISABLE_TURN_COUNT));
+                                    ActionSideEffects::Disabled(defender.id, m)
+                                }
+                            }
+                        })
+                        .collect()
                 }
                 //         Effect::VolatileStatus(ailment, probability, _) => {
                 //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
