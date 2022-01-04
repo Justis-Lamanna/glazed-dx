@@ -39,6 +39,28 @@ pub const DISABLE_TURN_COUNT: u8 = 4;
 /// Number of turns mist is active on a field
 pub const MIST_TURN_COUNT: u8 = 5;
 
+/// Table used to convert weight to base power for weight-based moves (Low Kick, Grass Knot)
+pub fn weight_to_power_map(weight: u16) -> u16 {
+    match weight {
+        0..=99 => 20,
+        100..=249 => 40,
+        250..=499 => 60,
+        500..=999 => 80,
+        1000..=1999 => 100,
+        2000..=u16::MAX => 120
+    }
+}
+
+/// Table used to convert weight ratio to base power for weight-ratio-based moves (Heavy Slam, Heat Crash)
+pub fn weight_ratio_to_power_map(attacker_weight: u16, defender_weight: u16) -> u16 {
+    let ratio = (attacker_weight as f64) / (defender_weight as f64);
+    if ratio > 0.5 { 40 }
+    else if ratio > 0.3335 { 60 }
+    else if ratio > 0.2501 { 80 }
+    else if ratio > 0.2001 { 100 }
+    else { 120 }
+}
+
 /// One-off structure to allow configuration of the Multi-Hit Distribution
 pub struct MultiHitDistribution;
 impl Distribution<u8> for MultiHitDistribution {

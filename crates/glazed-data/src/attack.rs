@@ -612,7 +612,7 @@ pub enum Power {
     Exact(u8),
     Percentage(FractionPlaceholder),
     Variable,
-    Revenge(FractionPlaceholder)
+    Revenge(FractionPlaceholder, Option<DamageType>)
 }
 
 /// The potential types of Multi Hit
@@ -696,7 +696,8 @@ pub enum Target {
     LastAttacker(Option<DamageType>),
     Any,
     AllExceptUser,
-    All
+    All,
+    Implicit
 }
 
 /// Represents if a stat change affects the user, or the target
@@ -723,6 +724,7 @@ pub enum Effect {
     Thrash,
     Disable,
     Mist,
+    Recharge,
     Custom
 }
 
@@ -2199,7 +2201,7 @@ pub static HyperBeam: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(150),
 	crit_rate: None,
-	effects: &[],
+	effects: &[Effect::Recharge],
 };
 pub static Peck: MoveData = MoveData {
     pp: 35,
@@ -2252,13 +2254,13 @@ pub static LowKick: MoveData = MoveData {
 pub static Counter: MoveData = MoveData {
     pp: 20,
     priority: -5,
-    power: Power::Revenge((2u8, 1u8)),
+    power: Power::Revenge((2u8, 1u8), Some(DamageType::Physical)),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Fighting,
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
-    target: Target::LastAttacker(Some(DamageType::Physical)),
+    target: Target::Implicit,
     effects: &[],
 };
 pub static SeismicToss: MoveData = MoveData {
@@ -4352,13 +4354,13 @@ pub static Crunch: MoveData = MoveData {
 pub static MirrorCoat: MoveData = MoveData {
     pp: 20,
     priority: -5,
-    power: Power::Revenge((2u8, 1u8)),
+    power: Power::Revenge((2u8, 1u8), Some(DamageType::Special)),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Psychic,
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Special,
-    target: Target::LastAttacker(Some(DamageType::Special)),
+    target: Target::Implicit,
     effects: &[],
 };
 pub static PsychUp: MoveData = MoveData {
@@ -5852,13 +5854,13 @@ pub static Acupressure: MoveData = MoveData {
 pub static MetalBurst: MoveData = MoveData {
     pp: 10,
     priority: 0,
-    power: Power::Revenge((3u8, 2u8)),
+    power: Power::Revenge((3u8, 2u8), None),
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Steel,
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
-    target: Target::LastAttacker(None),
+    target: Target::Implicit,
     effects: &[],
 };
 pub static UTurn: MoveData = MoveData {

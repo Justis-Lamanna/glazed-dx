@@ -49,7 +49,12 @@ impl Battlefield {
     pub fn do_implicit_attack(&mut self, attacker_id: Battler) -> Vec<ActionSideEffects> {
         let attacker = &self[attacker_id.side][attacker_id.individual];
         let data = attacker.data.borrow();
-        if let Some((defender, attack)) = data.charging {
+        if data.recharge {
+            drop(data);
+            let mut data = attacker.data.borrow_mut();
+            data.recharge = false;
+            vec![ActionSideEffects::Recharging(Cause::Natural)]
+        } else if let Some((defender, attack)) = data.charging {
             drop(data);
             self._do_attack(attacker_id, attack, defender)
         } else if let Some((attack, counter)) = data.thrashing {
@@ -347,6 +352,11 @@ impl Battlefield {
                         ActionSideEffects::MistStart(attacker.id.side)
                     };
                     vec![effect]
+                },
+                Effect::Recharge => {
+                    let mut data = attacker.data.borrow_mut();
+                    data.recharge = true;
+                    vec![]
                 }
                 //         Effect::VolatileStatus(ailment, probability, _) => {
                 //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);

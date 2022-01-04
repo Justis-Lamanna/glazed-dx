@@ -473,7 +473,7 @@ impl Battlefield {
         let move_data = attack.data();
 
         match move_data.target {
-            Target::User => vec![user()],
+            Target::User | Target::Implicit => vec![user()],
             Target::Ally => {
                 match ally() {
                     None => vec![],
@@ -718,6 +718,8 @@ pub struct BattleData {
     flinch: bool,
     /// If present, this Pokemon is charging, and will use Move on the next turn
     charging: Option<(SelectedTarget, Move)>,
+    /// If true, this Pokemon is resting from a previously-used move
+    recharge: bool,
     /// If present, this Pokemon is thrashing.
     thrashing: Option<(Move, u8)>,
     /// A list of disabled moves, and the amount of time left before they are enabled
@@ -1091,6 +1093,7 @@ pub enum ActionSideEffects {
     },
     DroppedCoins,
     Charging(Battler, Move),
+    Recharging(Cause),
     Bound {
         binder: Battler,
         bound: Battler,

@@ -195,22 +195,21 @@ impl Battlefield { //region Damage
                     Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
                 }
             }
-        //     Power::WeightBased => {
-        //         let weight = attacker.get_effective_weight();
-        //         let base = match weight {
-        //             0..=99 => 20,
-        //             100..=249 => 40,
-        //             250..=499 => 60,
-        //             500..=999 => 80,
-        //             1000..=1999 => 100,
-        //             2000..=u16::MAX => 120
-        //         };
-        //         self.do_damage_from_base_power(attacker, core::MoveContext {
-        //             attack,
-        //             data: move_data,
-        //             base_power: base
-        //         }, defender)
-        //     },
+            Power::WeightBased => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    vec![ActionSideEffects::NoEffect(cause)]
+                } else {
+                    let move_context = MoveContext {
+                        attack,
+                        data: move_data,
+                        base_power: weight_to_power_map(defender.get_effective_weight())
+                    };
+                    let is_crit = crit();
+                    let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
+                    Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
+                }
+            },
         //     Power::WeightRatioBased => {
         //         let attacker_weight = attacker.get_effective_weight() as f64;
         //         let defender_weight = defender.get_effective_weight() as f64;
@@ -245,7 +244,40 @@ impl Battlefield { //region Damage
             }
         //     Power::Variable => self.do_one_off_damage(attacker, attack, defender),
         //     Power::Percentage(_) => self.do_percent_damage(attacker, attack, defender),
-        //     Power::Revenge(_) => self.do_revenge_damage(attacker, attack),
+            Power::Revenge(a, damage) => {
+                let data = attacker.data.borrow();
+                let candidates = data.damage_this_turn.iter()
+                    .filter_map(|(attacker, attack, damage)| {
+                        let pkmn = &self[attacker.side][attacker.individual];
+                        if pkmn.borrow().has_health() {
+                            Some((pkmn, *attack, *damage))
+                        } else {
+                            None
+                        }
+                    });
+                let first_damage = match damage {
+                    None => candidates
+                            .map(|(pkmn, _, damage)| (pkmn, damage))
+                            .last(),
+                    Some(t) => candidates
+                            .filter_map(|(pkmn, attack, damage)| {
+                                if attack.data().damage_type == *t {
+                                    Some((pkmn, damage))
+                                } else {
+                                    None
+                                }
+                            })
+                            .last()
+                };
+                match first_damage {
+                    None => vec![ActionSideEffects::Failed(Cause::Natural)],
+                    Some((defender, damage)) => {
+                        let (numerator, denominator) = *a;
+                        let return_damage = u32::from(damage) * u32::from(numerator) / u32::from(denominator);
+                        Battlefield::lower_hp_basic(attacker, defender, attack, return_damage as u16, Cause::Natural)
+                    }
+                }
+            }
             Power::MultiHit(MultiHitFlavor::Variable(base)) => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
