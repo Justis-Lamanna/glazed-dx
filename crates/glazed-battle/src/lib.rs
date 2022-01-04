@@ -389,9 +389,9 @@ pub enum DoubleBattleSide {
 #[derive(Debug)]
 pub struct Battlefield {
     user: BattleParty,
-    user_side: Side,
+    user_side: RefCell<Side>,
     opponent: BattleParty,
-    opponent_side: Side,
+    opponent_side: RefCell<Side>,
     field: RefCell<Field>,
     wild_battle: bool,
     turn_record: Vec<Turn>
@@ -407,41 +407,17 @@ impl Battlefield {
                 pokemon: 0,
                 data: Default::default()
             }),
-            user_side: Side::default(),
+            user_side: RefCell::from(Side::default()),
             opponent: BattleParty::Single(ActivePokemon {
                 id: Battler { side: BattleSide::Back, individual: DoubleBattleSide::Left },
                 party: Rc::new(opponent),
                 pokemon: 0,
                 data: Default::default()
             }),
-            opponent_side: Side::default(),
+            opponent_side: RefCell::from(Side::default()),
             field: RefCell::from(Field::default()),
             wild_battle: false,
             turn_record: Vec::new()
-        }
-    }
-
-    /// Wild battle - Functionally, a 1v1 battle against a one-member party
-    /// This should only be used for wild battles
-    pub fn wild_battle<P: Into<Pokemon>>(player: Party, opponent: P) -> Battlefield {
-        Battlefield {
-            user: BattleParty::Single(ActivePokemon {
-                id: Battler { side: BattleSide::Forward, individual: DoubleBattleSide::Left },
-                party: Rc::new(player),
-                pokemon: 0,
-                data: Default::default()
-            }),
-            user_side: Default::default(),
-            opponent: BattleParty::Single(ActivePokemon {
-                id: Battler { side: BattleSide::Back, individual: DoubleBattleSide::Left },
-                party: Rc::new(Party::create_one(opponent)),
-                pokemon: 0,
-                data: Default::default()
-            }),
-            opponent_side: Default::default(),
-            field: RefCell::new(Default::default()),
-            wild_battle: true,
-            turn_record: vec![]
         }
     }
 
@@ -669,7 +645,7 @@ impl Battlefield {
     }
 
     /// Get the side associated with a battler
-    fn get_side(&self, id: &Battler) -> &Side {
+    fn get_side(&self, id: &Battler) -> &RefCell<Side> {
         match id.side {
             BattleSide::Forward => &self.user_side,
             BattleSide::Back => &self.opponent_side
@@ -1131,6 +1107,8 @@ pub enum ActionSideEffects {
     Flinched(Battler),
     Disabled(Battler, Move),
     NoLongerDisabled(Battler, Move),
+    MistStart(BattleSide),
+    MistEnd(BattleSide, Cause),
     NothingHappened
 }
 impl ActionSideEffects {

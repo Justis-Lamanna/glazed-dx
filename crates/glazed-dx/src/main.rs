@@ -16,10 +16,10 @@ fn main() {
 
         let mut battlefield = Battlefield::single_battle(me, them);
 
-        let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::FirePunch, SelectedTarget::Implied);
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Mist, SelectedTarget::Implied);
         println!("{:#?}", fx);
 
-        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Disable, SelectedTarget::Implied);
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::TailWhip, SelectedTarget::Implied);
         println!("{:#?}", fx);
     // }
 }

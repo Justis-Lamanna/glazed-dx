@@ -337,6 +337,16 @@ impl Battlefield {
                             }
                         })
                         .collect()
+                },
+                Effect::Mist => {
+                    let mut side = self.get_side(&attacker.id).borrow_mut();
+                    let effect = if side.mist > 0 {
+                        ActionSideEffects::Failed(Cause::Field(FieldCause::Mist))
+                    } else {
+                        side.mist = MIST_TURN_COUNT;
+                        ActionSideEffects::MistStart(attacker.id.side)
+                    };
+                    vec![effect]
                 }
                 //         Effect::VolatileStatus(ailment, probability, _) => {
                 //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
@@ -410,7 +420,7 @@ impl Battlefield {
     fn change_opponent_stat(&self, affecter: &ActivePokemon, affected: &ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
         let affected_side = self.get_side(&affected.id);
 
-        if affected_side.mist > 0 {
+        if affected_side.borrow().mist > 0 {
             return vec![ActionSideEffects::NoEffectSecondary(Cause::Field(FieldCause::Mist))]
         }
 

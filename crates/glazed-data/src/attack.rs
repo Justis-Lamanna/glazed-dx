@@ -722,6 +722,7 @@ pub enum Effect {
     Bind,
     Thrash,
     Disable,
+    Mist,
     Custom
 }
 
@@ -2090,7 +2091,7 @@ pub static Mist: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::UserAndAlly,
-    effects: &[],
+    effects: &[Effect::Mist],
 };
 pub static WaterGun: MoveData = MoveData {
     pp: 25,

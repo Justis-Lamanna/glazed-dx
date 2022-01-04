@@ -36,6 +36,8 @@ pub const MULTI_HIT_SKILL_LINK: u8 = 5;
 pub const THRASH_RANGE: RangeInclusive<u8> = 2..=3;
 /// Number of turns a move is disabled for
 pub const DISABLE_TURN_COUNT: u8 = 4;
+/// Number of turns mist is active on a field
+pub const MIST_TURN_COUNT: u8 = 5;
 
 /// One-off structure to allow configuration of the Multi-Hit Distribution
 pub struct MultiHitDistribution;
