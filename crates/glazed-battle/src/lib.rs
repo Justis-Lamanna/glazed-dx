@@ -780,6 +780,20 @@ impl BattleData {
         }
     }
 
+    pub fn set_last_used_move(&mut self, attack: Move) {
+        if let Some(a) = self.last_move_used {
+            if a == attack {
+                self.last_move_used_counter = self.last_move_used_counter.saturating_add(1);
+            } else {
+                self.last_move_used = Some(attack);
+                self.last_move_used_counter = 1;
+            }
+        } else {
+            self.last_move_used = Some(attack);
+            self.last_move_used_counter = 1;
+        }
+    }
+
     /// Check if a move is disabled
     pub fn is_disabled(&self, attack: Move) -> bool {
         self.disabled

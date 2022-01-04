@@ -92,6 +92,7 @@ impl Battlefield {
 
         // Check for reasons this Pokemon can't perform this move
         //region start-of-turn checks
+        if turn::do_disable_check(attacker, attack).add(&mut effects) { return effects; }
         if turn::do_freeze_check(attacker, attack).add(&mut effects) { return effects; }
         if turn::do_sleep_check(attacker, attack).add(&mut effects) { return effects; }
         if turn::do_paralysis_check(attacker).add(&mut effects) { return effects; }
@@ -149,6 +150,9 @@ impl Battlefield {
 
         //region end-of-turn checks
         let mut data = attacker.data.borrow_mut();
+
+        data.set_last_used_move(attack);
+
         effects.append(&mut data.lower_disable_counters()
             .iter()
             .map(|m| ActionSideEffects::NoLongerDisabled(attacker_id, *m))

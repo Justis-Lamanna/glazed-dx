@@ -12,11 +12,14 @@ fn main() {
             PokemonTemplate::pokemon(Species::Buizel, 20),
             PokemonTemplate::pokemon(Species::Furret, 20)]
         );
-        let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 100));
+        let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 20));
 
         let mut battlefield = Battlefield::single_battle(me, them);
 
-        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::SonicBoom, SelectedTarget::Implied);
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::FirePunch, SelectedTarget::Implied);
+        println!("{:#?}", fx);
+
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Disable, SelectedTarget::Implied);
         println!("{:#?}", fx);
     // }
 }

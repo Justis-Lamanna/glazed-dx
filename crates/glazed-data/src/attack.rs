@@ -2042,7 +2042,7 @@ pub static Disable: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Custom],
+    effects: &[Effect::Disable],
 };
 pub static Acid: MoveData = MoveData {
     pp: 30,

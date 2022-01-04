@@ -102,6 +102,15 @@ pub fn do_confusion_check(attacker: &ActivePokemon) -> CheckResult<ActionSideEff
     }
 }
 
+pub fn do_disable_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<ActionSideEffects> {
+    let data = attacker.data.borrow_mut();
+    if data.is_disabled(attack) {
+        CheckResult::EffectAndEnd(ActionSideEffects::Disabled(attacker.id, attack))
+    } else {
+        CheckResult::Nothing
+    }
+}
+
 /// Perform binding damage, if applicable. Also decreases the turn amount, clearing the value if binding is complete.
 pub fn do_binding_damage(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();

@@ -32,8 +32,9 @@ pub fn calculate_raw_damage(attacker: &ActivePokemon, base_power: u16, damage_ty
     };
 
     let calc = ((2u16 * attacker.borrow().level as u16) / 5) + 2;
-    let calc = calc * base_power * ea;
-    (calc / (ed * 50)) + 2
+    let calc = u32::from(calc) * u32::from(base_power) * u32::from(ea);
+    let calc = (calc / (u32::from(ed) * 50u32)) + 2u32;
+    calc as u16
 }
 
 /// Calculate confusion damage
@@ -68,11 +69,14 @@ impl Battlefield { //region Damage
             }]
         } else {
             let defender_id = defender.id;
-            let mut defender = defender.borrow_mut();
-            let start_hp = defender.current_hp;
+            let mut pkmn = defender.borrow_mut();
+            let start_hp = pkmn.current_hp;
             let end_hp = start_hp.saturating_sub(damage);
 
-            defender.current_hp = end_hp;
+            pkmn.current_hp = end_hp;
+
+            let mut data = defender.data.borrow_mut();
+            data.damage_this_turn.push((attacker.id, attack, damage));
 
             vec![ActionSideEffects::DirectDamage {
                 damaged: defender_id,
@@ -101,11 +105,14 @@ impl Battlefield { //region Damage
             }]
         } else {
             let defender_id = defender.id;
-            let mut defender = defender.borrow_mut();
-            let start_hp = defender.current_hp;
+            let mut pkmn = defender.borrow_mut();
+            let start_hp = pkmn.current_hp;
             let end_hp = start_hp.saturating_sub(damage);
 
-            defender.current_hp = end_hp;
+            pkmn.current_hp = end_hp;
+
+            let mut data = defender.data.borrow_mut();
+            data.damage_this_turn.push((attacker.id, attack, damage));
 
             vec![ActionSideEffects::BasicDamage {
                 damaged: defender_id,
