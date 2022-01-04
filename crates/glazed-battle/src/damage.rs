@@ -413,7 +413,16 @@ impl Battlefield { //region Damage
         //             hits: counter
         //         }]
         //     }
-            _ => vec![]
+            Power::Variable => {
+                match attack {
+                    Move::SeismicToss => {
+                        let damage = attacker.borrow().level as u16;
+                        Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id, attack))
+                    },
+                    a => panic!("Move {:?} has variable power, yet no implementation specified", a)
+                }
+            }
+            _ => unimplemented!("Unknown Power Type")
         }
     }
 
