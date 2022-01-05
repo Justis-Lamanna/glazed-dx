@@ -16,7 +16,7 @@ fn main() {
 
         let mut battlefield = Battlefield::single_battle(me, them);
 
-        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::SeismicToss, SelectedTarget::Implied);
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Growth, SelectedTarget::Implied);
         println!("{:#?}", fx);
     // }
 }

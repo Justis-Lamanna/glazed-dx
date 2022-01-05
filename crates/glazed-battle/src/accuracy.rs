@@ -1,6 +1,7 @@
 use rand::Rng;
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{Accuracy, Move};
+use glazed_data::types::Type;
 use crate::{ActionSideEffects, ActivePokemon, Cause};
 use crate::core::{ActionCheck, MoveContext};
 
@@ -27,6 +28,11 @@ pub fn do_accuracy_check<F>(attacker: &ActivePokemon, attack: F, defender: &Acti
     where F: Into<MoveContext>
 {
     let MoveContext { attack, data: move_data, .. } = attack.into();
+
+    if attack == Move::Toxic && attacker.get_effective_type().has_type(&Type::Poison) {
+        return ActionCheck::Ok(true)
+    }
+
     match move_data.accuracy {
         Accuracy::AlwaysHits => ActionCheck::Ok(true),
         Accuracy::Percentage(p) => {

@@ -7,7 +7,7 @@ use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, StatChangeTarget, Target, VolatileBattleAilment};
+use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, EffectPredicate, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::constants::UnownForm::P;
 use glazed_data::item::{EvolutionHeldItem, Item};
@@ -116,12 +116,22 @@ impl Battlefield {
         //region Accuracy Check
         let mut targets_hit = Vec::new();
         for defender in targets {
+            // Ability-based immunities
             match defender.get_effective_ability() {
                 Ability::Soundproof if attack.is_sound_based() && !attacker.get_effective_ability().is_ignore_ability_ability() => {
                     effects.push(ActionSideEffects::NoEffect(Cause::Ability(defender.id, Ability::Soundproof)));
                     continue;
                 },
                 _ => {}
+            }
+
+            // Type-based immunities
+            // note that regular type matchups are not calculated here, but instead when damage is applied
+            let defender_type = defender.get_effective_type();
+            if defender_type.has_type(&Type::Grass) && (attack.is_powder() || attack == Move::LeechSeed) {
+                effects.push(ActionSideEffects::NoEffectSecondary(Cause::Type(Type::Grass)))
+            } else if defender_type.has_type(&Type::Ghost) && attack.is_trapping() {
+                effects.push(ActionSideEffects::NoEffectSecondary(Cause::Type(Type::Ghost)))
             }
 
             let hit = accuracy::do_accuracy_check(attacker, attack, defender);
@@ -200,6 +210,20 @@ impl Battlefield {
         // Effects to the target happen only to those hit in step 3.
         //region Secondary effects
         for secondary_effect in move_data.effects {
+            let secondary_effect = if let Effect::Predicated(predicate, if_match, if_not_match) = secondary_effect {
+                let matches = match predicate {
+                    EffectPredicate::Sunny => self.field.borrow().is_sunny()
+                };
+
+                if matches {
+                    *if_match
+                } else {
+                    *if_not_match
+                }
+            } else {
+                secondary_effect
+            };
+
             let mut secondary_effects = match secondary_effect {
                 Effect::StatChange(stat, stages, probability, StatChangeTarget::User) => {
                     let triggers = self.activates_secondary_effect(attacker, *probability);
@@ -345,27 +369,67 @@ impl Battlefield {
                 },
                 Effect::Mist => {
                     let mut side = self.get_side(&attacker.id).borrow_mut();
-                    let effect = if side.mist > 0 {
-                        ActionSideEffects::Failed(Cause::Field(FieldCause::Mist))
-                    } else {
+                    if side.mist == 0 {
                         side.mist = MIST_TURN_COUNT;
-                        ActionSideEffects::MistStart(attacker.id.side)
-                    };
-                    vec![effect]
+                        vec![ActionSideEffects::MistStart(attacker.id.side)]
+                    } else {
+                        vec![]
+                    }
                 },
                 Effect::Recharge => {
                     let mut data = attacker.data.borrow_mut();
                     data.recharge = true;
                     vec![]
+                },
+                Effect::Drain(percentage) => {
+                    let mut pkmn = attacker.borrow_mut();
+                    let mut effects = Vec::new();
+                    for defender in targets_for_secondary_damage.iter() {
+                        if let Some((_, _, damage)) = defender.data.borrow().damage_this_turn.last() {
+                            let delta =
+                                if *damage == 1 {1}
+                                else {u32::from(*damage) * u32::from(*percentage) / 100u32};
+                            let start_hp = pkmn.current_hp;
+
+                            if defender.get_effective_ability() == Ability::LiquidOoze {
+                                let end_hp = start_hp.saturating_sub(delta as u16);
+                                pkmn.current_hp = end_hp;
+                                effects.push(ActionSideEffects::BasicDamage {
+                                    damaged: attacker.id,
+                                    start_hp,
+                                    end_hp,
+                                    cause: Cause::Ability(defender.id, Ability::LiquidOoze)
+                                })
+                            } else {
+                                let end_hp = start_hp.saturating_add(delta as u16).clamp(0, pkmn.hp.value);
+                                pkmn.current_hp = end_hp;
+                                effects.push(ActionSideEffects::Healed {
+                                    healed: attacker.id,
+                                    start_hp,
+                                    end_hp,
+                                    cause: Cause::Move(attacker.id, attack)
+                                })
+                            }
+                        }
+                    }
+                    effects
+                },
+                Effect::Leech => {
+                    targets_for_secondary_damage.iter()
+                        .map(|defender| {
+                            let mut data = defender.data.borrow_mut();
+                            if data.seeded.is_none() {
+                                data.seeded = Some(attacker.id);
+                                ActionSideEffects::SeedStart {
+                                    from: defender.id,
+                                    to: attacker.id
+                                }
+                            } else {
+                                ActionSideEffects::Failed(Cause::Natural)
+                            }
+                        })
+                        .collect()
                 }
-                //         Effect::VolatileStatus(ailment, probability, _) => {
-                //             let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
-                //             if triggers {
-                //                 self.inflict_volatile_status(defender, attacker, *ailment)
-                //             } else {
-                //                 Vec::new()
-                //             }
-                //         }
                 _ => unimplemented!("Secondary effect not yet created")
             };
             effects.append(&mut secondary_effects);
@@ -472,33 +536,5 @@ impl Battlefield {
             status
         }]
     }
-
-    fn inflict_volatile_status(&self, affected: &mut ActivePokemon, inflicter: &mut ActivePokemon, status: VolatileBattleAilment) -> Vec<ActionSideEffects> {
-        match status {
-            VolatileBattleAilment::Confusion => {
-                if let Ability::OwnTempo = affected.get_effective_ability() {
-                    vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id, Ability::OwnTempo))]
-                } else {
-                    affected.data.borrow_mut().confused = rand::thread_rng().gen_range(2..=5);
-                    vec![ActionSideEffects::Confuse(affected.id)]
-                }
-            }
-            VolatileBattleAilment::Infatuation => {
-                if affected.borrow().gender == Gender::None || affected.borrow().gender == inflicter.borrow().gender {
-                    vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
-                } else if affected.get_effective_ability() == Ability::Oblivious {
-                    vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id, Ability::Oblivious))]
-                } else {
-                    affected.data.borrow_mut().infatuated = true;
-                    vec![ActionSideEffects::Infatuated(affected.id)]
-                }
-            }
-            VolatileBattleAilment::Levitation => {
-                affected.data.borrow_mut().levitating = 5;
-                vec![]
-            }
-        }
-    }
-
     //endregion
 }

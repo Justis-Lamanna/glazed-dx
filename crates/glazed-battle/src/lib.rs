@@ -89,6 +89,13 @@ impl Field {
         }
     }
 
+    pub fn is_clear(&self) -> bool {
+        match self.weather {
+            None => true,
+            _ => false
+        }
+    }
+
     pub fn drop_coins(&mut self, coins: u16) {
         self.coins_on_ground = self.coins_on_ground.saturating_add(coins);
     }
@@ -397,6 +404,9 @@ pub struct Battlefield {
     turn_record: Vec<Turn>
 }
 impl Battlefield {
+    pub fn sun(&mut self) {
+        self.field.borrow_mut().weather = Some(Weather::Sun(100))
+    }
     /// Standard 1v1 battle
     /// This should only be used for trainer battles
     pub fn single_battle(player: Party, opponent: Party) -> Battlefield {
@@ -724,6 +734,8 @@ pub struct BattleData {
     thrashing: Option<(Move, u8)>,
     /// A list of disabled moves, and the amount of time left before they are enabled
     disabled: Vec<(Move, u8)>,
+    /// If present, this Pokemon is seeded by the contained Pokemon
+    seeded: Option<Battler>,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -970,6 +982,8 @@ pub enum Cause {
     Ability(Battler, Ability),
     /// A previously used move caused the side effect
     Move(Battler, Move),
+    /// The cause is related to the Pokemon's type
+    Type(Type),
     /// The side effect was the cause of a user's non-volatile ailment
     Ailment(NonVolatileBattleAilment),
     /// The side effect was the cause of a user's volatile ailment
@@ -1036,6 +1050,12 @@ pub enum ActionSideEffects {
     },
     BasicDamage {
         damaged: Battler,
+        start_hp: u16,
+        end_hp: u16,
+        cause: Cause
+    },
+    Healed {
+        healed: Battler,
         start_hp: u16,
         end_hp: u16,
         cause: Cause
@@ -1112,6 +1132,15 @@ pub enum ActionSideEffects {
     NoLongerDisabled(Battler, Move),
     MistStart(BattleSide),
     MistEnd(BattleSide, Cause),
+    SeedStart {
+        from: Battler,
+        to: Battler
+    },
+    SeedLeech {
+        from: Battler,
+        to: Battler,
+        damage: u8
+    },
     NothingHappened
 }
 impl ActionSideEffects {

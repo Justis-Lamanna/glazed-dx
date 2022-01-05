@@ -276,4 +276,8 @@ impl PokemonType {
             PokemonType::Double(t1, t2) => t1 == attack_type || t2 == attack_type
         }
     }
+
+    pub fn has_type(&self, attack_type: &Type) -> bool {
+        self.is_stab(attack_type)
+    }
 }

@@ -725,7 +725,15 @@ pub enum Effect {
     Disable,
     Mist,
     Recharge,
+    Leech,
+
+    Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
+}
+
+#[derive(Debug)]
+pub enum EffectPredicate {
+    Sunny
 }
 
 /// Represents data for a specific attack
@@ -1426,6 +1434,13 @@ impl Move {
     pub fn is_powder(&self) -> bool {
         match self {
             Move::CottonSpore | Move::PoisonPowder | Move::RagePowder | Move::SleepPowder | Move::Spore | Move::StunSpore => true,
+            _ => false
+        }
+    }
+
+    pub fn is_trapping(&self) -> bool {
+        match self {
+            Move::Block | Move::Ingrain | Move::MeanLook | Move::SpiderWeb => true,
             _ => false
         }
     }
@@ -2321,7 +2336,7 @@ pub static LeechSeed: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Custom],
+    effects: &[Effect::Leech],
 };
 pub static Growth: MoveData = MoveData {
     pp: 20,
@@ -2333,7 +2348,14 @@ pub static Growth: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User), Effect::StatChange(BattleStat::SpecialAttack, 1, 100, StatChangeTarget::User)],
+    effects: &[
+        Effect::Predicated(EffectPredicate::Sunny,
+                           &Effect::StatChange(BattleStat::Attack, 2, 100, StatChangeTarget::User),
+                           &Effect::StatChange(BattleStat::Attack, 1, 100, StatChangeTarget::User)),
+        Effect::Predicated(EffectPredicate::Sunny,
+                           &Effect::StatChange(BattleStat::SpecialAttack, 2, 100, StatChangeTarget::User),
+                           &Effect::StatChange(BattleStat::SpecialAttack, 1, 100, StatChangeTarget::User)),
+    ],
 };
 pub static RazorLeaf: MoveData = MoveData {
     pp: 25,
