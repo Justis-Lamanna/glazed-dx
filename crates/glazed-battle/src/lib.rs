@@ -12,7 +12,7 @@ use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{BattleStat, DamageType, Effect, Move, NonVolatileBattleAilment, SemiInvulnerableLocation, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
-use glazed_data::pokemon::{AbilitySlot, MoveSlot, Pokemon, StatSlot};
+use glazed_data::pokemon::{AbilitySlot, MoveSlot, PoisonType, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
 use crate::constants::{*};
@@ -364,6 +364,50 @@ impl ActivePokemon {
             end_hp
         }
     }
+
+    pub fn take_poison_damage(&self) -> ActionSideEffects {
+        let mut pkmn = self.borrow_mut();
+        let data = self.data.borrow();
+        if data.poison_counter > 0 {
+            let mut d = pkmn.hp.value / 16;
+            d *= data.poison_counter as u16;
+
+            let start_hp = pkmn.current_hp;
+            let end_hp = start_hp.saturating_sub(d);
+            pkmn.current_hp = end_hp;
+
+            ActionSideEffects::BasicDamage {
+                damaged: self.id,
+                start_hp,
+                end_hp,
+                cause: Cause::Ailment(NonVolatileBattleAilment::Poison(PoisonType::BadlyPoisoned))
+            }
+        } else {
+            let d = pkmn.hp.value / 8;
+
+            let start_hp = pkmn.current_hp;
+            let end_hp = start_hp.saturating_sub(d);
+            pkmn.current_hp = end_hp;
+
+            ActionSideEffects::BasicDamage {
+                damaged: self.id,
+                start_hp,
+                end_hp,
+                cause: Cause::Ailment(NonVolatileBattleAilment::Poison(PoisonType::Poison))
+            }
+        }
+    }
+
+    pub fn consume_item(&self) -> Option<ActionSideEffects> {
+        let mut pkmn = self.borrow_mut();
+        if let Some(i) = &pkmn.held_item {
+            let i = i.clone();
+            pkmn.held_item = None;
+            Some(ActionSideEffects::ConsumedItem(self.id, i))
+        } else {
+            None
+        }
+    }
 }
 impl Deref for ActivePokemon {
     type Target = RefCell<Pokemon>;
@@ -404,9 +448,6 @@ pub struct Battlefield {
     turn_record: Vec<Turn>
 }
 impl Battlefield {
-    pub fn sun(&mut self) {
-        self.field.borrow_mut().weather = Some(Weather::Sun(100))
-    }
     /// Standard 1v1 battle
     /// This should only be used for trainer battles
     pub fn single_battle(player: Party, opponent: Party) -> Battlefield {
@@ -703,6 +744,8 @@ pub struct BattleData {
     damage_this_turn: Vec<(Battler, Move, u16)>,
     /// If present, the user is biding (turns left, damage accumulated)
     bide: Option<(u8, u16)>,
+    /// Number of turns poisoned. 0 indicates not badly poison
+    poison_counter: u8,
 
     attack_stage: i8,
     defense_stage: i8,
@@ -811,6 +854,9 @@ impl BattleData {
         self.damage_this_turn = Vec::new();
         self.has_acted_this_turn = false;
         self.has_landed_attack_this_turn = false;
+        if self.poison_counter > 0 {
+            self.poison_counter = self.poison_counter.saturating_add(1);
+        }
     }
 }
 

@@ -2,7 +2,7 @@ use rand::Rng;
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{Accuracy, Move};
 use glazed_data::types::Type;
-use crate::{ActionSideEffects, ActivePokemon, Cause};
+use crate::{ActionSideEffects, ActivePokemon, Battlefield, Cause};
 use crate::core::{ActionCheck, MoveContext};
 
 pub fn get_accuracy_factor(attacker: &ActivePokemon, defender: &ActivePokemon) -> f64 {
@@ -24,27 +24,34 @@ pub fn get_accuracy_factor(attacker: &ActivePokemon, defender: &ActivePokemon) -
     }
 }
 
-pub fn do_accuracy_check<F>(attacker: &ActivePokemon, attack: F, defender: &ActivePokemon) -> ActionCheck<bool>
+pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &ActivePokemon, attack: F, defender: &ActivePokemon) -> ActionCheck<bool>
     where F: Into<MoveContext>
 {
+    let percentage_formula = |p: u8| {
+        let evasion_accuracy = get_accuracy_factor(attacker, defender);
+        let move_accuracy = f64::from(p) / 100f64;
+        let multiply = evasion_accuracy * move_accuracy;
+        if multiply > 1f64 {
+            ActionCheck::Ok(true)
+        } else {
+            ActionCheck::Ok(rand::thread_rng().gen_bool(evasion_accuracy * move_accuracy))
+        }
+    };
     let MoveContext { attack, data: move_data, .. } = attack.into();
 
     if attack == Move::Toxic && attacker.get_effective_type().has_type(&Type::Poison) {
-        return ActionCheck::Ok(true)
+        return ActionCheck::Ok(true);
+    } else if attack == Move::Thunder {
+        if field.field.borrow().is_rain() {
+            return ActionCheck::Ok(true);
+        } else if field.field.borrow().is_sunny() {
+            return percentage_formula(50);
+        }
     }
 
     match move_data.accuracy {
         Accuracy::AlwaysHits => ActionCheck::Ok(true),
-        Accuracy::Percentage(p) => {
-            let evasion_accuracy = get_accuracy_factor(attacker, defender);
-            let move_accuracy = f64::from(p) / 100f64;
-            let multiply = evasion_accuracy * move_accuracy;
-            if multiply > 1f64 {
-                ActionCheck::Ok(true)
-            } else {
-                ActionCheck::Ok(rand::thread_rng().gen_bool(evasion_accuracy * move_accuracy))
-            }
-        },
+        Accuracy::Percentage(p) => percentage_formula(p),
         Accuracy::Variable => match attack {
             Move::Guillotine | Move::Fissure | Move::HornDrill | Move::SheerCold => {
                 let level_user = attacker.borrow().level;

@@ -2427,7 +2427,7 @@ pub static PetalDance: MoveData = MoveData {
     target: Target::RandomOpponent,
     power: Power::Base(120),
 	crit_rate: None,
-	effects: &[],
+	effects: &[Effect::Thrash],
 };
 pub static StringShot: MoveData = MoveData {
     pp: 40,

@@ -11,7 +11,7 @@ use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, EffectPredic
 use glazed_data::constants::Species;
 use glazed_data::constants::UnownForm::P;
 use glazed_data::item::{EvolutionHeldItem, Item};
-use glazed_data::pokemon::{Gender, Pokemon};
+use glazed_data::pokemon::{Gender, PoisonType, Pokemon};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
 use crate::*;
@@ -134,7 +134,7 @@ impl Battlefield {
                 effects.push(ActionSideEffects::NoEffectSecondary(Cause::Type(Type::Ghost)))
             }
 
-            let hit = accuracy::do_accuracy_check(attacker, attack, defender);
+            let hit = accuracy::do_accuracy_check(&self, attacker, attack, defender);
             match hit {
                 Ok(b) => {
                     if b {
@@ -522,13 +522,19 @@ impl Battlefield {
 
     fn inflict_non_volatile_status(&self, affected: &ActivePokemon, status: NonVolatileBattleAilment) -> Vec<ActionSideEffects> {
         {
+            let mut data = affected.data.borrow_mut();
             let mut affected = affected.borrow_mut();
             match status {
                 NonVolatileBattleAilment::Paralysis => affected.status.paralysis = true,
                 NonVolatileBattleAilment::Sleep => affected.status.sleep = rand::thread_rng().gen_range(SLEEP_TURNS_RANGE),
                 NonVolatileBattleAilment::Freeze => affected.status.freeze = true,
                 NonVolatileBattleAilment::Burn => affected.status.burn = true,
-                NonVolatileBattleAilment::Poison(a) => affected.status.poison = Some(a)
+                NonVolatileBattleAilment::Poison(a) => {
+                    affected.status.poison = true;
+                    if let PoisonType::BadlyPoisoned = a {
+                        data.poison_counter = 1;
+                    }
+                }
             }
         }
         vec![ActionSideEffects::NonVolatileStatusAilment {

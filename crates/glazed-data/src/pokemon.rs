@@ -226,14 +226,14 @@ pub struct PokemonContestStats {
 #[derive(Debug, Default)]
 pub struct PokemonStatusCondition {
     pub sleep: u8,
-    pub poison: Option<PoisonType>,
+    pub poison: bool,
     pub burn: bool,
     pub freeze: bool,
     pub paralysis: bool
 }
 impl PokemonStatusCondition {
     pub fn has_status_condition(&self) -> bool {
-        self.sleep > 0 || self.poison.is_some() || self.burn || self.freeze || self.paralysis
+        self.sleep > 0 || self.poison || self.burn || self.freeze || self.paralysis
     }
 }
 
