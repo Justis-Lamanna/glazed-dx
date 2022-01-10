@@ -13,6 +13,7 @@ use glazed_data::constants::UnownForm::P;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::{Gender, PoisonType, Pokemon};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
+use glazed_core::math;
 
 use crate::*;
 use crate::core::{ActionCheck, MoveContext};
@@ -32,9 +33,9 @@ pub(crate) fn _change_stat(affected: &ActivePokemon, stat: BattleStat, stages: i
     let current = affected.get_stat_stage(stat);
     let next = current + stages;
     return if next > MAX_STAGE {
-        vec![ActionSideEffects::NoEffectSecondary(Cause::StatsMaxed(StatsCause::TooHigh))]
+        vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.id, PokemonState::StatsMaxed(StatsCause::TooHigh)))]
     } else if next < MIN_STAGE {
-        vec![ActionSideEffects::NoEffectSecondary(Cause::StatsMaxed(StatsCause::TooLow))]
+        vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.id, PokemonState::StatsMaxed(StatsCause::TooLow)))]
     } else {
         let mut data = affected.data.borrow_mut();
         match stat {
@@ -70,7 +71,7 @@ pub fn change_opponent_stat(field: &Battlefield, affecter: &ActivePokemon, affec
     let affected_side = field.get_side(&affected.id);
 
     if affected_side.borrow().mist > 0 {
-        return vec![ActionSideEffects::NoEffectSecondary(Cause::Field(FieldCause::Mist))]
+        return vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Mist))]
     }
 
     let (ability_cause, stages) = match affected.get_effective_ability() {
@@ -309,7 +310,7 @@ impl Battlefield {
                         .filter(|_| self.activates_secondary_effect(attacker, *probability))
                         .flat_map(|defender| {
                             if defender.is_behind_substitute() {
-                                vec![ActionSideEffects::NoEffectSecondary(Cause::Substitute(defender.id))]
+                                vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
                             } else {
                                 change_opponent_stat(&self, attacker, defender, *stat, *stages)
                             }
@@ -329,7 +330,7 @@ impl Battlefield {
                         .filter(|_| self.activates_secondary_effect(attacker, *probability))
                         .flat_map(|defender| {
                             if defender.is_behind_substitute() {
-                                vec![ActionSideEffects::Failed(Cause::Substitute(defender.id))]
+                                vec![ActionSideEffects::Failed(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
                             } else {
                                 self.inflict_non_volatile_status(defender, *ailment)
                             }
@@ -349,13 +350,14 @@ impl Battlefield {
                         .filter(|_| self.activates_secondary_effect(attacker, *probability))
                         .flat_map(|defender| {
                             if defender.is_behind_substitute() {
-                                vec![ActionSideEffects::Failed(Cause::Substitute(defender.id))]
+                                vec![ActionSideEffects::Failed(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
                             } else {
                                 inflict_confusion(attacker)
                             }
                         })
                         .collect()
                 },
+                Effect::VolatileStatus(VolatileBattleAilment::Infatuation, _, _) => unimplemented!("No infatuation yet"),
                 Effect::ForceSwitch(StatChangeTarget::User) => {
                     vec![ActionSideEffects::ForcePokemonSwap { must_leave: attacker.id }]
                 },
@@ -363,7 +365,7 @@ impl Battlefield {
                     targets_for_secondary_damage.iter()
                         .map(|defender| {
                             if defender.is_behind_substitute() {
-                                ActionSideEffects::NoEffectSecondary(Cause::Substitute(defender.id))
+                                ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))
                             } else if defender.get_effective_ability() == Ability::SuctionCups {
                                 ActionSideEffects::NoEffectSecondary(Cause::Ability(defender.id, Ability::SuctionCups))
                             } else if defender.data.borrow().rooted {
@@ -452,6 +454,20 @@ impl Battlefield {
                     data.recharge = true;
                     vec![]
                 },
+                Effect::Heal(percentage) => {
+                    let mut pkmn = attacker.borrow_mut();
+                    let start_hp = pkmn.current_hp;
+                    let delta = math::ratio(start_hp, *percentage, 100);
+                    let end_hp = start_hp.saturating_add(delta).clamp(0, pkmn.hp.value);
+                    pkmn.current_hp = end_hp;
+
+                    vec![ActionSideEffects::Healed {
+                        healed: attacker.id,
+                        start_hp,
+                        end_hp,
+                        cause: Cause::Natural
+                    }]
+                },
                 Effect::Drain(percentage) => {
                     let mut pkmn = attacker.borrow_mut();
                     let mut effects = Vec::new();
@@ -459,11 +475,11 @@ impl Battlefield {
                         if let Some((_, _, damage)) = defender.data.borrow().damage_this_turn.last() {
                             let delta =
                                 if *damage == 1 {1}
-                                else {u32::from(*damage) * u32::from(*percentage) / 100u32};
+                                else {math::ratio(*damage, *percentage, 100)};
                             let start_hp = pkmn.current_hp;
 
                             if defender.get_effective_ability() == Ability::LiquidOoze {
-                                let end_hp = start_hp.saturating_sub(delta as u16);
+                                let end_hp = start_hp.saturating_sub(delta);
                                 pkmn.current_hp = end_hp;
                                 effects.push(ActionSideEffects::BasicDamage {
                                     damaged: attacker.id,
@@ -472,7 +488,7 @@ impl Battlefield {
                                     cause: Cause::Ability(defender.id, Ability::LiquidOoze)
                                 })
                             } else {
-                                let end_hp = start_hp.saturating_add(delta as u16).clamp(0, pkmn.hp.value);
+                                let end_hp = start_hp.saturating_add(delta).clamp(0, pkmn.hp.value);
                                 pkmn.current_hp = end_hp;
                                 effects.push(ActionSideEffects::Healed {
                                     healed: attacker.id,
@@ -531,7 +547,10 @@ impl Battlefield {
                     };
                     vec![effect]
                 },
-                _ => unimplemented!("Secondary effect not yet created")
+                Effect::ChangeWeather(_) => unimplemented!("No Weather Yet"),
+                Effect::DispelWeather => unimplemented!("No Weather Yet"),
+                Effect::Predicated(_, _, _) => panic!("Nested predicated not supported"),
+                Effect::Custom => panic!("Consider changing from Custom to a concrete effect"),
             };
             effects.append(&mut secondary_effects);
         }

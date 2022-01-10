@@ -676,8 +676,8 @@ pub enum NonVolatileBattleAilment {
 pub enum VolatileBattleAilment {
     Confusion,
     Infatuation,
-    Levitation,
-    Rage
+    // Levitation,
+    // Rage
 }
 
 /// Represents a weather condition in battle

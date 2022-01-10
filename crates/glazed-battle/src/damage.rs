@@ -10,7 +10,7 @@ use glazed_data::item::Item;
 use glazed_data::pokemon::Pokemon;
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause, damage, StatsCause};
+use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause, damage, PokemonState, StatsCause};
 use crate::core;
 use crate::core::MoveContext;
 use crate::constants::{*};
@@ -91,7 +91,7 @@ impl Battlefield { //region Damage
             };
 
             if defender.data.borrow().enraged {
-                vec.append(&mut crate::effects::_change_stat(defender, BattleStat::Attack, 1, Cause::Ailment2(VolatileBattleAilment::Rage)))
+                vec.append(&mut crate::effects::_change_stat(defender, BattleStat::Attack, 1, Cause::PokemonBattleState(defender_id, PokemonState::Enraged)));
             }
 
             vec

@@ -1069,14 +1069,17 @@ pub enum Cause {
     Natural,
     /// A battler's ability caused the side effect
     Ability(Battler, Ability),
-    /// A previously used move caused the side effect
+    /// A battler's ability was about to cause a side effect, but another ability cancelled it
+    AbilityCancelled {
+        initial: (Battler, Ability),
+        overwriter: (Battler, Ability)
+    },
+    /// A used move caused the side effect
     Move(Battler, Move),
     /// The cause is related to the Pokemon's type
     Type(Type),
     /// The side effect was the cause of a user's non-volatile ailment
     Ailment(NonVolatileBattleAilment),
-    /// The side effect was the cause of a user's volatile ailment
-    Ailment2(VolatileBattleAilment),
     /// A battler's held item caused the side effect
     HeldItem(Battler, Item),
     /// One cause was about to occur, but another one overwrote it
@@ -1084,12 +1087,10 @@ pub enum Cause {
         initial: Box<Cause>,
         overwriter: Box<Cause>
     },
-    /// Failed because the stats were maxed out
-    StatsMaxed(StatsCause),
+    /// Failed because of something related to the Pokemon's current battle state
+    PokemonBattleState(Battler, PokemonState),
     /// Failed because of something on the field
-    Field(FieldCause),
-    /// Failed because the user is behind a substitute
-    Substitute(Battler)
+    PokemonFieldState(FieldCause)
 }
 impl Cause {
     pub fn overwrite(self, cause: Cause) -> Cause {
@@ -1106,6 +1107,14 @@ impl Cause {
 #[derive(Debug, Clone)]
 pub enum StatsCause {
     TooHigh, TooLow
+}
+
+#[derive(Debug, Clone)]
+pub enum PokemonState {
+    Confused,
+    StatsMaxed(StatsCause),
+    Enraged,
+    Substituted
 }
 
 #[derive(Debug, Clone)]
