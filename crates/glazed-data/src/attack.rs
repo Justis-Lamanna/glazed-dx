@@ -669,7 +669,8 @@ pub enum NonVolatileBattleAilment {
 pub enum VolatileBattleAilment {
     Confusion,
     Infatuation,
-    Levitation
+    Levitation,
+    Rage
 }
 
 /// Represents a weather condition in battle
@@ -726,6 +727,7 @@ pub enum Effect {
     Mist,
     Recharge,
     Leech,
+    Rage,
 
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
@@ -765,6 +767,17 @@ impl MoveData {
         } else {
             false
         }
+    }
+
+    pub fn is_rage(&self) -> bool {
+        self.effects.iter()
+            .any(|e| {
+                if let Effect::Rage = e {
+                    true
+                } else {
+                    false
+                }
+            })
     }
 
     /// Check whether this attack is affected by Kings Rock or Razor Fang
@@ -2655,7 +2668,7 @@ pub static Rage: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(20),
 	crit_rate: None,
-	effects: &[],
+	effects: &[Effect::Rage],
 };
 pub static Teleport: MoveData = MoveData {
     pp: 20,

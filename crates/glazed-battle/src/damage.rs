@@ -5,12 +5,12 @@ use fraction::{Fraction, ToPrimitive};
 use rand::{random, Rng};
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
+use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power, VolatileBattleAilment};
 use glazed_data::item::Item;
 use glazed_data::pokemon::Pokemon;
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause, damage};
+use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause, damage, StatsCause};
 use crate::core;
 use crate::core::MoveContext;
 use crate::constants::{*};
@@ -78,7 +78,7 @@ impl Battlefield { //region Damage
             let mut data = defender.data.borrow_mut();
             data.damage_this_turn.push((attacker.id, attack, damage));
 
-            vec![ActionSideEffects::DirectDamage {
+            let mut vec = vec![ActionSideEffects::DirectDamage {
                 damaged: defender_id,
                 damager: attacker.id,
                 attack,
@@ -86,7 +86,12 @@ impl Battlefield { //region Damage
                 end_hp,
                 critical_hit: is_crit,
                 effectiveness
-            }]
+            }];
+            if data.enraged {
+                vec.append(&mut crate::effects::change_self_stat(defender, BattleStat::Attack, 1))
+            }
+
+            vec
         }
     }
 

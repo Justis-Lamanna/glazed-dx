@@ -1,7 +1,7 @@
 #![feature(get_mut_unchecked)]
 
 use std::cell::{Ref, RefCell, RefMut};
-use std::ops::{Deref, DerefMut, Index, IndexMut};
+use std::ops::{Add, Deref, DerefMut, Index, IndexMut};
 use std::option::Option::Some;
 use std::rc::Rc;
 
@@ -779,6 +779,8 @@ pub struct BattleData {
     disabled: Vec<(Move, u8)>,
     /// If present, this Pokemon is seeded by the contained Pokemon
     seeded: Option<Battler>,
+    /// If true, this Pokemon's rage is building (attack increases if hit by attack)
+    enraged: bool,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -810,6 +812,26 @@ impl BattleData {
             BattleStat::Speed => self.speed_stage,
             BattleStat::Accuracy => self.accuracy_stage,
             BattleStat::Evasion => self.evasion_stage
+        }
+    }
+
+    pub fn add_stage(&mut self, stat: BattleStat, stages: i8) -> bool {
+        let stage = match stat {
+            BattleStat::Attack => &mut self.attack_stage,
+            BattleStat::Defense => &mut self.defense_stage,
+            BattleStat::SpecialAttack => &mut self.special_attack_stage,
+            BattleStat::SpecialDefense => &mut self.special_defense_stage,
+            BattleStat::Speed => &mut self.speed_stage,
+            BattleStat::Accuracy => &mut self.accuracy_stage,
+            BattleStat::Evasion => &mut self.evasion_stage
+        };
+
+        let new_stage = *stage + stages;
+        if new_stage < MIN_STAGE || new_stage > MAX_STAGE {
+            false
+        } else {
+            *stage = new_stage;
+            true
         }
     }
 
@@ -1152,8 +1174,7 @@ pub enum ActionSideEffects {
         hang_on_cause: Option<Cause>
     },
     SnappedOutOfConfusion(Battler),
-    Infatuated(Battler),
-    TooInfatuatedToAttack(Battler),
+    Infatuated(Battler), TooInfatuatedToAttack(Battler),
     ForcePokemonSwap {
         must_leave: Battler
     },
@@ -1172,12 +1193,9 @@ pub enum ActionSideEffects {
         end_hp: u16
     },
     Unbound(Battler),
-    WillFlinch(Battler),
-    Flinched(Battler),
-    Disabled(Battler, Move),
-    NoLongerDisabled(Battler, Move),
-    MistStart(BattleSide),
-    MistEnd(BattleSide, Cause),
+    WillFlinch(Battler), Flinched(Battler),
+    Disabled(Battler, Move), NoLongerDisabled(Battler, Move),
+    MistStart(BattleSide), MistEnd(BattleSide, Cause),
     SeedStart {
         from: Battler,
         to: Battler
@@ -1187,6 +1205,7 @@ pub enum ActionSideEffects {
         to: Battler,
         damage: u8
     },
+    RageStart(Battler), RageContinue(Battler), RageEnd(Battler),
     NothingHappened
 }
 impl ActionSideEffects {

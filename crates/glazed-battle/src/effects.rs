@@ -24,6 +24,73 @@ pub fn inflict_confusion(afflicted: &ActivePokemon) -> Vec<ActionSideEffects> {
     vec![ActionSideEffects::Confuse(afflicted.id)]
 }
 
+fn _change_stat(affected: &ActivePokemon, stat: BattleStat, stages: i8, cause: Cause) -> Vec<ActionSideEffects> {
+    let current = affected.get_stat_stage(stat);
+    let next = current + stages;
+    return if next > MAX_STAGE {
+        vec![ActionSideEffects::NoEffectSecondary(Cause::StatsMaxed(StatsCause::TooHigh))]
+    } else if next < MIN_STAGE {
+        vec![ActionSideEffects::NoEffectSecondary(Cause::StatsMaxed(StatsCause::TooLow))]
+    } else {
+        let mut data = affected.data.borrow_mut();
+        match stat {
+            BattleStat::Attack => data.attack_stage = next,
+            BattleStat::Defense => data.defense_stage = next,
+            BattleStat::SpecialAttack => data.special_attack_stage = next,
+            BattleStat::SpecialDefense => data.special_defense_stage = next,
+            BattleStat::Speed => data.speed_stage = next,
+            BattleStat::Accuracy => data.accuracy_stage = next,
+            BattleStat::Evasion => data.evasion_stage = next,
+        };
+        vec![ActionSideEffects::StatChanged {
+            stat,
+            affected: affected.id,
+            cause,
+            start: current,
+            end: next
+        }]
+    }
+}
+
+pub fn change_self_stat(affected: &ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+    let (ability_cause, stages) = match affected.get_effective_ability() {
+        Ability::Simple => (Cause::Ability(affected.id, Ability::Simple), stages * 2),
+        Ability::Contrary => (Cause::Ability(affected.id, Ability::Contrary), -stages),
+        _ => (Cause::Natural, stages)
+    };
+
+    _change_stat(affected, stat, stages, ability_cause)
+}
+
+pub fn change_opponent_stat(field: &Battlefield, affecter: &ActivePokemon, affected: &ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+    let affected_side = field.get_side(&affected.id);
+
+    if affected_side.borrow().mist > 0 {
+        return vec![ActionSideEffects::NoEffectSecondary(Cause::Field(FieldCause::Mist))]
+    }
+
+    let (ability_cause, stages) = match affected.get_effective_ability() {
+        Ability::Simple => (Cause::Ability(affected.id, Ability::Simple), stages * 2),
+        Ability::Contrary  => {
+            let cause = Cause::Ability(affected.id, Ability::Contrary);
+            match affected.get_effective_ability() {
+                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id, oc)), -stages),
+                _ => (cause, stages)
+            }
+        },
+        oc@ (Ability::ClearBody | Ability::WhiteSmoke) => {
+            let cause = Cause::Ability(affected.id, oc);
+            match affected.get_effective_ability() {
+                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id, oc)), stages),
+                _ => return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id, oc))]
+            }
+        }
+        _ => (Cause::Natural, stages)
+    };
+
+    _change_stat(affected, stat, stages, ability_cause)
+}
+
 impl Battlefield {
     /// Perform a regular attack
     pub fn do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
@@ -228,7 +295,7 @@ impl Battlefield {
                 Effect::StatChange(stat, stages, probability, StatChangeTarget::User) => {
                     let triggers = self.activates_secondary_effect(attacker, *probability);
                     if triggers {
-                        self.change_self_stat(attacker, *stat, *stages)
+                        change_self_stat(attacker, *stat, *stages)
                     } else {
                         Vec::new()
                     }
@@ -240,7 +307,7 @@ impl Battlefield {
                             if defender.is_behind_substitute() {
                                 vec![ActionSideEffects::NoEffectSecondary(Cause::Substitute(defender.id))]
                             } else {
-                                self.change_opponent_stat(attacker, defender, *stat, *stages)
+                                change_opponent_stat(&self, attacker, defender, *stat, *stages)
                             }
                         })
                         .collect()
@@ -429,10 +496,29 @@ impl Battlefield {
                             }
                         })
                         .collect()
+                },
+                Effect::Rage => {
+                    let mut data = attacker.data.borrow_mut();
+                    if data.enraged {
+                        vec![ActionSideEffects::RageContinue(attacker.id)]
+                    } else {
+                        data.enraged = true;
+                        vec![ActionSideEffects::RageStart(attacker.id)]
+                    }
                 }
                 _ => unimplemented!("Secondary effect not yet created")
             };
             effects.append(&mut secondary_effects);
+        }
+
+        {
+            let mut data = attacker.data.borrow_mut();
+
+            // Rage ends if the user is enraged, and they don't use a rage move
+            if data.enraged && !move_data.is_rage() {
+                data.enraged = false;
+                effects.push(ActionSideEffects::RageEnd(attacker.id))
+            }
         }
         //endregion
 
@@ -453,72 +539,6 @@ impl Battlefield {
     }
 
     //region Non-Damage
-    fn _change_stat(&self, affected: &ActivePokemon, stat: BattleStat, stages: i8, cause: Cause) -> Vec<ActionSideEffects> {
-        let current = affected.get_stat_stage(stat);
-        let next = current + stages;
-        return if next > MAX_STAGE {
-            vec![ActionSideEffects::NoEffectSecondary(Cause::StatsMaxed(StatsCause::TooHigh))]
-        } else if next < MIN_STAGE {
-            vec![ActionSideEffects::NoEffectSecondary(Cause::StatsMaxed(StatsCause::TooLow))]
-        } else {
-            let mut data = affected.data.borrow_mut();
-            match stat {
-                BattleStat::Attack => data.attack_stage = next,
-                BattleStat::Defense => data.defense_stage = next,
-                BattleStat::SpecialAttack => data.special_attack_stage = next,
-                BattleStat::SpecialDefense => data.special_defense_stage = next,
-                BattleStat::Speed => data.speed_stage = next,
-                BattleStat::Accuracy => data.accuracy_stage = next,
-                BattleStat::Evasion => data.evasion_stage = next,
-            };
-            vec![ActionSideEffects::StatChanged {
-                stat,
-                affected: affected.id,
-                cause,
-                start: current,
-                end: next
-            }]
-        }
-    }
-
-    fn change_self_stat(&self, affected: &ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
-        let (ability_cause, stages) = match affected.get_effective_ability() {
-            Ability::Simple => (Cause::Ability(affected.id, Ability::Simple), stages * 2),
-            Ability::Contrary => (Cause::Ability(affected.id, Ability::Contrary), -stages),
-            _ => (Cause::Natural, stages)
-        };
-
-        self._change_stat(affected, stat, stages, ability_cause)
-    }
-
-    fn change_opponent_stat(&self, affecter: &ActivePokemon, affected: &ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
-        let affected_side = self.get_side(&affected.id);
-
-        if affected_side.borrow().mist > 0 {
-            return vec![ActionSideEffects::NoEffectSecondary(Cause::Field(FieldCause::Mist))]
-        }
-
-        let (ability_cause, stages) = match affected.get_effective_ability() {
-            Ability::Simple => (Cause::Ability(affected.id, Ability::Simple), stages * 2),
-            Ability::Contrary  => {
-                let cause = Cause::Ability(affected.id, Ability::Contrary);
-                match affected.get_effective_ability() {
-                    oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id, oc)), -stages),
-                    _ => (cause, stages)
-                }
-            },
-            oc@ (Ability::ClearBody | Ability::WhiteSmoke) => {
-                let cause = Cause::Ability(affected.id, oc);
-                match affected.get_effective_ability() {
-                    oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id, oc)), stages),
-                    _ => return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id, oc))]
-                }
-            }
-            _ => (Cause::Natural, stages)
-        };
-
-        self._change_stat(affected, stat, stages, ability_cause)
-    }
 
     fn inflict_non_volatile_status(&self, affected: &ActivePokemon, status: NonVolatileBattleAilment) -> Vec<ActionSideEffects> {
         {
