@@ -487,6 +487,10 @@ impl Battlefield { //region Damage
             calc = calc / 2
         }
 
+        if defender.data.borrow().minimized && attack.double_damage_on_minimized_target() {
+            calc *= 2;
+        }
+
         u16::try_from(calc).unwrap_or(u16::MAX)
     }
     // endregion

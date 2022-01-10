@@ -591,6 +591,13 @@ impl Move {
             _ => true
         }
     }
+
+    pub fn double_damage_on_minimized_target(&self) -> bool {
+        match self {
+            Move::BodySlam | Move::Stomp | Move::DragonRush | Move::ShadowForce | Move::Steamroller | Move::HeatCrash | Move::HeavySlam => true,
+            _ => false
+        }
+    }
 }
 
 /// Represents the Accuracy of a move
@@ -736,6 +743,7 @@ pub enum Effect {
     Leech,
     Rage,
     Mimic,
+    Minimize,
 
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
@@ -2772,7 +2780,7 @@ pub static Minimize: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[Effect::StatChange(BattleStat::Evasion, 2, 100, StatChangeTarget::User)],
+    effects: &[Effect::Minimize, Effect::StatChange(BattleStat::Evasion, 2, 100, StatChangeTarget::User)],
 };
 pub static Smokescreen: MoveData = MoveData {
     pp: 20,

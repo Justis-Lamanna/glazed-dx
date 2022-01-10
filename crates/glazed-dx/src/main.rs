@@ -16,10 +16,7 @@ fn main() {
 
         let mut battlefield = Battlefield::single_battle(me, them);
 
-        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Smokescreen, SelectedTarget::Implied);
-        println!("{:#?}", fx);
-
-        let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Mimic, SelectedTarget::Implied);
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Minimize, SelectedTarget::Implied);
         println!("{:#?}", fx);
     // }
 }

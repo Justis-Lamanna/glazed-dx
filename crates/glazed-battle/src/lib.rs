@@ -802,6 +802,8 @@ pub struct BattleData {
     seeded: Option<Battler>,
     /// If true, this Pokemon's rage is building (attack increases if hit by attack)
     enraged: bool,
+    /// If true, this Pokemon is minimized (certain moves hit for double damage + 100% accuracy)
+    minimized: bool,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -1069,11 +1071,6 @@ pub enum Cause {
     Natural,
     /// A battler's ability caused the side effect
     Ability(Battler, Ability),
-    /// A battler's ability was about to cause a side effect, but another ability cancelled it
-    AbilityCancelled {
-        initial: (Battler, Ability),
-        overwriter: (Battler, Ability)
-    },
     /// A used move caused the side effect
     Move(Battler, Move),
     /// The cause is related to the Pokemon's type

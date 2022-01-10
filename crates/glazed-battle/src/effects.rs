@@ -551,6 +551,11 @@ impl Battlefield {
                 Effect::DispelWeather => unimplemented!("No Weather Yet"),
                 Effect::Predicated(_, _, _) => panic!("Nested predicated not supported"),
                 Effect::Custom => panic!("Consider changing from Custom to a concrete effect"),
+                Effect::Minimize => {
+                    let mut data = attacker.data.borrow_mut();
+                    data.minimized = true;
+                    Vec::new()
+                }
             };
             effects.append(&mut secondary_effects);
         }

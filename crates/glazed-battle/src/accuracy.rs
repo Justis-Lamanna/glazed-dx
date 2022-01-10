@@ -39,14 +39,18 @@ pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &ActivePokemon, attac
     };
     let MoveContext { attack, data: move_data, .. } = attack.into();
 
+    // Bypass Accuracy Check
     if attack == Move::Toxic && attacker.get_effective_type().has_type(&Type::Poison) {
         return ActionCheck::Ok(true);
-    } else if attack == Move::Thunder {
-        if field.field.borrow().is_rain() {
-            return ActionCheck::Ok(true);
-        } else if field.field.borrow().is_sunny() {
-            return percentage_formula(50);
-        }
+    } else if attack == Move::Thunder && field.field.borrow().is_rain() {
+        return ActionCheck::Ok(true);
+    } else if defender.data.borrow().minimized && attack.double_damage_on_minimized_target() {
+        return ActionCheck::Ok(true);
+    }
+
+    // modified accuracy
+    if attack == Move::Thunder && field.field.borrow().is_sunny() {
+        return percentage_formula(50);
     }
 
     match move_data.accuracy {
