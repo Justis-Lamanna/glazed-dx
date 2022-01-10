@@ -19,6 +19,10 @@ use crate::core::{ActionCheck, MoveContext};
 use crate::core::CheckResult;
 
 pub fn inflict_confusion(afflicted: &ActivePokemon) -> Vec<ActionSideEffects> {
+    if afflicted.get_effective_ability() == Ability::OwnTempo {
+        return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(afflicted.id, Ability::OwnTempo))]
+    }
+
     let mut data = afflicted.data.borrow_mut();
     data.confused = rand::thread_rng().gen_range(CONFUSION_TURN_RANGE);
     vec![ActionSideEffects::Confuse(afflicted.id)]
@@ -505,7 +509,28 @@ impl Battlefield {
                         data.enraged = true;
                         vec![ActionSideEffects::RageStart(attacker.id)]
                     }
-                }
+                },
+                Effect::Mimic => {
+                    let target = targets_for_secondary_damage.first();
+                    let effect = match target {
+                        None => ActionSideEffects::NoTarget,
+                        Some(defender) => {
+                            let data = defender.data.borrow();
+                            match data.last_move_used {
+                                None => ActionSideEffects::NoEffectSecondary(Cause::Natural),
+                                Some(m) => {
+                                    if m.can_be_mimicked() && !attacker.borrow().knows_move(m) {
+                                        attacker.replace_mimic_with(m);
+                                        ActionSideEffects::Mimicked(attacker.id, m)
+                                    } else {
+                                        ActionSideEffects::Failed(Cause::Natural)
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    vec![effect]
+                },
                 _ => unimplemented!("Secondary effect not yet created")
             };
             effects.append(&mut secondary_effects);

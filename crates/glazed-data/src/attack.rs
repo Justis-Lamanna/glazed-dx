@@ -4,7 +4,7 @@ use glazed_core::Id;
 use glazed_macro::*;
 
 use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
-use crate::pokemon::PoisonType;
+use crate::pokemon::{MoveSlot, PoisonType};
 use crate::types::Type;
 
 /// Represents an Attack a Pokemon can have
@@ -584,6 +584,13 @@ impl Move {
             _ => false
         }
     }
+
+    pub fn can_be_mimicked(&self) -> bool {
+        match self {
+            Move::Sketch | Move::Transform | Move::Struggle | Move::Metronome => false,
+            _ => true
+        }
+    }
 }
 
 /// Represents the Accuracy of a move
@@ -728,6 +735,7 @@ pub enum Effect {
     Recharge,
     Leech,
     Rage,
+    Mimic,
 
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
@@ -2680,7 +2688,7 @@ pub static Teleport: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::ForceSwitch(StatChangeTarget::User)],
 };
 pub static NightShade: MoveData = MoveData {
     pp: 15,
@@ -2704,7 +2712,7 @@ pub static Mimic: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::Mimic],
 };
 pub static Screech: MoveData = MoveData {
     pp: 40,

@@ -408,6 +408,21 @@ impl ActivePokemon {
             None
         }
     }
+
+    pub fn replace_mimic_with(&self, attack: Move) {
+        let pkmn = self.borrow();
+        let mut data = self.data.borrow_mut();
+
+        if let Some(MoveSlot { attack: Move::Mimic, .. }) = pkmn.move_1 {
+            data.temp_move_1 = Some(MoveSlot::from(attack));
+        } else if let Some(MoveSlot { attack: Move::Mimic, .. }) = pkmn.move_2 {
+            data.temp_move_2 = Some(MoveSlot::from(attack));
+        } else if let Some(MoveSlot { attack: Move::Mimic, .. }) = pkmn.move_3 {
+            data.temp_move_3 = Some(MoveSlot::from(attack));
+        } else if let Some(MoveSlot { attack: Move::Mimic, .. }) = pkmn.move_4 {
+            data.temp_move_4 = Some(MoveSlot::from(attack));
+        }
+    }
 }
 impl Deref for ActivePokemon {
     type Target = RefCell<Pokemon>;
@@ -760,6 +775,12 @@ pub struct BattleData {
     temp_defense: Option<u16>,
     temp_special_attack: Option<u16>,
     temp_special_defense: Option<u16>,
+
+    /// Manipulated moves (mimic)
+    temp_move_1: Option<MoveSlot>,
+    temp_move_2: Option<MoveSlot>,
+    temp_move_3: Option<MoveSlot>,
+    temp_move_4: Option<MoveSlot>,
 
     /// If present, the turns remaining bound, and whether a Binding Band was used
     bound: Option<(u8, bool)>,
@@ -1206,6 +1227,7 @@ pub enum ActionSideEffects {
         damage: u8
     },
     RageStart(Battler), RageContinue(Battler), RageEnd(Battler),
+    Mimicked(Battler, Move),
     NothingHappened
 }
 impl ActionSideEffects {

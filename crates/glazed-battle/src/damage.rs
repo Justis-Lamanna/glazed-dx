@@ -423,7 +423,7 @@ impl Battlefield { //region Damage
         //     }
             Power::Variable => {
                 match attack {
-                    Move::SeismicToss => {
+                    Move::SeismicToss | Move::NightShade => {
                         let damage = attacker.borrow().level as u16;
                         Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id, attack))
                     },

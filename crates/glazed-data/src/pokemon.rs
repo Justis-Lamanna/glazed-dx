@@ -246,8 +246,8 @@ pub enum PoisonType {
 /// Represents the values tied to a given moveslot
 #[derive(Debug)]
 pub struct MoveSlot {
-    attack: Move,
-    pp: u8,
+    pub attack: Move,
+    pub pp: u8,
     pp_bonus: u8
 }
 impl From<Move> for MoveSlot {
@@ -594,6 +594,16 @@ impl Pokemon {
             *i == item
         } else {
             false
+        }
+    }
+
+    pub fn knows_move(&self, check_attack: Move) -> bool {
+        match (&self.move_1, &self.move_2, &self.move_3, &self.move_4) {
+            (Some(MoveSlot{attack, ..}), _, _, _) if *attack == check_attack => true,
+            (_, Some(MoveSlot{attack, ..}), _, _) if *attack == check_attack => true,
+            (_, _, Some(MoveSlot{attack, ..}), _) if *attack == check_attack => true,
+            (_, _, _, Some(MoveSlot{attack, ..})) if *attack == check_attack => true,
+            _ => false
         }
     }
 }
