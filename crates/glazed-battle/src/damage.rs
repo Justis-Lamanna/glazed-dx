@@ -75,20 +75,23 @@ impl Battlefield { //region Damage
 
             pkmn.current_hp = end_hp;
 
-            let mut data = defender.data.borrow_mut();
-            data.damage_this_turn.push((attacker.id, attack, damage));
+            let mut vec = {
+                let mut data = defender.data.borrow_mut();
+                data.damage_this_turn.push((attacker.id, attack, damage));
 
-            let mut vec = vec![ActionSideEffects::DirectDamage {
-                damaged: defender_id,
-                damager: attacker.id,
-                attack,
-                start_hp,
-                end_hp,
-                critical_hit: is_crit,
-                effectiveness
-            }];
-            if data.enraged {
-                vec.append(&mut crate::effects::change_self_stat(defender, BattleStat::Attack, 1))
+                vec![ActionSideEffects::DirectDamage {
+                    damaged: defender_id,
+                    damager: attacker.id,
+                    attack,
+                    start_hp,
+                    end_hp,
+                    critical_hit: is_crit,
+                    effectiveness
+                }]
+            };
+
+            if defender.data.borrow().enraged {
+                vec.append(&mut crate::effects::_change_stat(defender, BattleStat::Attack, 1, Cause::Ailment2(VolatileBattleAilment::Rage)))
             }
 
             vec

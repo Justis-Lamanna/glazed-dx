@@ -24,7 +24,7 @@ pub fn inflict_confusion(afflicted: &ActivePokemon) -> Vec<ActionSideEffects> {
     vec![ActionSideEffects::Confuse(afflicted.id)]
 }
 
-fn _change_stat(affected: &ActivePokemon, stat: BattleStat, stages: i8, cause: Cause) -> Vec<ActionSideEffects> {
+pub(crate) fn _change_stat(affected: &ActivePokemon, stat: BattleStat, stages: i8, cause: Cause) -> Vec<ActionSideEffects> {
     let current = affected.get_stat_stage(stat);
     let next = current + stages;
     return if next > MAX_STAGE {

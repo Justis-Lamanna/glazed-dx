@@ -18,5 +18,11 @@ fn main() {
 
         let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Rage, SelectedTarget::Implied);
         println!("{:#?}", fx);
+
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Tackle, SelectedTarget::Implied);
+        println!("{:#?}", fx);
+
+        let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Tackle, SelectedTarget::Implied);
+        println!("{:#?}", fx);
     // }
 }
