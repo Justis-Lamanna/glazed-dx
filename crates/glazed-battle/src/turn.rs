@@ -1,9 +1,11 @@
+use std::cell::RefCell;
 use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
+use glazed_core::math;
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, Move};
+use glazed_data::attack::{BattleStat, Move, ScreenType};
 
-use crate::{ActionSideEffects, ActivePokemon, Cause};
+use crate::{ActionSideEffects, ActivePokemon, BattleSide, Cause, Side};
 use crate::damage::calculate_confusion_damage;
 use crate::constants::{*};
 use crate::core::CheckResult;
@@ -108,6 +110,32 @@ pub fn do_disable_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<A
         CheckResult::EffectAndEnd(ActionSideEffects::Disabled(attacker.id, attack))
     } else {
         CheckResult::Nothing
+    }
+}
+
+pub fn do_screen_countdown(side: &RefCell<Side>, side_id: BattleSide) -> Vec<ActionSideEffects> {
+    let mut effects = Vec::new();
+    let mut side = side.borrow_mut();
+    if side.light_screen > 0 {
+        side.light_screen = side.light_screen.saturating_sub(1);
+        if side.light_screen == 0 {
+            effects.push(ActionSideEffects::ScreenEnd(side_id, ScreenType::LightScreen));
+        }
+    }
+    if side.reflect > 0 {
+        side.reflect = side.reflect.saturating_sub(1);
+        if side.reflect == 0 {
+            effects.push(ActionSideEffects::ScreenEnd(side_id, ScreenType::Reflect));
+        }
+    }
+    effects
+}
+
+pub fn do_poison_damage(p: &ActivePokemon) -> Vec<ActionSideEffects> {
+    if p.borrow().status.poison {
+        vec![p.take_poison_damage()]
+    } else {
+        vec![]
     }
 }
 

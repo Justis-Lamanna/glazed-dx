@@ -7,7 +7,7 @@ use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, EffectPredicate, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, StatChangeTarget, Target, VolatileBattleAilment};
+use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, EffectPredicate, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::constants::UnownForm::P;
 use glazed_data::item::{EvolutionHeldItem, Item};
@@ -151,11 +151,18 @@ impl Battlefield {
     }
 
     /// Do all the end-of-turn things
-    pub fn end_of_turn(&mut self) -> Vec<ActionSideEffects> {
-        let everyone = self.get_everyone();
+    pub fn end_of_round(&mut self) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
+        let mut both_sides = vec![(BattleSide::Forward, &self.user_side), (BattleSide::Back, &self.opponent_side)];
+        for (side_id, side) in both_sides {
+            effects.append(&mut turn::do_screen_countdown(side, side_id));
+        }
+
+        let everyone = self.get_everyone();
         for pokemon in everyone {
-            effects.append(&mut turn::do_binding_damage(pokemon))
+            effects.append(&mut turn::do_poison_damage(pokemon));
+            effects.append(&mut turn::do_binding_damage(pokemon));
+            pokemon.data.borrow_mut().end_of_turn();
         }
         effects
     }
@@ -555,6 +562,39 @@ impl Battlefield {
                     let mut data = attacker.data.borrow_mut();
                     data.minimized = true;
                     Vec::new()
+                },
+                Effect::Curl => {
+                    let mut data = attacker.data.borrow_mut();
+                    data.curled = true;
+                    Vec::new()
+                },
+                Effect::Screen(screen) => {
+                    let mut side = self.get_side(&attacker.id).borrow_mut();
+                    let turn_count = if attacker.borrow().is_holding(Item::LightClay) {
+                        SCREEN_TURN_COUNT_LIGHT_CLAY
+                    } else {
+                        SCREEN_TURN_COUNT
+                    };
+
+                    let effect = match screen {
+                        ScreenType::LightScreen => {
+                            if side.light_screen > 0 {
+                                ActionSideEffects::NoEffectSecondary(Cause::Natural)
+                            } else {
+                                side.light_screen = turn_count;
+                                ActionSideEffects::ScreenStart(attacker.id.side, ScreenType::LightScreen)
+                            }
+                        }
+                        ScreenType::Reflect => {
+                            if side.reflect > 0 {
+                                ActionSideEffects::NoEffectSecondary(Cause::Natural)
+                            } else {
+                                side.reflect = turn_count;
+                                ActionSideEffects::ScreenStart(attacker.id.side, ScreenType::Reflect)
+                            }
+                        }
+                    };
+                    vec![effect]
                 }
             };
             effects.append(&mut secondary_effects);

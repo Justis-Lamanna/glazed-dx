@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 
 use fraction::{Fraction, ToPrimitive};
 use rand::{random, Rng};
+use glazed_core::math;
 
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power, VolatileBattleAilment};
@@ -444,33 +445,33 @@ impl Battlefield { //region Damage
 
         // *targets
         if is_multi_target {
-            calc = calc * 3 / 4;
+            calc = math::fraction(calc, MULTI_TARGET_MULTIPLIER);
         }
 
         // *weather
         {
             let field = self.field.borrow();
             match attack_type {
-                Type::Water if field.is_rain() => calc = calc * 3 / 2,
-                Type::Water if field.is_sunny() => calc = calc / 2,
-                Type::Fire if field.is_rain() => calc = calc / 2,
-                Type::Fire if field.is_sunny() => calc = calc * 3 / 2,
+                Type::Water if field.is_rain() => calc = math::fraction(calc, GOOD_WEATHER_MULTIPLIER),
+                Type::Water if field.is_sunny() => calc = math::fraction(calc, BAD_WEATHER_MULTIPLIER),
+                Type::Fire if field.is_rain() => calc = math::fraction(calc, BAD_WEATHER_MULTIPLIER),
+                Type::Fire if field.is_sunny() => calc = math::fraction(calc, GOOD_WEATHER_MULTIPLIER),
                 _ => {}
             }
         }
 
         // *critical
         if is_crit {
-            calc = calc * 2
+            calc = math::fraction(calc, CRIT_MULTIPLIER);
         }
 
         // *random
-        let random = rand::thread_rng().gen_range(0.85..=1.0);
+        let random = rand::thread_rng().gen_range(DAMAGE_VARIABILITY);
         calc = ((calc as f64) * random) as u32;
 
         // *STAB
         if attacker.get_effective_type().is_stab(&attack_type) {
-            calc = calc * 3 / 2
+            calc = math::fraction(calc, STAB_MULTIPLIER);
         }
 
         // *Type
@@ -484,11 +485,11 @@ impl Battlefield { //region Damage
 
         // *burn
         if attacker.borrow().status.burn {
-            calc = calc / 2
+            calc = math::fraction(calc, BURN_MULTIPLIER);
         }
 
         if defender.data.borrow().minimized && attack.double_damage_on_minimized_target() {
-            calc *= 2;
+            calc = math::fraction(calc, MINIMIZE_MULTIPLIER);
         }
 
         u16::try_from(calc).unwrap_or(u16::MAX)

@@ -2,6 +2,24 @@ use std::ops::RangeInclusive;
 use rand::distributions::{Distribution, WeightedIndex};
 use rand::Rng;
 
+// Damage-related
+/// If a move hits multiple targets, the damage is multiplied by this
+pub const MULTI_TARGET_MULTIPLIER: (u8, u8) = (3, 4);
+/// If the move type matches weather (fire/sun or water/rain), the damage is multiplied by this
+pub const GOOD_WEATHER_MULTIPLIER: (u8, u8) = (3, 2);
+/// If the move type matches the wrong weather (fire/rain or water/sun), the damage is multiplied by this
+pub const BAD_WEATHER_MULTIPLIER: (u8, u8) = (1, 2);
+/// If the move crits, damage is multiplied by this
+pub const CRIT_MULTIPLIER: (u8, u8) = (2, 1);
+/// Each move strike is varied by multiplying by a random number in this range
+pub const DAMAGE_VARIABILITY: RangeInclusive<f64> = 0.85..=1.0;
+/// If the move type matches the attacker's type (STAB), the damage is multiplied by this
+pub const STAB_MULTIPLIER: (u8, u8) = (3, 2);
+/// If the attacker is burned + using a physical attack, the damage is multiplied by this
+pub const BURN_MULTIPLIER: (u8, u8) = (1, 2);
+/// If the defender is minimized, and the attacker
+pub const MINIMIZE_MULTIPLIER: (u8, u8) = (2, 1);
+
 /// Max # of stages a stat can be at
 pub const MAX_STAGE: i8 = 6;
 /// Min # of stages a stat can be at
@@ -38,6 +56,10 @@ pub const THRASH_RANGE: RangeInclusive<u8> = 2..=3;
 pub const DISABLE_TURN_COUNT: u8 = 4;
 /// Number of turns mist is active on a field
 pub const MIST_TURN_COUNT: u8 = 5;
+
+pub const SCREEN_TURN_COUNT: u8 = 5;
+
+pub const SCREEN_TURN_COUNT_LIGHT_CLAY: u8 = 8;
 
 /// Table used to convert weight to base power for weight-based moves (Low Kick, Grass Knot)
 pub fn weight_to_power_map(weight: u16) -> u16 {

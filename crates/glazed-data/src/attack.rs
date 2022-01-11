@@ -744,7 +744,8 @@ pub enum Effect {
     Rage,
     Mimic,
     Minimize,
-
+    Curl,
+    Screen(ScreenType),
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -752,6 +753,12 @@ pub enum Effect {
 #[derive(Debug)]
 pub enum EffectPredicate {
     Sunny
+}
+
+#[derive(Debug)]
+pub enum ScreenType {
+    LightScreen,
+    Reflect
 }
 
 /// Represents data for a specific attack
@@ -2828,7 +2835,7 @@ pub static DefenseCurl: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[Effect::StatChange(BattleStat::Defense, 1, 100, StatChangeTarget::User)],
+    effects: &[Effect::StatChange(BattleStat::Defense, 1, 100, StatChangeTarget::User), Effect::Curl],
 };
 pub static Barrier: MoveData = MoveData {
     pp: 20,
@@ -2852,7 +2859,7 @@ pub static LightScreen: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::UserAndAlly,
-    effects: &[],
+    effects: &[Effect::Screen(ScreenType::LightScreen)],
 };
 pub static Haze: MoveData = MoveData {
     pp: 30,
@@ -2876,7 +2883,7 @@ pub static Reflect: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::UserAndAlly,
-    effects: &[],
+    effects: &[Effect::Screen(ScreenType::Reflect)],
 };
 pub static FocusEnergy: MoveData = MoveData {
     pp: 30,

@@ -9,7 +9,7 @@ use fraction::Fraction;
 use rand::Rng;
 
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{BattleStat, DamageType, Effect, Move, NonVolatileBattleAilment, SemiInvulnerableLocation, StatChangeTarget, Target, VolatileBattleAilment};
+use glazed_data::attack::{BattleStat, DamageType, Effect, Move, NonVolatileBattleAilment, ScreenType, SemiInvulnerableLocation, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
 use glazed_data::pokemon::{AbilitySlot, MoveSlot, PoisonType, Pokemon, StatSlot};
@@ -804,6 +804,8 @@ pub struct BattleData {
     enraged: bool,
     /// If true, this Pokemon is minimized (certain moves hit for double damage + 100% accuracy)
     minimized: bool,
+    /// If true, this Pokemon has curled (Rollout does more damage)
+    curled: bool,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -1234,6 +1236,7 @@ pub enum ActionSideEffects {
     },
     RageStart(Battler), RageContinue(Battler), RageEnd(Battler),
     Mimicked(Battler, Move),
+    ScreenStart(BattleSide, ScreenType), ScreenEnd(BattleSide, ScreenType),
     NothingHappened
 }
 impl ActionSideEffects {
