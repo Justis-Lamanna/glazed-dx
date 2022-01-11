@@ -665,7 +665,8 @@ pub enum BattleStat {
     SpecialDefense,
     Speed,
     Accuracy,
-    Evasion
+    Evasion,
+    CriticalHitRatio
 }
 
 /// Represents a persistent status ailment
@@ -726,6 +727,7 @@ pub enum StatChangeTarget {
 #[derive(Debug)]
 pub enum Effect {
     StatChange(BattleStat, i8, u8, StatChangeTarget),
+    StatReset,
     NonVolatileStatus(NonVolatileBattleAilment, u8, StatChangeTarget),
     VolatileStatus(VolatileBattleAilment, u8, StatChangeTarget),
     Heal(u8),
@@ -2895,7 +2897,7 @@ pub static FocusEnergy: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::StatChange(BattleStat::CriticalHitRatio, 2, 0, StatChangeTarget::User)],
 };
 pub static Bide: MoveData = MoveData {
     pp: 10,

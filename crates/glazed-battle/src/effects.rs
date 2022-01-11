@@ -46,6 +46,7 @@ pub(crate) fn _change_stat(affected: &ActivePokemon, stat: BattleStat, stages: i
             BattleStat::Speed => data.speed_stage = next,
             BattleStat::Accuracy => data.accuracy_stage = next,
             BattleStat::Evasion => data.evasion_stage = next,
+            BattleStat::CriticalHitRatio => data.crit_stage = if next < 0 { 0 } else { u8::try_from(next).unwrap() }
         };
         vec![ActionSideEffects::StatChanged {
             stat,
@@ -595,6 +596,22 @@ impl Battlefield {
                         }
                     };
                     vec![effect]
+                }
+                Effect::StatReset => {
+                    let mut effects = Vec::new();
+                    for pkmn in targets_for_secondary_damage.iter() {
+                        let mut data = pkmn.data.borrow_mut();
+                        data.attack_stage = 0;
+                        data.defense_stage = 0;
+                        data.special_attack_stage = 0;
+                        data.special_defense_stage = 0;
+                        data.speed_stage = 0;
+                        data.accuracy_stage = 0;
+                        data.evasion_stage = 0;
+                        data.crit_stage = 0;
+                        effects.push(ActionSideEffects::StatsReset(pkmn.id));
+                    }
+                    effects
                 }
             };
             effects.append(&mut secondary_effects);

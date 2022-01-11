@@ -1,6 +1,7 @@
 #![feature(get_mut_unchecked)]
 
 use std::cell::{Ref, RefCell, RefMut};
+use std::convert::TryFrom;
 use std::ops::{Add, Deref, DerefMut, Index, IndexMut};
 use std::option::Option::Some;
 use std::rc::Rc;
@@ -256,7 +257,8 @@ impl ActivePokemon {
             BattleStat::SpecialDefense => data.special_defense_stage,
             BattleStat::Speed => data.speed_stage,
             BattleStat::Accuracy => data.accuracy_stage,
-            BattleStat::Evasion => data.evasion_stage
+            BattleStat::Evasion => data.evasion_stage,
+            BattleStat::CriticalHitRatio => i8::try_from(data.crit_stage).unwrap(),
         }
     }
 
@@ -270,8 +272,9 @@ impl ActivePokemon {
             BattleStat::SpecialAttack => data.transformed.as_ref().map(|t| t.special_attack.value).or(data.temp_special_attack).unwrap_or(pkmn.special_attack.value),
             BattleStat::SpecialDefense => data.transformed.as_ref().map(|t| t.special_defense.value).or(data.temp_special_defense).unwrap_or(pkmn.special_defense.value),
             BattleStat::Speed => data.transformed.as_ref().map(|t| t.speed.value).unwrap_or(pkmn.speed.value),
-            BattleStat::Accuracy => 1,
-            BattleStat::Evasion => 1
+            BattleStat::Accuracy => 0,
+            BattleStat::Evasion => 0,
+            BattleStat::CriticalHitRatio => 0
         };
 
         let stage = self.get_stat_stage(stat);
@@ -295,12 +298,12 @@ impl ActivePokemon {
 
     /// Get the raw critical hit stage of this Pokemon. Takes held item and ability into account
     pub fn get_raw_critical_hit(&self) -> u8 {
-        let mut value = 0;
+        let mut value = self.data.borrow().crit_stage;
         value += match self.borrow().held_item {
             Some(Item::EvolutionHeldItem(EvolutionHeldItem::RazorClaw)) => 1,
             Some(Item::ScopeLens) => 1,
-            Some(Item::Leek) if self.borrow().species == Species::Farfetchd => 2,
-            Some(Item::LuckyPunch) if self.borrow().species == Species::Chansey => 2,
+            Some(Item::Leek) if self.get_effective_species() == Species::Farfetchd => 2,
+            Some(Item::LuckyPunch) if self.get_effective_species() == Species::Chansey => 2,
             _ => 0
         };
         value += match self.get_effective_ability() {
@@ -769,6 +772,7 @@ pub struct BattleData {
     speed_stage: i8,
     accuracy_stage: i8,
     evasion_stage: i8,
+    crit_stage: u8,
 
     /// Manipulated stats (Power Trick, Power Split, Guard Split)
     temp_attack: Option<u16>,
@@ -836,7 +840,8 @@ impl BattleData {
             BattleStat::SpecialDefense => self.special_defense_stage,
             BattleStat::Speed => self.speed_stage,
             BattleStat::Accuracy => self.accuracy_stage,
-            BattleStat::Evasion => self.evasion_stage
+            BattleStat::Evasion => self.evasion_stage,
+            BattleStat::CriticalHitRatio => i8::try_from(self.crit_stage).unwrap()
         }
     }
 
@@ -848,7 +853,17 @@ impl BattleData {
             BattleStat::SpecialDefense => &mut self.special_defense_stage,
             BattleStat::Speed => &mut self.speed_stage,
             BattleStat::Accuracy => &mut self.accuracy_stage,
-            BattleStat::Evasion => &mut self.evasion_stage
+            BattleStat::Evasion => &mut self.evasion_stage,
+            BattleStat::CriticalHitRatio => {
+                let crit_stage = i8::try_from(self.crit_stage).unwrap();
+                let new_stage = crit_stage + stages;
+                if new_stage < 0 {
+                    return false;
+                } else {
+                    self.crit_stage = u8::try_from(new_stage).unwrap();
+                    return true;
+                }
+            }
         };
 
         let new_stage = *stage + stages;
@@ -1185,6 +1200,7 @@ pub enum ActionSideEffects {
         start: i8,
         end: i8
     },
+    StatsReset(Battler),
     NonVolatileStatusAilment {
         affected: Battler,
         status: NonVolatileBattleAilment
