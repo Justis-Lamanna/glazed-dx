@@ -137,10 +137,24 @@ impl Battlefield { //region Damage
         }
 
         if data.enraged {
-            vec.append(&mut crate::effects::_change_stat(defender, BattleStat::Attack, 1,
-                                                         Cause::PokemonBattleState(defender.id, PokemonState::Enraged)));
+            vec.push(crate::effects::change_self_stat(defender, BattleStat::Attack, 1));
         }
         vec
+    }
+
+    fn faint(active: &ActivePokemon, cause: Cause) -> Vec<ActionSideEffects> {
+        let mut pkmn = active.borrow_mut();
+        let start_hp = pkmn.current_hp;
+        let end_hp = 0;
+
+        pkmn.current_hp = 0;
+
+        vec![ActionSideEffects::BasicDamage {
+            damaged: active.id,
+            start_hp,
+            end_hp,
+            cause
+        }]
     }
 
     pub fn do_damage(&self, attacker: &ActivePokemon, attack: Move, defender: &ActivePokemon, is_multi_target: bool) -> Vec<ActionSideEffects> {
@@ -213,6 +227,18 @@ impl Battlefield { //region Damage
                     let is_crit = crit();
                     let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
                     Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
+                }
+            },
+            Power::BaseWithFaint(_) => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    vec![ActionSideEffects::NoEffect(cause)]
+                } else {
+                    let is_crit = crit();
+                    let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
+                    let mut effects = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
+                    effects.append(&mut Battlefield::faint(attacker, Cause::Move(attacker.id, attack)));
+                    effects
                 }
             }
             Power::WeightBased => {

@@ -29,13 +29,13 @@ pub fn inflict_confusion(afflicted: &ActivePokemon) -> Vec<ActionSideEffects> {
     vec![ActionSideEffects::Confuse(afflicted.id)]
 }
 
-pub(crate) fn _change_stat(affected: &ActivePokemon, stat: BattleStat, stages: i8, cause: Cause) -> Vec<ActionSideEffects> {
+fn _change_stat(affected: &ActivePokemon, stat: BattleStat, stages: i8, cause: Cause) -> ActionSideEffects {
     let current = affected.get_stat_stage(stat);
     let next = current + stages;
     return if next > MAX_STAGE {
-        vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.id, PokemonState::StatsMaxed(StatsCause::TooHigh)))]
+        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.id, PokemonState::StatsMaxed(StatsCause::TooHigh)))
     } else if next < MIN_STAGE {
-        vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.id, PokemonState::StatsMaxed(StatsCause::TooLow)))]
+        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.id, PokemonState::StatsMaxed(StatsCause::TooLow)))
     } else {
         let mut data = affected.data.borrow_mut();
         match stat {
@@ -48,17 +48,17 @@ pub(crate) fn _change_stat(affected: &ActivePokemon, stat: BattleStat, stages: i
             BattleStat::Evasion => data.evasion_stage = next,
             BattleStat::CriticalHitRatio => data.crit_stage = if next < 0 { 0 } else { u8::try_from(next).unwrap() }
         };
-        vec![ActionSideEffects::StatChanged {
+        ActionSideEffects::StatChanged {
             stat,
             affected: affected.id,
             cause,
             start: current,
             end: next
-        }]
+        }
     }
 }
 
-pub fn change_self_stat(affected: &ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+pub fn change_self_stat(affected: &ActivePokemon, stat: BattleStat, stages: i8) -> ActionSideEffects {
     let (ability_cause, stages) = match affected.get_effective_ability() {
         Ability::Simple => (Cause::Ability(affected.id, Ability::Simple), stages * 2),
         Ability::Contrary => (Cause::Ability(affected.id, Ability::Contrary), -stages),
@@ -68,11 +68,11 @@ pub fn change_self_stat(affected: &ActivePokemon, stat: BattleStat, stages: i8) 
     _change_stat(affected, stat, stages, ability_cause)
 }
 
-pub fn change_opponent_stat(field: &Battlefield, affecter: &ActivePokemon, affected: &ActivePokemon, stat: BattleStat, stages: i8) -> Vec<ActionSideEffects> {
+pub fn change_opponent_stat(field: &Battlefield, affecter: &ActivePokemon, affected: &ActivePokemon, stat: BattleStat, stages: i8) -> ActionSideEffects {
     let affected_side = field.get_side(&affected.id);
 
     if affected_side.borrow().mist > 0 {
-        return vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Mist))]
+        return ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Mist))
     }
 
     let (ability_cause, stages) = match affected.get_effective_ability() {
@@ -88,7 +88,7 @@ pub fn change_opponent_stat(field: &Battlefield, affecter: &ActivePokemon, affec
             let cause = Cause::Ability(affected.id, oc);
             match affected.get_effective_ability() {
                 oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id, oc)), stages),
-                _ => return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id, oc))]
+                _ => return ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id, oc))
             }
         }
         _ => (Cause::Natural, stages)
@@ -118,6 +118,18 @@ impl Battlefield {
             }
         } else if let Power::BaseWithCharge(_, place) = move_data.power {
             let attacker = &self[attacker_id.side][attacker_id.individual];
+
+            let mut effects = vec![ActionSideEffects::Charging(attacker_id, attack)];
+
+            // Skull Bash has a unique effect where it raises user defense on its charging turn
+            if attack == Move::SkullBash {
+                let effect = change_self_stat(attacker, BattleStat::Defense, 1);
+                if let ActionSideEffects::NoEffectSecondary(_) = effect { }
+                else {
+                    effects.push(effect);
+                }
+            }
+
             let mut data = attacker.data.borrow_mut();
 
             if let Some(s) = place {
@@ -126,7 +138,7 @@ impl Battlefield {
 
             data.charging = Some((defender, attack));
 
-            vec![ActionSideEffects::Charging(attacker_id, attack)]
+            effects
         } else {
             self._do_attack(attacker_id, attack, defender)
         }
@@ -341,7 +353,7 @@ impl Battlefield {
                 Effect::StatChange(stat, stages, probability, StatChangeTarget::User) => {
                     let triggers = self.activates_secondary_effect(attacker, *probability);
                     if triggers {
-                        change_self_stat(attacker, *stat, *stages)
+                        vec![change_self_stat(attacker, *stat, *stages)]
                     } else {
                         Vec::new()
                     }
@@ -349,9 +361,9 @@ impl Battlefield {
                 Effect::StatChange(stat, stages, probability, StatChangeTarget::Target) => {
                     targets_for_secondary_damage.iter()
                         .filter(|_| self.activates_secondary_effect(attacker, *probability))
-                        .flat_map(|defender| {
+                        .map(|defender| {
                             if defender.is_behind_substitute() {
-                                vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
+                                ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))
                             } else {
                                 change_opponent_stat(&self, attacker, defender, *stat, *stages)
                             }

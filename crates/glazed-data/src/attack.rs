@@ -648,6 +648,7 @@ pub enum Power {
     BaseWithMercy(u8),
     BaseWithCharge(u8, Option<SemiInvulnerableLocation>),
     BaseWithCrash(u8),
+    BaseWithFaint(u8),
     WeightBased,
     WeightRatioBased,
     MultiHit(MultiHitFlavor),
@@ -2973,7 +2974,7 @@ pub static SelfDestruct: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllExceptUser,
-    power: Power::Base(200),
+    power: Power::BaseWithFaint(200),
 	crit_rate: None,
 	effects: &[],
 };
@@ -3369,7 +3370,7 @@ pub static Explosion: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllExceptUser,
-    power: Power::Base(250),
+    power: Power::BaseWithFaint(250),
 	crit_rate: None,
 	effects: &[],
 };
