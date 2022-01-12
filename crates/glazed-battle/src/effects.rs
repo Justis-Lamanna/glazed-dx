@@ -102,7 +102,21 @@ impl Battlefield {
     pub fn do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let move_data = attack.data();
 
-        if let Power::BaseWithCharge(_, place) = move_data.power {
+        if attack == Move::Metronome {
+            let rand_attack = Move::metronome();
+            let mut effects = vec![ActionSideEffects::Metronome(attacker_id, rand_attack)];
+            effects.append(&mut self.do_attack(attacker_id, rand_attack, defender));
+            effects
+        } else if attack == Move::MirrorMove {
+            let attacker = &self[attacker_id.side][attacker_id.individual];
+            let mut data = attacker.data.borrow_mut();
+            if let Some((_, attack)) = data.get_last_targeted_attack() {
+                drop(data);
+                self.do_attack(attacker_id, attack, defender)
+            } else {
+                vec![ActionSideEffects::Failed(Cause::Natural)]
+            }
+        } else if let Power::BaseWithCharge(_, place) = move_data.power {
             let attacker = &self[attacker_id.side][attacker_id.individual];
             let mut data = attacker.data.borrow_mut();
 
@@ -129,7 +143,9 @@ impl Battlefield {
             vec![ActionSideEffects::Recharging(Cause::Natural)]
         } else if let Some((defender, attack)) = data.charging {
             drop(data);
-            self._do_attack(attacker_id, attack, defender)
+            let effects = self._do_attack(attacker_id, attack, defender);
+            attacker.data.borrow_mut().invulnerable = None;
+            effects
         } else if let Some((attack, counter)) = data.thrashing {
             drop(data);
             let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
@@ -203,6 +219,10 @@ impl Battlefield {
         if targets.is_empty() {
             effects.push(ActionSideEffects::NoTarget);
             return effects;
+        }
+
+        for t in targets.iter() {
+            t.data.borrow_mut().targeted_by(attacker, attack);
         }
 
         // 2. For each target, determine if the move hits

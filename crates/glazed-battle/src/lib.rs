@@ -758,14 +758,16 @@ pub struct BattleData {
     last_move_used: Option<Move>,
     /// The number of times the last move was used
     last_move_used_counter: u8,
-    /// The last person who attacked the Pokemon
-    last_attacker: Option<Battler>,
     /// If present, contains the amount of damage this Pokemon encountered last
     damage_this_turn: Vec<(Battler, Move, u16)>,
     /// If present, the user is biding (turns left, damage accumulated)
     bide: Option<(u8, u16)>,
     /// Number of turns poisoned. 0 indicates not badly poison
     poison_counter: u8,
+    /// The Pokemon that have targeted this Pokemon, in order. Index 0 == Most recent, For Mirror Move (not reset at end of round)
+    last_targeted: Vec<(Battler, Move)>,
+    /// The last person who attacked the Pokemon (not reset at end of round)
+    last_attacker: Option<Battler>,
 
     attack_stage: i8,
     defense_stage: i8,
@@ -911,6 +913,20 @@ impl BattleData {
         }
         self.disabled = disabled;
         undisabled
+    }
+
+    pub fn targeted_by(&mut self, pkmn: &ActivePokemon, attack: Move) {
+        self.remove_from_targeted_by(pkmn);
+        self.last_targeted.insert(0, (pkmn.id, attack));
+    }
+
+    pub fn remove_from_targeted_by(&mut self, pkmn: &ActivePokemon) {
+        self.last_targeted.retain(|(e, _)| *e != pkmn.id);
+    }
+
+    pub fn get_last_targeted_attack(&self) -> Option<(Battler, Move)> {
+        self.last_targeted.first()
+            .map(|(battler, attack)| (*battler, *attack))
     }
 
     pub fn end_of_turn(&mut self) {
@@ -1256,6 +1272,7 @@ pub enum ActionSideEffects {
     Mimicked(Battler, Move),
     ScreenStart(BattleSide, ScreenType), ScreenEnd(BattleSide, ScreenType),
     BideStart(Battler), BideContinue(Battler),
+    Metronome(Battler, Move),
     NothingHappened
 }
 impl ActionSideEffects {

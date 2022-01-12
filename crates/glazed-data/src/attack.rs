@@ -1,14 +1,21 @@
 #![allow(non_upper_case_globals)]
 
+use rand::distributions::Standard;
+use rand::prelude::Distribution;
+use rand::Rng;
+
 use glazed_core::Id;
 use glazed_macro::*;
+
+use strum::{EnumCount, IntoEnumIterator};
+use strum_macros::{EnumIter, EnumCount as EnumCountMacro};
 
 use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
 use crate::pokemon::{MoveSlot, PoisonType};
 use crate::types::Type;
 
 /// Represents an Attack a Pokemon can have
-#[derive(Debug, Copy, Clone, PartialEq, Id)]
+#[derive(Debug, Copy, Clone, PartialEq, Id, EnumIter, EnumCountMacro)]
 pub enum Move {
     Pound,
     KarateChop,
@@ -570,7 +577,29 @@ pub enum Move {
     FusionFlare,
     FusionBolt
 }
+impl Distribution<Move> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Move {
+        let idx = rng.gen_range(0usize..Move::COUNT);
+        Move::iter().nth(idx).unwrap()
+    }
+}
 impl Move {
+    pub fn metronome() -> Move {
+        loop {
+            let attack = rand::thread_rng().gen::<Move>();
+            match attack {
+                Move::AfterYou | Move::Assist | Move::Bestow | Move::Chatter | Move::Copycat |
+                Move::Counter | Move::Covet | Move::DestinyBond | Move::Detect | Move::Endure |
+                Move::Feint | Move::FocusPunch | Move::FollowMe | Move::FreezeShock | Move::HelpingHand |
+                Move::IceBurn | Move::MeFirst | Move::Mimic | Move::MirrorCoat | Move::MirrorMove |
+                Move::NaturePower | Move::Protect | Move::Sketch | Move::SleepTalk | Move::Snatch |
+                Move::Snore | Move::Struggle | Move::Switcheroo | Move::Thief | Move::Transform |
+                Move::Trick | Move::VCreate | Move::WideGuard => {},
+                m => return m
+            }
+        }
+    }
+
     pub fn can_thaw_user(&self) -> bool {
         match self {
             Move::FlameWheel | Move::FlareBlitz | Move::FusionFlare | Move::SacredFire | Move::Scald => true,

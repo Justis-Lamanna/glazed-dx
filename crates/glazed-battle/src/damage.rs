@@ -76,32 +76,19 @@ impl Battlefield { //region Damage
 
             pkmn.current_hp = end_hp;
 
-            let mut vec = {
-                let mut data = defender.data.borrow_mut();
-                data.damage_this_turn.push((attacker.id, attack, damage));
-                data.last_attacker = Some(attacker.id);
+            let mut effects = vec![ActionSideEffects::DirectDamage {
+                damaged: defender_id,
+                damager: attacker.id,
+                attack,
+                start_hp,
+                end_hp,
+                critical_hit: is_crit,
+                effectiveness
+            }];
 
-                vec![ActionSideEffects::DirectDamage {
-                    damaged: defender_id,
-                    damager: attacker.id,
-                    attack,
-                    start_hp,
-                    end_hp,
-                    critical_hit: is_crit,
-                    effectiveness
-                }]
-            };
+            effects.append(&mut Battlefield::do_after_damage(attacker, defender, attack, damage));
 
-            let mut data = defender.data.borrow_mut();
-            if let Some((counter, damage)) = data.bide {
-                let delta = start_hp - end_hp;
-                data.bide = Some((counter, damage + delta));
-            }
-            if data.enraged {
-                vec.append(&mut crate::effects::_change_stat(defender, BattleStat::Attack, 1, Cause::PokemonBattleState(defender_id, PokemonState::Enraged)));
-            }
-
-            vec
+            effects
         }
     }
 
@@ -126,16 +113,34 @@ impl Battlefield { //region Damage
 
             pkmn.current_hp = end_hp;
 
-            let mut data = defender.data.borrow_mut();
-            data.damage_this_turn.push((attacker.id, attack, damage));
-
-            vec![ActionSideEffects::BasicDamage {
+            let mut effects = vec![ActionSideEffects::BasicDamage {
                 damaged: defender_id,
                 start_hp,
                 end_hp,
                 cause
-            }]
+            }];
+
+            effects.append(&mut Battlefield::do_after_damage(attacker, defender, attack, damage));
+
+            effects
         }
+    }
+
+    fn do_after_damage(attacker: &ActivePokemon, defender: &ActivePokemon, attack: Move, damage: u16) -> Vec<ActionSideEffects> {
+        let mut vec = Vec::new();
+        let mut data = defender.data.borrow_mut();
+        data.damage_this_turn.push((attacker.id, attack, damage));
+        data.last_attacker = Some(attacker.id);
+
+        if let Some((counter, acc)) = data.bide {
+            data.bide = Some((counter, acc + damage));
+        }
+
+        if data.enraged {
+            vec.append(&mut crate::effects::_change_stat(defender, BattleStat::Attack, 1,
+                                                         Cause::PokemonBattleState(defender.id, PokemonState::Enraged)));
+        }
+        vec
     }
 
     pub fn do_damage(&self, attacker: &ActivePokemon, attack: Move, defender: &ActivePokemon, is_multi_target: bool) -> Vec<ActionSideEffects> {
