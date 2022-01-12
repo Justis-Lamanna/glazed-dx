@@ -146,6 +146,19 @@ impl Battlefield {
                 data.thrashing = Some((attack, counter))
             }
             effects
+        } else if let Some((counter, damage)) = data.bide {
+            let counter = counter - 1;
+            if counter == 0 {
+                let damage = damage.saturating_mul(2);
+                if let Some(defender) = attacker.data.borrow().last_attacker {
+                    let defender = &self[defender.side][defender.individual];
+                    self.do_bide_damage(attacker, damage, defender)
+                } else {
+                    vec![ActionSideEffects::NoTarget]
+                }
+            } else {
+                vec![ActionSideEffects::BideContinue(attacker_id)]
+            }
         } else {
             vec![]
         }
@@ -612,6 +625,11 @@ impl Battlefield {
                         effects.push(ActionSideEffects::StatsReset(pkmn.id));
                     }
                     effects
+                }
+                Effect::Bide => {
+                    let mut data = attacker.data.borrow_mut();
+                    data.bide = Some((BIDE_TURN_COUNT, 0));
+                    vec![ActionSideEffects::BideStart(attacker.id)]
                 }
             };
             effects.append(&mut secondary_effects);

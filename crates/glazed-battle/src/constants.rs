@@ -56,6 +56,8 @@ pub const THRASH_RANGE: RangeInclusive<u8> = 2..=3;
 pub const DISABLE_TURN_COUNT: u8 = 4;
 /// Number of turns mist is active on a field
 pub const MIST_TURN_COUNT: u8 = 5;
+/// Number of turns bide lasts before an attack
+pub const BIDE_TURN_COUNT: u8 = 2;
 
 pub const SCREEN_TURN_COUNT: u8 = 5;
 

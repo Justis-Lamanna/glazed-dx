@@ -79,6 +79,7 @@ impl Battlefield { //region Damage
             let mut vec = {
                 let mut data = defender.data.borrow_mut();
                 data.damage_this_turn.push((attacker.id, attack, damage));
+                data.last_attacker = Some(attacker.id);
 
                 vec![ActionSideEffects::DirectDamage {
                     damaged: defender_id,
@@ -91,7 +92,12 @@ impl Battlefield { //region Damage
                 }]
             };
 
-            if defender.data.borrow().enraged {
+            let mut data = defender.data.borrow_mut();
+            if let Some((counter, damage)) = data.bide {
+                let delta = start_hp - end_hp;
+                data.bide = Some((counter, damage + delta));
+            }
+            if data.enraged {
                 vec.append(&mut crate::effects::_change_stat(defender, BattleStat::Attack, 1, Cause::PokemonBattleState(defender_id, PokemonState::Enraged)));
             }
 
@@ -493,6 +499,15 @@ impl Battlefield { //region Damage
         }
 
         u16::try_from(calc).unwrap_or(u16::MAX)
+    }
+
+    pub fn do_bide_damage(&self, attacker: &ActivePokemon, damage: u16, defender: &ActivePokemon) -> Vec<ActionSideEffects> {
+        let (effectiveness, cause) = core::get_type_effectiveness(&self, attacker, Move::Bide, defender);
+        if let Effectiveness::Immune = effectiveness {
+            vec![ActionSideEffects::NoEffect(cause)]
+        } else {
+            Battlefield::lower_hp(attacker, defender, Move::Bide, damage, false, effectiveness)
+        }
     }
     // endregion
 }

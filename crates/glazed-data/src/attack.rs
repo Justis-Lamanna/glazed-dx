@@ -748,6 +748,7 @@ pub enum Effect {
     Minimize,
     Curl,
     Screen(ScreenType),
+    Bide,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -2909,7 +2910,7 @@ pub static Bide: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::Bide],
 };
 pub static Metronome: MoveData = MoveData {
     pp: 10,

@@ -758,6 +758,8 @@ pub struct BattleData {
     last_move_used: Option<Move>,
     /// The number of times the last move was used
     last_move_used_counter: u8,
+    /// The last person who attacked the Pokemon
+    last_attacker: Option<Battler>,
     /// If present, contains the amount of damage this Pokemon encountered last
     damage_this_turn: Vec<(Battler, Move, u16)>,
     /// If present, the user is biding (turns left, damage accumulated)
@@ -1253,6 +1255,7 @@ pub enum ActionSideEffects {
     RageStart(Battler), RageContinue(Battler), RageEnd(Battler),
     Mimicked(Battler, Move),
     ScreenStart(BattleSide, ScreenType), ScreenEnd(BattleSide, ScreenType),
+    BideStart(Battler), BideContinue(Battler),
     NothingHappened
 }
 impl ActionSideEffects {
