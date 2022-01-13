@@ -719,6 +719,29 @@ impl Battlefield {
                             cause: Cause::PokemonBattleState(attacker.id, PokemonState::Substituted)
                         }, ActionSideEffects::CreatedSubstitute(attacker.id)]
                     }
+                },
+                Effect::Sketch => {
+                    match targets_for_secondary_damage.last() {
+                        Some(target) => {
+                            let target_data = target.data.borrow();
+                            match target_data.last_move_used {
+                                Some(m) => {
+                                    if attacker.borrow().knows_move(m) {
+                                        vec![ActionSideEffects::Failed(Cause::Natural)]
+                                    } else {
+                                        attacker.replace_sketch_with(m);
+                                        vec![ActionSideEffects::Sketched {
+                                            user: attacker.id,
+                                            target: target.id,
+                                            attack: m
+                                        }]
+                                    }
+                                },
+                                None => vec![ActionSideEffects::Failed(Cause::Natural)]
+                            }
+                        },
+                        None => vec![ActionSideEffects::NoTarget]
+                    }
                 }
             };
             effects.append(&mut secondary_effects);

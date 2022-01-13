@@ -628,6 +628,13 @@ impl Move {
         }
     }
 
+    pub fn can_be_sketched(&self) -> bool {
+        match self {
+            Move::MirrorMove | Move::SleepTalk | Move::Sketch => false,
+            _ => true
+        }
+    }
+
     pub fn double_damage_on_minimized_target(&self) -> bool {
         match self {
             Move::BodySlam | Move::Stomp | Move::DragonRush | Move::ShadowForce | Move::Steamroller | Move::HeatCrash | Move::HeavySlam => true,
@@ -791,6 +798,7 @@ pub enum Effect {
     Rest,
     Conversion,
     Substitute,
+    Sketch,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -3540,7 +3548,7 @@ pub static Sketch: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::Sketch],
 };
 pub static TripleKick: MoveData = MoveData {
     pp: 10,

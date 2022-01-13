@@ -437,6 +437,32 @@ impl ActivePokemon {
             data.temp_move_4 = Some(MoveSlot::from(attack));
         }
     }
+
+    pub fn replace_sketch_with(&self, attack: Move) {
+        let mut data = self.data.borrow_mut();
+        if let Some(transform) = &mut data.transformed {
+            if let Some(MoveSlot { attack: Move::Sketch, .. }) = transform.move_1 {
+                transform.move_1 = Some(MoveSlot::from(attack));
+            } else if let Some(MoveSlot { attack: Move::Sketch, .. }) = transform.move_2 {
+                transform.move_2 = Some(MoveSlot::from(attack));
+            } else if let Some(MoveSlot { attack: Move::Sketch, .. }) = transform.move_3 {
+                transform.move_3 = Some(MoveSlot::from(attack));
+            } else if let Some(MoveSlot { attack: Move::Sketch, .. }) = transform.move_4 {
+                transform.move_4 = Some(MoveSlot::from(attack));
+            }
+        } else {
+            let mut pkmn = self.borrow_mut();
+            if let Some(MoveSlot { attack: Move::Sketch, .. }) = pkmn.move_1 {
+                pkmn.move_1 = Some(MoveSlot::from(attack));
+            } else if let Some(MoveSlot { attack: Move::Sketch, .. }) = pkmn.move_2 {
+                pkmn.move_2 = Some(MoveSlot::from(attack));
+            } else if let Some(MoveSlot { attack: Move::Sketch, .. }) = pkmn.move_3 {
+                pkmn.move_3 = Some(MoveSlot::from(attack));
+            } else if let Some(MoveSlot { attack: Move::Sketch, .. }) = pkmn.move_4 {
+                pkmn.move_4 = Some(MoveSlot::from(attack));
+            }
+        }
+    }
 }
 impl Deref for ActivePokemon {
     type Target = RefCell<Pokemon>;
@@ -1294,6 +1320,11 @@ pub enum ActionSideEffects {
         shiny: bool
     },
     ChangeType(Battler, Type), ChangeAbility(Battler, Ability),
+    Sketched {
+        user: Battler,
+        target: Battler,
+        attack: Move
+    },
     NothingHappened
 }
 impl ActionSideEffects {
