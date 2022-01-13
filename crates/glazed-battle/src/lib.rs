@@ -13,7 +13,7 @@ use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{BattleStat, DamageType, Effect, Move, NonVolatileBattleAilment, ScreenType, SemiInvulnerableLocation, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
-use glazed_data::pokemon::{AbilitySlot, MoveSlot, PoisonType, Pokemon, StatSlot};
+use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, PoisonType, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
 use crate::constants::{*};
@@ -971,6 +971,7 @@ impl Battler {
 #[derive(Debug)]
 struct TransformData {
     species: Species,
+    gender: Gender,
     ability: AbilitySlot,
     attack: StatSlot,
     defense: StatSlot,
@@ -982,10 +983,12 @@ struct TransformData {
     move_3: Option<MoveSlot>,
     move_4: Option<MoveSlot>
 }
-impl From<Pokemon> for TransformData {
-    fn from(p: Pokemon) -> Self {
+impl TransformData {
+    fn from(p: &ActivePokemon) -> Self {
+        let p = p.borrow();
         TransformData {
             species: p.species,
+            gender: p.gender,
             ability: p.ability,
             attack: p.attack,
             defense: p.defense,
@@ -998,8 +1001,7 @@ impl From<Pokemon> for TransformData {
             move_4: TransformData::transform_move(p.move_4)
         }
     }
-}
-impl TransformData {
+
     fn transform_move(slot: Option<MoveSlot>) -> Option<MoveSlot> {
         match slot {
             None => None,
@@ -1273,6 +1275,12 @@ pub enum ActionSideEffects {
     ScreenStart(BattleSide, ScreenType), ScreenEnd(BattleSide, ScreenType),
     BideStart(Battler), BideContinue(Battler),
     Metronome(Battler, Move),
+    Transform {
+        id: Battler,
+        species: Species,
+        gender: Gender,
+        shiny: bool
+    },
     NothingHappened
 }
 impl ActionSideEffects {

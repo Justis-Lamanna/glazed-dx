@@ -240,6 +240,37 @@ impl Battlefield { //region Damage
                     effects.append(&mut Battlefield::faint(attacker, Cause::Move(attacker.id, attack)));
                     effects
                 }
+            },
+            Power::BaseWithDrain(_) => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    vec![ActionSideEffects::NoEffect(cause)]
+                } else {
+                    let is_crit = crit();
+                    let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
+                    let mut effects = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
+
+                    let heal_amount = if damage == 1 { 1 } else { damage / 2 };
+                    let mut pkmn = attacker.borrow_mut();
+                    if defender.get_effective_ability() == Ability::LiquidOoze {
+                        let (start_hp, end_hp) = pkmn.subtract_hp(heal_amount);
+                        effects.push(ActionSideEffects::BasicDamage {
+                            damaged: attacker.id,
+                            start_hp,
+                            end_hp,
+                            cause: Cause::Ability(defender.id, Ability::LiquidOoze)
+                        })
+                    } else {
+                        let (start_hp, end_hp) = pkmn.add_hp(heal_amount);
+                        effects.push(ActionSideEffects::Healed {
+                            healed: attacker.id,
+                            start_hp,
+                            end_hp,
+                            cause: Cause::Move(attacker.id, attack)
+                        })
+                    }
+                    effects
+                }
             }
             Power::WeightBased => {
                 let (effectiveness, cause) = effectiveness();

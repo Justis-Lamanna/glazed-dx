@@ -614,6 +614,13 @@ impl Move {
         }
     }
 
+    pub fn can_only_be_used_on_sleeping_target(&self) -> bool {
+        match self {
+            Move::DreamEater | Move::Nightmare => true,
+            _ => false
+        }
+    }
+
     pub fn can_be_mimicked(&self) -> bool {
         match self {
             Move::Sketch | Move::Transform | Move::Struggle | Move::Metronome => false,
@@ -649,6 +656,7 @@ pub enum Power {
     BaseWithCharge(u8, Option<SemiInvulnerableLocation>),
     BaseWithCrash(u8),
     BaseWithFaint(u8),
+    BaseWithDrain(u8),
     WeightBased,
     WeightRatioBased,
     MultiHit(MultiHitFlavor),
@@ -761,7 +769,6 @@ pub enum Effect {
     NonVolatileStatus(NonVolatileBattleAilment, u8, StatChangeTarget),
     VolatileStatus(VolatileBattleAilment, u8, StatChangeTarget),
     Heal(u8),
-    Drain(u8),
     Flinch(u8),
     ChangeWeather(Weather),
     DispelWeather,
@@ -779,6 +786,7 @@ pub enum Effect {
     Curl,
     Screen(ScreenType),
     Bide,
+    Transform,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -2379,9 +2387,9 @@ pub static Absorb: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    power: Power::Base(20),
+    power: Power::BaseWithDrain(20),
 	crit_rate: None,
-	effects: &[Effect::Drain(50)],
+	effects: &[],
 };
 pub static MegaDrain: MoveData = MoveData {
     pp: 15,
@@ -2391,9 +2399,9 @@ pub static MegaDrain: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    power: Power::Base(40),
+    power: Power::BaseWithDrain(40),
 	crit_rate: None,
-	effects: &[Effect::Drain(50)],
+	effects: &[],
 };
 pub static LeechSeed: MoveData = MoveData {
     pp: 10,
@@ -3190,9 +3198,9 @@ pub static DreamEater: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    power: Power::Base(100),
+    power: Power::BaseWithDrain(100),
 	crit_rate: None,
-	effects: &[Effect::Drain(50)],
+	effects: &[],
 };
 pub static PoisonGas: MoveData = MoveData {
     pp: 40,
@@ -3226,9 +3234,9 @@ pub static LeechLife: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(80),
+    power: Power::BaseWithDrain(80),
 	crit_rate: None,
-	effects: &[Effect::Drain(50)],
+	effects: &[],
 };
 pub static LovelyKiss: MoveData = MoveData {
     pp: 10,
@@ -3264,7 +3272,7 @@ pub static Transform: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::Transform],
 };
 pub static Bubble: MoveData = MoveData {
     pp: 30,
@@ -3958,9 +3966,9 @@ pub static GigaDrain: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    power: Power::Base(75),
+    power: Power::BaseWithDrain(75),
 	crit_rate: None,
-	effects: &[Effect::Drain(50)],
+	effects: &[],
 };
 pub static Endure: MoveData = MoveData {
     pp: 10,
@@ -6442,9 +6450,9 @@ pub static DrainPunch: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(75),
+    power: Power::BaseWithDrain(75),
 	crit_rate: None,
-	effects: &[Effect::Drain(50)],
+	effects: &[],
 };
 pub static VacuumWave: MoveData = MoveData {
     pp: 30,
@@ -7918,9 +7926,9 @@ pub static HornLeech: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(75),
+    power: Power::BaseWithDrain(75),
 	crit_rate: None,
-	effects: &[Effect::Drain(50)],
+	effects: &[],
 };
 pub static SacredSword: MoveData = MoveData {
     pp: 15,

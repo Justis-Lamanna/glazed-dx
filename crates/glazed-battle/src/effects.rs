@@ -314,6 +314,17 @@ impl Battlefield {
         } else {
             let mut damaged = Vec::new();
             for defender in targets_hit {
+                match accuracy::do_failure_check(attacker, attack, defender) {
+                    Ok(b) => {
+                        if !b { effects.push(ActionSideEffects::Failed(Cause::Natural)); continue; }
+                        else {}
+                    }
+                    Err(e) => {
+                        effects.push(e);
+                        continue;
+                    }
+                }
+
                 let attacker = &self[attacker.id.side][attacker.id.individual];
                 let mut individual_effects = self.do_damage(attacker, attack, defender, is_multi_target);
 
@@ -521,39 +532,6 @@ impl Battlefield {
                         cause: Cause::Natural
                     }]
                 },
-                Effect::Drain(percentage) => {
-                    let mut pkmn = attacker.borrow_mut();
-                    let mut effects = Vec::new();
-                    for defender in targets_for_secondary_damage.iter() {
-                        if let Some((_, _, damage)) = defender.data.borrow().damage_this_turn.last() {
-                            let delta =
-                                if *damage == 1 {1}
-                                else {math::ratio(*damage, *percentage, 100)};
-                            let start_hp = pkmn.current_hp;
-
-                            if defender.get_effective_ability() == Ability::LiquidOoze {
-                                let end_hp = start_hp.saturating_sub(delta);
-                                pkmn.current_hp = end_hp;
-                                effects.push(ActionSideEffects::BasicDamage {
-                                    damaged: attacker.id,
-                                    start_hp,
-                                    end_hp,
-                                    cause: Cause::Ability(defender.id, Ability::LiquidOoze)
-                                })
-                            } else {
-                                let end_hp = start_hp.saturating_add(delta).clamp(0, pkmn.hp.value);
-                                pkmn.current_hp = end_hp;
-                                effects.push(ActionSideEffects::Healed {
-                                    healed: attacker.id,
-                                    start_hp,
-                                    end_hp,
-                                    cause: Cause::Move(attacker.id, attack)
-                                })
-                            }
-                        }
-                    }
-                    effects
-                },
                 Effect::Leech => {
                     targets_for_secondary_damage.iter()
                         .map(|defender| {
@@ -641,7 +619,7 @@ impl Battlefield {
                         }
                     };
                     vec![effect]
-                }
+                },
                 Effect::StatReset => {
                     let mut effects = Vec::new();
                     for pkmn in targets_for_secondary_damage.iter() {
@@ -657,11 +635,27 @@ impl Battlefield {
                         effects.push(ActionSideEffects::StatsReset(pkmn.id));
                     }
                     effects
-                }
+                },
                 Effect::Bide => {
                     let mut data = attacker.data.borrow_mut();
                     data.bide = Some((BIDE_TURN_COUNT, 0));
                     vec![ActionSideEffects::BideStart(attacker.id)]
+                },
+                Effect::Transform => {
+                    match targets_for_secondary_damage.last() {
+                        Some(target) => {
+                            let transform = TransformData::from(*target);
+                            let target = target.borrow();
+                            attacker.data.borrow_mut().transformed = Some(transform);
+                            vec![ActionSideEffects::Transform {
+                                id: attacker.id,
+                                species: target.species,
+                                gender: target.gender,
+                                shiny: target.is_shiny()
+                            }]
+                        },
+                        None => vec![ActionSideEffects::NoTarget]
+                    }
                 }
             };
             effects.append(&mut secondary_effects);

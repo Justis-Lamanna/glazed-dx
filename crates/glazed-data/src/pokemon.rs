@@ -235,6 +235,10 @@ impl PokemonStatusCondition {
     pub fn has_status_condition(&self) -> bool {
         self.sleep > 0 || self.poison || self.burn || self.freeze || self.paralysis
     }
+
+    pub fn is_asleep(&self) -> bool {
+        self.sleep > 0
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -244,7 +248,7 @@ pub enum PoisonType {
 }
 
 /// Represents the values tied to a given moveslot
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct MoveSlot {
     pub attack: Move,
     pub pp: u8,
@@ -274,7 +278,7 @@ impl MoveSlot {
 }
 
 /// Represents the values tied to a given stat (HP, Atk, etc.)
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct StatSlot {
     pub value: u16,
     iv: u8,
@@ -326,7 +330,7 @@ impl StatSlot {
 }
 
 /// Represents which Ability the Pokemon has
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum AbilitySlot {
     SlotOne,
     SlotTwo,
@@ -605,6 +609,20 @@ impl Pokemon {
             (_, _, _, Some(MoveSlot{attack, ..})) if *attack == check_attack => true,
             _ => false
         }
+    }
+
+    pub fn subtract_hp(&mut self, lose: u16) -> (u16, u16) {
+        let start_hp = self.current_hp;
+        let end_hp = start_hp.saturating_sub(lose);
+        self.current_hp = end_hp;
+        (start_hp, end_hp)
+    }
+
+    pub fn add_hp(&mut self, gain: u16) -> (u16, u16) {
+        let start_hp = self.current_hp;
+        let end_hp = start_hp.saturating_add(gain).clamp(0, self.hp.value);
+        self.current_hp = end_hp;
+        (start_hp, end_hp)
     }
 }
 
