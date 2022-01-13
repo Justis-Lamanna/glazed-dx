@@ -58,6 +58,8 @@ pub const DISABLE_TURN_COUNT: u8 = 4;
 pub const MIST_TURN_COUNT: u8 = 5;
 /// Number of turns bide lasts before an attack
 pub const BIDE_TURN_COUNT: u8 = 2;
+/// Number of turns a resting Pokemon sleeps
+pub const REST_SLEEP_TURN_COUNT: u8 = 3;
 
 pub const SCREEN_TURN_COUNT: u8 = 5;
 

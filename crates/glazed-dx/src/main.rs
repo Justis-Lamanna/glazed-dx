@@ -16,9 +16,9 @@ fn main() {
 
     let mut battlefield = Battlefield::single_battle(me, them);
 
-    let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Transform, SelectedTarget::Implied);
+    let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Substitute, SelectedTarget::Implied);
     println!("{:#?}", fx);
-    let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::SkullBash, SelectedTarget::Implied);
+    let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Tackle, SelectedTarget::Implied);
     println!("{:#?}", fx);
     let fx = battlefield.end_of_round();
     println!("{:#?}", fx);

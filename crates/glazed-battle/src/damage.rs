@@ -493,9 +493,25 @@ impl Battlefield { //region Damage
             Power::Variable => {
                 match attack {
                     Move::SeismicToss | Move::NightShade => {
+                        let (effectiveness, cause) = effectiveness();
+                        if let Effectiveness::Immune = effectiveness {
+                            return vec![ActionSideEffects::NoEffect(cause)]
+                        }
+
                         let damage = attacker.borrow().level as u16;
                         Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id, attack))
                     },
+                    Move::Psywave => {
+                        let (effectiveness, cause) = effectiveness();
+                        if let Effectiveness::Immune = effectiveness {
+                            return vec![ActionSideEffects::NoEffect(cause)]
+                        }
+
+                        let r = rand::thread_rng().gen_range(0..=100);
+                        let mut damage = (attacker.borrow().level as u16 * (r + 50)) / 100;
+                        if damage == 0 { damage = 1; }
+                        Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id, attack))
+                    }
                     a => panic!("Move {:?} has variable power, yet no implementation specified", a)
                 }
             }

@@ -656,6 +656,69 @@ impl Battlefield {
                         },
                         None => vec![ActionSideEffects::NoTarget]
                     }
+                },
+                Effect::Rest => {
+                    let mut pkmn = attacker.borrow_mut();
+                    if pkmn.is_full_health() {
+                        vec![ActionSideEffects::Failed(Cause::Natural)]
+                    } else {
+                        let start_hp = pkmn.current_hp;
+                        pkmn.status.sleep = REST_SLEEP_TURN_COUNT;
+                        pkmn.status.poison = false;
+                        pkmn.status.freeze = false;
+                        pkmn.status.burn = false;
+                        pkmn.status.paralysis = false;
+                        pkmn.heal();
+                        vec![ActionSideEffects::Sleep(attacker.id), ActionSideEffects::Healed {
+                            healed: attacker.id,
+                            start_hp,
+                            end_hp: pkmn.current_hp,
+                            cause: Cause::Natural
+                        }]
+                    }
+                },
+                Effect::Conversion => {
+                    let slot = loop {
+                        if let Some(slot) = attacker.get_effective_move(rand::thread_rng().gen_range(0..4)) {
+                            break slot;
+                        }
+                    };
+                    let new_type = slot.attack.data()._type;
+                    attacker.data.borrow_mut().temp_type = Some(PokemonType::Single(new_type));
+                    vec![ActionSideEffects::ChangeType(attacker.id, new_type)]
+                },
+                Effect::TriAttack => {
+                    targets_for_secondary_damage.iter()
+                        .filter(|_| self.activates_secondary_effect(attacker, 20))
+                        .flat_map(|defender| {
+                            if defender.is_behind_substitute() {
+                                vec![ActionSideEffects::Failed(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
+                            } else {
+                                match rand::thread_rng().gen_range(0..3) {
+                                    0 => self.inflict_non_volatile_status(defender, NonVolatileBattleAilment::Paralysis),
+                                    1 => self.inflict_non_volatile_status(defender, NonVolatileBattleAilment::Burn),
+                                    _ => self.inflict_non_volatile_status(defender, NonVolatileBattleAilment::Freeze)
+                                }
+                            }
+                        })
+                        .collect()
+                },
+                Effect::Substitute => {
+                    let mut pkmn = attacker.borrow_mut();
+                    let substitute_hp = pkmn.hp.value / 4;
+                    if pkmn.current_hp <= substitute_hp {
+                        vec![ActionSideEffects::Failed(Cause::PokemonBattleState(attacker.id, PokemonState::TooWeak))]
+                    } else {
+                        let (start_hp, end_hp) = pkmn.subtract_hp(substitute_hp);
+                        let mut data = attacker.data.borrow_mut();
+                        data.substituted = substitute_hp + 1;
+                        vec![ActionSideEffects::BasicDamage {
+                            damaged: attacker.id,
+                            start_hp,
+                            end_hp,
+                            cause: Cause::PokemonBattleState(attacker.id, PokemonState::Substituted)
+                        }, ActionSideEffects::CreatedSubstitute(attacker.id)]
+                    }
                 }
             };
             effects.append(&mut secondary_effects);

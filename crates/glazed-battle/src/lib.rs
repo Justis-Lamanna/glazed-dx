@@ -331,6 +331,17 @@ impl ActivePokemon {
         if weight == 0 { 1 } else { weight }
     }
 
+    pub fn get_effective_move(&self, slot: usize) -> Option<MoveSlot> {
+        let pkmn = self.borrow();
+        let data = self.data.borrow();
+        match slot {
+            0 => data.temp_move_1.or(pkmn.move_1),
+            1 => data.temp_move_2.or(pkmn.move_2),
+            2 => data.temp_move_3.or(pkmn.move_3),
+            _ => data.temp_move_4.or(pkmn.move_4)
+        }
+    }
+
     pub fn is_grounded(&self) -> (bool, Cause) {
         if let Some(Item::IronBall) = self.borrow().held_item {
             return (true, Cause::HeldItem(self.id, Item::IronBall))
@@ -1148,7 +1159,8 @@ pub enum PokemonState {
     Confused,
     StatsMaxed(StatsCause),
     Enraged,
-    Substituted
+    Substituted,
+    TooWeak
 }
 
 #[derive(Debug, Clone)]
@@ -1199,7 +1211,7 @@ pub enum ActionSideEffects {
         actions: Vec<Vec<ActionSideEffects>>,
         hits: u8
     },
-    DamagedSubstitute {
+    CreatedSubstitute(Battler), DamagedSubstitute {
         damaged: Battler,
         start_hp: u16,
         end_hp: u16
@@ -1281,6 +1293,7 @@ pub enum ActionSideEffects {
         gender: Gender,
         shiny: bool
     },
+    ChangeType(Battler, Type), ChangeAbility(Battler, Ability),
     NothingHappened
 }
 impl ActionSideEffects {

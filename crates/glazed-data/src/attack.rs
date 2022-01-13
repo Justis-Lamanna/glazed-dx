@@ -181,7 +181,7 @@ pub enum Move {
     SuperFang,
     Slash,
     Substitute,
-    Struggle,
+    // Struggle,
     Sketch,
     TripleKick,
     Thief,
@@ -593,7 +593,7 @@ impl Move {
                 Move::Feint | Move::FocusPunch | Move::FollowMe | Move::FreezeShock | Move::HelpingHand |
                 Move::IceBurn | Move::MeFirst | Move::Mimic | Move::MirrorCoat | Move::MirrorMove |
                 Move::NaturePower | Move::Protect | Move::Sketch | Move::SleepTalk | Move::Snatch |
-                Move::Snore | Move::Struggle | Move::Switcheroo | Move::Thief | Move::Transform |
+                Move::Snore | Move::Switcheroo | Move::Thief | Move::Transform |
                 Move::Trick | Move::VCreate | Move::WideGuard => {},
                 m => return m
             }
@@ -623,7 +623,7 @@ impl Move {
 
     pub fn can_be_mimicked(&self) -> bool {
         match self {
-            Move::Sketch | Move::Transform | Move::Struggle | Move::Metronome => false,
+            Move::Sketch | Move::Transform | Move::Metronome => false,
             _ => true
         }
     }
@@ -767,6 +767,7 @@ pub enum Effect {
     StatChange(BattleStat, i8, u8, StatChangeTarget),
     StatReset,
     NonVolatileStatus(NonVolatileBattleAilment, u8, StatChangeTarget),
+    TriAttack,
     VolatileStatus(VolatileBattleAilment, u8, StatChangeTarget),
     Heal(u8),
     Flinch(u8),
@@ -787,6 +788,9 @@ pub enum Effect {
     Screen(ScreenType),
     Bide,
     Transform,
+    Rest,
+    Conversion,
+    Substitute,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -1077,7 +1081,7 @@ impl Move {
             Move::SuperFang => &SuperFang,
             Move::Slash => &Slash,
             Move::Substitute => &Substitute,
-            Move::Struggle => &Struggle,
+            // Move::Struggle => &Struggle,
             Move::Sketch => &Sketch,
             Move::TripleKick => &TripleKick,
             Move::Thief => &Thief,
@@ -3416,7 +3420,7 @@ pub static Rest: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::Rest],
 };
 pub static RockSlide: MoveData = MoveData {
     pp: 10,
@@ -3464,7 +3468,7 @@ pub static Conversion: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::Conversion],
 };
 pub static TriAttack: MoveData = MoveData {
     pp: 10,
@@ -3476,7 +3480,7 @@ pub static TriAttack: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(80),
 	crit_rate: None,
-	effects: &[Effect::Custom],
+	effects: &[Effect::TriAttack],
 };
 pub static SuperFang: MoveData = MoveData {
     pp: 10,
@@ -3512,20 +3516,20 @@ pub static Substitute: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::Substitute],
 };
-pub static Struggle: MoveData = MoveData {
-    pp: 1,
-    priority: 0,
-    accuracy: Accuracy::AlwaysHits,
-    _type: Type::Normal,
-    contest_type: ContestType::Cool,
-    damage_type: DamageType::Physical,
-    target: Target::RandomOpponent,
-    power: Power::BaseWithRecoil(50, (1u8, 4u8)),
-	crit_rate: None,
-	effects: &[],
-};
+// pub static Struggle: MoveData = MoveData {
+//     pp: 1,
+//     priority: 0,
+//     accuracy: Accuracy::AlwaysHits,
+//     _type: Type::Normal,
+//     contest_type: ContestType::Cool,
+//     damage_type: DamageType::Physical,
+//     target: Target::RandomOpponent,
+//     power: Power::BaseWithRecoil(50, (1u8, 4u8)),
+// 	crit_rate: None,
+// 	effects: &[],
+// };
 pub static Sketch: MoveData = MoveData {
     pp: 1,
     priority: 0,
