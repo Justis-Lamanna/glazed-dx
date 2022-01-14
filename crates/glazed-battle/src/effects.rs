@@ -394,16 +394,9 @@ impl Battlefield {
                     }
                 },
                 Effect::StatChange(stat, stages, probability, StatChangeTarget::Target) => {
-                    targets_for_secondary_damage.iter()
-                        .filter(|_| self.activates_secondary_effect(attacker, *probability))
-                        .map(|defender| {
-                            if defender.is_behind_substitute() {
-                                ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))
-                            } else {
-                                change_opponent_stat(&self, attacker, defender, *stat, *stages)
-                            }
-                        })
-                        .collect()
+                    let do_stat_change = |attacker: &ActivePokemon, defender: &ActivePokemon|
+                        vec![change_opponent_stat(&self, attacker, defender, *stat, *stages)];
+                    self.do_probable_effect_on_all_targets(attacker, &targets_for_secondary_damage, *probability, do_stat_change)
                 },
                 Effect::NonVolatileStatus(ailment, probability, StatChangeTarget::User) => {
                     let triggers = self.activates_secondary_effect(attacker, *probability);
@@ -490,23 +483,7 @@ impl Battlefield {
                         })
                         .collect()
                 }
-                Effect::Flinch(probability) => {
-                    targets_for_secondary_damage.iter()
-                        .filter_map(|defender| {
-                            if defender.is_behind_substitute() {
-                                None
-                            } else {
-                                let triggers = *probability == 0 || rand::thread_rng().gen_bool(f64::from(*probability) / 100f64);
-                                if triggers {
-                                    defender.data.borrow_mut().flinch = true;
-                                    Some(ActionSideEffects::WillFlinch(defender.id))
-                                } else {
-                                    None
-                                }
-                            }
-                        })
-                        .collect()
-                },
+                Effect::Flinch(probability) => self.do_probable_effect_on_all_targets(attacker, &targets_for_secondary_damage, *probability, do_flinch_effect),
                 Effect::Thrash => {
                     let mut data = attacker.data.borrow_mut();
                     if data.thrashing.is_none() {
@@ -542,36 +519,8 @@ impl Battlefield {
                     data.recharge = true;
                     vec![]
                 },
-                Effect::Heal(percentage) => {
-                    let mut pkmn = attacker.borrow_mut();
-                    let start_hp = pkmn.current_hp;
-                    let delta = math::ratio(start_hp, *percentage, 100);
-                    let end_hp = start_hp.saturating_add(delta).clamp(0, pkmn.hp.value);
-                    pkmn.current_hp = end_hp;
-
-                    vec![ActionSideEffects::Healed {
-                        healed: attacker.id,
-                        start_hp,
-                        end_hp,
-                        cause: Cause::Natural
-                    }]
-                },
-                Effect::Leech => {
-                    targets_for_secondary_damage.iter()
-                        .map(|defender| {
-                            let mut data = defender.data.borrow_mut();
-                            if data.seeded.is_none() {
-                                data.seeded = Some(attacker.id);
-                                ActionSideEffects::SeedStart {
-                                    from: defender.id,
-                                    to: attacker.id
-                                }
-                            } else {
-                                ActionSideEffects::Failed(Cause::Natural)
-                            }
-                        })
-                        .collect()
-                },
+                Effect::Heal(percentage) => do_heal_effect(attacker, *percentage),
+                Effect::Leech => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_leech_effect),
                 Effect::Rage => {
                     let mut data = attacker.data.borrow_mut();
                     if data.enraged {
@@ -581,27 +530,7 @@ impl Battlefield {
                         vec![ActionSideEffects::RageStart(attacker.id)]
                     }
                 },
-                Effect::Mimic => {
-                    let target = targets_for_secondary_damage.first();
-                    let effect = match target {
-                        None => ActionSideEffects::NoTarget,
-                        Some(defender) => {
-                            let data = defender.data.borrow();
-                            match data.last_move_used {
-                                None => ActionSideEffects::NoEffectSecondary(Cause::Natural),
-                                Some(m) => {
-                                    if m.can_be_mimicked() && !attacker.borrow().knows_move(m) {
-                                        attacker.replace_mimic_with(m);
-                                        ActionSideEffects::Mimicked(attacker.id, m)
-                                    } else {
-                                        ActionSideEffects::Failed(Cause::Natural)
-                                    }
-                                }
-                            }
-                        }
-                    };
-                    vec![effect]
-                },
+                Effect::Mimic => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_mimic_effect),
                 Effect::ChangeWeather(_) => unimplemented!("No Weather Yet"),
                 Effect::DispelWeather => unimplemented!("No Weather Yet"),
                 Effect::Predicated(_, _, _) => panic!("Nested predicated not supported"),
@@ -624,204 +553,21 @@ impl Battlefield {
                         SCREEN_TURN_COUNT
                     };
 
-                    let effect = match screen {
-                        ScreenType::LightScreen => {
-                            if side.light_screen > 0 {
-                                ActionSideEffects::NoEffectSecondary(Cause::Natural)
-                            } else {
-                                side.light_screen = turn_count;
-                                ActionSideEffects::ScreenStart(attacker.id.side, ScreenType::LightScreen)
-                            }
-                        }
-                        ScreenType::Reflect => {
-                            if side.reflect > 0 {
-                                ActionSideEffects::NoEffectSecondary(Cause::Natural)
-                            } else {
-                                side.reflect = turn_count;
-                                ActionSideEffects::ScreenStart(attacker.id.side, ScreenType::Reflect)
-                            }
-                        }
-                    };
-                    vec![effect]
+                    do_screen_effect(&mut side, screen, turn_count)
                 },
-                Effect::StatReset => {
-                    let mut effects = Vec::new();
-                    for pkmn in targets_for_secondary_damage.iter() {
-                        let mut data = pkmn.data.borrow_mut();
-                        data.attack_stage = 0;
-                        data.defense_stage = 0;
-                        data.special_attack_stage = 0;
-                        data.special_defense_stage = 0;
-                        data.speed_stage = 0;
-                        data.accuracy_stage = 0;
-                        data.evasion_stage = 0;
-                        data.crit_stage = 0;
-                        effects.push(ActionSideEffects::StatsReset(pkmn.id));
-                    }
-                    effects
-                },
+                Effect::StatReset => do_stat_reset_effect(&targets_for_secondary_damage),
                 Effect::Bide => {
                     let mut data = attacker.data.borrow_mut();
                     data.bide = Some((BIDE_TURN_COUNT, 0));
                     vec![ActionSideEffects::BideStart(attacker.id)]
                 },
-                Effect::Transform => {
-                    match targets_for_secondary_damage.last() {
-                        Some(target) => {
-                            let transform = TransformData::from(*target);
-                            let target = target.borrow();
-                            attacker.data.borrow_mut().transformed = Some(transform);
-                            vec![ActionSideEffects::Transform {
-                                id: attacker.id,
-                                species: target.species,
-                                gender: target.gender,
-                                shiny: target.is_shiny()
-                            }]
-                        },
-                        None => vec![ActionSideEffects::NoTarget]
-                    }
-                },
-                Effect::Rest => {
-                    let mut pkmn = attacker.borrow_mut();
-                    if pkmn.is_full_health() {
-                        vec![ActionSideEffects::Failed(Cause::Natural)]
-                    } else {
-                        let start_hp = pkmn.current_hp;
-                        pkmn.status.sleep = REST_SLEEP_TURN_COUNT;
-                        pkmn.status.poison = false;
-                        pkmn.status.freeze = false;
-                        pkmn.status.burn = false;
-                        pkmn.status.paralysis = false;
-                        pkmn.heal();
-                        vec![ActionSideEffects::Sleep(attacker.id), ActionSideEffects::Healed {
-                            healed: attacker.id,
-                            start_hp,
-                            end_hp: pkmn.current_hp,
-                            cause: Cause::Natural
-                        }]
-                    }
-                },
-                Effect::Conversion => {
-                    let slot = loop {
-                        if let Some(slot) = attacker.get_effective_move(rand::thread_rng().gen_range(0..4)) {
-                            break slot;
-                        }
-                    };
-                    let new_type = slot.attack.data()._type;
-                    attacker.data.borrow_mut().temp_type = Some(PokemonType::Single(new_type));
-                    vec![ActionSideEffects::ChangeType(attacker.id, new_type)]
-                },
-                Effect::TriAttack => {
-                    targets_for_secondary_damage.iter()
-                        .filter(|_| self.activates_secondary_effect(attacker, 20))
-                        .flat_map(|defender| {
-                            if defender.is_behind_substitute() {
-                                vec![ActionSideEffects::Failed(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
-                            } else {
-                                match rand::thread_rng().gen_range(0..3) {
-                                    0 => inflict_non_volatile_status(defender, NonVolatileBattleAilment::Paralysis),
-                                    1 => inflict_non_volatile_status(defender, NonVolatileBattleAilment::Burn),
-                                    _ => inflict_non_volatile_status(defender, NonVolatileBattleAilment::Freeze)
-                                }
-                            }
-                        })
-                        .collect()
-                },
-                Effect::Substitute => {
-                    let mut pkmn = attacker.borrow_mut();
-                    let substitute_hp = pkmn.hp.value / 4;
-                    if pkmn.current_hp <= substitute_hp {
-                        vec![ActionSideEffects::Failed(Cause::PokemonBattleState(attacker.id, PokemonState::TooWeak))]
-                    } else {
-                        let (start_hp, end_hp) = pkmn.subtract_hp(substitute_hp);
-                        let mut data = attacker.data.borrow_mut();
-                        data.substituted = substitute_hp + 1;
-                        vec![ActionSideEffects::BasicDamage {
-                            damaged: attacker.id,
-                            start_hp,
-                            end_hp,
-                            cause: Cause::PokemonBattleState(attacker.id, PokemonState::Substituted)
-                        }, ActionSideEffects::CreatedSubstitute(attacker.id)]
-                    }
-                },
-                Effect::Sketch => {
-                    match targets_for_secondary_damage.last() {
-                        Some(target) => {
-                            let target_data = target.data.borrow();
-                            match target_data.last_move_used {
-                                Some(m) => {
-                                    if attacker.borrow().knows_move(m) {
-                                        vec![ActionSideEffects::Failed(Cause::Natural)]
-                                    } else {
-                                        attacker.replace_sketch_with(m);
-                                        vec![ActionSideEffects::Sketched {
-                                            user: attacker.id,
-                                            target: target.id,
-                                            attack: m
-                                        }]
-                                    }
-                                },
-                                None => vec![ActionSideEffects::Failed(Cause::Natural)]
-                            }
-                        },
-                        None => vec![ActionSideEffects::NoTarget]
-                    }
-                },
-                Effect::StealItem => {
-                    match targets_for_secondary_damage.last() {
-                        Some(target) => {
-                                let mut attacking_pkmn = attacker.borrow_mut();
-                                if attacking_pkmn.held_item.is_some() {
-                                    // We can't steal when holding a held item, so we do nothing.
-                                    vec![ActionSideEffects::CouldntStealItem {
-                                        from: attacker.id,
-                                        to: target.id,
-                                        cause: Cause::PokemonBattleState(attacker.id, PokemonState::HoldingItem)
-                                    }]
-                                } else {
-                                    let mut target_pkmn = target.borrow_mut();
-                                    let can_steal = match &target_pkmn.held_item {
-                                        None => false,
-                                        Some(i) if i.is_mail() => false,
-                                        Some(Item::GriseousOrb) => {
-                                            match (attacking_pkmn.species, target_pkmn.species) {
-                                                (Species::Giratina(_), _) | (_, Species::Giratina(_)) => false,
-                                                _ => true
-                                            }
-                                        },
-                                        Some(i) if i.is_plate() => {
-                                            match (attacking_pkmn.species, target_pkmn.species) {
-                                                (Species::Arceus(_), _) | (_, Species::Arceus(_)) => false,
-                                                _ => true
-                                            }
-                                        },
-                                        Some(i) if i.is_drive() => {
-                                            match (attacking_pkmn.species, target_pkmn.species) {
-                                                (Species::Genesect(_), _) | (_, Species::Genesect(_)) => false,
-                                                _ => true
-                                            }
-                                        },
-                                        _ => true
-                                    };
-                                    if can_steal {
-                                        attacking_pkmn.held_item = take(&mut target_pkmn.held_item);
-                                        vec![ActionSideEffects::StoleItem {
-                                            from: target.id,
-                                            to: attacker.id,
-                                            item: attacking_pkmn.held_item.as_ref().unwrap().clone()
-                                        }]
-                                    } else {
-                                        vec![ActionSideEffects::CouldntStealItem {
-                                            from: attacker.id,
-                                            to: target.id,
-                                            cause: Cause::Natural
-                                        }]
-                                    }
-                                }
-                            },
-                        None => vec![]
-                    }
-                }
+                Effect::Transform => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_transform_effect),
+                Effect::Rest => do_rest_effect(attacker),
+                Effect::Conversion => do_conversion_effect(attacker),
+                Effect::TriAttack => self.do_probable_effect_on_all_targets(attacker, &targets_for_secondary_damage, 20, do_tri_attack_effect),
+                Effect::Substitute => do_substitute_effect(attacker),
+                Effect::Sketch => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_sketch_effect),
+                Effect::StealItem => do_optional_effect_on_last_target(attacker, &targets_for_secondary_damage, do_steal_item_effect)
             };
             effects.append(&mut secondary_effects);
         }
@@ -851,5 +597,284 @@ impl Battlefield {
         } else {
             rand::thread_rng().gen_bool(f64::from(probability) / 100f64)
         }
+    }
+
+    fn do_probable_effect_on_all_targets<F>(&self, attacker: &ActivePokemon, targets: &Vec<&ActivePokemon>, probability: u8, effect: F) -> Vec<ActionSideEffects>
+        where F: Fn(&ActivePokemon, &ActivePokemon) -> Vec<ActionSideEffects>
+    {
+        targets.iter()
+            .filter(|_| self.activates_secondary_effect(attacker, probability))
+            .flat_map(|target| effect(attacker, *target))
+            .collect()
+    }
+}
+
+fn do_effect_on_last_target<F>(attacker: &ActivePokemon, to_effect: &Vec<&ActivePokemon>, effect: F) -> Vec<ActionSideEffects>
+    where F: Fn(&ActivePokemon, &ActivePokemon) -> Vec<ActionSideEffects>
+{
+    match to_effect.last() {
+        Some(t) => effect(attacker, *t),
+        None => vec![ActionSideEffects::NoTarget]
+    }
+}
+
+fn do_optional_effect_on_last_target<F>(attacker: &ActivePokemon, to_effect: &Vec<&ActivePokemon>, effect: F) -> Vec<ActionSideEffects>
+    where F: Fn(&ActivePokemon, &ActivePokemon) -> Vec<ActionSideEffects>
+{
+    match to_effect.last() {
+        Some(t) => effect(attacker, *t),
+        None => vec![]
+    }
+}
+
+fn do_flinch_effect(attacker: &ActivePokemon, defender: &ActivePokemon) -> Vec<ActionSideEffects> {
+    if defender.is_behind_substitute() {
+        vec![]
+    } else {
+        defender.data.borrow_mut().flinch = true;
+        vec![ActionSideEffects::WillFlinch(defender.id)]
+    }
+}
+
+fn do_heal_effect(attacker: &ActivePokemon, percentage: u8) -> Vec<ActionSideEffects> {
+    let mut pkmn = attacker.borrow_mut();
+    let start_hp = pkmn.current_hp;
+    let delta = math::ratio(start_hp, percentage, 100);
+    let end_hp = start_hp.saturating_add(delta).clamp(0, pkmn.hp.value);
+    pkmn.current_hp = end_hp;
+
+    vec![ActionSideEffects::Healed {
+        healed: attacker.id,
+        start_hp,
+        end_hp,
+        cause: Cause::Natural
+    }]
+}
+
+fn do_leech_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let mut data = target.data.borrow_mut();
+    let effect = if data.seeded.is_none() {
+        data.seeded = Some(attacker.id);
+        ActionSideEffects::SeedStart {
+            from: target.id,
+            to: attacker.id
+        }
+    } else {
+        ActionSideEffects::Failed(Cause::Natural)
+    };
+    vec![effect]
+}
+
+fn do_mimic_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let data = target.data.borrow();
+    let effect = match data.last_move_used {
+        None => ActionSideEffects::NoEffectSecondary(Cause::Natural),
+        Some(m) => {
+            if m.can_be_mimicked() && !attacker.borrow().knows_move(m) {
+                attacker.replace_mimic_with(m);
+                ActionSideEffects::Mimicked(attacker.id, m)
+            } else {
+                ActionSideEffects::Failed(Cause::Natural)
+            }
+        }
+    };
+    vec![effect]
+}
+
+fn do_screen_effect(side: &mut RefMut<Side>, screen: &ScreenType, turns: u8) -> Vec<ActionSideEffects> {
+    let effect = match screen {
+        ScreenType::LightScreen => {
+            if side.light_screen > 0 {
+                ActionSideEffects::NoEffectSecondary(Cause::Natural)
+            } else {
+                side.light_screen = turns;
+                ActionSideEffects::ScreenStart(side.id, ScreenType::LightScreen)
+            }
+        }
+        ScreenType::Reflect => {
+            if side.reflect > 0 {
+                ActionSideEffects::NoEffectSecondary(Cause::Natural)
+            } else {
+                side.reflect = turns;
+                ActionSideEffects::ScreenStart(side.id, ScreenType::Reflect)
+            }
+        }
+    };
+    vec![effect]
+}
+
+fn do_stat_reset_effect(targets: &Vec<&ActivePokemon>) -> Vec<ActionSideEffects> {
+    let mut effects = Vec::new();
+    for pkmn in targets.iter() {
+        let mut data = pkmn.data.borrow_mut();
+        data.attack_stage = 0;
+        data.defense_stage = 0;
+        data.special_attack_stage = 0;
+        data.special_defense_stage = 0;
+        data.speed_stage = 0;
+        data.accuracy_stage = 0;
+        data.evasion_stage = 0;
+        data.crit_stage = 0;
+        effects.push(ActionSideEffects::StatsReset(pkmn.id));
+    }
+    effects
+}
+
+fn do_rest_effect(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let mut pkmn = attacker.borrow_mut();
+    if pkmn.is_full_health() {
+        vec![ActionSideEffects::Failed(Cause::Natural)]
+    } else {
+        let start_hp = pkmn.current_hp;
+        pkmn.status.sleep = REST_SLEEP_TURN_COUNT;
+        pkmn.status.poison = false;
+        pkmn.status.freeze = false;
+        pkmn.status.burn = false;
+        pkmn.status.paralysis = false;
+        pkmn.heal();
+        vec![ActionSideEffects::Sleep(attacker.id), ActionSideEffects::Healed {
+            healed: attacker.id,
+            start_hp,
+            end_hp: pkmn.current_hp,
+            cause: Cause::Natural
+        }]
+    }
+}
+
+fn do_conversion_effect(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let slot = loop {
+        if let Some(slot) = attacker.get_effective_move(rand::thread_rng().gen_range(0..4)) {
+            break slot;
+        }
+    };
+    let new_type = slot.attack.data()._type;
+    attacker.data.borrow_mut().temp_type = Some(PokemonType::Single(new_type));
+    vec![ActionSideEffects::ChangeType(attacker.id, new_type)]
+}
+
+fn do_tri_attack_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    if target.is_behind_substitute() {
+        vec![]
+    } else {
+        match rand::thread_rng().gen_range(0..3) {
+            0 => inflict_non_volatile_status(target, NonVolatileBattleAilment::Paralysis),
+            1 => inflict_non_volatile_status(target, NonVolatileBattleAilment::Burn),
+            _ => inflict_non_volatile_status(target, NonVolatileBattleAilment::Freeze)
+        }
+    }
+}
+
+fn do_substitute_effect(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let mut pkmn = attacker.borrow_mut();
+    let substitute_hp = pkmn.hp.value / 4;
+    if pkmn.current_hp <= substitute_hp {
+        vec![ActionSideEffects::Failed(Cause::PokemonBattleState(attacker.id, PokemonState::TooWeak))]
+    } else {
+        let (start_hp, end_hp) = pkmn.subtract_hp(substitute_hp);
+        let mut data = attacker.data.borrow_mut();
+        data.substituted = substitute_hp + 1;
+        vec![ActionSideEffects::BasicDamage {
+            damaged: attacker.id,
+            start_hp,
+            end_hp,
+            cause: Cause::PokemonBattleState(attacker.id, PokemonState::Substituted)
+        }, ActionSideEffects::CreatedSubstitute(attacker.id)]
+    }
+}
+
+fn do_sketch_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let target_data = target.data.borrow();
+    match target_data.last_move_used {
+        Some(m) => {
+            if attacker.borrow().knows_move(m) {
+                vec![ActionSideEffects::Failed(Cause::Natural)]
+            } else {
+                attacker.replace_sketch_with(m);
+                vec![ActionSideEffects::Sketched {
+                    user: attacker.id,
+                    target: target.id,
+                    attack: m
+                }]
+            }
+        },
+        None => vec![ActionSideEffects::Failed(Cause::Natural)]
+    }
+}
+
+fn do_transform_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let transform = TransformData::from(target);
+    let target = target.borrow();
+    attacker.data.borrow_mut().transformed = Some(transform);
+    vec![ActionSideEffects::Transform {
+        id: attacker.id,
+        species: target.species,
+        gender: target.gender,
+        shiny: target.is_shiny()
+    }]
+}
+
+fn do_steal_item_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let mut attacking_pkmn = attacker.borrow_mut();
+    if attacking_pkmn.held_item.is_some() {
+        // We can't steal when holding a held item, so we do nothing.
+        return vec![ActionSideEffects::CouldntStealItem {
+            from: attacker.id,
+            to: target.id,
+            cause: Cause::PokemonBattleState(attacker.id, PokemonState::HoldingItem)
+        }]
+    }
+
+    if target.get_effective_ability() == Ability::StickyHold {
+        return vec![ActionSideEffects::CouldntStealItem {
+            from: attacker.id,
+            to: target.id,
+            cause: Cause::Ability(attacker.id, Ability::StickyHold)
+        }]
+    }
+
+    let mut target_pkmn = target.borrow_mut();
+    let can_steal = match &target_pkmn.held_item {
+        None => {
+            return vec![ActionSideEffects::CouldntStealItem {
+                from: attacker.id,
+                to: target.id,
+                cause: Cause::PokemonBattleState(target.id, PokemonState::NotHoldingItem)
+            }]
+        },
+        Some(i) if i.is_mail() => false,
+        Some(Item::GriseousOrb) => {
+            match (attacking_pkmn.species, target_pkmn.species) {
+                (Species::Giratina(_), _) | (_, Species::Giratina(_)) => false,
+                _ => true
+            }
+        },
+        Some(i) if i.is_plate() => {
+            match (attacking_pkmn.species, target_pkmn.species) {
+                (Species::Arceus(_), _) | (_, Species::Arceus(_)) => false,
+                _ => true
+            }
+        },
+        Some(i) if i.is_drive() => {
+            match (attacking_pkmn.species, target_pkmn.species) {
+                (Species::Genesect(_), _) | (_, Species::Genesect(_)) => false,
+                _ => true
+            }
+        },
+        _ => true
+    };
+
+    if can_steal {
+        attacking_pkmn.held_item = take(&mut target_pkmn.held_item);
+        vec![ActionSideEffects::StoleItem {
+            from: target.id,
+            to: attacker.id,
+            item: attacking_pkmn.held_item.as_ref().unwrap().clone()
+        }]
+    } else {
+        vec![ActionSideEffects::CouldntStealItem {
+            from: attacker.id,
+            to: target.id,
+            cause: Cause::Natural
+        }]
     }
 }

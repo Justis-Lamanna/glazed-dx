@@ -32,14 +32,28 @@ pub enum SelectedTarget {
 }
 
 /// Represents one side of a battlefield
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Side {
+    id: BattleSide,
     hazard: Option<EntryHazard>,
     tailwind: u8,
     aurora_veil: u8,
     light_screen: u8,
     reflect: u8,
     mist: u8
+}
+impl Side {
+    pub fn new(side: BattleSide) -> Side {
+        Side {
+            id: side,
+            hazard: None,
+            tailwind: 0,
+            aurora_veil: 0,
+            light_screen: 0,
+            reflect: 0,
+            mist: 0
+        }
+    }
 }
 
 /// Represents the entire battlefield
@@ -513,14 +527,14 @@ impl Battlefield {
                 pokemon: 0,
                 data: Default::default()
             }),
-            user_side: RefCell::from(Side::default()),
+            user_side: RefCell::from(Side::new(BattleSide::Forward)),
             opponent: BattleParty::Single(ActivePokemon {
                 id: Battler { side: BattleSide::Back, individual: DoubleBattleSide::Left },
                 party: Rc::new(opponent),
                 pokemon: 0,
                 data: Default::default()
             }),
-            opponent_side: RefCell::from(Side::default()),
+            opponent_side: RefCell::from(Side::new(BattleSide::Back)),
             field: RefCell::from(Field::default()),
             wild_battle: false,
             turn_record: Vec::new()

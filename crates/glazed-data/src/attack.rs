@@ -2925,7 +2925,7 @@ pub static Haze: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::Opponents,
-    effects: &[],
+    effects: &[Effect::StatReset],
 };
 pub static Reflect: MoveData = MoveData {
     pp: 20,
