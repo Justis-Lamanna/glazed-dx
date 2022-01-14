@@ -11,7 +11,7 @@ use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{EnumIter, EnumCount as EnumCountMacro};
 
 use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
-use crate::pokemon::{MoveSlot, PoisonType};
+use crate::pokemon::{PoisonType};
 use crate::types::Type;
 
 /// Represents an Attack a Pokemon can have

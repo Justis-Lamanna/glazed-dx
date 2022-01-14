@@ -1,5 +1,4 @@
 use rand::Rng;
-use glazed_data::abilities::Ability;
 use glazed_data::attack::{Accuracy, Move};
 use glazed_data::types::Type;
 use crate::{ActionSideEffects, ActivePokemon, Battlefield, Cause};

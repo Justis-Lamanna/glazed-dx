@@ -1,18 +1,18 @@
 #![feature(get_mut_unchecked)]
 
-use std::cell::{Ref, RefCell, RefMut};
+use std::cell::{RefCell};
 use std::convert::TryFrom;
-use std::ops::{Add, Deref, DerefMut, Index, IndexMut};
+use std::ops::{Deref, Index, IndexMut};
 use std::option::Option::Some;
 use std::rc::Rc;
 
-use fraction::Fraction;
+
 use rand::Rng;
 
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{BattleStat, DamageType, Effect, Move, NonVolatileBattleAilment, ScreenType, SemiInvulnerableLocation, StatChangeTarget, Target, VolatileBattleAilment};
+use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, ScreenType, SemiInvulnerableLocation, Target};
 use glazed_data::constants::Species;
-use glazed_data::item::{Berry, EvolutionHeldItem, Incense, Item};
+use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, PoisonType, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 

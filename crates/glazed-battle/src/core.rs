@@ -1,17 +1,11 @@
-use std::cell::{Ref, RefCell, RefMut};
-use std::convert::{Infallible, TryFrom, TryInto};
-
-use rand::Rng;
+use std::cell::RefCell;
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, DamageType, Effect, Move, MoveData, MultiHitFlavor, Power, VolatileBattleAilment};
-use glazed_data::constants::Species;
-use glazed_data::item::{EvolutionHeldItem, Item};
-use glazed_data::pokemon::Pokemon;
-use glazed_data::types::{Effectiveness, PokemonType, Type};
+use glazed_data::attack::{Move, MoveData, MultiHitFlavor, Power};
+use glazed_data::item::{Item};
+use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, ActivePokemon, BattleData, Battlefield, Battler, Cause, Field, Weather};
-use crate::constants::{*};
+use crate::{ActionSideEffects, ActivePokemon, Battlefield, Cause, Field, Weather};
 
 pub type ActionCheck<T> = Result<T, ActionSideEffects>;
 

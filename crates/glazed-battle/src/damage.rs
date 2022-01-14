@@ -1,20 +1,17 @@
-use std::cell::{Ref, RefCell, RefMut};
 use std::convert::TryFrom;
 
 use fraction::{Fraction, ToPrimitive};
-use rand::{random, Rng};
+use rand::{Rng};
 use glazed_core::math;
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power, VolatileBattleAilment};
-use glazed_data::item::Item;
-use glazed_data::pokemon::Pokemon;
+use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, ActivePokemon, Battlefield, Battler, Cause, damage, PokemonState, StatsCause};
+use crate::{ActionSideEffects, ActivePokemon, Battlefield, Cause, damage};
 use crate::core;
 use crate::core::MoveContext;
-use crate::constants::{*};
+use crate::constants::*;
 
 /// Perform raw damage calculation
 /// Nothing related to types (such as Weather, STAB, or Effectiveness) or ailments (Burn) is applied here.
