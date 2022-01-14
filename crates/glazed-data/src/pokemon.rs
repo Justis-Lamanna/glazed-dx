@@ -760,6 +760,13 @@ impl PokemonTemplate {
         self
     }
 
+    /// Give this Pokemon an item to hold
+    pub fn holding<B: Into<Item>>(mut self, item: B) -> Self {
+        self.held_item = Some(item.into());
+
+        self
+    }
+
     fn create_stats(ivs: IVTemplate, evs: EVTemplate) -> (StatSlot, StatSlot, StatSlot, StatSlot, StatSlot, StatSlot) {
         let ivs = match ivs {
             IVTemplate::Random => [

@@ -799,6 +799,7 @@ pub enum Effect {
     Conversion,
     Substitute,
     Sketch,
+    StealItem,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -3572,7 +3573,7 @@ pub static Thief: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(60),
 	crit_rate: None,
-	effects: &[],
+	effects: &[Effect::StealItem],
 };
 pub static SpiderWeb: MoveData = MoveData {
     pp: 10,

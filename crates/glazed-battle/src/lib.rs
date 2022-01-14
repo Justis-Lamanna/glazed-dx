@@ -1186,7 +1186,8 @@ pub enum PokemonState {
     StatsMaxed(StatsCause),
     Enraged,
     Substituted,
-    TooWeak
+    TooWeak,
+    HoldingItem, NotHoldingItem
 }
 
 #[derive(Debug, Clone)]
@@ -1324,6 +1325,15 @@ pub enum ActionSideEffects {
         user: Battler,
         target: Battler,
         attack: Move
+    },
+    StoleItem {
+        from: Battler,
+        to: Battler,
+        item: Item
+    }, CouldntStealItem {
+        from: Battler,
+        to: Battler,
+        cause: Cause
     },
     NothingHappened
 }

@@ -737,6 +737,30 @@ impl Item {
             Item::TM(_) | Item::HM(_) | Item::KeyItem(_) => panic!("No TM, HM, Key Item data filled in")
         }
     }
+
+    pub fn is_mail(&self) -> bool {
+        match self {
+            Item::Mail(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_plate(&self) -> bool {
+        use Item::*;
+        match self {
+            DracoPlate | DreadPlate | EarthPlate | FistPlate | FlamePlate | IciclePlate | InsectPlate | IronPlate |
+            MeadowPlate | MindPlate | PixiePlate | SkyPlate | SplashPlate | SpookyPlate | StonePlate | ToxicPlate | ZapPlate => true,
+            _ => false
+        }
+    }
+
+    pub fn is_drive(&self) -> bool {
+        use Item::*;
+        match self {
+            DouseDrive | ShockDrive | BurnDrive | ChillDrive => true,
+            _ => false
+        }
+    }
 }
 
 pub static PokeBall: ItemData = ItemData {

@@ -1,5 +1,6 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::convert::TryFrom;
+use std::mem::{swap, take};
 use std::ops::{Deref, Index, IndexMut, RangeInclusive};
 use std::pin::Pin;
 
@@ -95,6 +96,29 @@ pub fn change_opponent_stat(field: &Battlefield, affecter: &ActivePokemon, affec
     };
 
     _change_stat(affected, stat, stages, ability_cause)
+}
+
+pub fn inflict_non_volatile_status(affected: &ActivePokemon, status: NonVolatileBattleAilment) -> Vec<ActionSideEffects> {
+    {
+        let mut data = affected.data.borrow_mut();
+        let mut affected = affected.borrow_mut();
+        match status {
+            NonVolatileBattleAilment::Paralysis => affected.status.paralysis = true,
+            NonVolatileBattleAilment::Sleep => affected.status.sleep = rand::thread_rng().gen_range(SLEEP_TURNS_RANGE),
+            NonVolatileBattleAilment::Freeze => affected.status.freeze = true,
+            NonVolatileBattleAilment::Burn => affected.status.burn = true,
+            NonVolatileBattleAilment::Poison(a) => {
+                affected.status.poison = true;
+                if let PoisonType::BadlyPoisoned = a {
+                    data.poison_counter = 1;
+                }
+            }
+        }
+    }
+    vec![ActionSideEffects::NonVolatileStatusAilment {
+        affected: affected.id,
+        status
+    }]
 }
 
 impl Battlefield {
@@ -384,7 +408,7 @@ impl Battlefield {
                 Effect::NonVolatileStatus(ailment, probability, StatChangeTarget::User) => {
                     let triggers = self.activates_secondary_effect(attacker, *probability);
                     if triggers {
-                        self.inflict_non_volatile_status(attacker, *ailment)
+                        inflict_non_volatile_status(attacker, *ailment)
                     } else {
                         Vec::new()
                     }
@@ -396,7 +420,7 @@ impl Battlefield {
                             if defender.is_behind_substitute() {
                                 vec![ActionSideEffects::Failed(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
                             } else {
-                                self.inflict_non_volatile_status(defender, *ailment)
+                                inflict_non_volatile_status(defender, *ailment)
                             }
                         })
                         .collect()
@@ -695,9 +719,9 @@ impl Battlefield {
                                 vec![ActionSideEffects::Failed(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
                             } else {
                                 match rand::thread_rng().gen_range(0..3) {
-                                    0 => self.inflict_non_volatile_status(defender, NonVolatileBattleAilment::Paralysis),
-                                    1 => self.inflict_non_volatile_status(defender, NonVolatileBattleAilment::Burn),
-                                    _ => self.inflict_non_volatile_status(defender, NonVolatileBattleAilment::Freeze)
+                                    0 => inflict_non_volatile_status(defender, NonVolatileBattleAilment::Paralysis),
+                                    1 => inflict_non_volatile_status(defender, NonVolatileBattleAilment::Burn),
+                                    _ => inflict_non_volatile_status(defender, NonVolatileBattleAilment::Freeze)
                                 }
                             }
                         })
@@ -742,6 +766,61 @@ impl Battlefield {
                         },
                         None => vec![ActionSideEffects::NoTarget]
                     }
+                },
+                Effect::StealItem => {
+                    match targets_for_secondary_damage.last() {
+                        Some(target) => {
+                                let mut attacking_pkmn = attacker.borrow_mut();
+                                if attacking_pkmn.held_item.is_some() {
+                                    // We can't steal when holding a held item, so we do nothing.
+                                    vec![ActionSideEffects::CouldntStealItem {
+                                        from: attacker.id,
+                                        to: target.id,
+                                        cause: Cause::PokemonBattleState(attacker.id, PokemonState::HoldingItem)
+                                    }]
+                                } else {
+                                    let mut target_pkmn = target.borrow_mut();
+                                    let can_steal = match &target_pkmn.held_item {
+                                        None => false,
+                                        Some(i) if i.is_mail() => false,
+                                        Some(Item::GriseousOrb) => {
+                                            match (attacking_pkmn.species, target_pkmn.species) {
+                                                (Species::Giratina(_), _) | (_, Species::Giratina(_)) => false,
+                                                _ => true
+                                            }
+                                        },
+                                        Some(i) if i.is_plate() => {
+                                            match (attacking_pkmn.species, target_pkmn.species) {
+                                                (Species::Arceus(_), _) | (_, Species::Arceus(_)) => false,
+                                                _ => true
+                                            }
+                                        },
+                                        Some(i) if i.is_drive() => {
+                                            match (attacking_pkmn.species, target_pkmn.species) {
+                                                (Species::Genesect(_), _) | (_, Species::Genesect(_)) => false,
+                                                _ => true
+                                            }
+                                        },
+                                        _ => true
+                                    };
+                                    if can_steal {
+                                        attacking_pkmn.held_item = take(&mut target_pkmn.held_item);
+                                        vec![ActionSideEffects::StoleItem {
+                                            from: target.id,
+                                            to: attacker.id,
+                                            item: attacking_pkmn.held_item.as_ref().unwrap().clone()
+                                        }]
+                                    } else {
+                                        vec![ActionSideEffects::CouldntStealItem {
+                                            from: attacker.id,
+                                            to: target.id,
+                                            cause: Cause::Natural
+                                        }]
+                                    }
+                                }
+                            },
+                        None => vec![]
+                    }
                 }
             };
             effects.append(&mut secondary_effects);
@@ -773,30 +852,4 @@ impl Battlefield {
             rand::thread_rng().gen_bool(f64::from(probability) / 100f64)
         }
     }
-
-    //region Non-Damage
-
-    fn inflict_non_volatile_status(&self, affected: &ActivePokemon, status: NonVolatileBattleAilment) -> Vec<ActionSideEffects> {
-        {
-            let mut data = affected.data.borrow_mut();
-            let mut affected = affected.borrow_mut();
-            match status {
-                NonVolatileBattleAilment::Paralysis => affected.status.paralysis = true,
-                NonVolatileBattleAilment::Sleep => affected.status.sleep = rand::thread_rng().gen_range(SLEEP_TURNS_RANGE),
-                NonVolatileBattleAilment::Freeze => affected.status.freeze = true,
-                NonVolatileBattleAilment::Burn => affected.status.burn = true,
-                NonVolatileBattleAilment::Poison(a) => {
-                    affected.status.poison = true;
-                    if let PoisonType::BadlyPoisoned = a {
-                        data.poison_counter = 1;
-                    }
-                }
-            }
-        }
-        vec![ActionSideEffects::NonVolatileStatusAilment {
-            affected: affected.id,
-            status
-        }]
-    }
-    //endregion
 }
