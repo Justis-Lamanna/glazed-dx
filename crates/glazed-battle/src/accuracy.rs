@@ -39,7 +39,9 @@ pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &ActivePokemon, attac
     let MoveContext { attack, data: move_data, .. } = attack.into();
 
     // Bypass Accuracy Check
-    if attack == Move::Toxic && attacker.get_effective_type().has_type(&Type::Poison) {
+    if attacker.data.borrow().is_locked_on_to(defender) {
+        return ActionCheck::Ok(true);
+    } else if attack == Move::Toxic && attacker.get_effective_type().has_type(&Type::Poison) {
         return ActionCheck::Ok(true);
     } else if attack == Move::Thunder && field.field.borrow().is_rain() {
         return ActionCheck::Ok(true);

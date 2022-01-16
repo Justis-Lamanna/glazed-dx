@@ -1,16 +1,12 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::convert::TryFrom;
-use std::mem::{swap, take};
-use std::ops::{Deref, Index, IndexMut, RangeInclusive};
-use std::pin::Pin;
+use std::mem::take;
 
-use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
 
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, EffectPredicate, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, Target, VolatileBattleAilment};
 use glazed_data::constants::Species;
-use glazed_data::constants::UnownForm::P;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::{Gender, PoisonType, Pokemon};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
@@ -133,7 +129,7 @@ impl Battlefield {
             effects
         } else if attack == Move::MirrorMove {
             let attacker = &self[attacker_id.side][attacker_id.individual];
-            let mut data = attacker.data.borrow_mut();
+            let data = attacker.data.borrow_mut();
             if let Some((_, attack)) = data.get_last_targeted_attack() {
                 drop(data);
                 self.do_attack(attacker_id, attack, defender)
@@ -219,9 +215,9 @@ impl Battlefield {
     /// Do all the end-of-turn things
     pub fn end_of_round(&mut self) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
-        let mut both_sides = vec![(BattleSide::Forward, &self.user_side), (BattleSide::Back, &self.opponent_side)];
-        for (side_id, side) in both_sides {
-            effects.append(&mut turn::do_screen_countdown(side, side_id));
+        let both_sides = vec![&self.user_side, &self.opponent_side];
+        for side in both_sides {
+            effects.append(&mut turn::do_screen_countdown(side));
         }
 
         let everyone = self.get_everyone();
@@ -567,7 +563,9 @@ impl Battlefield {
                 Effect::TriAttack => self.do_probable_effect_on_all_targets(attacker, &targets_for_secondary_damage, 20, do_tri_attack_effect),
                 Effect::Substitute => do_substitute_effect(attacker),
                 Effect::Sketch => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_sketch_effect),
-                Effect::StealItem => do_optional_effect_on_last_target(attacker, &targets_for_secondary_damage, do_steal_item_effect)
+                Effect::StealItem => do_optional_effect_on_last_target(attacker, &targets_for_secondary_damage, do_steal_item_effect),
+                Effect::Trap => do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_trap_effect),
+                Effect::LockOn => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_lock_on_effect)
             };
             effects.append(&mut secondary_effects);
         }
@@ -609,6 +607,14 @@ impl Battlefield {
     }
 }
 
+fn do_effect_on_all_targets<F>(attacker: &ActivePokemon, to_effect: &Vec<&ActivePokemon>, effect: F) -> Vec<ActionSideEffects>
+where F: Fn(&ActivePokemon, &ActivePokemon) -> Vec<ActionSideEffects>
+{
+    to_effect.iter()
+        .flat_map(|pkmn| effect(attacker, *pkmn))
+        .collect()
+}
+
 fn do_effect_on_last_target<F>(attacker: &ActivePokemon, to_effect: &Vec<&ActivePokemon>, effect: F) -> Vec<ActionSideEffects>
     where F: Fn(&ActivePokemon, &ActivePokemon) -> Vec<ActionSideEffects>
 {
@@ -627,7 +633,7 @@ fn do_optional_effect_on_last_target<F>(attacker: &ActivePokemon, to_effect: &Ve
     }
 }
 
-fn do_flinch_effect(attacker: &ActivePokemon, defender: &ActivePokemon) -> Vec<ActionSideEffects> {
+fn do_flinch_effect(_attacker: &ActivePokemon, defender: &ActivePokemon) -> Vec<ActionSideEffects> {
     if defender.is_behind_substitute() {
         vec![]
     } else {
@@ -752,7 +758,7 @@ fn do_conversion_effect(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
     vec![ActionSideEffects::ChangeType(attacker.id, new_type)]
 }
 
-fn do_tri_attack_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+fn do_tri_attack_effect(_attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
     if target.is_behind_substitute() {
         vec![]
     } else {
@@ -877,4 +883,14 @@ fn do_steal_item_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec
             cause: Cause::Natural
         }]
     }
+}
+
+fn do_trap_effect(_attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    target.data.borrow_mut().trapped = true;
+    vec![ActionSideEffects::TrappedStart(target.id)]
+}
+
+fn do_lock_on_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    target.data.borrow_mut().locked_on = Some((2, target.id));
+    vec![ActionSideEffects::LockedOn { user: attacker.id, target: target.id }]
 }

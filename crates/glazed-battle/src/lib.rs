@@ -865,6 +865,10 @@ pub struct BattleData {
     minimized: bool,
     /// If true, this Pokemon has curled (Rollout does more damage)
     curled: bool,
+    /// If true, this Pokemon cannot escape
+    trapped: bool,
+    /// If present, the user is locked-on to that Battler for the specified number of turns
+    locked_on: Option<(u8, Battler)>,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -980,6 +984,14 @@ impl BattleData {
             .map(|(battler, attack)| (*battler, *attack))
     }
 
+    pub fn is_locked_on_to(&self, pkmn: &ActivePokemon) -> bool {
+        if let Some((_, battler)) = self.locked_on {
+            pkmn.id == battler
+        } else {
+            false
+        }
+    }
+
     pub fn end_of_turn(&mut self) {
         self.turn_count += 1;
         self.damage_this_turn = Vec::new();
@@ -988,10 +1000,19 @@ impl BattleData {
         if self.poison_counter > 0 {
             self.poison_counter = self.poison_counter.saturating_add(1);
         }
+
+        if let Some((counter, battler)) = self.locked_on {
+            let counter = counter - 1;
+            if counter == 0 {
+                self.locked_on = None;
+            } else {
+                self.locked_on = Some((counter, battler));
+            }
+        }
     }
 }
 
-/// Identifier of a member on the field
+/// Identifier of a member on the field (more specifically, a "place" on the battlefield)
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Battler {
     side: BattleSide,
@@ -1348,6 +1369,11 @@ pub enum ActionSideEffects {
         from: Battler,
         to: Battler,
         cause: Cause
+    },
+    TrappedStart(Battler),
+    LockedOn {
+        user: Battler,
+        target: Battler
     },
     NothingHappened
 }

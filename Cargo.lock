@@ -48,28 +48,28 @@ dependencies = [
 ]
 
 [[package]]
-name = "glazed-battle"
+name = "glazed_battle"
 version = "0.1.0"
 dependencies = [
  "either",
  "fraction",
- "glazed-core",
- "glazed-data",
+ "glazed_core",
+ "glazed_data",
  "parking_lot",
  "rand",
 ]
 
 [[package]]
-name = "glazed-core"
+name = "glazed_core"
 version = "0.1.0"
 
 [[package]]
-name = "glazed-data"
+name = "glazed_data"
 version = "0.1.0"
 dependencies = [
  "fraction",
- "glazed-core",
- "glazed-macro",
+ "glazed_core",
+ "glazed_macro",
  "lazy_static 0.1.16",
  "rand",
  "strum",
@@ -77,19 +77,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "glazed-dx"
+name = "glazed_dx"
 version = "0.1.0"
 dependencies = [
- "glazed-battle",
- "glazed-core",
- "glazed-data",
+ "glazed_battle",
+ "glazed_core",
+ "glazed_data",
 ]
 
 [[package]]
-name = "glazed-macro"
+name = "glazed_macro"
 version = "0.1.0"
 dependencies = [
- "glazed-core",
+ "glazed_core",
  "quote",
  "syn",
 ]

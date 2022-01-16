@@ -1,5 +1,5 @@
 [package]
-name = "glazed-data"
+name = "glazed_data"
 version = "0.1.0"
 authors = ["Justis <lamanna.justis@gmail.com>"]
 edition = "2018"
@@ -12,5 +12,5 @@ strum = "0.22"
 strum_macros = "0.22"
 lazy_static = "0.1.15"
 fraction = "0.9.0"
-glazed-core = { path = "../glazed-core" }
-glazed-macro = { path = "../glazed-macro" }
+glazed_core = { path = "../glazed-core" }
+glazed_macro = { path = "../glazed-macro" }

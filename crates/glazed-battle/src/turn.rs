@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use fraction::{Fraction, ToPrimitive};
 use rand::Rng;
 use glazed_core::math;
 use glazed_data::abilities::Ability;
@@ -113,19 +112,19 @@ pub fn do_disable_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<A
     }
 }
 
-pub fn do_screen_countdown(side: &RefCell<Side>, side_id: BattleSide) -> Vec<ActionSideEffects> {
+pub fn do_screen_countdown(side: &RefCell<Side>) -> Vec<ActionSideEffects> {
     let mut effects = Vec::new();
     let mut side = side.borrow_mut();
     if side.light_screen > 0 {
         side.light_screen = side.light_screen.saturating_sub(1);
         if side.light_screen == 0 {
-            effects.push(ActionSideEffects::ScreenEnd(side_id, ScreenType::LightScreen));
+            effects.push(ActionSideEffects::ScreenEnd(side.id, ScreenType::LightScreen));
         }
     }
     if side.reflect > 0 {
         side.reflect = side.reflect.saturating_sub(1);
         if side.reflect == 0 {
-            effects.push(ActionSideEffects::ScreenEnd(side_id, ScreenType::Reflect));
+            effects.push(ActionSideEffects::ScreenEnd(side.id, ScreenType::Reflect));
         }
     }
     effects

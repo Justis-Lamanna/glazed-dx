@@ -1,5 +1,5 @@
 [package]
-name = "glazed-battle"
+name = "glazed_battle"
 version = "0.1.0"
 authors = ["Justis <lamanna.justis@gmail.com>"]
 edition = "2018"
@@ -11,5 +11,5 @@ rand = "0.8.4"
 either = "1.6.1"
 fraction = "0.9.0"
 parking_lot = "0.11.2"
-glazed-data = { path = "../glazed-data" }
-glazed-core = { path = "../glazed-core" }
+glazed_data = { path = "../glazed-data" }
+glazed_core = { path = "../glazed-core" }

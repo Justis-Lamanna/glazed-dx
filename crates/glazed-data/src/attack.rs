@@ -800,6 +800,8 @@ pub enum Effect {
     Substitute,
     Sketch,
     StealItem,
+    Trap,
+    LockOn,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -3585,7 +3587,7 @@ pub static SpiderWeb: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::Trap],
 };
 pub static MindReader: MoveData = MoveData {
     pp: 5,
@@ -3597,7 +3599,7 @@ pub static MindReader: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::LockOn],
 };
 pub static Nightmare: MoveData = MoveData {
     pp: 15,
@@ -3945,7 +3947,7 @@ pub static LockOn: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::LockOn],
 };
 pub static Outrage: MoveData = MoveData {
     pp: 10,

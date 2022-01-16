@@ -1,5 +1,5 @@
 [package]
-name = "glazed-dx"
+name = "glazed_dx"
 version = "0.1.0"
 authors = ["Justis <lamanna.justis@gmail.com>"]
 edition = "2018"
@@ -7,6 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-glazed-core = { path = "../glazed-core" }
-glazed-data = { path = "../glazed-data" }
-glazed-battle = { path = "../glazed-battle" }
+glazed_core = { path = "../glazed-core" }
+glazed_data = { path = "../glazed-data" }
+glazed_battle = { path = "../glazed-battle" }

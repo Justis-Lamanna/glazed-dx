@@ -2,7 +2,7 @@
 proc-macro = true
 
 [package]
-name = "glazed-macro"
+name = "glazed_macro"
 version = "0.1.0"
 authors = ["Justis <lamanna.justis@gmail.com>"]
 edition = "2018"
@@ -12,4 +12,4 @@ edition = "2018"
 [dependencies]
 syn = "1.0"
 quote = "1.0"
-glazed-core = { path = "../glazed-core" }
+glazed_core = { path = "../glazed-core" }
