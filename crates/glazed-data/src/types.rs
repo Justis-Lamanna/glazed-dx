@@ -1,10 +1,10 @@
 use std::ops::Mul;
 
-use glazed_core::Id;
-use glazed_macro::*;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 /// Represents the Type of a Pokemon
-#[derive(Debug, Copy, Clone, PartialEq, Id)]
+#[derive(Debug, Copy, Clone, PartialEq, EnumIter)]
 pub enum Type {
     Normal,
     Fighting,

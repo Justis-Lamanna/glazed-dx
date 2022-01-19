@@ -816,7 +816,7 @@ pub struct BattleData {
     /// The Pokemon that have targeted this Pokemon, in order. Index 0 == Most recent, For Mirror Move (not reset at end of round)
     last_targeted: Vec<(Battler, Move)>,
     /// The last person who attacked the Pokemon (not reset at end of round)
-    last_attacker: Option<Battler>,
+    last_attacker: Option<(Battler, Move)>,
 
     attack_stage: i8,
     defense_stage: i8,

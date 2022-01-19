@@ -794,6 +794,7 @@ pub enum Effect {
     Transform,
     Rest,
     Conversion,
+    Conversion2,
     Substitute,
     Sketch,
     StealItem,
@@ -3670,7 +3671,7 @@ pub static Conversion2: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::Conversion2],
 };
 pub static Aeroblast: MoveData = MoveData {
     pp: 5,

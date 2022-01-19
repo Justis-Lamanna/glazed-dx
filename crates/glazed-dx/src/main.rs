@@ -8,7 +8,7 @@ use glazed_data::pokemon::{Gender, PokemonTemplate};
 fn main() {
     // for _ in 1..=40 {
     let me = Party::create(vec![
-        PokemonTemplate::pokemon(Species::Gastly, 20).shiny(),
+        PokemonTemplate::pokemon(Species::Quilava, 20).shiny(),
         PokemonTemplate::pokemon(Species::Eevee, 20),
         PokemonTemplate::pokemon(Species::Buizel, 20),
         PokemonTemplate::pokemon(Species::Furret, 20)]
@@ -17,7 +17,9 @@ fn main() {
 
     let mut battlefield = Battlefield::single_battle(me, them);
 
-    let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Flail, SelectedTarget::Implied);
+    let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::ThunderShock, SelectedTarget::Implied);
+    println!("{:#?}", fx);
+    let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Conversion2, SelectedTarget::Implied);
     println!("{:#?}", fx);
     let fx = battlefield.end_of_round();
     println!("{:#?}", fx);

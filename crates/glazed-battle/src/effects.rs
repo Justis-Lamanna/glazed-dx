@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 use std::mem::take;
 
 use rand::Rng;
+use strum::IntoEnumIterator;
 
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, EffectPredicate, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, Target, VolatileBattleAilment};
@@ -198,7 +199,7 @@ impl Battlefield {
             let counter = counter - 1;
             if counter == 0 {
                 let damage = damage.saturating_mul(2);
-                if let Some(defender) = attacker.data.borrow().last_attacker {
+                if let Some((defender, _)) = attacker.data.borrow().last_attacker {
                     let defender = &self[defender.side][defender.individual];
                     self.do_bide_damage(attacker, damage, defender)
                 } else {
@@ -573,6 +574,7 @@ impl Battlefield {
                 Effect::Transform => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_transform_effect),
                 Effect::Rest => do_rest_effect(attacker),
                 Effect::Conversion => do_conversion_effect(attacker),
+                Effect::Conversion2 => do_conversion_2_effect(attacker),
                 Effect::TriAttack => self.do_probable_effect_on_all_targets(attacker, &targets_for_secondary_damage, 20, do_tri_attack_effect),
                 Effect::Substitute => do_substitute_effect(attacker),
                 Effect::Sketch => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_sketch_effect),
@@ -782,6 +784,31 @@ fn do_conversion_effect(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
     let new_type = slot.attack.data()._type;
     attacker.data.borrow_mut().temp_type = Some(PokemonType::Single(new_type));
     vec![ActionSideEffects::ChangeType(attacker.id, new_type)]
+}
+
+fn do_conversion_2_effect(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let mut data = attacker.data.borrow_mut();
+    if let Some((_, attack)) = data.last_attacker {
+        let attack_type = attack.data()._type;
+        let candidates: Vec<Type> = Type::iter()
+            .filter(|t: &Type| {
+                match t.attacking(&attack_type) {
+                    Effectiveness::Immune => true,
+                    Effectiveness::Effect(i) => i < 0,
+                }
+            })
+            .collect();
+        let new_type = if candidates.len() == 1 {
+            candidates.get(0).unwrap()
+        } else {
+            let idx = rand::thread_rng().gen_range(0..candidates.len());
+            candidates.get(idx).unwrap()
+        };
+        data.temp_type = Some(PokemonType::Single(*new_type));
+        vec![ActionSideEffects::ChangeType(attacker.id, *new_type)]
+    } else {
+        vec![ActionSideEffects::Failed(Cause::Natural)]
+    }
 }
 
 fn do_tri_attack_effect(_attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {

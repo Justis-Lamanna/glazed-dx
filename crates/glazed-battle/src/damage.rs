@@ -1,6 +1,5 @@
 use std::convert::TryFrom;
 
-use fraction::{Fraction, ToPrimitive};
 use rand::{Rng};
 use glazed_core::math;
 
@@ -127,7 +126,7 @@ impl Battlefield { //region Damage
         let mut vec = Vec::new();
         let mut data = defender.data.borrow_mut();
         data.damage_this_turn.push((attacker.id, attack, damage));
-        data.last_attacker = Some(attacker.id);
+        data.last_attacker = Some((attacker.id, attack));
 
         if let Some((counter, acc)) = data.bide {
             data.bide = Some((counter, acc + damage));
@@ -198,7 +197,7 @@ impl Battlefield { //region Damage
                     {
                         let attacker_ability = attacker.get_effective_ability();
                         if attacker_ability != Ability::RockHead && attacker_ability != Ability::MagicGuard {
-                            let recoil_damage = (Fraction::from(*recoil) * Fraction::from(damage)).to_u16().unwrap();
+                            let recoil_damage = math::fraction(damage, *recoil);
 
                             let mut attacker_pkmn = attacker.borrow_mut();
                             let start_hp = attacker_pkmn.current_hp;
