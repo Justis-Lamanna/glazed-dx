@@ -4,7 +4,8 @@ use glazed_core::math;
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, Move, ScreenType};
 
-use crate::{ActionSideEffects, ActivePokemon, BattleSide, Cause, Side};
+use crate::{ActionSideEffects, ActivePokemon, Cause, Side};
+use crate::PokemonState;
 use crate::damage::calculate_confusion_damage;
 use crate::constants::{*};
 use crate::core::CheckResult;
@@ -30,6 +31,7 @@ pub fn do_sleep_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<Act
     if pkmn.status.sleep > 0 {
         pkmn.status.sleep -= 1;
         if pkmn.status.sleep == 0 {
+            attacker.data.borrow_mut().nightmare = false;
             Effect(ActionSideEffects::WokeUp(attacker.id))
         } else if !attack.can_be_used_while_sleeping() {
             EffectAndEnd(ActionSideEffects::Sleep(attacker.id))
@@ -164,6 +166,22 @@ pub fn do_binding_damage(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
         }
 
         effects
+    } else {
+        vec![]
+    }
+}
+
+pub fn do_nightmare_damage(affected: &ActivePokemon) -> Vec<ActionSideEffects> {
+    if affected.data.borrow().nightmare {
+        let mut pkmn = affected.borrow_mut();
+        let damage = math::fraction(pkmn.hp.value, NIGHTMARE_MULTIPLIER);
+        let (start_hp, end_hp) = pkmn.subtract_hp(damage);
+        vec![ActionSideEffects::BasicDamage {
+            damaged: affected.id,
+            start_hp,
+            end_hp,
+            cause: Cause::PokemonBattleState(affected.id, PokemonState::Nightmare)
+        }]
     } else {
         vec![]
     }

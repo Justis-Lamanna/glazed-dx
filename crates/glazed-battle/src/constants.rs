@@ -19,6 +19,8 @@ pub const STAB_MULTIPLIER: (u8, u8) = (3, 2);
 pub const BURN_MULTIPLIER: (u8, u8) = (1, 2);
 /// If the defender is minimized, and the attacker
 pub const MINIMIZE_MULTIPLIER: (u8, u8) = (2, 1);
+/// The fraction of max HP that Nightmare takes each turn
+pub const NIGHTMARE_MULTIPLIER: (u8, u8) = (1, 4);
 
 /// Max # of stages a stat can be at
 pub const MAX_STAGE: i8 = 6;

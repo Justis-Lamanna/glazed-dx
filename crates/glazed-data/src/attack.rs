@@ -802,6 +802,7 @@ pub enum Effect {
     StealItem,
     Trap,
     LockOn,
+    Nightmare,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -3611,7 +3612,7 @@ pub static Nightmare: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Custom],
+    effects: &[Effect::Nightmare],
 };
 pub static FlameWheel: MoveData = MoveData {
     pp: 25,

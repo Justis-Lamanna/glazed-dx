@@ -222,9 +222,14 @@ impl Battlefield {
 
         let everyone = self.get_everyone();
         for pokemon in everyone {
-            effects.append(&mut turn::do_poison_damage(pokemon));
-            effects.append(&mut turn::do_binding_damage(pokemon));
             pokemon.data.borrow_mut().end_of_turn();
+
+            if pokemon.borrow().is_fainted() { continue; }
+            effects.append(&mut turn::do_poison_damage(pokemon));
+            if pokemon.borrow().is_fainted() { continue; }
+            effects.append(&mut turn::do_binding_damage(pokemon));
+            if pokemon.borrow().is_fainted() { continue; }
+            effects.append(&mut turn::do_nightmare_damage(pokemon));
         }
         effects
     }
@@ -565,7 +570,8 @@ impl Battlefield {
                 Effect::Sketch => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_sketch_effect),
                 Effect::StealItem => do_optional_effect_on_last_target(attacker, &targets_for_secondary_damage, do_steal_item_effect),
                 Effect::Trap => do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_trap_effect),
-                Effect::LockOn => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_lock_on_effect)
+                Effect::LockOn => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_lock_on_effect),
+                Effect::Nightmare => do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_nightmare_effect)
             };
             effects.append(&mut secondary_effects);
         }
@@ -893,4 +899,13 @@ fn do_trap_effect(_attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<Acti
 fn do_lock_on_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
     target.data.borrow_mut().locked_on = Some((2, target.id));
     vec![ActionSideEffects::LockedOn { user: attacker.id, target: target.id }]
+}
+
+fn do_nightmare_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    if target.borrow().status.sleep > 0 {
+        target.data.borrow_mut().nightmare = true;
+        vec![ActionSideEffects::Nightmare(target.id)]
+    } else {
+        vec![ActionSideEffects::Failed(Cause::Natural)]
+    }
 }

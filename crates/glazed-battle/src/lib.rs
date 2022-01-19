@@ -1,5 +1,3 @@
-#![feature(get_mut_unchecked)]
-
 use std::cell::{RefCell};
 use std::convert::TryFrom;
 use std::ops::{Deref, Index, IndexMut};
@@ -335,11 +333,11 @@ impl ActivePokemon {
         if ability == Ability::HeavyMetal {
             weight = weight.saturating_mul(2);
         } else if ability == Ability::LightMetal {
-            weight = weight.saturating_div(2);
+            weight = weight / 2;
         }
 
         if let Some(Item::FloatStone) = self.borrow().held_item {
-            weight = weight.saturating_div(2);
+            weight = weight/ 2;
         }
 
         if weight == 0 { 1 } else { weight }
@@ -869,6 +867,8 @@ pub struct BattleData {
     trapped: bool,
     /// If present, the user is locked-on to that Battler for the specified number of turns
     locked_on: Option<(u8, Battler)>,
+    /// If true, this Pokemon is having a nightmare
+    nightmare: bool,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -1222,7 +1222,8 @@ pub enum PokemonState {
     Enraged,
     Substituted,
     TooWeak,
-    HoldingItem, NotHoldingItem
+    HoldingItem, NotHoldingItem,
+    Nightmare
 }
 
 #[derive(Debug, Clone)]
@@ -1375,6 +1376,7 @@ pub enum ActionSideEffects {
         user: Battler,
         target: Battler
     },
+    Nightmare(Battler),
     NothingHappened
 }
 impl ActionSideEffects {
