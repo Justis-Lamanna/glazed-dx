@@ -508,7 +508,7 @@ impl Battlefield { //region Damage
                         if damage == 0 { damage = 1; }
                         Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id, attack))
                     },
-                    Move::Flail => {
+                    Move::Flail | Move::Reversal => {
                         let (effectiveness, cause) = effectiveness();
                         if let Effectiveness::Immune = effectiveness {
                             vec![ActionSideEffects::NoEffect(cause)]

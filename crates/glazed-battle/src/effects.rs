@@ -121,19 +121,22 @@ pub fn inflict_non_volatile_status(affected: &ActivePokemon, status: NonVolatile
 impl Battlefield {
     /// Perform a regular attack
     pub fn do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
+        let attacker = &self[attacker_id.side][attacker_id.individual];
+        attacker.data.borrow_mut().set_last_used_move(attack);
+        
         let move_data = attack.data();
 
         if attack == Move::Metronome {
             let rand_attack = Move::metronome();
             let mut effects = vec![ActionSideEffects::Metronome(attacker_id, rand_attack)];
-            effects.append(&mut self.do_attack(attacker_id, rand_attack, defender));
+            effects.append(&mut self._do_attack(attacker_id, rand_attack, SelectedTarget::Implied));
             effects
         } else if attack == Move::MirrorMove {
             let attacker = &self[attacker_id.side][attacker_id.individual];
             let data = attacker.data.borrow_mut();
             if let Some((_, attack)) = data.get_last_targeted_attack() {
                 drop(data);
-                self.do_attack(attacker_id, attack, defender)
+                self._do_attack(attacker_id, attack, SelectedTarget::Implied)
             } else {
                 vec![ActionSideEffects::Failed(Cause::Natural)]
             }
@@ -324,8 +327,6 @@ impl Battlefield {
 
         //region end-of-turn checks
         let mut data = attacker.data.borrow_mut();
-
-        data.set_last_used_move(attack);
 
         effects.append(&mut data.lower_disable_counters()
             .iter()
