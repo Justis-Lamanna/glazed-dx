@@ -230,6 +230,8 @@ impl Battlefield {
             effects.append(&mut turn::do_binding_damage(pokemon));
             if pokemon.borrow().is_fainted() { continue; }
             effects.append(&mut turn::do_nightmare_damage(pokemon));
+            if pokemon.borrow().is_fainted() { continue; }
+            effects.append(&mut turn::do_curse_damage(pokemon));
         }
         effects
     }
@@ -249,6 +251,12 @@ impl Battlefield {
         if turn::do_paralysis_check(attacker).add(&mut effects) { return effects; }
         if turn::do_flinch_check(attacker).add(&mut effects) { return effects; }
         if turn::do_confusion_check(attacker).add(&mut effects) { return effects; }
+
+        // Snore 
+        if attack.can_be_used_while_sleeping() && !attacker.borrow().status.is_asleep() {
+            effects.push(ActionSideEffects::Failed(Cause::Natural));
+            return effects;
+        }
         //endregion
 
         // 1. Get the target(s)
@@ -571,7 +579,19 @@ impl Battlefield {
                 Effect::StealItem => do_optional_effect_on_last_target(attacker, &targets_for_secondary_damage, do_steal_item_effect),
                 Effect::Trap => do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_trap_effect),
                 Effect::LockOn => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_lock_on_effect),
-                Effect::Nightmare => do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_nightmare_effect)
+                Effect::Nightmare => do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_nightmare_effect),
+                Effect::Curse => {
+                    let is_ghost = attacker.get_effective_type().has_type(&Type::Ghost);
+                    if is_ghost {
+                        do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_ghost_curse_effect)
+                    } else {
+                        let mut effects = Vec::new();
+                        effects.push(change_self_stat(attacker, BattleStat::Speed, -1));
+                        effects.push(change_self_stat(attacker, BattleStat::Attack, 1));
+                        effects.push(change_self_stat(attacker, BattleStat::Defense, 1));
+                        effects
+                    }
+                }
             };
             effects.append(&mut secondary_effects);
         }
@@ -901,11 +921,16 @@ fn do_lock_on_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<Ac
     vec![ActionSideEffects::LockedOn { user: attacker.id, target: target.id }]
 }
 
-fn do_nightmare_effect(attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+fn do_nightmare_effect(_attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
     if target.borrow().status.sleep > 0 {
         target.data.borrow_mut().nightmare = true;
         vec![ActionSideEffects::Nightmare(target.id)]
     } else {
         vec![ActionSideEffects::Failed(Cause::Natural)]
     }
+}
+
+fn do_ghost_curse_effect(_attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    target.data.borrow_mut().cursed = true;
+    vec![ActionSideEffects::Curse(target.id)]
 }

@@ -508,7 +508,22 @@ impl Battlefield { //region Damage
                         let mut damage = (attacker.borrow().level as u16 * (r + 50)) / 100;
                         if damage == 0 { damage = 1; }
                         Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id, attack))
-                    }
+                    },
+                    Move::Flail => {
+                        let (effectiveness, cause) = effectiveness();
+                        if let Effectiveness::Immune = effectiveness {
+                            vec![ActionSideEffects::NoEffect(cause)]
+                        } else {
+                            let move_context = MoveContext {
+                                attack,
+                                data: move_data,
+                                base_power: hp_to_power_map(defender.borrow().current_hp, defender.borrow().hp.value)
+                            };
+                            let is_crit = crit();
+                            let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
+                            Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
+                        }
+                    },
                     a => panic!("Move {:?} has variable power, yet no implementation specified", a)
                 }
             }

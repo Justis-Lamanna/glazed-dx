@@ -869,6 +869,8 @@ pub struct BattleData {
     locked_on: Option<(u8, Battler)>,
     /// If true, this Pokemon is having a nightmare
     nightmare: bool,
+    /// If true, this Pokemon has been cursed
+    cursed: bool,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -997,6 +999,7 @@ impl BattleData {
         self.damage_this_turn = Vec::new();
         self.has_acted_this_turn = false;
         self.has_landed_attack_this_turn = false;
+        self.flinch = false;
         if self.poison_counter > 0 {
             self.poison_counter = self.poison_counter.saturating_add(1);
         }
@@ -1223,7 +1226,8 @@ pub enum PokemonState {
     Substituted,
     TooWeak,
     HoldingItem, NotHoldingItem,
-    Nightmare
+    Nightmare,
+    Curse
 }
 
 #[derive(Debug, Clone)]
@@ -1377,6 +1381,7 @@ pub enum ActionSideEffects {
         target: Battler
     },
     Nightmare(Battler),
+    Curse(Battler),
     NothingHappened
 }
 impl ActionSideEffects {

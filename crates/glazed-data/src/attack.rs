@@ -4,9 +4,6 @@ use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
 
-use glazed_core::Id;
-use glazed_macro::*;
-
 use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{EnumIter, EnumCount as EnumCountMacro};
 
@@ -15,7 +12,7 @@ use crate::pokemon::{PoisonType};
 use crate::types::Type;
 
 /// Represents an Attack a Pokemon can have
-#[derive(Debug, Copy, Clone, PartialEq, Id, EnumIter, EnumCountMacro)]
+#[derive(Debug, Copy, Clone, PartialEq, EnumIter, EnumCountMacro)]
 pub enum Move {
     Pound,
     KarateChop,
@@ -803,6 +800,7 @@ pub enum Effect {
     Trap,
     LockOn,
     Nightmare,
+    Curse,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -3648,12 +3646,12 @@ pub static Curse: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::Curse],
 };
 pub static Flail: MoveData = MoveData {
     pp: 15,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,

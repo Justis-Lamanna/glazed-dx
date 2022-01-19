@@ -21,6 +21,8 @@ pub const BURN_MULTIPLIER: (u8, u8) = (1, 2);
 pub const MINIMIZE_MULTIPLIER: (u8, u8) = (2, 1);
 /// The fraction of max HP that Nightmare takes each turn
 pub const NIGHTMARE_MULTIPLIER: (u8, u8) = (1, 4);
+/// The fraction of max HP that Curse takes each turn
+pub const CURSE_MULTIPLIER: (u8, u8) = (1, 4);
 
 /// Max # of stages a stat can be at
 pub const MAX_STAGE: i8 = 6;
@@ -87,6 +89,17 @@ pub fn weight_ratio_to_power_map(attacker_weight: u16, defender_weight: u16) -> 
     else if ratio > 0.2501 { 80 }
     else if ratio > 0.2001 { 100 }
     else { 120 }
+}
+
+/// Table to convert HP Ratio to base power for Flail
+pub fn hp_to_power_map(current_hp: u16, max_hp: u16) -> u16 {
+    let ratio = f64::from(current_hp) / f64::from(max_hp);
+    if ratio > 0.6875 { 20 }
+    else if ratio > 0.3542 { 40 }
+    else if ratio > 0.2083 { 80 }
+    else if ratio > 0.1042 { 100 }
+    else if ratio > 0.0417 { 150 }
+    else { 200 }
 }
 
 /// One-off structure to allow configuration of the Multi-Hit Distribution

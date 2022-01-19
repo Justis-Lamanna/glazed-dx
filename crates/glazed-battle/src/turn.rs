@@ -186,3 +186,19 @@ pub fn do_nightmare_damage(affected: &ActivePokemon) -> Vec<ActionSideEffects> {
         vec![]
     }
 }
+
+pub fn do_curse_damage(affected: &ActivePokemon) -> Vec<ActionSideEffects> {
+    if affected.data.borrow().cursed {
+        let mut pkmn = affected.borrow_mut();
+        let damage = math::fraction(pkmn.hp.value, CURSE_MULTIPLIER);
+        let (start_hp, end_hp) = pkmn.subtract_hp(damage);
+        vec![ActionSideEffects::BasicDamage {
+            damaged: affected.id,
+            start_hp,
+            end_hp,
+            cause: Cause::PokemonBattleState(affected.id, PokemonState::Curse)
+        }]
+    } else {
+        vec![]
+    }
+}
