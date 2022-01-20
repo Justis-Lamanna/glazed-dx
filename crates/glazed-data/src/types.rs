@@ -1,6 +1,5 @@
 use std::ops::Mul;
 
-use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 /// Represents the Type of a Pokemon

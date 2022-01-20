@@ -73,10 +73,10 @@ pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &ActivePokemon, attac
     }
 }
 
-pub fn do_failure_check<F>(attacker: &ActivePokemon, attack: F, defender: &ActivePokemon) -> ActionCheck<bool>
+pub fn do_failure_check<F>(_attacker: &ActivePokemon, attack: F, defender: &ActivePokemon) -> ActionCheck<bool>
     where F: Into<MoveContext>
 {
-    let MoveContext { data, attack, .. } = attack.into();
+    let MoveContext { attack, .. } = attack.into();
     if attack.can_only_be_used_on_sleeping_target() && !defender.borrow().status.is_asleep() {
         return ActionCheck::Ok(false);
     }

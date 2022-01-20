@@ -8,10 +8,10 @@ use std::rc::Rc;
 use rand::Rng;
 
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, ScreenType, SemiInvulnerableLocation, Target};
+use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, PoisonType, ScreenType, SemiInvulnerableLocation, Target};
 use glazed_data::constants::Species;
 use glazed_data::item::{EvolutionHeldItem, Item};
-use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, PoisonType, Pokemon, StatSlot};
+use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
 use crate::constants::{*};
@@ -511,8 +511,7 @@ pub struct Battlefield {
     opponent: BattleParty,
     opponent_side: RefCell<Side>,
     field: RefCell<Field>,
-    wild_battle: bool,
-    turn_record: Vec<Turn>
+    wild_battle: bool
 }
 impl Battlefield {
     /// Standard 1v1 battle
@@ -534,8 +533,7 @@ impl Battlefield {
             }),
             opponent_side: RefCell::from(Side::new(BattleSide::Back)),
             field: RefCell::from(Field::default()),
-            wild_battle: false,
-            turn_record: Vec::new()
+            wild_battle: false
         }
     }
 
@@ -774,12 +772,6 @@ impl Battlefield {
         let mut active = self.user.both();
         active.append(&mut self.opponent.both());
         active
-    }
-
-    /// Pushes this Turn to the Turn Record, to signal it is complete and permanent.
-    /// Intentionally eats the passed-in turn...it belongs to the battlefield now
-    pub fn finish_turn(&mut self, turn: Turn) {
-        self.turn_record.push(turn);
     }
 }
 impl Index<BattleSide> for Battlefield {
@@ -1126,56 +1118,6 @@ enum EntryHazard {
     PointedStones
 }
 
-// Turn Recording (for use by UIs)
-/// One of the usable actions that can be taken in a turn
-#[derive(Debug)]
-pub enum TurnAction {
-    Attack(Move, Battler),
-    Swap(u8),
-    UseItem(Item),
-    Flee
-}
-impl TurnAction{
-    /// Get the priority of this move
-    /// 0 is default. >0 means it will happen sooner, and <0 means it will happen later
-    fn get_priority(&self) -> i8 {
-        match self {
-            TurnAction::Attack(m, _) => m.data().priority,
-            TurnAction::Swap(_) => 10,
-            TurnAction::UseItem(_) => 10,
-            TurnAction::Flee => 10
-        }
-    }
-}
-
-/// Represents the actions taken during one turn of battle
-#[derive(Debug)]
-pub struct Turn {
-    /// All side effects that occur at the start of the turn
-    pub start_of_turn: Vec<ActionSideEffects>,
-    /// All actions that take place during the turn, in order
-    pub actions: Vec<ActionRecord>,
-    /// All side effects that occur at the end of the turn
-    pub end_of_turn: Vec<ActionSideEffects>
-}
-impl Turn {
-    pub fn new() -> Turn {
-        Turn {
-            start_of_turn: Vec::new(),
-            actions: Vec::new(),
-            end_of_turn: Vec::new()
-        }
-    }
-}
-
-/// An action, and all consequences that occurred because of it
-#[derive(Debug)]
-pub struct ActionRecord {
-    pub user: Battler,
-    pub action: TurnAction,
-    pub side_effects: Vec<ActionSideEffects>
-}
-
 /// The cause of some particular action's side effect
 #[derive(Debug, Clone)]
 pub enum Cause {
@@ -1183,8 +1125,10 @@ pub enum Cause {
     Natural,
     /// A battler's ability caused the side effect
     Ability(Battler, Ability),
-    /// A used move caused the side effect
+    /// A used move caused the side effect (this is things that happen directly during the move)
     Move(Battler, Move),
+    /// A used move caused the side effect (this is things that happen later, such as Curse at the end of each turn)
+    MoveSideEffect(Move),
     /// The cause is related to the Pokemon's type
     Type(Type),
     /// The side effect was the cause of a user's non-volatile ailment
@@ -1225,9 +1169,7 @@ pub enum PokemonState {
     Enraged,
     Substituted,
     TooWeak,
-    HoldingItem, NotHoldingItem,
-    Nightmare,
-    Curse
+    HoldingItem, NotHoldingItem
 }
 
 #[derive(Debug, Clone)]

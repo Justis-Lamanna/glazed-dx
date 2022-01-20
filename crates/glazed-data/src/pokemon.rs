@@ -241,12 +241,6 @@ impl PokemonStatusCondition {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum PoisonType {
-    Poison,
-    BadlyPoisoned
-}
-
 /// Represents the values tied to a given moveslot
 #[derive(Debug, Copy, Clone)]
 pub struct MoveSlot {

@@ -159,7 +159,7 @@ impl Battlefield { //region Damage
         let effectiveness = || core::get_type_effectiveness(&self, attacker, attack, defender);
         match &move_data.power {
             Power::None => Vec::new(),
-            Power::Base(_) | Power::BaseWithCharge(_, _) => {
+            Power::Base(_) => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
                     vec![ActionSideEffects::NoEffect(cause)]
@@ -351,7 +351,7 @@ impl Battlefield { //region Damage
                     }
                 }
             }
-            Power::MultiHit(MultiHitFlavor::Variable(base)) => {
+            Power::MultiHit(MultiHitFlavor::Variable(_)) => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
                     return vec![ActionSideEffects::NoEffect(cause)]

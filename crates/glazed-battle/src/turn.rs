@@ -5,7 +5,6 @@ use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, Move, ScreenType};
 
 use crate::{ActionSideEffects, ActivePokemon, Cause, Side};
-use crate::PokemonState;
 use crate::damage::calculate_confusion_damage;
 use crate::constants::{*};
 use crate::core::CheckResult;
@@ -180,7 +179,7 @@ pub fn do_nightmare_damage(affected: &ActivePokemon) -> Vec<ActionSideEffects> {
             damaged: affected.id,
             start_hp,
             end_hp,
-            cause: Cause::PokemonBattleState(affected.id, PokemonState::Nightmare)
+            cause: Cause::MoveSideEffect(Move::Nightmare)
         }]
     } else {
         vec![]
@@ -196,7 +195,7 @@ pub fn do_curse_damage(affected: &ActivePokemon) -> Vec<ActionSideEffects> {
             damaged: affected.id,
             start_hp,
             end_hp,
-            cause: Cause::PokemonBattleState(affected.id, PokemonState::Curse)
+            cause: Cause::MoveSideEffect(Move::Curse)
         }]
     } else {
         vec![]

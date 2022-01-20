@@ -8,7 +8,6 @@ use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{EnumIter, EnumCount as EnumCountMacro};
 
 use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
-use crate::pokemon::{PoisonType};
 use crate::types::Type;
 
 /// Represents an Attack a Pokemon can have
@@ -809,6 +808,12 @@ pub enum Effect {
 #[derive(Debug)]
 pub enum EffectPredicate {
     Sunny
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum PoisonType {
+    Poison,
+    BadlyPoisoned
 }
 
 #[derive(Debug)]

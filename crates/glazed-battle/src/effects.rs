@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefCell, RefMut};
+use std::cell::RefMut;
 use std::convert::TryFrom;
 use std::mem::take;
 
@@ -6,16 +6,13 @@ use rand::Rng;
 use strum::IntoEnumIterator;
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{Accuracy, BattleStat, DamageType, Effect, EffectPredicate, Move, MoveData, MultiHitFlavor, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, Target, VolatileBattleAilment};
+use glazed_data::attack::{BattleStat, Effect, EffectPredicate, Move, MoveData, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, VolatileBattleAilment};
 use glazed_data::constants::Species;
-use glazed_data::item::{EvolutionHeldItem, Item};
-use glazed_data::pokemon::{Gender, PoisonType, Pokemon};
+use glazed_data::item::Item;
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 use glazed_core::math;
 
 use crate::*;
-use crate::core::{ActionCheck, MoveContext};
-use crate::core::CheckResult;
 
 pub fn inflict_confusion(afflicted: &ActivePokemon) -> Vec<ActionSideEffects> {
     if afflicted.get_effective_ability() == Ability::OwnTempo {
@@ -123,7 +120,7 @@ impl Battlefield {
     pub fn do_attack(&mut self, attacker_id: Battler, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let attacker = &self[attacker_id.side][attacker_id.individual];
         attacker.data.borrow_mut().set_last_used_move(attack);
-        
+
         let move_data = attack.data();
 
         if attack == Move::Metronome {
@@ -256,7 +253,7 @@ impl Battlefield {
         if turn::do_flinch_check(attacker).add(&mut effects) { return effects; }
         if turn::do_confusion_check(attacker).add(&mut effects) { return effects; }
 
-        // Snore 
+        // Snore
         if attack.can_be_used_while_sleeping() && !attacker.borrow().status.is_asleep() {
             effects.push(ActionSideEffects::Failed(Cause::Natural));
             return effects;
