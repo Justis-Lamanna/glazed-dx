@@ -6,7 +6,7 @@ use rand::Rng;
 use strum::IntoEnumIterator;
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, Effect, EffectPredicate, Move, MoveData, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, VolatileBattleAilment};
+use glazed_data::attack::{BattleStat, Effect, EffectPredicate, EntryHazardType, Move, MoveData, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, VolatileBattleAilment};
 use glazed_data::constants::Species;
 use glazed_data::item::Item;
 use glazed_data::types::{Effectiveness, PokemonType, Type};
@@ -612,7 +612,13 @@ impl Battlefield {
                 }
                 Effect::Spite => do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_spite_effect),
                 Effect::Protect => do_protect_effect(attacker, attack),
-                Effect::BellyDrum => do_belly_drum_effect(attacker)
+                Effect::BellyDrum => do_belly_drum_effect(attacker),
+                Effect::EntryHazard(eh) => {
+                    match targets_for_secondary_damage.last() {
+                        None => vec![ActionSideEffects::NoTarget],
+                        Some(t) => do_hazard_effect(self.get_side(&t.id), eh)
+                    }
+                }
             };
             effects.append(&mut secondary_effects);
         }
@@ -1036,5 +1042,35 @@ fn do_belly_drum_effect(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
             end_hp,
             cause: Cause::MoveSideEffect(Move::BellyDrum)
         }, ActionSideEffects::StatMaxed(attacker.id, BattleStat::Attack)]
+    }
+}
+
+fn do_hazard_effect(side: &RefCell<Side>, hazard: &EntryHazardType) -> Vec<ActionSideEffects> {
+    let mut side = side.borrow_mut();
+    match hazard {
+        EntryHazardType::Spikes => {
+            if side.spikes < MAX_SPIKES {
+                side.spikes = side.spikes + 1;
+                vec![ActionSideEffects::EntryHazard(side.id, Move::Spikes, side.spikes)]
+            } else {
+                vec![ActionSideEffects::Failed(Cause::Natural)]
+            }
+        }
+        EntryHazardType::ToxicSpikes => {
+            if side.toxic_spikes < MAX_TOXIC_SPIKES {
+                side.toxic_spikes = side.toxic_spikes + 1;
+                vec![ActionSideEffects::EntryHazard(side.id, Move::ToxicSpikes, side.toxic_spikes)]
+            } else {
+                vec![ActionSideEffects::Failed(Cause::Natural)]
+            }
+        }
+        EntryHazardType::StealthRock => {
+            if side.pointed_stones {
+                vec![ActionSideEffects::Failed(Cause::Natural)]
+            } else {
+                side.pointed_stones = true;
+                vec![ActionSideEffects::EntryHazard(side.id, Move::StealthRock, 1)]
+            }
+        }
     }
 }

@@ -72,3 +72,35 @@ fn test_belly_drum_failure() {
         }
     });
 }
+
+#[test]
+fn test_spikes() {
+    let mut b = create_battlefield();
+    let fx = b.do_attack(FORWARD, Move::Spikes, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::EntryHazard(_, _, 1)) => true, _ => false
+        }
+    });
+
+    let fx = b.do_attack(FORWARD, Move::Spikes, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::EntryHazard(_, _, 2)) => true, _ => false
+        }
+    });
+
+    let fx = b.do_attack(FORWARD, Move::Spikes, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::EntryHazard(_, _, 3)) => true, _ => false
+        }
+    });
+
+    let fx = b.do_attack(FORWARD, Move::Spikes, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::Failed(_)) => true, _ => false
+        }
+    });
+}

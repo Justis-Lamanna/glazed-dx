@@ -825,6 +825,7 @@ pub enum Effect {
     Spite,
     Protect,
     BellyDrum,
+    EntryHazard(EntryHazardType),
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -844,6 +845,13 @@ pub enum PoisonType {
 pub enum ScreenType {
     LightScreen,
     Reflect
+}
+
+#[derive(Debug)]
+pub enum EntryHazardType {
+    Spikes,
+    ToxicSpikes,
+    StealthRock
 }
 
 /// Represents data for a specific attack
@@ -3880,7 +3888,7 @@ pub static Spikes: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::Opponents,
-    effects: &[],
+    effects: &[Effect::EntryHazard(EntryHazardType::Spikes)],
 };
 pub static ZapCannon: MoveData = MoveData {
     pp: 5,

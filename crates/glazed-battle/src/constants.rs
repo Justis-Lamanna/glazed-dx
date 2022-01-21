@@ -68,6 +68,10 @@ pub const REST_SLEEP_TURN_COUNT: u8 = 3;
 pub const SPITE_PP_COUNT: u8 = 4;
 /// The number of subsequent protection moves that can be used before the accuracy stops dropping
 pub const PROTECTION_CAP: u8 = 4;
+/// The maximum number of spikes that can be placed
+pub const MAX_SPIKES: u8 = 3;
+/// The maximum number of toxic spikes that can be placed
+pub const MAX_TOXIC_SPIKES: u8 = 2;
 
 pub const SCREEN_TURN_COUNT: u8 = 5;
 

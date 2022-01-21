@@ -33,7 +33,9 @@ pub enum SelectedTarget {
 #[derive(Debug)]
 pub struct Side {
     id: BattleSide,
-    hazard: Option<EntryHazard>,
+    spikes: u8,
+    toxic_spikes: u8,
+    pointed_stones: bool,
     tailwind: u8,
     aurora_veil: u8,
     light_screen: u8,
@@ -44,7 +46,9 @@ impl Side {
     pub fn new(side: BattleSide) -> Side {
         Side {
             id: side,
-            hazard: None,
+            spikes: 0,
+            toxic_spikes: 0,
+            pointed_stones: false,
             tailwind: 0,
             aurora_veil: 0,
             light_screen: 0,
@@ -1136,7 +1140,6 @@ enum Weather {
 enum EntryHazard {
     Spikes(u8),
     ToxicSpikes(u8),
-    StickyWeb,
     PointedStones
 }
 
@@ -1344,6 +1347,7 @@ pub enum ActionSideEffects {
     Nightmare(Battler),
     Curse(Battler),
     StartProtection(Battler, Move), IsProtected(Battler, Move),
+    EntryHazard(BattleSide, Move, u8),
     NothingHappened
 }
 impl ActionSideEffects {
