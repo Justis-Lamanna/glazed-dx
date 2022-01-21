@@ -1260,6 +1260,7 @@ pub enum ActionSideEffects {
         end: i8
     },
     StatsReset(Battler),
+    StatMaxed(Battler, BattleStat),
     NonVolatileStatusAilment {
         affected: Battler,
         status: NonVolatileBattleAilment

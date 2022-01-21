@@ -611,7 +611,8 @@ impl Battlefield {
                     }
                 }
                 Effect::Spite => do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_spite_effect),
-                Effect::Protect => do_protect_effect(attacker, attack)
+                Effect::Protect => do_protect_effect(attacker, attack),
+                Effect::BellyDrum => do_belly_drum_effect(attacker)
             };
             effects.append(&mut secondary_effects);
         }
@@ -1012,4 +1013,28 @@ fn do_protect_effect(attacker: &ActivePokemon, attack: Move) -> Vec<ActionSideEf
     let mut data = attacker.data.borrow_mut();
     data.protected = Some(attack);
     vec![ActionSideEffects::StartProtection(attacker.id, attack)]
+}
+
+fn do_belly_drum_effect(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
+    let has_contrary = attacker.get_effective_ability() == Ability::Contrary;
+
+    let mut pkmn = attacker.borrow_mut();
+    let delta_hp = pkmn.hp.value / 2;
+    if pkmn.current_hp < delta_hp {
+        vec![ActionSideEffects::Failed(Cause::Natural)]
+    } else {
+        let (start_hp, end_hp) = pkmn.subtract_hp(delta_hp);
+        let mut data = attacker.data.borrow_mut();
+        if has_contrary {
+            data.attack_stage = MIN_STAGE;
+        } else {
+            data.attack_stage = MAX_STAGE;
+        }
+        vec![ActionSideEffects::BasicDamage {
+            damaged: attacker.id,
+            start_hp,
+            end_hp,
+            cause: Cause::MoveSideEffect(Move::BellyDrum)
+        }, ActionSideEffects::StatMaxed(attacker.id, BattleStat::Attack)]
+    }
 }

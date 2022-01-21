@@ -824,6 +824,7 @@ pub enum Effect {
     Curse,
     Spite,
     Protect,
+    BellyDrum,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -3831,7 +3832,7 @@ pub static BellyDrum: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::BellyDrum],
 };
 pub static SludgeBomb: MoveData = MoveData {
     pp: 10,
