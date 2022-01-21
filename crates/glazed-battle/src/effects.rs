@@ -13,6 +13,7 @@ use glazed_data::types::{Effectiveness, PokemonType, Type};
 use glazed_core::math;
 
 use crate::*;
+use crate::core::ActionCheck;
 
 pub fn inflict_confusion(afflicted: &ActivePokemon) -> Vec<ActionSideEffects> {
     if afflicted.get_effective_ability() == Ability::OwnTempo {
@@ -253,12 +254,17 @@ impl Battlefield {
         if turn::do_flinch_check(attacker).add(&mut effects) { return effects; }
         if turn::do_confusion_check(attacker).add(&mut effects) { return effects; }
 
-        // Snore
-        if attack.can_be_used_while_sleeping() && !attacker.borrow().status.is_asleep() {
-            effects.push(ActionSideEffects::Failed(Cause::Natural));
-            return effects;
-        }
         //endregion
+
+        // 0. Test if the attacker can use the move
+        match accuracy::cannot_use_attack(attacker, attack) {
+            Ok(b) => {
+                if !b { effects.push(ActionSideEffects::Failed(Cause::Natural)); return effects; }
+            }
+            Err(effect) => {
+                effects.push(effect); return effects
+            }
+        }
 
         // 1. Get the target(s)
         let targets = self.get_targets(attacker.id, attack, defender);
@@ -303,6 +309,9 @@ impl Battlefield {
                         if let Power::BaseWithCrash(_) = move_data.power {
                             effects.push(attacker.take_crash_damage());
                         }
+                        if attack.is_protection_move() {
+                            attacker.data.borrow_mut().protection_counter = 0;
+                        }
                     }
                 }
                 Err(a) => {
@@ -339,17 +348,17 @@ impl Battlefield {
         let mut effects = Vec::new();
 
         // 3. For each hit target, perform damage
-        // For non-damaging moves, "damaged" becomes everyone from Step 2.
+        // For non-damaging moves, all valid targets go on to Step 4.
         //region Primary Strike
-        let targets_for_secondary_damage = if move_data.is_no_power_move() {
-            targets_hit
-        } else {
+        let targets_for_secondary_damage= {
             let mut damaged = Vec::new();
             for defender in targets_hit {
-                match accuracy::do_failure_check(attacker, attack, defender) {
+                match accuracy::cannot_use_attack_against(attacker, attack, defender) {
                     Ok(b) => {
-                        if !b { effects.push(ActionSideEffects::Failed(Cause::Natural)); continue; }
-                        else {}
+                        if !b {
+                            effects.push(ActionSideEffects::Failed(Cause::Natural));
+                            continue;
+                        } else {}
                     }
                     Err(e) => {
                         effects.push(e);
@@ -357,16 +366,25 @@ impl Battlefield {
                     }
                 }
 
-                let attacker = &self[attacker.id.side][attacker.id.individual];
-                let mut individual_effects = self.do_damage(attacker, attack, defender, is_multi_target);
+                if move_data.is_no_power_move() {
+                    if defender.is_behind_substitute() && !attack.bypasses_substitute() {
+                        effects.push(ActionSideEffects::Failed(Cause::Natural));
+                        continue;
+                    } else {
+                        damaged.push(defender);
+                    }
+                } else {
+                    let attacker = &self[attacker.id.side][attacker.id.individual];
+                    let mut individual_effects = self.do_damage(attacker, attack, defender, is_multi_target);
 
-                let hit_substitute = individual_effects.iter().any(|e| e.hit_substitute());
-                let defender_fainted = defender.borrow().is_fainted();
+                    let hit_substitute = individual_effects.iter().any(|e| e.hit_substitute());
+                    let defender_fainted = defender.borrow().is_fainted();
 
-                effects.append(&mut individual_effects);
+                    effects.append(&mut individual_effects);
 
-                if !defender_fainted && !hit_substitute {
-                    damaged.push(defender);
+                    if !defender_fainted && !hit_substitute {
+                        damaged.push(defender);
+                    }
                 }
             }
             damaged
@@ -592,6 +610,8 @@ impl Battlefield {
                         effects
                     }
                 }
+                Effect::Spite => do_effect_on_all_targets(attacker, &targets_for_secondary_damage, do_spite_effect),
+                Effect::Protect => do_protect_effect(attacker, attack)
             };
             effects.append(&mut secondary_effects);
         }
@@ -603,6 +623,13 @@ impl Battlefield {
             if data.enraged && !move_data.is_rage() {
                 data.enraged = false;
                 effects.push(ActionSideEffects::RageEnd(attacker.id))
+            }
+
+            // Increment the protection counter for any protection moves. Reset it if anything else is used.
+            if attack.is_protection_move() {
+                data.protection_counter = data.protection_counter.saturating_add(1);
+            } else {
+                data.protection_counter = 0;
             }
         }
         //endregion
@@ -958,4 +985,31 @@ fn do_nightmare_effect(_attacker: &ActivePokemon, target: &ActivePokemon) -> Vec
 fn do_ghost_curse_effect(_attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
     target.data.borrow_mut().cursed = true;
     vec![ActionSideEffects::Curse(target.id)]
+}
+
+fn do_spite_effect(_attacker: &ActivePokemon, target: &ActivePokemon) -> Vec<ActionSideEffects> {
+    if let Some(m) = target.data.borrow().last_move_used {
+        let mut pkmn = target.borrow_mut();
+        if let Some(slot) = pkmn.get_move_slot_mut(m) {
+            let pp_start = slot.pp;
+            if pp_start == 0 {
+                vec![ActionSideEffects::Failed(Cause::Natural)]
+            } else {
+                let pp_end = pp_start.saturating_sub(SPITE_PP_COUNT);
+                slot.pp = pp_end;
+                vec![ActionSideEffects::LostPP(target.id, slot.attack, pp_start, pp_end)]
+            }
+        } else {
+            println!("Here");
+            vec![ActionSideEffects::Failed(Cause::Natural)]
+        }
+    } else {
+        vec![ActionSideEffects::Failed(Cause::Natural)]
+    }
+}
+
+fn do_protect_effect(attacker: &ActivePokemon, attack: Move) -> Vec<ActionSideEffects> {
+    let mut data = attacker.data.borrow_mut();
+    data.protected = Some(attack);
+    vec![ActionSideEffects::StartProtection(attacker.id, attack)]
 }

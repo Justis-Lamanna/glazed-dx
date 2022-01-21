@@ -226,10 +226,10 @@ impl IndexMut<DoubleBattleSide> for BattleParty {
 /// Smart pointer that points to the current active Pokemon
 #[derive(Debug)]
 pub struct ActivePokemon {
-    id: Battler,
+    pub id: Battler,
     party: Rc<Party>,
     pokemon: usize,
-    data: RefCell<BattleData>,
+    pub data: RefCell<BattleData>,
 }
 impl ActivePokemon {
     /// Get the effective species of this Pokemon. Takes Transform into effect
@@ -514,6 +514,12 @@ pub struct Battlefield {
     wild_battle: bool
 }
 impl Battlefield {
+    pub fn one_v_one<F, G>(left: F, right: G) -> Battlefield
+        where F: Into<Pokemon>, G: Into<Pokemon>
+    {
+        Battlefield::single_battle(Party::create_one(left), Party::create_one(right))
+    }
+
     /// Standard 1v1 battle
     /// This should only be used for trainer battles
     pub fn single_battle(player: Party, opponent: Party) -> Battlefield {
@@ -535,6 +541,10 @@ impl Battlefield {
             field: RefCell::from(Field::default()),
             wild_battle: false
         }
+    }
+
+    pub fn get_by_id(&self, id: &Battler) -> &ActivePokemon {
+        self.index(id.side).index(id.individual)
     }
 
     fn opposite_of(&self, side: &BattleSide) -> &BattleParty {
@@ -863,6 +873,12 @@ pub struct BattleData {
     nightmare: bool,
     /// If true, this Pokemon has been cursed
     cursed: bool,
+    /// If present, the form of Protection this Pokemon has
+    protected: Option<Move>,
+    /// The number of subsequent times Protect was used.
+    /// Global counter for all protection moves; only resets when a non-protection move is used
+    protection_counter: u8,
+
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -992,6 +1008,7 @@ impl BattleData {
         self.has_acted_this_turn = false;
         self.has_landed_attack_this_turn = false;
         self.flinch = false;
+        self.protected = None;
         if self.poison_counter > 0 {
             self.poison_counter = self.poison_counter.saturating_add(1);
         }
@@ -1010,8 +1027,8 @@ impl BattleData {
 /// Identifier of a member on the field (more specifically, a "place" on the battlefield)
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Battler {
-    side: BattleSide,
-    individual: DoubleBattleSide
+    pub side: BattleSide,
+    pub individual: DoubleBattleSide
 }
 impl Battler {
     pub fn single(side: BattleSide) -> Battler {
@@ -1032,6 +1049,11 @@ impl Battler {
     /// Note that this returns false if self == other!
     pub fn is_ally(&self, other: &Battler) -> bool {
         self.side == other.side && self.individual != other.individual
+    }
+
+    /// Test if other battler and this battler are either the same, or an ally
+    pub fn is_self_or_ally(&self, other: &Battler) -> bool {
+        self.side == other.side
     }
 }
 
@@ -1225,12 +1247,8 @@ pub enum ActionSideEffects {
         start_hp: u16,
         end_hp: u16
     },
-    ConsumedItem(Battler, Item),
-    PainSplit {
-        user: Battler,
-        defender: Battler,
-        split_hp: u16
-    },
+    ConsumedItem(Battler, Item), GainedItem(Battler, Item),
+    LostPP(Battler, Move, u8, u8),
     NoTarget,
 
     NoEffectSecondary(Cause),
@@ -1324,6 +1342,7 @@ pub enum ActionSideEffects {
     },
     Nightmare(Battler),
     Curse(Battler),
+    StartProtection(Battler, Move), IsProtected(Battler, Move),
     NothingHappened
 }
 impl ActionSideEffects {

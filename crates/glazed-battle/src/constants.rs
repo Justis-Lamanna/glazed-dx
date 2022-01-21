@@ -64,6 +64,10 @@ pub const MIST_TURN_COUNT: u8 = 5;
 pub const BIDE_TURN_COUNT: u8 = 2;
 /// Number of turns a resting Pokemon sleeps
 pub const REST_SLEEP_TURN_COUNT: u8 = 3;
+/// Number of PP deducted from Spite
+pub const SPITE_PP_COUNT: u8 = 4;
+/// The number of subsequent protection moves that can be used before the accuracy stops dropping
+pub const PROTECTION_CAP: u8 = 4;
 
 pub const SCREEN_TURN_COUNT: u8 = 5;
 

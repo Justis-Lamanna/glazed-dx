@@ -32,7 +32,7 @@ pub fn do_sleep_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<Act
         if pkmn.status.sleep == 0 {
             attacker.data.borrow_mut().nightmare = false;
             Effect(ActionSideEffects::WokeUp(attacker.id))
-        } else if !attack.can_be_used_while_sleeping() {
+        } else if !attack.can_only_be_used_while_sleeping() {
             EffectAndEnd(ActionSideEffects::Sleep(attacker.id))
         } else {
             Effect(ActionSideEffects::Sleep(attacker.id))

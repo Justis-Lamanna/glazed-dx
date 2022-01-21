@@ -603,7 +603,7 @@ impl Move {
         }
     }
 
-    pub fn can_be_used_while_sleeping(&self) -> bool {
+    pub fn can_only_be_used_while_sleeping(&self) -> bool {
         match self {
             Move::SleepTalk | Move::Snore => true,
             _ => false
@@ -635,6 +635,27 @@ impl Move {
         match self {
             Move::BodySlam | Move::Stomp | Move::DragonRush | Move::ShadowForce | Move::Steamroller | Move::HeatCrash | Move::HeavySlam => true,
             _ => false
+        }
+    }
+
+    /// If true, this move increments the protection counter. If false, this move resets the protection counter to 0.
+    pub fn is_protection_move(&self) -> bool {
+        match self {
+            Move::Protect | Move::Detect | Move::Endure | Move::QuickGuard | Move::WideGuard => true,
+            _ => false
+        }
+    }
+
+    /// If true, this attack can bypass Protect/Detect
+    pub fn bypasses_protect(&self) -> bool {
+        match self.data().target {
+            Target::User | Target::UserAndAlly | Target::All => true,
+            _ => match self {
+                Move::Acupressure | Move::Conversion2 | Move::Curse | Move::DoomDesire | Move::Feint |
+                Move::FutureSight | Move::PerishSong | Move::PsychUp | Move::RolePlay | Move::ShadowForce |
+                Move::Sketch | Move::Transform | Move::Spikes | Move::ToxicSpikes | Move::StealthRock => true,
+                _ => false
+            }
         }
     }
 }
@@ -801,6 +822,8 @@ pub enum Effect {
     LockOn,
     Nightmare,
     Curse,
+    Spite,
+    Protect,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -3724,7 +3747,7 @@ pub static Spite: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::Spite],
 };
 pub static PowderSnow: MoveData = MoveData {
     pp: 25,
@@ -3743,12 +3766,12 @@ pub static Protect: MoveData = MoveData {
     priority: 4,
     power: Power::None,
     crit_rate: None,
-    accuracy: Accuracy::AlwaysHits,
+    accuracy: Accuracy::Variable,
     _type: Type::Normal,
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::Protect],
 };
 pub static MachPunch: MoveData = MoveData {
     pp: 30,
@@ -3928,7 +3951,7 @@ pub static Detect: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::Protect],
 };
 pub static BoneRush: MoveData = MoveData {
     pp: 10,

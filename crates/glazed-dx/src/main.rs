@@ -17,10 +17,16 @@ fn main() {
 
     let mut battlefield = Battlefield::single_battle(me, them);
 
-    let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Metronome, SelectedTarget::Implied);
+    let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Protect, SelectedTarget::Implied);
     println!("{:#?}", fx);
-    // let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Conversion2, SelectedTarget::Implied);
-    // println!("{:#?}", fx);
+    let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Protect, SelectedTarget::Implied);
+    println!("{:#?}", fx);
+    let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Protect, SelectedTarget::Implied);
+    println!("{:#?}", fx);
+    let fx = battlefield.do_attack(Battler::single(BattleSide::Back), Move::Protect, SelectedTarget::Implied);
+    println!("{:#?}", fx);
+    let fx = battlefield.do_attack(Battler::single(BattleSide::Forward), Move::Tackle, SelectedTarget::Implied);
+    println!("{:#?}", fx);
     // let fx = battlefield.end_of_round();
     // println!("{:#?}", fx);
     // }

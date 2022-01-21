@@ -1,7 +1,7 @@
 use rand::Rng;
 use glazed_data::attack::{Accuracy, Move};
 use glazed_data::types::Type;
-use crate::{ActionSideEffects, ActivePokemon, Battlefield, Cause};
+use crate::{ActionSideEffects, ActivePokemon, Battlefield, Cause, PROTECTION_CAP};
 use crate::core::{ActionCheck, MoveContext};
 
 pub fn get_accuracy_factor(attacker: &ActivePokemon, defender: &ActivePokemon) -> f64 {
@@ -68,15 +68,48 @@ pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &ActivePokemon, attac
                     ActionCheck::Ok(if acc > 1f64 { true } else {rand::thread_rng().gen_bool(acc)})
                 }
             },
+            Move::Protect | Move::Detect | Move::Endure | Move::QuickGuard | Move::WideGuard => {
+                let counter = attacker.data.borrow().protection_counter;
+                if counter == 0 {
+                    ActionCheck::Ok(true)
+                } else {
+                    let counter = if counter < PROTECTION_CAP { counter } else { PROTECTION_CAP };
+                    let accuracy = 1f64 / f64::from(1 << counter);
+                    ActionCheck::Ok(rand::thread_rng().gen_bool(accuracy))
+                }
+            }
             _ => unimplemented!("Unknown accuracy for {:?}", attack)
         }
     }
 }
 
-pub fn do_failure_check<F>(_attacker: &ActivePokemon, attack: F, defender: &ActivePokemon) -> ActionCheck<bool>
+pub fn cannot_use_attack<F: Into<MoveContext>>(attacker: &ActivePokemon, attack: F) -> ActionCheck<bool> {
+    let MoveContext { attack, .. } = attack.into();
+
+    // Snore
+    if attack.can_only_be_used_while_sleeping() && !attacker.borrow().status.is_asleep() {
+        return ActionCheck::Ok(false);
+    }
+
+    ActionCheck::Ok(true)
+}
+
+pub fn cannot_use_attack_against<F>(attacker: &ActivePokemon, attack: F, defender: &ActivePokemon) -> ActionCheck<bool>
     where F: Into<MoveContext>
 {
-    let MoveContext { attack, .. } = attack.into();
+    let MoveContext { attack,.. } = attack.into();
+
+    let using_against_self = attacker.id == defender.id;
+
+    if let Some(m) = defender.data.borrow().protected {
+        match m {
+            Move::Protect | Move::Detect if !using_against_self && !attack.bypasses_protect() => {
+                return ActionCheck::Err(ActionSideEffects::IsProtected(defender.id, m));
+            }
+            _ => {}
+        }
+    }
+
     if attack.can_only_be_used_on_sleeping_target() && !defender.borrow().status.is_asleep() {
         return ActionCheck::Ok(false);
     }
