@@ -269,6 +269,20 @@ impl PokemonType {
         }
     }
 
+    pub fn defending_against_ignore_immunities(&self, attack_type: &Type) -> Effectiveness {
+        let attacking = |t: &Type| {
+            match attack_type.attacking(t) {
+                Effectiveness::Immune => Effectiveness::NORMAL,
+                n => n
+            }
+        };
+
+        match self {
+            PokemonType::Single(t) => attacking(t),
+            PokemonType::Double(t1, t2) => attacking(t1) * attacking(t2)
+        }
+    }
+
     pub fn is_stab(&self, attack_type: &Type) -> bool {
         match self {
             PokemonType::Single(t) => t == attack_type,

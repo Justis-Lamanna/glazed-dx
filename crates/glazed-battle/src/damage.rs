@@ -7,7 +7,7 @@ use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, ActivePokemon, Battlefield, Cause, damage};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage};
 use crate::core;
 use crate::core::MoveContext;
 use crate::constants::*;
@@ -15,7 +15,7 @@ use crate::constants::*;
 /// Perform raw damage calculation
 /// Nothing related to types (such as Weather, STAB, or Effectiveness) or ailments (Burn) is applied here.
 /// Randomness is also not applied here. All additional multipliers should be handled externally.
-pub fn calculate_raw_damage(attacker: &ActivePokemon, base_power: u16, damage_type: DamageType, defender: &ActivePokemon) -> u16 {
+pub fn calculate_raw_damage(attacker: &Slot, base_power: u16, damage_type: DamageType, defender: &Slot) -> u16 {
     let (ea, ed) = match damage_type {
         DamageType::Physical => (
             attacker.get_effective_stat(BattleStat::Attack),
@@ -36,13 +36,13 @@ pub fn calculate_raw_damage(attacker: &ActivePokemon, base_power: u16, damage_ty
 
 /// Calculate confusion damage
 /// Confusion damage is equivalent to a typeless physical move of power 40.
-pub fn calculate_confusion_damage(pkmn: &ActivePokemon) -> u16 {
+pub fn calculate_confusion_damage(pkmn: &Slot) -> u16 {
     let raw = calculate_raw_damage(pkmn, CONFUSION_POWER, DamageType::Physical, pkmn);
     (f64::from(raw) * rand::thread_rng().gen_range(0.85..=1.0)) as u16
 }
 
 impl Battlefield { //region Damage
-    fn determine_crit(attacker: &ActivePokemon, move_data: &MoveData) -> bool {
+    fn determine_crit(attacker: &Slot, move_data: &MoveData) -> bool {
         match attacker.get_raw_critical_hit() + move_data.crit_rate.unwrap_or(0) {
             0 => rand::thread_rng().gen_bool(0.0625),
             1 => rand::thread_rng().gen_bool(0.125),
@@ -51,7 +51,7 @@ impl Battlefield { //region Damage
         }
     }
 
-    fn lower_hp(attacker: &ActivePokemon, defender: &ActivePokemon, attack: Move, damage: u16, is_crit: bool, effectiveness: Effectiveness) -> Vec<ActionSideEffects> {
+    fn lower_hp(attacker: &Slot, defender: &Slot, attack: Move, damage: u16, is_crit: bool, effectiveness: Effectiveness) -> Vec<ActionSideEffects> {
         if defender.is_behind_substitute() && !attack.bypasses_substitute() && attacker.get_effective_ability() != Ability::Infiltrator {
             let mut defender_data = defender.data.borrow_mut();
             let start_hp = defender_data.substituted;
@@ -88,7 +88,7 @@ impl Battlefield { //region Damage
         }
     }
 
-    fn lower_hp_basic(attacker: &ActivePokemon, defender: &ActivePokemon, attack: Move, damage: u16, cause: Cause) -> Vec<ActionSideEffects> {
+    fn lower_hp_basic(attacker: &Slot, defender: &Slot, attack: Move, damage: u16, cause: Cause) -> Vec<ActionSideEffects> {
         if defender.is_behind_substitute() && !attack.bypasses_substitute() && attacker.get_effective_ability() != Ability::Infiltrator {
             let mut defender_data = defender.data.borrow_mut();
             let start_hp = defender_data.substituted;
@@ -122,7 +122,7 @@ impl Battlefield { //region Damage
         }
     }
 
-    fn do_after_damage(attacker: &ActivePokemon, defender: &ActivePokemon, attack: Move, damage: u16) -> Vec<ActionSideEffects> {
+    fn do_after_damage(attacker: &Slot, defender: &Slot, attack: Move, damage: u16) -> Vec<ActionSideEffects> {
         let mut vec = Vec::new();
         let mut data = defender.data.borrow_mut();
         data.damage_this_turn.push((attacker.id, attack, damage));
@@ -138,7 +138,7 @@ impl Battlefield { //region Damage
         vec
     }
 
-    fn faint(active: &ActivePokemon, cause: Cause) -> Vec<ActionSideEffects> {
+    fn faint(active: &Slot, cause: Cause) -> Vec<ActionSideEffects> {
         let mut pkmn = active.borrow_mut();
         let start_hp = pkmn.current_hp;
         let end_hp = 0;
@@ -153,7 +153,7 @@ impl Battlefield { //region Damage
         }]
     }
 
-    pub fn do_damage(&self, attacker: &ActivePokemon, attack: Move, defender: &ActivePokemon, is_multi_target: bool) -> Vec<ActionSideEffects> {
+    pub fn do_damage(&self, attacker: &Slot, attack: Move, defender: &Slot, is_multi_target: bool) -> Vec<ActionSideEffects> {
         let move_data = attack.data();
         let crit = || Battlefield::determine_crit(attacker, move_data);
         let effectiveness = || core::get_type_effectiveness(&self, attacker, attack, defender);
@@ -530,7 +530,7 @@ impl Battlefield { //region Damage
         }
     }
 
-    pub fn calculate_full_damage<F>(&self, attacker: &ActivePokemon, attack: F, defender: &ActivePokemon, is_multi_target: bool, is_crit: bool, effectiveness: Effectiveness) -> u16
+    pub fn calculate_full_damage<F>(&self, attacker: &Slot, attack: F, defender: &Slot, is_multi_target: bool, is_crit: bool, effectiveness: Effectiveness) -> u16
         where F: Into<MoveContext>
     {
         let MoveContext{ attack, data, base_power} = attack.into();
@@ -590,7 +590,7 @@ impl Battlefield { //region Damage
         u16::try_from(calc).unwrap_or(u16::MAX)
     }
 
-    pub fn do_bide_damage(&self, attacker: &ActivePokemon, damage: u16, defender: &ActivePokemon) -> Vec<ActionSideEffects> {
+    pub fn do_bide_damage(&self, attacker: &Slot, damage: u16, defender: &Slot) -> Vec<ActionSideEffects> {
         let (effectiveness, cause) = core::get_type_effectiveness(&self, attacker, Move::Bide, defender);
         if let Effectiveness::Immune = effectiveness {
             vec![ActionSideEffects::NoEffect(cause)]

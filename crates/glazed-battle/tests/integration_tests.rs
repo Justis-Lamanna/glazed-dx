@@ -4,13 +4,13 @@ use glazed_data::attack::StatChangeTarget::Target;
 use glazed_data::constants::Species;
 use glazed_data::pokemon::PokemonTemplate;
 
-const FORWARD: Battler = Battler {
-    side: BattleSide::Forward,
-    individual: DoubleBattleSide::Left
+const FORWARD: SlotId = SlotId {
+    side: BattleSideId::Forward,
+    individual: DoubleBattleSideId::Left
 };
-const BACK: Battler = Battler {
-    side: BattleSide::Back,
-    individual: DoubleBattleSide::Left
+const BACK: SlotId = SlotId {
+    side: BattleSideId::Back,
+    individual: DoubleBattleSideId::Left
 };
 
 fn create_battlefield() -> Battlefield {
@@ -20,9 +20,17 @@ fn create_battlefield() -> Battlefield {
     )
 }
 
+fn create_specific_battlefield(sp1: Species, sp2: Species) -> Battlefield {
+    Battlefield::one_v_one(
+        PokemonTemplate::pokemon(sp1, 20),
+        PokemonTemplate::pokemon(sp2, 20)
+    )
+}
+
 #[test]
 fn test_protect() {
     let mut b = create_battlefield();
+    // Sets up protection
     let fx = b.do_attack(FORWARD, Move::Protect, SelectedTarget::Implied);
 
     assert!({
@@ -32,6 +40,7 @@ fn test_protect() {
         }
     });
 
+    // Attempted attack fails
     let fx = b.do_attack(BACK, Move::Tackle, SelectedTarget::Implied);
 
     assert!({
@@ -45,6 +54,7 @@ fn test_protect() {
 #[test]
 fn test_belly_drum() {
     let mut b = create_battlefield();
+    // Cuts HP by 50% Max, increases Attack to +6
     let fx = b.do_attack(FORWARD, Move::BellyDrum, SelectedTarget::Implied);
 
     assert!({
@@ -64,6 +74,7 @@ fn test_belly_drum() {
 fn test_belly_drum_failure() {
     let mut b = create_battlefield();
     b.get_by_id(&FORWARD).borrow_mut().current_hp = 1;
+    // Fails if <50% health
     let fx = b.do_attack(FORWARD, Move::BellyDrum, SelectedTarget::Implied);
 
     assert!({
@@ -76,6 +87,7 @@ fn test_belly_drum_failure() {
 #[test]
 fn test_spikes() {
     let mut b = create_battlefield();
+    // First layer of spikes
     let fx = b.do_attack(FORWARD, Move::Spikes, SelectedTarget::Implied);
     assert!({
         match fx.get(0) {
@@ -83,6 +95,7 @@ fn test_spikes() {
         }
     });
 
+    // Second layers of spikes
     let fx = b.do_attack(FORWARD, Move::Spikes, SelectedTarget::Implied);
     assert!({
         match fx.get(0) {
@@ -90,6 +103,7 @@ fn test_spikes() {
         }
     });
 
+    // Third layer of spikes
     let fx = b.do_attack(FORWARD, Move::Spikes, SelectedTarget::Implied);
     assert!({
         match fx.get(0) {
@@ -97,10 +111,39 @@ fn test_spikes() {
         }
     });
 
+    // Attempted fourth layer fails
     let fx = b.do_attack(FORWARD, Move::Spikes, SelectedTarget::Implied);
     assert!({
         match fx.get(0) {
             Some(ActionSideEffects::Failed(_)) => true, _ => false
+        }
+    });
+}
+
+#[test]
+fn test_foresight() {
+    let mut b = create_specific_battlefield(Species::Quilava, Species::Gastly);
+    // Gastly is immune to Tackle
+    let fx = b.do_attack(FORWARD, Move::Tackle, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::NoEffect(_)) => true, _ => false
+        }
+    });
+
+    // Foresight on Gastly
+    let fx = b.do_attack(FORWARD, Move::Foresight, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::Foresighted{..}) => true, _ => false
+        }
+    });
+
+    // Gastly is no longer immune to Tackle
+    let fx = b.do_attack(FORWARD, Move::Tackle, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::NoEffect(_)) => false, _ => true
         }
     });
 }

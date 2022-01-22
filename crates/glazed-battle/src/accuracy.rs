@@ -1,11 +1,23 @@
 use rand::Rng;
 use glazed_data::attack::{Accuracy, Move};
 use glazed_data::types::Type;
-use crate::{ActionSideEffects, ActivePokemon, Battlefield, Cause, PROTECTION_CAP};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, PROTECTION_CAP};
 use crate::core::{ActionCheck, MoveContext};
 
-pub fn get_accuracy_factor(attacker: &ActivePokemon, defender: &ActivePokemon) -> f64 {
-    let net_stages = attacker.data.borrow().accuracy_stage - defender.data.borrow().evasion_stage;
+/// Get the probability of the attacker hitting the defender
+pub fn get_accuracy_factor(attacker: &Slot, defender: &Slot) -> f64 {
+    get_raw_factor(attacker.data.borrow().accuracy_stage, defender.data.borrow().evasion_stage)
+}
+
+/// Same as get_accuracy_factor, but ignores positive evasion changes.
+pub fn get_accuracy_factor_foresight(attacker: &Slot, defender: &Slot) -> f64 {
+    let evasion = defender.data.borrow().evasion_stage;
+    let evasion = if evasion > 0 { 0 } else { evasion };
+    get_raw_factor(attacker.data.borrow().accuracy_stage, evasion)
+}
+
+fn get_raw_factor(accuracy: i8, evasion: i8) -> f64 {
+    let net_stages = accuracy - evasion;
     match net_stages {
         i8::MIN..=-6 => 3f64/9f64,
         -5 => 0.375,
@@ -23,14 +35,17 @@ pub fn get_accuracy_factor(attacker: &ActivePokemon, defender: &ActivePokemon) -
     }
 }
 
-pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &ActivePokemon, attack: F, defender: &ActivePokemon) -> ActionCheck<bool>
+pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &Slot, attack: F, defender: &Slot) -> ActionCheck<bool>
     where F: Into<MoveContext>
 {
     let percentage_formula = |p: u8| {
-        let evasion_accuracy = get_accuracy_factor(attacker, defender);
+        let evasion_accuracy = match defender.data.borrow().foresight_by {
+            Some(attack_id) if attack_id == attacker.id => get_accuracy_factor_foresight(attacker, defender),
+            _ => get_accuracy_factor(attacker, defender)
+        };
         let move_accuracy = f64::from(p) / 100f64;
         let multiply = evasion_accuracy * move_accuracy;
-        if multiply > 1f64 {
+        if multiply >= 1f64 {
             ActionCheck::Ok(true)
         } else {
             ActionCheck::Ok(rand::thread_rng().gen_bool(evasion_accuracy * move_accuracy))
@@ -83,7 +98,7 @@ pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &ActivePokemon, attac
     }
 }
 
-pub fn cannot_use_attack<F: Into<MoveContext>>(attacker: &ActivePokemon, attack: F) -> ActionCheck<bool> {
+pub fn cannot_use_attack<F: Into<MoveContext>>(attacker: &Slot, attack: F) -> ActionCheck<bool> {
     let MoveContext { attack, .. } = attack.into();
 
     // Snore
@@ -94,7 +109,7 @@ pub fn cannot_use_attack<F: Into<MoveContext>>(attacker: &ActivePokemon, attack:
     ActionCheck::Ok(true)
 }
 
-pub fn cannot_use_attack_against<F>(attacker: &ActivePokemon, attack: F, defender: &ActivePokemon) -> ActionCheck<bool>
+pub fn cannot_use_attack_against<F>(attacker: &Slot, attack: F, defender: &Slot) -> ActionCheck<bool>
     where F: Into<MoveContext>
 {
     let MoveContext { attack,.. } = attack.into();

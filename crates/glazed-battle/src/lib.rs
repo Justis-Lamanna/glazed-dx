@@ -4,7 +4,6 @@ use std::ops::{Deref, Index, IndexMut};
 use std::option::Option::Some;
 use std::rc::Rc;
 
-
 use rand::Rng;
 
 use glazed_data::abilities::{Ability, PokemonAbility};
@@ -26,36 +25,7 @@ mod constants;
 #[derive(Debug, Copy, Clone)]
 pub enum SelectedTarget {
     Implied,
-    One(Battler)
-}
-
-/// Represents one side of a battlefield
-#[derive(Debug)]
-pub struct Side {
-    id: BattleSide,
-    spikes: u8,
-    toxic_spikes: u8,
-    pointed_stones: bool,
-    tailwind: u8,
-    aurora_veil: u8,
-    light_screen: u8,
-    reflect: u8,
-    mist: u8
-}
-impl Side {
-    pub fn new(side: BattleSide) -> Side {
-        Side {
-            id: side,
-            spikes: 0,
-            toxic_spikes: 0,
-            pointed_stones: false,
-            tailwind: 0,
-            aurora_veil: 0,
-            light_screen: 0,
-            reflect: 0,
-            mist: 0
-        }
-    }
+    One(SlotId)
 }
 
 /// Represents the entire battlefield
@@ -118,6 +88,35 @@ impl Field {
     }
 }
 
+/// Represents one side of a battlefield
+#[derive(Debug)]
+pub struct FieldSide {
+    id: BattleSideId,
+    spikes: u8,
+    toxic_spikes: u8,
+    pointed_stones: bool,
+    tailwind: u8,
+    aurora_veil: u8,
+    light_screen: u8,
+    reflect: u8,
+    mist: u8
+}
+impl FieldSide {
+    pub fn new(side: BattleSideId) -> FieldSide {
+        FieldSide {
+            id: side,
+            spikes: 0,
+            toxic_spikes: 0,
+            pointed_stones: false,
+            tailwind: 0,
+            aurora_veil: 0,
+            light_screen: 0,
+            reflect: 0,
+            mist: 0
+        }
+    }
+}
+
 /// A group of between 1 and 6 Pokemon, which a trainer owns
 #[derive(Debug)]
 pub struct Party {
@@ -168,74 +167,74 @@ impl Party {
 }
 
 #[derive(Debug)]
-pub enum BattleParty {
-    Single (ActivePokemon),
-    Double (ActivePokemon, ActivePokemon),
-    Tag (ActivePokemon, ActivePokemon)
+pub enum Side {
+    Single (Slot),
+    Double (Slot, Slot),
+    Tag (Slot, Slot)
 }
-impl BattleParty {
-    pub fn left(&self) -> &ActivePokemon {
+impl Side {
+    pub fn left(&self) -> &Slot {
         match self {
-            BattleParty::Single(p) | BattleParty::Double(p, _) | BattleParty::Tag(p, _) => p
+            Side::Single(p) | Side::Double(p, _) | Side::Tag(p, _) => p
         }
     }
-    pub fn right(&self) -> &ActivePokemon {
+    pub fn right(&self) -> &Slot {
         match self {
-            BattleParty::Single(p) | BattleParty::Double(_, p) | BattleParty::Tag(_, p) => p
+            Side::Single(p) | Side::Double(_, p) | Side::Tag(_, p) => p
         }
     }
-    pub fn both(&self) -> Vec<&ActivePokemon> {
+    pub fn both(&self) -> Vec<&Slot> {
         match self {
-            BattleParty::Single(p) => vec![p],
-            BattleParty::Double(a, b) | BattleParty::Tag(a, b) => vec![a, b]
+            Side::Single(p) => vec![p],
+            Side::Double(a, b) | Side::Tag(a, b) => vec![a, b]
         }
     }
-    pub fn ally_of(&self, me: &DoubleBattleSide) -> &ActivePokemon {
+    pub fn ally_of(&self, me: &DoubleBattleSideId) -> &Slot {
         match me {
-            DoubleBattleSide::Left => self.right(),
-            DoubleBattleSide::Right => self.left()
+            DoubleBattleSideId::Left => self.right(),
+            DoubleBattleSideId::Right => self.left()
         }
     }
 
-    pub fn left_mut(&mut self) -> &mut ActivePokemon {
+    pub fn left_mut(&mut self) -> &mut Slot {
         match self {
-            BattleParty::Single(p) | BattleParty::Double(p, _) | BattleParty::Tag(p, _) => p
+            Side::Single(p) | Side::Double(p, _) | Side::Tag(p, _) => p
         }
     }
-    pub fn right_mut(&mut self) -> &mut ActivePokemon {
+    pub fn right_mut(&mut self) -> &mut Slot {
         match self {
-            BattleParty::Single(p) | BattleParty::Double(_, p) | BattleParty::Tag(_, p) => p
+            Side::Single(p) | Side::Double(_, p) | Side::Tag(_, p) => p
         }
     }
 }
-impl Index<DoubleBattleSide> for BattleParty {
-    type Output = ActivePokemon;
+impl Index<DoubleBattleSideId> for Side {
+    type Output = Slot;
 
-    fn index(&self, index: DoubleBattleSide) -> &Self::Output {
+    fn index(&self, index: DoubleBattleSideId) -> &Self::Output {
         match index {
-            DoubleBattleSide::Left => self.left(),
-            DoubleBattleSide::Right => self.right()
+            DoubleBattleSideId::Left => self.left(),
+            DoubleBattleSideId::Right => self.right()
         }
     }
 }
-impl IndexMut<DoubleBattleSide> for BattleParty {
-    fn index_mut(&mut self, index: DoubleBattleSide) -> &mut Self::Output {
+impl IndexMut<DoubleBattleSideId> for Side {
+    fn index_mut(&mut self, index: DoubleBattleSideId) -> &mut Self::Output {
         match index {
-            DoubleBattleSide::Left => self.left_mut(),
-            DoubleBattleSide::Right => self.right_mut()
+            DoubleBattleSideId::Left => self.left_mut(),
+            DoubleBattleSideId::Right => self.right_mut()
         }
     }
 }
 
 /// Smart pointer that points to the current active Pokemon
 #[derive(Debug)]
-pub struct ActivePokemon {
-    pub id: Battler,
+pub struct Slot {
+    pub id: SlotId,
     party: Rc<Party>,
     pokemon: usize,
     pub data: RefCell<BattleData>,
 }
-impl ActivePokemon {
+impl Slot {
     /// Get the effective species of this Pokemon. Takes Transform into effect
     pub fn get_effective_species(&self) -> Species {
         match &self.data.borrow().transformed {
@@ -480,7 +479,7 @@ impl ActivePokemon {
         }
     }
 }
-impl Deref for ActivePokemon {
+impl Deref for Slot {
     type Target = RefCell<Pokemon>;
 
     fn deref(&self) -> &Self::Target {
@@ -496,24 +495,13 @@ impl Deref for ActivePokemon {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum BattleSide {
-    Forward,
-    Back
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum DoubleBattleSide {
-    Left, Right
-}
-
 /// Represents the current battlefield
 #[derive(Debug)]
 pub struct Battlefield {
-    user: BattleParty,
-    user_side: RefCell<Side>,
-    opponent: BattleParty,
-    opponent_side: RefCell<Side>,
+    user: Side,
+    user_side: RefCell<FieldSide>,
+    opponent: Side,
+    opponent_side: RefCell<FieldSide>,
     field: RefCell<Field>,
     wild_battle: bool
 }
@@ -528,37 +516,37 @@ impl Battlefield {
     /// This should only be used for trainer battles
     pub fn single_battle(player: Party, opponent: Party) -> Battlefield {
         Battlefield {
-            user: BattleParty::Single(ActivePokemon {
-                id: Battler { side: BattleSide::Forward, individual: DoubleBattleSide::Left },
+            user: Side::Single(Slot {
+                id: SlotId { side: BattleSideId::Forward, individual: DoubleBattleSideId::Left },
                 party: Rc::new(player),
                 pokemon: 0,
                 data: Default::default()
             }),
-            user_side: RefCell::from(Side::new(BattleSide::Forward)),
-            opponent: BattleParty::Single(ActivePokemon {
-                id: Battler { side: BattleSide::Back, individual: DoubleBattleSide::Left },
+            user_side: RefCell::from(FieldSide::new(BattleSideId::Forward)),
+            opponent: Side::Single(Slot {
+                id: SlotId { side: BattleSideId::Back, individual: DoubleBattleSideId::Left },
                 party: Rc::new(opponent),
                 pokemon: 0,
                 data: Default::default()
             }),
-            opponent_side: RefCell::from(Side::new(BattleSide::Back)),
+            opponent_side: RefCell::from(FieldSide::new(BattleSideId::Back)),
             field: RefCell::from(Field::default()),
             wild_battle: false
         }
     }
 
-    pub fn get_by_id(&self, id: &Battler) -> &ActivePokemon {
+    pub fn get_by_id(&self, id: &SlotId) -> &Slot {
         self.index(id.side).index(id.individual)
     }
 
-    fn opposite_of(&self, side: &BattleSide) -> &BattleParty {
+    fn opposite_of(&self, side: &BattleSideId) -> &Side {
         match side {
-            BattleSide::Forward => &self.opponent,
-            BattleSide::Back => &self.user
+            BattleSideId::Forward => &self.opponent,
+            BattleSideId::Back => &self.user
         }
     }
 
-    pub fn get_targets(&self, attacker: Battler, attack: Move, selected: SelectedTarget) -> Vec<&ActivePokemon> {
+    pub fn get_targets(&self, attacker: SlotId, attack: Move, selected: SelectedTarget) -> Vec<&Slot> {
         let implied_opponent = || {
             let default_target = self.opposite_of(&attacker.side).index(attacker.individual);
             if default_target.borrow().is_fainted() {
@@ -572,7 +560,7 @@ impl Battlefield {
                 Some(default_target)
             }
         };
-        let unimplied_opponent = |b: Battler| {
+        let unimplied_opponent = |b: SlotId| {
             let default_target = &self[b.side][b.individual];
             if default_target.borrow().is_fainted() {
                 let default_target = self.opposite_of(&attacker.side).ally_of(&attacker.individual);
@@ -588,8 +576,8 @@ impl Battlefield {
         let user = || &self[attacker.side][attacker.individual];
         let ally = || {
             match self.user {
-                BattleParty::Single(_) => None,
-                BattleParty::Double(_, _) | BattleParty::Tag(_, _) => {
+                Side::Single(_) => None,
+                Side::Double(_, _) | Side::Tag(_, _) => {
                     let ally = self[attacker.side].ally_of(&attacker.individual);
                     if ally.borrow().is_fainted() {
                         Some(ally)
@@ -673,11 +661,11 @@ impl Battlefield {
             },
             Target::RandomOpponent => {
                 match self.opposite_of(&attacker.side) {
-                    BattleParty::Single(p) => {
+                    Side::Single(p) => {
                         if p.borrow().is_fainted() { vec![] } else { vec![p] }
                     },
-                    BattleParty::Double(a, b) |
-                    BattleParty::Tag(a, b) => {
+                    Side::Double(a, b) |
+                    Side::Tag(a, b) => {
                         let a_fainted = a.borrow().is_fainted();
                         let b_fainted = b.borrow().is_fainted();
                         if a_fainted && b_fainted {
@@ -718,7 +706,7 @@ impl Battlefield {
                 }
             },
             Target::AllExceptUser => {
-                let mut targets: Vec<&ActivePokemon> = self.opposite_of(&attacker.side).both()
+                let mut targets: Vec<&Slot> = self.opposite_of(&attacker.side).both()
                     .iter()
                     .map(|p| *p)
                     .filter(|p| p.borrow().has_health())
@@ -730,12 +718,12 @@ impl Battlefield {
                 targets
             },
             Target::All => {
-                let mut targets: Vec<&ActivePokemon> = self[attacker.side].both()
+                let mut targets: Vec<&Slot> = self[attacker.side].both()
                     .iter()
                     .map(|p| *p)
                     .filter(|a| a.borrow().has_health())
                     .collect();
-                let mut opponent_side: Vec<&ActivePokemon> = self.opposite_of(&attacker.side).both()
+                let mut opponent_side: Vec<&Slot> = self.opposite_of(&attacker.side).both()
                     .iter()
                     .map(|p| *p)
                     .filter(|a| a.borrow().has_health())
@@ -775,33 +763,33 @@ impl Battlefield {
     }
 
     /// Get the side associated with a battler
-    fn get_side(&self, id: &Battler) -> &RefCell<Side> {
+    fn get_side(&self, id: &SlotId) -> &RefCell<FieldSide> {
         match id.side {
-            BattleSide::Forward => &self.user_side,
-            BattleSide::Back => &self.opponent_side
+            BattleSideId::Forward => &self.user_side,
+            BattleSideId::Back => &self.opponent_side
         }
     }
 
-    fn get_everyone(&self) -> Vec<&ActivePokemon> {
+    fn get_everyone(&self) -> Vec<&Slot> {
         let mut active = self.user.both();
         active.append(&mut self.opponent.both());
         active
     }
 }
-impl Index<BattleSide> for Battlefield {
-    type Output = BattleParty;
+impl Index<BattleSideId> for Battlefield {
+    type Output = Side;
 
-    fn index(&self, index: BattleSide) -> &Self::Output {
+    fn index(&self, index: BattleSideId) -> &Self::Output {
         match index {
-            BattleSide::Forward => &self.user,
-            BattleSide::Back => &self.opponent
+            BattleSideId::Forward => &self.user,
+            BattleSideId::Back => &self.opponent
         }
     }
 }
 
-#[derive(Default, Debug)]
 /// Really, anything that needs to be tracked during the course of the battle
 /// When the pokemon is switched out, everything here is reset to defaults
+#[derive(Default, Debug)]
 pub struct BattleData {
     /// The number of turns this Pokemon has been in battle
     turn_count: u8,
@@ -814,15 +802,15 @@ pub struct BattleData {
     /// The number of times the last move was used
     last_move_used_counter: u8,
     /// If present, contains the amount of damage this Pokemon encountered last
-    damage_this_turn: Vec<(Battler, Move, u16)>,
+    damage_this_turn: Vec<(SlotId, Move, u16)>,
     /// If present, the user is biding (turns left, damage accumulated)
     bide: Option<(u8, u16)>,
     /// Number of turns poisoned. 0 indicates not badly poison
     poison_counter: u8,
     /// The Pokemon that have targeted this Pokemon, in order. Index 0 == Most recent, For Mirror Move (not reset at end of round)
-    last_targeted: Vec<(Battler, Move)>,
+    last_targeted: Vec<(SlotId, Move)>,
     /// The last person who attacked the Pokemon (not reset at end of round)
-    last_attacker: Option<(Battler, Move)>,
+    last_attacker: Option<(SlotId, Move)>,
 
     attack_stage: i8,
     defense_stage: i8,
@@ -862,7 +850,7 @@ pub struct BattleData {
     /// A list of disabled moves, and the amount of time left before they are enabled
     disabled: Vec<(Move, u8)>,
     /// If present, this Pokemon is seeded by the contained Pokemon
-    seeded: Option<Battler>,
+    seeded: Option<SlotId>,
     /// If true, this Pokemon's rage is building (attack increases if hit by attack)
     enraged: bool,
     /// If true, this Pokemon is minimized (certain moves hit for double damage + 100% accuracy)
@@ -872,7 +860,7 @@ pub struct BattleData {
     /// If true, this Pokemon cannot escape
     trapped: bool,
     /// If present, the user is locked-on to that Battler for the specified number of turns
-    locked_on: Option<(u8, Battler)>,
+    locked_on: Option<(u8, SlotId)>,
     /// If true, this Pokemon is having a nightmare
     nightmare: bool,
     /// If true, this Pokemon has been cursed
@@ -882,7 +870,8 @@ pub struct BattleData {
     /// The number of subsequent times Protect was used.
     /// Global counter for all protection moves; only resets when a non-protection move is used
     protection_counter: u8,
-
+    /// If present, and the attacker is the Pokemon in SlotID, and the defender is this Pokemon, Evasion is ignored if >0
+    foresight_by: Option<SlotId>,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -984,21 +973,21 @@ impl BattleData {
         undisabled
     }
 
-    pub fn targeted_by(&mut self, pkmn: &ActivePokemon, attack: Move) {
+    pub fn targeted_by(&mut self, pkmn: &Slot, attack: Move) {
         self.remove_from_targeted_by(pkmn);
         self.last_targeted.insert(0, (pkmn.id, attack));
     }
 
-    pub fn remove_from_targeted_by(&mut self, pkmn: &ActivePokemon) {
+    fn remove_from_targeted_by(&mut self, pkmn: &Slot) {
         self.last_targeted.retain(|(e, _)| *e != pkmn.id);
     }
 
-    pub fn get_last_targeted_attack(&self) -> Option<(Battler, Move)> {
+    pub fn get_last_targeted_attack(&self) -> Option<(SlotId, Move)> {
         self.last_targeted.first()
             .map(|(battler, attack)| (*battler, *attack))
     }
 
-    pub fn is_locked_on_to(&self, pkmn: &ActivePokemon) -> bool {
+    pub fn is_locked_on_to(&self, pkmn: &Slot) -> bool {
         if let Some((_, battler)) = self.locked_on {
             pkmn.id == battler
         } else {
@@ -1006,7 +995,18 @@ impl BattleData {
         }
     }
 
-    pub fn end_of_turn(&mut self) {
+    /// This hook is called when another Pokemon on the field swaps out
+    pub fn other_swapped_out(&mut self, pkmn: &Slot) {
+        self.remove_from_targeted_by(pkmn);
+        if let Some(b) = self.foresight_by {
+            if b == pkmn.id {
+                self.foresight_by = None;
+            }
+        }
+    }
+
+    /// This hook is called when the round ends
+    pub fn end_of_round(&mut self) {
         self.turn_count += 1;
         self.damage_this_turn = Vec::new();
         self.has_acted_this_turn = false;
@@ -1028,22 +1028,33 @@ impl BattleData {
     }
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum BattleSideId {
+    Forward,
+    Back
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum DoubleBattleSideId {
+    Left, Right
+}
+
 /// Identifier of a member on the field (more specifically, a "place" on the battlefield)
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub struct Battler {
-    pub side: BattleSide,
-    pub individual: DoubleBattleSide
+pub struct SlotId {
+    pub side: BattleSideId,
+    pub individual: DoubleBattleSideId
 }
-impl Battler {
-    pub fn single(side: BattleSide) -> Battler {
-        Battler {
+impl SlotId {
+    pub fn single(side: BattleSideId) -> SlotId {
+        SlotId {
             side,
-            individual: DoubleBattleSide::Left
+            individual: DoubleBattleSideId::Left
         }
     }
 
-    pub fn double(side: BattleSide, side2: DoubleBattleSide) -> Battler {
-        Battler {
+    pub fn double(side: BattleSideId, side2: DoubleBattleSideId) -> SlotId {
+        SlotId {
             side,
             individual: side2
         }
@@ -1051,16 +1062,17 @@ impl Battler {
 
     /// Test if other battler and this battler are allies
     /// Note that this returns false if self == other!
-    pub fn is_ally(&self, other: &Battler) -> bool {
+    pub fn is_ally(&self, other: &SlotId) -> bool {
         self.side == other.side && self.individual != other.individual
     }
 
     /// Test if other battler and this battler are either the same, or an ally
-    pub fn is_self_or_ally(&self, other: &Battler) -> bool {
+    pub fn is_self_or_ally(&self, other: &SlotId) -> bool {
         self.side == other.side
     }
 }
 
+/// Temporary data for when transforming into a Pokemon.
 #[derive(Debug)]
 struct TransformData {
     species: Species,
@@ -1077,7 +1089,7 @@ struct TransformData {
     move_4: Option<MoveSlot>
 }
 impl TransformData {
-    fn from(p: &ActivePokemon) -> Self {
+    fn from(p: &Slot) -> Self {
         let p = p.borrow();
         TransformData {
             species: p.species,
@@ -1135,23 +1147,15 @@ enum Weather {
     Fog
 }
 
-/// One of the possible entry hazards that can occur on one side of the field
-#[derive(Debug)]
-enum EntryHazard {
-    Spikes(u8),
-    ToxicSpikes(u8),
-    PointedStones
-}
-
 /// The cause of some particular action's side effect
 #[derive(Debug, Clone)]
 pub enum Cause {
     /// This is just what normally happens
     Natural,
     /// A battler's ability caused the side effect
-    Ability(Battler, Ability),
+    Ability(SlotId, Ability),
     /// A used move caused the side effect (this is things that happen directly during the move)
-    Move(Battler, Move),
+    Move(SlotId, Move),
     /// A used move caused the side effect (this is things that happen later, such as Curse at the end of each turn)
     MoveSideEffect(Move),
     /// The cause is related to the Pokemon's type
@@ -1159,14 +1163,14 @@ pub enum Cause {
     /// The side effect was the cause of a user's non-volatile ailment
     Ailment(NonVolatileBattleAilment),
     /// A battler's held item caused the side effect
-    HeldItem(Battler, Item),
+    HeldItem(SlotId, Item),
     /// One cause was about to occur, but another one overwrote it
     Overwrite{
         initial: Box<Cause>,
         overwriter: Box<Cause>
     },
     /// Failed because of something related to the Pokemon's current battle state
-    PokemonBattleState(Battler, PokemonState),
+    PokemonBattleState(SlotId, PokemonState),
     /// Failed because of something on the field
     PokemonFieldState(FieldCause)
 }
@@ -1207,8 +1211,8 @@ pub enum FieldCause {
 #[derive(Debug)]
 pub enum ActionSideEffects {
     DirectDamage {
-        damaged: Battler,
-        damager: Battler,
+        damaged: SlotId,
+        damager: SlotId,
         attack: Move,
         start_hp: u16,
         end_hp: u16,
@@ -1216,138 +1220,142 @@ pub enum ActionSideEffects {
         effectiveness: Effectiveness
     },
     Recoil {
-        damaged: Battler,
+        damaged: SlotId,
         start_hp: u16,
         end_hp: u16,
         cause: Cause
     },
     Crash {
-        damaged: Battler,
+        damaged: SlotId,
         start_hp: u16,
         end_hp: u16
     },
     BasicDamage {
-        damaged: Battler,
+        damaged: SlotId,
         start_hp: u16,
         end_hp: u16,
         cause: Cause
     },
     Healed {
-        healed: Battler,
+        healed: SlotId,
         start_hp: u16,
         end_hp: u16,
         cause: Cause
     },
-    Missed(Battler, Cause),
+    Missed(SlotId, Cause),
     NoEffect(Cause),
     Failed(Cause),
     MultiStrike {
         actions: Vec<Vec<ActionSideEffects>>,
         hits: u8
     },
-    CreatedSubstitute(Battler), DamagedSubstitute {
-        damaged: Battler,
+    CreatedSubstitute(SlotId), DamagedSubstitute {
+        damaged: SlotId,
         start_hp: u16,
         end_hp: u16
     },
-    ConsumedItem(Battler, Item), GainedItem(Battler, Item),
-    LostPP(Battler, Move, u8, u8),
+    ConsumedItem(SlotId, Item), GainedItem(SlotId, Item),
+    LostPP(SlotId, Move, u8, u8),
     NoTarget,
 
     NoEffectSecondary(Cause),
     StatChanged {
-        affected: Battler,
+        affected: SlotId,
         stat: BattleStat,
         cause: Cause,
         start: i8,
         end: i8
     },
-    StatsReset(Battler),
-    StatMaxed(Battler, BattleStat),
+    StatsReset(SlotId),
+    StatMaxed(SlotId, BattleStat),
     NonVolatileStatusAilment {
-        affected: Battler,
+        affected: SlotId,
         status: NonVolatileBattleAilment
     },
-    Thawed(Battler),
-    WasFrozen(Battler),
-    Sleep(Battler),
-    WokeUp(Battler),
-    IsFullyParalyzed(Battler),
-    Confuse(Battler),
-    ConfusionTurn(Battler),
+    Thawed(SlotId),
+    WasFrozen(SlotId),
+    Sleep(SlotId),
+    WokeUp(SlotId),
+    IsFullyParalyzed(SlotId),
+    Confuse(SlotId),
+    ConfusionTurn(SlotId),
     HurtInConfusion {
-        affected: Battler,
+        affected: SlotId,
         start: u16,
         end: u16,
         hang_on_cause: Option<Cause>
     },
-    SnappedOutOfConfusion(Battler),
-    Infatuated(Battler), TooInfatuatedToAttack(Battler),
+    SnappedOutOfConfusion(SlotId),
+    Infatuated(SlotId), TooInfatuatedToAttack(SlotId),
     ForcePokemonSwap {
-        must_leave: Battler
+        must_leave: SlotId
     },
     DroppedCoins,
-    Charging(Battler, Move),
+    Charging(SlotId, Move),
     Recharging(Cause),
     Bound {
-        binder: Battler,
-        bound: Battler,
+        binder: SlotId,
+        bound: SlotId,
         turns: u8,
         attack: Move
     },
     HurtByBound {
-        bound: Battler,
+        bound: SlotId,
         start_hp: u16,
         end_hp: u16
     },
-    Unbound(Battler),
-    WillFlinch(Battler), Flinched(Battler),
-    Disabled(Battler, Move), NoLongerDisabled(Battler, Move),
-    MistStart(BattleSide), MistEnd(BattleSide, Cause),
+    Unbound(SlotId),
+    WillFlinch(SlotId), Flinched(SlotId),
+    Disabled(SlotId, Move), NoLongerDisabled(SlotId, Move),
+    MistStart(BattleSideId), MistEnd(BattleSideId, Cause),
     SeedStart {
-        from: Battler,
-        to: Battler
+        from: SlotId,
+        to: SlotId
     },
     SeedLeech {
-        from: Battler,
-        to: Battler,
+        from: SlotId,
+        to: SlotId,
         damage: u8
     },
-    RageStart(Battler), RageContinue(Battler), RageEnd(Battler),
-    Mimicked(Battler, Move),
-    ScreenStart(BattleSide, ScreenType), ScreenEnd(BattleSide, ScreenType),
-    BideStart(Battler), BideContinue(Battler),
-    Metronome(Battler, Move),
+    RageStart(SlotId), RageContinue(SlotId), RageEnd(SlotId),
+    Mimicked(SlotId, Move),
+    ScreenStart(BattleSideId, ScreenType), ScreenEnd(BattleSideId, ScreenType),
+    BideStart(SlotId), BideContinue(SlotId),
+    Metronome(SlotId, Move),
     Transform {
-        id: Battler,
+        id: SlotId,
         species: Species,
         gender: Gender,
         shiny: bool
     },
-    ChangeType(Battler, Type), ChangeAbility(Battler, Ability),
+    ChangeType(SlotId, Type), ChangeAbility(SlotId, Ability),
     Sketched {
-        user: Battler,
-        target: Battler,
+        user: SlotId,
+        target: SlotId,
         attack: Move
     },
     StoleItem {
-        from: Battler,
-        to: Battler,
+        from: SlotId,
+        to: SlotId,
         item: Item
     }, CouldntStealItem {
-        from: Battler,
-        to: Battler,
+        from: SlotId,
+        to: SlotId,
         cause: Cause
     },
-    TrappedStart(Battler),
+    TrappedStart(SlotId),
     LockedOn {
-        user: Battler,
-        target: Battler
+        user: SlotId,
+        target: SlotId
     },
-    Nightmare(Battler),
-    Curse(Battler),
-    StartProtection(Battler, Move), IsProtected(Battler, Move),
-    EntryHazard(BattleSide, Move, u8),
+    Foresighted {
+        user: SlotId,
+        target: SlotId
+    },
+    Nightmare(SlotId),
+    Curse(SlotId),
+    StartProtection(SlotId, Move), IsProtected(SlotId, Move),
+    EntryHazard(BattleSideId, Move, u8),
     NothingHappened
 }
 impl ActionSideEffects {

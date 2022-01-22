@@ -825,6 +825,7 @@ pub enum Effect {
     Spite,
     Protect,
     BellyDrum,
+    Foresight,
     EntryHazard(EntryHazardType),
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
@@ -3912,7 +3913,7 @@ pub static Foresight: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::Custom],
+    effects: &[Effect::Foresight],
 };
 pub static DestinyBond: MoveData = MoveData {
     pp: 5,

@@ -5,7 +5,7 @@ use glazed_data::attack::{Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::item::{Item};
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, ActivePokemon, Battlefield, Cause, Field, Weather};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, Field, Weather};
 
 pub type ActionCheck<T> = Result<T, ActionSideEffects>;
 
@@ -59,7 +59,7 @@ impl From<Move> for MoveContext {
 }
 
 /// Get the type of the move used. Takes ability and type-changing moves into account
-pub fn get_effective_move_type<F>(attacker: &ActivePokemon, field: &RefCell<Field>, attack: F) -> Type
+pub fn get_effective_move_type<F>(attacker: &Slot, field: &RefCell<Field>, attack: F) -> Type
     where F: Into<MoveContext>
 {
     let MoveContext { attack, data, .. } = attack.into();
@@ -119,12 +119,15 @@ pub fn get_effective_move_type<F>(attacker: &ActivePokemon, field: &RefCell<Fiel
     }
 }
 
-pub fn get_type_effectiveness(field: &Battlefield, attacker: &ActivePokemon, attack: Move, defender: &ActivePokemon) -> (Effectiveness, Cause) {
+pub fn get_type_effectiveness(field: &Battlefield, attacker: &Slot, attack: Move, defender: &Slot) -> (Effectiveness, Cause) {
     let move_type = get_effective_move_type(attacker, &field.field, attack);
     let attacker_ability = attacker.get_effective_ability();
     let defender_ability = defender.get_effective_ability();
 
-    let raw_effectiveness = defender.get_effective_type().defending_against(&move_type);
+    let raw_effectiveness = match defender.data.borrow().foresight_by {
+        Some(attack_id) if attack_id == attacker.id => defender.get_effective_type().defending_against_ignore_immunities(&move_type),
+        _ => defender.get_effective_type().defending_against(&move_type)
+    };
 
     let (effectiveness, cause) =
         if defender_ability == Ability::WonderGuard {

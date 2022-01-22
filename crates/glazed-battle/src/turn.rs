@@ -4,13 +4,13 @@ use glazed_core::math;
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, Move, ScreenType};
 
-use crate::{ActionSideEffects, ActivePokemon, Cause, Side};
+use crate::{ActionSideEffects, Slot, Cause, FieldSide};
 use crate::damage::calculate_confusion_damage;
 use crate::constants::{*};
 use crate::core::CheckResult;
 use crate::core::CheckResult::{Effect, EffectAndEnd, EffectsAndEnd, Nothing};
 
-pub fn do_freeze_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<ActionSideEffects> {
+pub fn do_freeze_check(attacker: &Slot, attack: Move) -> CheckResult<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();
     if pkmn.status.freeze {
         let thaw = attack.can_thaw_user() || rand::thread_rng().gen_bool(THAW_CHANCE);
@@ -25,7 +25,7 @@ pub fn do_freeze_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<Ac
     }
 }
 
-pub fn do_sleep_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<ActionSideEffects> {
+pub fn do_sleep_check(attacker: &Slot, attack: Move) -> CheckResult<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();
     if pkmn.status.sleep > 0 {
         pkmn.status.sleep -= 1;
@@ -42,7 +42,7 @@ pub fn do_sleep_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<Act
     }
 }
 
-pub fn do_paralysis_check(attacker: &ActivePokemon) -> CheckResult<ActionSideEffects> {
+pub fn do_paralysis_check(attacker: &Slot) -> CheckResult<ActionSideEffects> {
     let pkmn = attacker.borrow();
     if pkmn.status.paralysis && rand::thread_rng().gen_bool(FULL_PARALYSIS_CHANCE) {
         EffectAndEnd(ActionSideEffects::IsFullyParalyzed(attacker.id))
@@ -51,7 +51,7 @@ pub fn do_paralysis_check(attacker: &ActivePokemon) -> CheckResult<ActionSideEff
     }
 }
 
-pub fn do_flinch_check(attacker: &ActivePokemon) -> CheckResult<ActionSideEffects> {
+pub fn do_flinch_check(attacker: &Slot) -> CheckResult<ActionSideEffects> {
     let has_steadfast = attacker.get_effective_ability() == Ability::Steadfast;
     let mut data = attacker.data.borrow_mut();
     if data.flinch {
@@ -75,7 +75,7 @@ pub fn do_flinch_check(attacker: &ActivePokemon) -> CheckResult<ActionSideEffect
     }
 }
 
-pub fn do_confusion_check(attacker: &ActivePokemon) -> CheckResult<ActionSideEffects> {
+pub fn do_confusion_check(attacker: &Slot) -> CheckResult<ActionSideEffects> {
     let mut data = attacker.data.borrow_mut();
     if data.confused > 0 {
         data.confused -= 1;
@@ -104,7 +104,7 @@ pub fn do_confusion_check(attacker: &ActivePokemon) -> CheckResult<ActionSideEff
     }
 }
 
-pub fn do_disable_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<ActionSideEffects> {
+pub fn do_disable_check(attacker: &Slot, attack: Move) -> CheckResult<ActionSideEffects> {
     let data = attacker.data.borrow_mut();
     if data.is_disabled(attack) {
         CheckResult::EffectAndEnd(ActionSideEffects::Disabled(attacker.id, attack))
@@ -113,7 +113,7 @@ pub fn do_disable_check(attacker: &ActivePokemon, attack: Move) -> CheckResult<A
     }
 }
 
-pub fn do_screen_countdown(side: &RefCell<Side>) -> Vec<ActionSideEffects> {
+pub fn do_screen_countdown(side: &RefCell<FieldSide>) -> Vec<ActionSideEffects> {
     let mut effects = Vec::new();
     let mut side = side.borrow_mut();
     if side.light_screen > 0 {
@@ -131,7 +131,7 @@ pub fn do_screen_countdown(side: &RefCell<Side>) -> Vec<ActionSideEffects> {
     effects
 }
 
-pub fn do_poison_damage(p: &ActivePokemon) -> Vec<ActionSideEffects> {
+pub fn do_poison_damage(p: &Slot) -> Vec<ActionSideEffects> {
     if p.borrow().status.poison {
         vec![p.take_poison_damage()]
     } else {
@@ -140,7 +140,7 @@ pub fn do_poison_damage(p: &ActivePokemon) -> Vec<ActionSideEffects> {
 }
 
 /// Perform binding damage, if applicable. Also decreases the turn amount, clearing the value if binding is complete.
-pub fn do_binding_damage(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
+pub fn do_binding_damage(attacker: &Slot) -> Vec<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();
     let mut data = attacker.data.borrow_mut();
 
@@ -170,7 +170,7 @@ pub fn do_binding_damage(attacker: &ActivePokemon) -> Vec<ActionSideEffects> {
     }
 }
 
-pub fn do_nightmare_damage(affected: &ActivePokemon) -> Vec<ActionSideEffects> {
+pub fn do_nightmare_damage(affected: &Slot) -> Vec<ActionSideEffects> {
     if affected.data.borrow().nightmare {
         let mut pkmn = affected.borrow_mut();
         let damage = math::fraction(pkmn.hp.value, NIGHTMARE_MULTIPLIER);
@@ -186,7 +186,7 @@ pub fn do_nightmare_damage(affected: &ActivePokemon) -> Vec<ActionSideEffects> {
     }
 }
 
-pub fn do_curse_damage(affected: &ActivePokemon) -> Vec<ActionSideEffects> {
+pub fn do_curse_damage(affected: &Slot) -> Vec<ActionSideEffects> {
     if affected.data.borrow().cursed {
         let mut pkmn = affected.borrow_mut();
         let damage = math::fraction(pkmn.hp.value, CURSE_MULTIPLIER);
