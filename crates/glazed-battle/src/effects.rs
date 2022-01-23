@@ -715,6 +715,14 @@ impl Battlefield {
                 },
                 Effect::Mimic => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_mimic_effect),
                 Effect::ChangeWeather(weather) => {
+                    match weather {
+                        Weather::HarshSun if self.field.borrow().is_sunny() => { return vec![ActionSideEffects::Failed(Cause::Natural)]},
+                        Weather::Rain if self.field.borrow().is_rain() => { return vec![ActionSideEffects::Failed(Cause::Natural)]},
+                        Weather::Sandstorm if self.field.borrow().is_sandstorm() => { return vec![ActionSideEffects::Failed(Cause::Natural)]},
+                        Weather::Hail if self.field.borrow().is_hail() => { return vec![ActionSideEffects::Failed(Cause::Natural)]},
+                        _ => {}
+                    }
+
                     let w = match weather {
                         Weather::HarshSun => {
                             let turns =
