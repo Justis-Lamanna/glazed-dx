@@ -5,7 +5,7 @@ use glazed_data::attack::{Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::item::{Item};
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, Slot, Battlefield, Cause, Field, Weather};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, Field, WeatherCounter};
 
 pub type ActionCheck<T> = Result<T, ActionSideEffects>;
 
@@ -75,11 +75,11 @@ pub fn get_effective_move_type<F>(attacker: &Slot, field: &RefCell<Field>, attac
     match attack {
         Move::HiddenPower => attacker.borrow().get_hidden_power_type(),
         Move::WeatherBall => match field.borrow().weather {
-            Some(Weather::Sun(_)) => Type::Fire,
-            Some(Weather::Rain(_)) => Type::Water,
-            Some(Weather::Hail(_)) => Type::Ice,
-            Some(Weather::Sandstorm(_)) => Type::Rock,
-            Some(Weather::Fog) | None => Type::Normal
+            Some(WeatherCounter::Sun(_)) => Type::Fire,
+            Some(WeatherCounter::Rain(_)) => Type::Water,
+            Some(WeatherCounter::Hail(_)) => Type::Ice,
+            Some(WeatherCounter::Sandstorm(_)) => Type::Rock,
+            Some(WeatherCounter::Fog) | None => Type::Normal
         },
         Move::Judgment => match attacker.borrow().held_item {
             Some(Item::DracoPlate) => Type::Dragon,

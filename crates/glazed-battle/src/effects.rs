@@ -6,7 +6,7 @@ use rand::Rng;
 use strum::IntoEnumIterator;
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, Effect, EffectPredicate, EntryHazardType, Move, MoveData, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, VolatileBattleAilment};
+use glazed_data::attack::{BattleStat, Effect, EffectPredicate, EntryHazardType, Move, MoveData, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, VolatileBattleAilment, Weather};
 use glazed_data::constants::Species;
 use glazed_data::item::Item;
 use glazed_data::types::{Effectiveness, PokemonType, Type};
@@ -299,6 +299,96 @@ impl Battlefield {
                 if data.perish_song_counter == 0 {
                     effects.append(&mut Battlefield::faint(pokemon, Cause::MoveSideEffect(Move::PerishSong)));
                     continue;
+                }
+            }
+        }
+
+        effects
+    }
+
+    pub fn do_weather(&self) -> Vec<ActionSideEffects> {
+        let mut effects = Vec::new();
+        let mut field = self.field.borrow_mut();
+        // Weather Effects
+        if let Some(ctr) = &field.weather {
+            match ctr {
+                WeatherCounter::Sun(ctr) => {
+                    let ctr = *ctr - 1;
+                    if ctr == 0 {
+                        effects.push(ActionSideEffects::EndWeather(Weather::HarshSun));
+                        field.weather = None;
+                    }
+                    else {
+                        effects.push(ActionSideEffects::ContinueWeather(Weather::HarshSun));
+                        field.weather = Some(WeatherCounter::Sun(ctr))
+                    }
+                },
+                WeatherCounter::Rain(ctr) => {
+                    let ctr = *ctr - 1;
+                    if ctr == 0 {
+                        effects.push(ActionSideEffects::EndWeather(Weather::Rain));
+                        field.weather = None;
+                    }
+                    else {
+                        effects.push(ActionSideEffects::ContinueWeather(Weather::Rain));
+                        field.weather = Some(WeatherCounter::Rain(ctr))
+                    }
+                },
+                WeatherCounter::Fog => {
+                    effects.push(ActionSideEffects::ContinueWeather(Weather::Fog))
+                },
+                WeatherCounter::Hail(ctr) => {
+                    let ctr = *ctr - 1;
+                    if ctr == 0 {
+                        effects.push(ActionSideEffects::EndWeather(Weather::Hail));
+                        field.weather = None;
+                    }
+                    else {
+                        effects.push(ActionSideEffects::ContinueWeather(Weather::Hail));
+                        field.weather = Some(WeatherCounter::Hail(ctr));
+                        // Hail Damage
+                        for pkmn in self.get_everyone() {
+                            let immune_to_ice = pkmn.get_effective_type().has_type(&Type::Ice);
+                            if !immune_to_ice {
+                                let damage = pkmn.borrow().hp.value / 16;
+                                let (start_hp, end_hp) = pkmn.borrow_mut().subtract_hp(damage);
+                                effects.push(ActionSideEffects::BasicDamage {
+                                    damaged: pkmn.id,
+                                    start_hp,
+                                    end_hp,
+                                    cause: Cause::PokemonFieldState(FieldCause::Weather(Weather::Hail))
+                                })
+                            }
+                        }
+                    }
+                },
+                WeatherCounter::Sandstorm(ctr) => {
+                    let ctr = *ctr - 1;
+                    if ctr == 0 {
+                        effects.push(ActionSideEffects::EndWeather(Weather::Sandstorm));
+                        field.weather = None;
+                    }
+                    else {
+                        effects.push(ActionSideEffects::ContinueWeather(Weather::Sandstorm));
+                        field.weather = Some(WeatherCounter::Sandstorm(ctr));
+                        // Sandstorm Damage
+                        for pkmn in self.get_everyone() {
+                            let immune_to_standstorm =
+                                pkmn.get_effective_type().has_type(&Type::Rock) ||
+                                    pkmn.get_effective_type().has_type(&Type::Ground) ||
+                                    pkmn.get_effective_type().has_type(&Type::Steel);
+                            if !immune_to_standstorm {
+                                let damage = pkmn.borrow().hp.value / 16;
+                                let (start_hp, end_hp) = pkmn.borrow_mut().subtract_hp(damage);
+                                effects.push(ActionSideEffects::BasicDamage {
+                                    damaged: pkmn.id,
+                                    start_hp,
+                                    end_hp,
+                                    cause: Cause::PokemonFieldState(FieldCause::Weather(Weather::Sandstorm))
+                                })
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -624,7 +714,39 @@ impl Battlefield {
                     }
                 },
                 Effect::Mimic => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_mimic_effect),
-                Effect::ChangeWeather(_) => unimplemented!("No Weather Yet"),
+                Effect::ChangeWeather(weather) => {
+                    let w = match weather {
+                        Weather::HarshSun => {
+                            let turns =
+                                if attacker.borrow().is_holding(Item::HeatRock) { WEATHER_WITH_ROCK_TURN_COUNT }
+                                else { WEATHER_TURN_COUNT };
+                            WeatherCounter::Sun(turns)
+                        },
+                        Weather::Rain => {
+                            let turns =
+                                if attacker.borrow().is_holding(Item::DampRock) { WEATHER_WITH_ROCK_TURN_COUNT }
+                                else { WEATHER_TURN_COUNT };
+                            WeatherCounter::Rain(turns)
+                        },
+                        Weather::Sandstorm => {
+                            let turns =
+                                if attacker.borrow().is_holding(Item::SmoothRock) { WEATHER_WITH_ROCK_TURN_COUNT }
+                                else { WEATHER_TURN_COUNT };
+                            WeatherCounter::Sandstorm(turns)
+                        }
+                        Weather::Hail => {
+                            let turns =
+                                if attacker.borrow().is_holding(Item::IcyRock) { WEATHER_WITH_ROCK_TURN_COUNT }
+                                else { WEATHER_TURN_COUNT };
+                            WeatherCounter::Hail(turns)
+                        }
+                        Weather::Fog => {
+                            WeatherCounter::Fog
+                        }
+                    };
+                    self.field.borrow_mut().weather = Some(w);
+                    vec![ActionSideEffects::StartWeather(*weather)]
+                },
                 Effect::DispelWeather => unimplemented!("No Weather Yet"),
                 Effect::Predicated(_, _, _) => panic!("Nested predicated not supported"),
                 Effect::Custom => panic!("Consider changing from Custom to a concrete effect"),

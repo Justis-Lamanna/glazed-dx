@@ -1,5 +1,5 @@
 use glazed_battle::*;
-use glazed_data::attack::{BattleStat, Move};
+use glazed_data::attack::{BattleStat, Move, Weather};
 use glazed_data::attack::StatChangeTarget::Target;
 use glazed_data::constants::Species;
 use glazed_data::pokemon::PokemonTemplate;
@@ -208,4 +208,41 @@ fn test_perish_song() {
             Some(ActionSideEffects::BasicDamage {end_hp: 0, ..}) => true, _ => false
         }
     });
+}
+
+#[test]
+fn test_sandstorm() {
+    let mut b = create_battlefield();
+    let fx = b.do_attack(FORWARD, Move::Sandstorm, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::StartWeather(Weather::Sandstorm)) => true, _ => false
+        }
+    });
+
+    let fx = b.do_weather();
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::ContinueWeather(Weather::Sandstorm)) => true, _ => false
+        }
+    });
+    assert!({
+        match fx.get(1) {
+            Some(ActionSideEffects::BasicDamage {..}) => true, _ => false
+        }
+    });
+}
+
+#[test]
+fn test_sandstorm_immune() {
+    let mut b = create_specific_battlefield(Species::Aron, Species::Onix);
+    let fx = b.do_attack(FORWARD, Move::Sandstorm, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::StartWeather(Weather::Sandstorm)) => true, _ => false
+        }
+    });
+
+    let fx = b.do_weather();
+    assert_eq!(fx.len(), 1);
 }

@@ -426,7 +426,8 @@ pub enum Item {
     GripClaw, LightClay, TerrainExtender, AssaultVest, FlameOrb, IronBall, LaggingTail, MachoBrace,
     RingTarget, ToxicOrb, Leftovers, AbsorbBulb, CellBattery, EjectButton, LuminousMoss,
     Snowball, WeaknessPolicy, WideLens, ZoomLens, ScopeLens, BrightPowder, ExpertBelt, Metronome, FocusSash,
-    FloatStone, BindingBand
+    FloatStone, BindingBand,
+    HeatRock, DampRock, SmoothRock, IcyRock
 }
 
 #[derive(Debug)]
@@ -734,7 +735,11 @@ impl Item {
             Item::FocusSash => &FocusSash,
             Item::FloatStone => &FloatStone,
             Item::BindingBand => &BindingBand,
-            Item::TM(_) | Item::HM(_) | Item::KeyItem(_) => panic!("No TM, HM, Key Item data filled in")
+            Item::TM(_) | Item::HM(_) | Item::KeyItem(_) => panic!("No TM, HM, Key Item data filled in"),
+            Item::HeatRock => &HeatRock,
+            Item::DampRock => &DampRock,
+            Item::SmoothRock => &SmoothRock,
+            Item::IcyRock => &IcyRock
         }
     }
 
@@ -3248,6 +3253,42 @@ pub const FloatStone: ItemData = ItemData {
     overworld_usable: false
 };
 pub const BindingBand: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
+};
+pub const HeatRock: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
+};
+pub const DampRock: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
+};
+pub const SmoothRock: ItemData = ItemData {
+    cost: 2000,
+    pocket: Pocket::Items,
+    countable: false,
+    consumable: false,
+    holdable: true,
+    battle_usable: false,
+    overworld_usable: false
+};
+pub const IcyRock: ItemData = ItemData {
     cost: 2000,
     pocket: Pocket::Items,
     countable: false,

@@ -7,7 +7,7 @@ use std::rc::Rc;
 use rand::Rng;
 
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, PoisonType, ScreenType, SemiInvulnerableLocation, Target};
+use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, PoisonType, ScreenType, SemiInvulnerableLocation, Target, Weather};
 use glazed_data::constants::Species;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, Pokemon, StatSlot};
@@ -31,7 +31,7 @@ pub enum SelectedTarget {
 /// Represents the entire battlefield
 #[derive(Default, Debug)]
 pub struct Field {
-    weather: Option<Weather>,
+    weather: Option<WeatherCounter>,
     gravity: u8,
     magic_room: u8,
     coins_on_ground: u16
@@ -40,7 +40,7 @@ impl Field {
     /// Return if harsh sunlight is present on the field
     pub fn is_sunny(&self) -> bool {
         match self.weather {
-            Some(Weather::Sun(_)) => true,
+            Some(WeatherCounter::Sun(_)) => true,
             _ => false
         }
     }
@@ -48,7 +48,7 @@ impl Field {
     /// Return if it is raining on the field
     pub fn is_rain(&self) -> bool {
         match self.weather {
-            Some(Weather::Rain(_)) => true,
+            Some(WeatherCounter::Rain(_)) => true,
             _ => false
         }
     }
@@ -56,7 +56,7 @@ impl Field {
     /// Return if there is a sandstorm on the field
     pub fn is_sandstorm(&self) -> bool {
         match self.weather {
-            Some(Weather::Sandstorm(_)) => true,
+            Some(WeatherCounter::Sandstorm(_)) => true,
             _ => false
         }
     }
@@ -64,14 +64,14 @@ impl Field {
     /// Return if there is hail on the field
     pub fn is_hail(&self) -> bool {
         match self.weather {
-            Some(Weather::Hail(_)) => true,
+            Some(WeatherCounter::Hail(_)) => true,
             _ => false
         }
     }
 
     pub fn is_foggy(&self) -> bool {
         match self.weather {
-            Some(Weather::Fog) => true,
+            Some(WeatherCounter::Fog) => true,
             _ => false
         }
     }
@@ -1160,7 +1160,7 @@ impl TransformData {
 
 /// One of the possible weather conditions that can occur on the field
 #[derive(Debug)]
-enum Weather {
+enum WeatherCounter {
     Rain(u8),
     Sun(u8),
     Hail(u8),
@@ -1227,7 +1227,8 @@ pub enum FieldCause {
     Mist,
     Spikes,
     ToxicSpikes,
-    StealthRock
+    StealthRock,
+    Weather(Weather)
 }
 
 /// Possible consequences of an Action
@@ -1312,6 +1313,7 @@ pub enum ActionSideEffects {
     ForcePokemonSwap {
         must_leave: SlotId
     },
+    StartWeather(glazed_data::attack::Weather), ContinueWeather(glazed_data::attack::Weather), EndWeather(glazed_data::attack::Weather),
     DroppedCoins,
     Charging(SlotId, Move),
     Recharging(Cause),

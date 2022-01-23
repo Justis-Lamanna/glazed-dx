@@ -72,6 +72,10 @@ pub const PROTECTION_CAP: u8 = 4;
 pub const MAX_SPIKES: u8 = 3;
 /// The maximum number of toxic spikes that can be placed
 pub const MAX_TOXIC_SPIKES: u8 = 2;
+/// The number of turns weather lasts
+pub const WEATHER_TURN_COUNT: u8 = 5;
+/// The number of turns weather lasts, while holding the corresponding rock
+pub const WEATHER_WITH_ROCK_TURN_COUNT: u8 = 8;
 
 pub const SCREEN_TURN_COUNT: u8 = 5;
 
