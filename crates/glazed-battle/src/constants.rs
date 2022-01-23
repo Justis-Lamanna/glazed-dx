@@ -110,6 +110,15 @@ pub fn hp_to_power_map(current_hp: u16, max_hp: u16) -> u16 {
     else { 200 }
 }
 
+/// Get the denominator of spikes damage
+pub fn get_spikes_damage(level: u8) -> u16 {
+    match level {
+        1 => 8,
+        2 => 6,
+        _ => 4
+    }
+}
+
 /// One-off structure to allow configuration of the Multi-Hit Distribution
 pub struct MultiHitDistribution;
 impl Distribution<u8> for MultiHitDistribution {

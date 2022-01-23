@@ -539,6 +539,10 @@ impl Battlefield {
         self.index(id.side).index(id.individual)
     }
 
+    pub fn get_by_id_mut(&mut self, id: &SlotId) -> &mut Slot {
+        self.index_mut(id.side).index_mut(id.individual)
+    }
+
     fn opposite_of(&self, side: &BattleSideId) -> &Side {
         match side {
             BattleSideId::Forward => &self.opponent,
@@ -786,6 +790,14 @@ impl Index<BattleSideId> for Battlefield {
         }
     }
 }
+impl IndexMut<BattleSideId> for Battlefield {
+    fn index_mut(&mut self, index: BattleSideId) -> &mut Self::Output {
+        match index {
+            BattleSideId::Forward => &mut self.user,
+            BattleSideId::Back => &mut self.opponent
+        }
+    }
+}
 
 /// Really, anything that needs to be tracked during the course of the battle
 /// When the pokemon is switched out, everything here is reset to defaults
@@ -872,6 +884,10 @@ pub struct BattleData {
     protection_counter: u8,
     /// If present, and the attacker is the Pokemon in SlotID, and the defender is this Pokemon, Evasion is ignored if >0
     foresight_by: Option<SlotId>,
+    /// If true, this user is Destiny Bond'ed. If a Pokemon KOs this one, it will faint as well.
+    destiny_bond: bool,
+    /// If > 0, Perish Song is in effect. Death happens on 1 -> 0
+    perish_song_counter: u8,
     /// If true, this user is rooted
     rooted: bool,
     /// If >0, levitating. Decrement after each turn
@@ -1003,6 +1019,11 @@ impl BattleData {
                 self.foresight_by = None;
             }
         }
+    }
+
+    /// This hook is called just before this Pokemon's turn starts
+    pub fn start_of_turn(&mut self) {
+        self.destiny_bond = false;
     }
 
     /// This hook is called when the round ends
@@ -1203,7 +1224,10 @@ pub enum PokemonState {
 
 #[derive(Debug, Clone)]
 pub enum FieldCause {
-    Mist
+    Mist,
+    Spikes,
+    ToxicSpikes,
+    StealthRock
 }
 
 /// Possible consequences of an Action
@@ -1255,6 +1279,7 @@ pub enum ActionSideEffects {
         end_hp: u16
     },
     ConsumedItem(SlotId, Item), GainedItem(SlotId, Item),
+    PokemonLeft(SlotId, usize), PokemonEntered(SlotId, usize),
     LostPP(SlotId, Move, u8, u8),
     NoTarget,
 
@@ -1272,13 +1297,10 @@ pub enum ActionSideEffects {
         affected: SlotId,
         status: NonVolatileBattleAilment
     },
-    Thawed(SlotId),
-    WasFrozen(SlotId),
-    Sleep(SlotId),
-    WokeUp(SlotId),
+    WasFrozen(SlotId), Thawed(SlotId),
+    Sleep(SlotId), WokeUp(SlotId),
     IsFullyParalyzed(SlotId),
-    Confuse(SlotId),
-    ConfusionTurn(SlotId),
+    Confuse(SlotId), ConfusionTurn(SlotId),
     HurtInConfusion {
         affected: SlotId,
         start: u16,
@@ -1354,6 +1376,8 @@ pub enum ActionSideEffects {
     },
     Nightmare(SlotId),
     Curse(SlotId),
+    DestinyBond(SlotId),
+    StartPerishSong, PerishCount(SlotId, u8),
     StartProtection(SlotId, Move), IsProtected(SlotId, Move),
     EntryHazard(BattleSideId, Move, u8),
     NothingHappened

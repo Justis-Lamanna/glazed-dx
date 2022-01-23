@@ -826,6 +826,8 @@ pub enum Effect {
     Protect,
     BellyDrum,
     Foresight,
+    DestinyBond,
+    PerishSong,
     EntryHazard(EntryHazardType),
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
@@ -3925,7 +3927,7 @@ pub static DestinyBond: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::DestinyBond],
 };
 pub static PerishSong: MoveData = MoveData {
     pp: 5,
@@ -3937,7 +3939,7 @@ pub static PerishSong: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::All,
-    effects: &[Effect::Custom],
+    effects: &[Effect::PerishSong],
 };
 pub static IcyWind: MoveData = MoveData {
     pp: 15,

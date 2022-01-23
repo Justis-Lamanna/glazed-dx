@@ -117,10 +117,66 @@ pub fn inflict_non_volatile_status(affected: &Slot, status: NonVolatileBattleAil
 }
 
 impl Battlefield {
+    /// Called when a Pokemon enters battle (either at start, or when swapped out)
+    pub fn enter_battle(&mut self, slot: SlotId) -> Vec<ActionSideEffects> {
+        let mut effects = Vec::new();
+        let side = self.get_side(&slot).borrow();
+        let mut pkmn = self.get_by_id(&slot);
+        let pkmn_ability = pkmn.get_effective_ability();
+
+        let grounded = || self.field.borrow().gravity > 0 || pkmn.borrow().is_holding(Item::IronBall) || pkmn.data.borrow().rooted;
+        let immune_to_spikes = pkmn_ability == Ability::MagicGuard ||
+            ((pkmn.get_effective_type().has_type(&Type::Flying) ||  pkmn_ability == Ability::Levitate) && !grounded());
+
+        // Spikes
+        if side.spikes > 0 && !immune_to_spikes {
+            let max_hp = pkmn.borrow().hp.value;
+            let damage = max_hp / get_spikes_damage(side.spikes);
+
+            let (start_hp, end_hp) = pkmn.borrow_mut().subtract_hp(damage);
+            effects.push(ActionSideEffects::BasicDamage {
+                damaged: slot,
+                start_hp,
+                end_hp,
+                cause: Cause::PokemonFieldState(FieldCause::Spikes)
+            });
+            if end_hp == 0 { return effects; }
+        }
+
+        effects
+    }
+
+    /// Called when swapping to a new Pokemon
+    pub fn swap_pokemon(&mut self, slot: SlotId, member: usize) -> Vec<ActionSideEffects> {
+        let s = self.get_by_id(&slot);
+        // Call hook for when a Pokemon swaps out
+        for e_slot in self.get_everyone() {
+            if e_slot.id != slot {
+                e_slot.data.borrow_mut().other_swapped_out(s);
+            }
+        }
+
+        let mut s = self.get_by_id_mut(&slot);
+
+        // Call hook for start of turn action
+        s.data.borrow_mut().start_of_turn();
+
+        let old_member = s.pokemon;
+        s.pokemon = member;
+
+        let mut effects = vec![ActionSideEffects::PokemonLeft(slot, old_member)];
+        effects.append(&mut self.enter_battle(slot));
+        effects
+    }
+
     /// Perform a regular attack
     pub fn do_attack(&mut self, attacker_id: SlotId, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let attacker = &self[attacker_id.side][attacker_id.individual];
-        attacker.data.borrow_mut().set_last_used_move(attack);
+        {
+            let mut data = attacker.data.borrow_mut();
+            data.set_last_used_move(attack);
+            data.start_of_turn();
+        }
 
         let move_data = attack.data();
 
@@ -169,6 +225,7 @@ impl Battlefield {
     /// Do an attack a Pokemon is locked in to (example: charge attack selected the previous turn)
     pub fn do_implicit_attack(&mut self, attacker_id: SlotId) -> Vec<ActionSideEffects> {
         let attacker = &self[attacker_id.side][attacker_id.individual];
+        attacker.data.borrow_mut().start_of_turn();
         let data = attacker.data.borrow();
         if data.recharge {
             drop(data);
@@ -179,6 +236,7 @@ impl Battlefield {
             drop(data);
             let effects = self._do_attack(attacker_id, attack, defender);
             attacker.data.borrow_mut().invulnerable = None;
+            attacker.data.borrow_mut().set_last_used_move(attack);
             effects
         } else if let Some((attack, counter)) = data.thrashing {
             drop(data);
@@ -190,11 +248,8 @@ impl Battlefield {
             }
 
             let mut data = attacker.data.borrow_mut();
-            if !damaged {
-                data.thrashing = None
-            } else {
-                data.thrashing = Some((attack, counter))
-            }
+            data.set_last_used_move(attack);
+            data.thrashing = if !damaged { None } else { Some((attack, counter)) };
             effects
         } else if let Some((counter, damage)) = data.bide {
             let counter = counter - 1;
@@ -202,6 +257,7 @@ impl Battlefield {
                 let damage = damage.saturating_mul(2);
                 if let Some((defender, _)) = attacker.data.borrow().last_attacker {
                     let defender = &self[defender.side][defender.individual];
+                    attacker.data.borrow_mut().set_last_used_move(Move::Bide);
                     self.do_bide_damage(attacker, damage, defender)
                 } else {
                     vec![ActionSideEffects::NoTarget]
@@ -234,6 +290,17 @@ impl Battlefield {
             effects.append(&mut turn::do_nightmare_damage(pokemon));
             if pokemon.borrow().is_fainted() { continue; }
             effects.append(&mut turn::do_curse_damage(pokemon));
+            if pokemon.borrow().is_fainted() { continue; }
+
+            let mut data = pokemon.data.borrow_mut();
+            if data.perish_song_counter > 0 {
+                data.perish_song_counter = data.perish_song_counter.saturating_sub(1);
+                effects.push(ActionSideEffects::PerishCount(pokemon.id, data.perish_song_counter));
+                if data.perish_song_counter == 0 {
+                    effects.append(&mut Battlefield::faint(pokemon, Cause::MoveSideEffect(Move::PerishSong)));
+                    continue;
+                }
+            }
         }
         effects
     }
@@ -619,7 +686,22 @@ impl Battlefield {
                         Some(t) => do_hazard_effect(self.get_side(&t.id), eh)
                     }
                 }
-                Effect::Foresight => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_foresight_effect)
+                Effect::Foresight => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_foresight_effect),
+                Effect::DestinyBond => {
+                    attacker.data.borrow_mut().destiny_bond = true;
+                    vec![ActionSideEffects::DestinyBond(attacker.id)]
+                },
+                Effect::PerishSong => {
+                    let affected_count = targets_for_secondary_damage.iter()
+                        .filter(|e| e.data.borrow_mut().perish_song_counter == 0)
+                        .map(|e| e.data.borrow_mut().perish_song_counter = 3)
+                        .count();
+                    if affected_count == 0 {
+                        vec![ActionSideEffects::Failed(Cause::Natural)]
+                    } else {
+                        vec![ActionSideEffects::StartPerishSong]
+                    }
+                }
             };
             effects.append(&mut secondary_effects);
         }

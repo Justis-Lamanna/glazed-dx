@@ -82,6 +82,7 @@ impl Battlefield { //region Damage
                 effectiveness
             }];
 
+            drop(pkmn);
             effects.append(&mut Battlefield::do_after_damage(attacker, defender, attack, damage));
 
             effects
@@ -116,6 +117,7 @@ impl Battlefield { //region Damage
                 cause
             }];
 
+            drop(pkmn);
             effects.append(&mut Battlefield::do_after_damage(attacker, defender, attack, damage));
 
             effects
@@ -125,6 +127,12 @@ impl Battlefield { //region Damage
     fn do_after_damage(attacker: &Slot, defender: &Slot, attack: Move, damage: u16) -> Vec<ActionSideEffects> {
         let mut vec = Vec::new();
         let mut data = defender.data.borrow_mut();
+
+        if defender.borrow().is_fainted() && data.destiny_bond {
+            vec.append(&mut Battlefield::faint(attacker, Cause::MoveSideEffect(Move::DestinyBond)));
+            return vec;
+        }
+
         data.damage_this_turn.push((attacker.id, attack, damage));
         data.last_attacker = Some((attacker.id, attack));
 
@@ -138,7 +146,7 @@ impl Battlefield { //region Damage
         vec
     }
 
-    fn faint(active: &Slot, cause: Cause) -> Vec<ActionSideEffects> {
+    pub fn faint(active: &Slot, cause: Cause) -> Vec<ActionSideEffects> {
         let mut pkmn = active.borrow_mut();
         let start_hp = pkmn.current_hp;
         let end_hp = 0;

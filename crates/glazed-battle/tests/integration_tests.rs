@@ -121,6 +121,18 @@ fn test_spikes() {
 }
 
 #[test]
+fn test_spikes_on_entry() {
+    let mut b = create_battlefield();
+    b.do_attack(FORWARD, Move::Spikes, SelectedTarget::Implied);
+    let fx = b.enter_battle(BACK);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::BasicDamage {..}) => true, _ => false
+        }
+    });
+}
+
+#[test]
 fn test_foresight() {
     let mut b = create_specific_battlefield(Species::Quilava, Species::Gastly);
     // Gastly is immune to Tackle
@@ -144,6 +156,56 @@ fn test_foresight() {
     assert!({
         match fx.get(0) {
             Some(ActionSideEffects::NoEffect(_)) => false, _ => true
+        }
+    });
+}
+
+#[test]
+fn test_destiny_bond() {
+    // Insanely OP Pokemon to force a KO
+    let mut b = Battlefield::one_v_one(PokemonTemplate::pokemon(Species::Quilava, 20), PokemonTemplate::pokemon(Species::Lugia, 100));
+    b.do_attack(FORWARD, Move::DestinyBond, SelectedTarget::Implied);
+    let fx = b.do_attack(BACK, Move::WaterGun, SelectedTarget::Implied);
+    assert!({
+        match fx.get(1) {
+            Some(ActionSideEffects::BasicDamage {cause: Cause::MoveSideEffect(Move::DestinyBond), ..}) => true, _ => false
+        }
+    });
+}
+
+#[test]
+fn test_perish_song() {
+    let mut b = Battlefield::one_v_one(PokemonTemplate::pokemon(Species::Quilava, 20), PokemonTemplate::pokemon(Species::Lugia, 100));
+    let fx = b.do_attack(FORWARD, Move::PerishSong, SelectedTarget::Implied);
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::StartPerishSong) => true, _ => false
+        }
+    });
+
+    let fx = b.end_of_round();
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::PerishCount(_, 2)) => true, _ => false
+        }
+    });
+
+    let fx = b.end_of_round();
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::PerishCount(_, 1)) => true, _ => false
+        }
+    });
+
+    let fx = b.end_of_round();
+    assert!({
+        match fx.get(0) {
+            Some(ActionSideEffects::PerishCount(_, 0)) => true, _ => false
+        }
+    });
+    assert!({
+        match fx.get(1) {
+            Some(ActionSideEffects::BasicDamage {end_hp: 0, ..}) => true, _ => false
         }
     });
 }
