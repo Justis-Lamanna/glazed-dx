@@ -3999,7 +3999,7 @@ pub static Outrage: MoveData = MoveData {
     target: Target::RandomOpponent,
     power: Power::Base(120),
 	crit_rate: None,
-	effects: &[],
+	effects: &[Effect::Thrash],
 };
 pub static Sandstorm: MoveData = MoveData {
     pp: 10,
