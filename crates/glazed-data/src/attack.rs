@@ -684,6 +684,7 @@ pub enum Power {
     WeightBased,
     WeightRatioBased,
     MultiHit(MultiHitFlavor),
+    MultiTurn(u8, u8),
     OneHitKnockout,
     Exact(u8),
     Percentage(FractionPlaceholder),
@@ -4057,7 +4058,7 @@ pub static Rollout: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(30),
+    power: Power::MultiTurn(30, 5),
 	crit_rate: None,
 	effects: &[],
 };

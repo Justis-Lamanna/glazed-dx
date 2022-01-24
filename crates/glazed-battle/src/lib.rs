@@ -890,6 +890,8 @@ pub struct BattleData {
     perish_song_counter: u8,
     /// If true, this user is rooted
     rooted: bool,
+    /// If present, this user is using a multi-turn move (Rollout or Ice Ball). u8 is the # turns left
+    rolling: Option<(Move, u8)>,
     /// If >0, levitating. Decrement after each turn
     levitating: u8,
     /// If present, the Pokemon is semi-invulnerable

@@ -8,7 +8,7 @@ use glazed_data::pokemon::PokemonTemplate;
 fn main() {
     // for _ in 1..=40 {
     let me = Party::create(vec![
-        PokemonTemplate::pokemon(Species::Quilava, 20).shiny(),
+        PokemonTemplate::pokemon(Species::Quilava, 40).shiny(),
         PokemonTemplate::pokemon(Species::Eevee, 20),
         PokemonTemplate::pokemon(Species::Buizel, 20),
         PokemonTemplate::pokemon(Species::Furret, 20)]
@@ -17,15 +17,13 @@ fn main() {
 
     let mut battlefield = Battlefield::single_battle(me, them);
 
-    let fx = battlefield.do_attack(SlotId::single(BattleSideId::Back), Move::Protect, SelectedTarget::Implied);
+    let fx = battlefield.do_attack(SlotId::single(BattleSideId::Back), Move::Rollout, SelectedTarget::Implied);
     println!("{:#?}", fx);
-    let fx = battlefield.do_attack(SlotId::single(BattleSideId::Back), Move::Protect, SelectedTarget::Implied);
+    let fx = battlefield.do_implicit_attack(SlotId::single(BattleSideId::Back));
     println!("{:#?}", fx);
-    let fx = battlefield.do_attack(SlotId::single(BattleSideId::Back), Move::Protect, SelectedTarget::Implied);
+    let fx = battlefield.do_implicit_attack(SlotId::single(BattleSideId::Back));
     println!("{:#?}", fx);
-    let fx = battlefield.do_attack(SlotId::single(BattleSideId::Back), Move::Protect, SelectedTarget::Implied);
-    println!("{:#?}", fx);
-    let fx = battlefield.do_attack(SlotId::single(BattleSideId::Forward), Move::Tackle, SelectedTarget::Implied);
+    let fx = battlefield.do_implicit_attack(SlotId::single(BattleSideId::Back));
     println!("{:#?}", fx);
     // let fx = battlefield.end_of_round();
     // println!("{:#?}", fx);

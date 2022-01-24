@@ -47,7 +47,7 @@ impl From<Move> for MoveContext {
             Power::Base(base) | Power::BaseWithRecoil(base, _) | Power::BaseWithMercy(base) |
             Power::MultiHit(MultiHitFlavor::Variable(base)) | Power::MultiHit(MultiHitFlavor::Fixed(_, base)) |
             Power::BaseWithCharge(base, _) | Power::BaseWithCrash(base) | Power::BaseWithFaint(base) |
-            Power::BaseWithDrain(base) => u16::from(base),
+            Power::BaseWithDrain(base) | Power::MultiTurn(base, _) => u16::from(base),
             _ => 0
         };
         MoveContext {

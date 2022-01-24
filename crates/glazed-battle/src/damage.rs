@@ -310,7 +310,7 @@ impl Battlefield { //region Damage
                     }
                     effects
                 }
-            }
+            },
             Power::WeightBased => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
@@ -392,6 +392,37 @@ impl Battlefield { //region Damage
                         let return_damage = u32::from(damage) * u32::from(numerator) / u32::from(denominator);
                         Battlefield::lower_hp_basic(attacker, defender, attack, return_damage as u16, Cause::Natural)
                     }
+                }
+            },
+            Power::MultiTurn(base, turns) => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    vec![ActionSideEffects::NoEffect(cause)]
+                } else {
+                    let curl_multiplier = if attacker.data.borrow().curled { 2 } else { 1 };
+                    let context = if let Some((_, turn_ctr)) = attacker.data.borrow().rolling {
+                        println!("{:?}", turn_ctr);
+                        MoveContext {
+                            attack,
+                            data: attack.data(),
+                            base_power: u16::from(*base).saturating_mul(1 << turn_ctr).saturating_mul(curl_multiplier)
+                        }
+                    } else {
+                        let mut ctx = MoveContext::from(attack);
+                        ctx.base_power = ctx.base_power.saturating_mul(curl_multiplier);
+                        ctx
+                    };
+
+                    {
+                        let mut data = attacker.data.borrow_mut();
+                        if data.rolling.is_none() {
+                            data.rolling = Some((attack, 1));
+                        }
+                    }
+
+                    let is_crit = crit();
+                    let damage = self.calculate_full_damage(attacker, context, defender, is_multi_target, is_crit, effectiveness);
+                    Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
                 }
             }
             Power::MultiHit(MultiHitFlavor::Variable(_)) => {

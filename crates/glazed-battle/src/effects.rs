@@ -265,7 +265,17 @@ impl Battlefield {
             } else {
                 vec![ActionSideEffects::BideContinue(attacker_id)]
             }
-        } else {
+        } else if let Some((attack, ctr)) = data.rolling {
+            drop(data);
+            let effects = self._do_attack(attacker.id, attack, SelectedTarget::Implied);
+            if ctr < 5 && effects.iter().any(|e| e.did_damage()) {
+                attacker.data.borrow_mut().rolling = Some((attack, ctr + 1));
+            } else {
+                attacker.data.borrow_mut().rolling = None;
+            }
+            effects
+        }
+        else {
             vec![]
         }
     }
@@ -465,7 +475,10 @@ impl Battlefield {
                         effects.push(ActionSideEffects::Missed(defender.id, Cause::Natural));
                         if let Power::BaseWithCrash(_) = move_data.power {
                             effects.push(attacker.take_crash_damage());
+                        } else if let Power::MultiTurn(_, _) = move_data.power {
+                            attacker.data.borrow_mut().rolling = None;
                         }
+
                         if attack.is_protection_move() {
                             attacker.data.borrow_mut().protection_counter = 0;
                         }
