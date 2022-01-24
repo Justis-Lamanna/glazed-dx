@@ -1,16 +1,17 @@
 use rand::Rng;
+use glazed_data::abilities::Ability;
 use glazed_data::attack::{Accuracy, Move};
 use glazed_data::types::Type;
 use crate::{ActionSideEffects, Slot, Battlefield, Cause, PROTECTION_CAP};
 use crate::core::{ActionCheck, MoveContext};
 
 /// Get the probability of the attacker hitting the defender
-pub fn get_accuracy_factor(attacker: &Slot, defender: &Slot) -> f64 {
+fn get_accuracy_factor(attacker: &Slot, defender: &Slot) -> f64 {
     get_raw_factor(attacker.data.borrow().accuracy_stage, defender.data.borrow().evasion_stage)
 }
 
 /// Same as get_accuracy_factor, but ignores positive evasion changes.
-pub fn get_accuracy_factor_foresight(attacker: &Slot, defender: &Slot) -> f64 {
+fn get_accuracy_factor_foresight(attacker: &Slot, defender: &Slot) -> f64 {
     let evasion = defender.data.borrow().evasion_stage;
     let evasion = if evasion > 0 { 0 } else { evasion };
     get_raw_factor(attacker.data.borrow().accuracy_stage, evasion)
@@ -35,6 +36,7 @@ fn get_raw_factor(accuracy: i8, evasion: i8) -> f64 {
     }
 }
 
+/// Run the Accuracy formula, determining if an attack will miss. Type immunities shouldn't go here
 pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &Slot, attack: F, defender: &Slot) -> ActionCheck<bool>
     where F: Into<MoveContext>
 {
@@ -98,6 +100,7 @@ pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &Slot, attack: F, def
     }
 }
 
+/// Check whether the attacker can use the attack at all, regardless of the targets.
 pub fn cannot_use_attack<F: Into<MoveContext>>(attacker: &Slot, attack: F) -> ActionCheck<bool> {
     let MoveContext { attack, .. } = attack.into();
 
@@ -109,10 +112,29 @@ pub fn cannot_use_attack<F: Into<MoveContext>>(attacker: &Slot, attack: F) -> Ac
     ActionCheck::Ok(true)
 }
 
+/// Check whether the attacker can use the attack against a specific target.
+/// "Type" and Ability immunities can go here.
 pub fn cannot_use_attack_against<F>(attacker: &Slot, attack: F, defender: &Slot) -> ActionCheck<bool>
     where F: Into<MoveContext>
 {
     let MoveContext { attack,.. } = attack.into();
+
+    // Ability-based immunities
+    match defender.get_effective_ability() {
+        Ability::Soundproof if attack.is_sound_based() && !attacker.get_effective_ability().is_ignore_ability_ability() => {
+            return ActionCheck::Err(ActionSideEffects::NoEffect(Cause::Ability(defender.id, Ability::Soundproof)));
+        },
+        _ => {}
+    }
+
+    // Type-based immunities
+    // note that regular type matchups are not calculated here, but instead when damage is applied
+    let defender_type = defender.get_effective_type();
+    if defender_type.has_type(&Type::Grass) && (attack.is_powder() || attack == Move::LeechSeed) {
+        return ActionCheck::Err(ActionSideEffects::NoEffectSecondary(Cause::Type(Type::Grass)));
+    } else if defender_type.has_type(&Type::Ghost) && attack.is_trapping() {
+        return ActionCheck::Err(ActionSideEffects::NoEffectSecondary(Cause::Type(Type::Ghost)));
+    }
 
     let using_against_self = attacker.id == defender.id;
 

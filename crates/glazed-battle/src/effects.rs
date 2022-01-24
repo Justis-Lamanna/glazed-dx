@@ -316,6 +316,7 @@ impl Battlefield {
         effects
     }
 
+    /// Run weather effects
     pub fn do_weather(&self) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
         let mut field = self.field.borrow_mut();
@@ -414,22 +415,22 @@ impl Battlefield {
 
         // Check for reasons this Pokemon can't perform this move
         //region start-of-turn checks
-        if turn::do_disable_check(attacker, attack).add(&mut effects) { return effects; }
-        if turn::do_freeze_check(attacker, attack).add(&mut effects) { return effects; }
-        if turn::do_sleep_check(attacker, attack).add(&mut effects) { return effects; }
-        if turn::do_paralysis_check(attacker).add(&mut effects) { return effects; }
-        if turn::do_flinch_check(attacker).add(&mut effects) { return effects; }
-        if turn::do_confusion_check(attacker).add(&mut effects) { return effects; }
+        if turn::do_disable_check(attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
+        if turn::do_freeze_check(attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
+        if turn::do_sleep_check(attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
+        if turn::do_paralysis_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
+        if turn::do_flinch_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
+        if turn::do_confusion_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
 
         //endregion
 
         // 0. Test if the attacker can use the move
         match accuracy::cannot_use_attack(attacker, attack) {
             Ok(b) => {
-                if !b { effects.push(ActionSideEffects::Failed(Cause::Natural)); return effects; }
+                if !b { effects.push(ActionSideEffects::Failed(Cause::Natural)); return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
             }
             Err(effect) => {
-                effects.push(effect); return effects
+                effects.push(effect); return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
             }
         }
 
@@ -437,7 +438,7 @@ impl Battlefield {
         let targets = self.get_targets(attacker.id, attack, defender);
         if targets.is_empty() {
             effects.push(ActionSideEffects::NoTarget);
-            return effects;
+            return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
         }
 
         for t in targets.iter() {
@@ -448,24 +449,6 @@ impl Battlefield {
         //region Accuracy Check
         let mut targets_hit = Vec::new();
         for defender in targets {
-            // Ability-based immunities
-            match defender.get_effective_ability() {
-                Ability::Soundproof if attack.is_sound_based() && !attacker.get_effective_ability().is_ignore_ability_ability() => {
-                    effects.push(ActionSideEffects::NoEffect(Cause::Ability(defender.id, Ability::Soundproof)));
-                    continue;
-                },
-                _ => {}
-            }
-
-            // Type-based immunities
-            // note that regular type matchups are not calculated here, but instead when damage is applied
-            let defender_type = defender.get_effective_type();
-            if defender_type.has_type(&Type::Grass) && (attack.is_powder() || attack == Move::LeechSeed) {
-                effects.push(ActionSideEffects::NoEffectSecondary(Cause::Type(Type::Grass)))
-            } else if defender_type.has_type(&Type::Ghost) && attack.is_trapping() {
-                effects.push(ActionSideEffects::NoEffectSecondary(Cause::Type(Type::Ghost)))
-            }
-
             let hit = accuracy::do_accuracy_check(&self, attacker, attack, defender);
             match hit {
                 Ok(b) => {
@@ -473,15 +456,6 @@ impl Battlefield {
                         targets_hit.push(defender);
                     } else {
                         effects.push(ActionSideEffects::Missed(defender.id, Cause::Natural));
-                        if let Power::BaseWithCrash(_) = move_data.power {
-                            effects.push(attacker.take_crash_damage());
-                        } else if let Power::MultiTurn(_, _) = move_data.power {
-                            attacker.data.borrow_mut().rolling = None;
-                        }
-
-                        if attack.is_protection_move() {
-                            attacker.data.borrow_mut().protection_counter = 0;
-                        }
                     }
                 }
                 Err(a) => {
@@ -491,7 +465,7 @@ impl Battlefield {
         }
 
         if targets_hit.is_empty() {
-            return effects;
+            return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
         }
         //endregion
 
@@ -559,6 +533,10 @@ impl Battlefield {
             }
             damaged
         };
+
+        if targets_for_secondary_damage.is_empty() {
+            return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
+        }
         //endregion
 
         // 4. Perform secondary effects.
@@ -849,27 +827,12 @@ impl Battlefield {
             effects.append(&mut secondary_effects);
         }
 
-        {
-            let mut data = attacker.data.borrow_mut();
-
-            // Rage ends if the user is enraged, and they don't use a rage move
-            if data.enraged && !move_data.is_rage() {
-                data.enraged = false;
-                effects.push(ActionSideEffects::RageEnd(attacker.id))
-            }
-
-            // Increment the protection counter for any protection moves. Reset it if anything else is used.
-            if attack.is_protection_move() {
-                data.protection_counter = data.protection_counter.saturating_add(1);
-            } else {
-                data.protection_counter = 0;
-            }
-        }
-        //endregion
+        effects.append(&mut self.on_attack_succeed(attacker, attack));
 
         effects
     }
 
+    /// Check if a secondary effect activates
     fn activates_secondary_effect(&self, attacker: &Slot, probability: u8) -> bool {
         let probability = if let Ability::SereneGrace = attacker.get_effective_ability() {
             probability * 2
@@ -883,6 +846,7 @@ impl Battlefield {
         }
     }
 
+    /// Run an effect on all targets, doing probability check for each
     fn do_probable_effect_on_all_targets<F>(&self, attacker: &Slot, targets: &Vec<&Slot>, probability: u8, effect: F) -> Vec<ActionSideEffects>
         where F: Fn(&Slot, &Slot) -> Vec<ActionSideEffects>
     {
@@ -893,6 +857,7 @@ impl Battlefield {
     }
 }
 
+/// Run an effect on all targets, with no probability check
 fn do_effect_on_all_targets<F>(attacker: &Slot, to_effect: &Vec<&Slot>, effect: F) -> Vec<ActionSideEffects>
 where F: Fn(&Slot, &Slot) -> Vec<ActionSideEffects>
 {
@@ -901,6 +866,9 @@ where F: Fn(&Slot, &Slot) -> Vec<ActionSideEffects>
         .collect()
 }
 
+/// Run an effect only on the last target
+/// This should only be used when you are *CERTAIN* that only one (or zero) target(s) will ever exist.
+/// If there are no targets, the return Vec contains NoTarget.
 fn do_effect_on_last_target<F>(attacker: &Slot, to_effect: &Vec<&Slot>, effect: F) -> Vec<ActionSideEffects>
     where F: Fn(&Slot, &Slot) -> Vec<ActionSideEffects>
 {
@@ -910,6 +878,9 @@ fn do_effect_on_last_target<F>(attacker: &Slot, to_effect: &Vec<&Slot>, effect: 
     }
 }
 
+/// Run an effect only on the last target
+/// This should only be used when you are *CERTAIN* that only one (or zero) target(s) will ever exist.
+/// If there are no targets, the return Vec is empty.
 fn do_optional_effect_on_last_target<F>(attacker: &Slot, to_effect: &Vec<&Slot>, effect: F) -> Vec<ActionSideEffects>
     where F: Fn(&Slot, &Slot) -> Vec<ActionSideEffects>
 {
@@ -919,19 +890,18 @@ fn do_optional_effect_on_last_target<F>(attacker: &Slot, to_effect: &Vec<&Slot>,
     }
 }
 
+/// Sets the flinch flag on the defender.
+/// Note that this doesn't make the target flinch *yet*. The target won't flinch until it is their turn.
 fn do_flinch_effect(_attacker: &Slot, defender: &Slot) -> Vec<ActionSideEffects> {
-    if defender.is_behind_substitute() {
-        vec![]
-    } else {
-        defender.data.borrow_mut().flinch = true;
-        vec![ActionSideEffects::WillFlinch(defender.id)]
-    }
+    defender.data.borrow_mut().flinch = true;
+    vec![ActionSideEffects::WillFlinch(defender.id)]
 }
 
+/// Heal a percentage of the attacker's max HP
 fn do_heal_effect(attacker: &Slot, percentage: u8) -> Vec<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();
     let start_hp = pkmn.current_hp;
-    let delta = math::ratio(start_hp, percentage, 100);
+    let delta = math::ratio(pkmn.hp.value, percentage, 100);
     let end_hp = start_hp.saturating_add(delta).clamp(0, pkmn.hp.value);
     pkmn.current_hp = end_hp;
 
@@ -943,6 +913,7 @@ fn do_heal_effect(attacker: &Slot, percentage: u8) -> Vec<ActionSideEffects> {
     }]
 }
 
+/// Seed the target, if not already seeded.
 fn do_leech_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     let mut data = target.data.borrow_mut();
     let effect = if data.seeded.is_none() {
@@ -957,6 +928,8 @@ fn do_leech_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     vec![effect]
 }
 
+/// Get the target's last move used, and replace the attacker's Mimic with it for the rest of battle.
+/// If the target hasn't used a move, or the move is not Mimic-able, fails.
 fn do_mimic_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     let data = target.data.borrow();
     let effect = match data.last_move_used {
@@ -973,6 +946,7 @@ fn do_mimic_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     vec![effect]
 }
 
+/// Set up screen (Light Screen or Reflect) for some number of turns
 fn do_screen_effect(side: &mut RefMut<FieldSide>, screen: &ScreenType, turns: u8) -> Vec<ActionSideEffects> {
     let effect = match screen {
         ScreenType::LightScreen => {
@@ -995,6 +969,7 @@ fn do_screen_effect(side: &mut RefMut<FieldSide>, screen: &ScreenType, turns: u8
     vec![effect]
 }
 
+/// Reset everyone's stat changes to 0.
 fn do_stat_reset_effect(targets: &Vec<&Slot>) -> Vec<ActionSideEffects> {
     let mut effects = Vec::new();
     for pkmn in targets.iter() {
@@ -1012,6 +987,7 @@ fn do_stat_reset_effect(targets: &Vec<&Slot>) -> Vec<ActionSideEffects> {
     effects
 }
 
+/// Heal all non-volatile statues and HP and sleep. Fail if full health.
 fn do_rest_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();
     if pkmn.is_full_health() {
@@ -1033,6 +1009,7 @@ fn do_rest_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     }
 }
 
+/// Pick a random Move the user has, and change the user's type to match it.
 fn do_conversion_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     let slot = loop {
         if let Some(slot) = attacker.get_effective_move(rand::thread_rng().gen_range(0..4)) {
@@ -1044,13 +1021,15 @@ fn do_conversion_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     vec![ActionSideEffects::ChangeType(attacker.id, new_type)]
 }
 
+/// Pick a random type that is immune or not very effective to the target's last used move.
+/// Fails if the target hasn't used a move yet.
 fn do_conversion_2_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     let mut data = attacker.data.borrow_mut();
     if let Some((_, attack)) = data.last_attacker {
         let attack_type = attack.data()._type;
         let candidates: Vec<Type> = Type::iter()
             .filter(|t: &Type| {
-                match t.attacking(&attack_type) {
+                match attack_type.attacking(t) {
                     Effectiveness::Immune => true,
                     Effectiveness::Effect(i) => i < 0,
                 }
@@ -1069,6 +1048,7 @@ fn do_conversion_2_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     }
 }
 
+/// Randomly either paralyze, burn, or freeze the target (1/3 chance of each)
 fn do_tri_attack_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     if target.is_behind_substitute() {
         vec![]
@@ -1081,6 +1061,8 @@ fn do_tri_attack_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffect
     }
 }
 
+/// Take 1/4 max damage, and create a substitute with that much HP + 1.
+/// Fails if not enough HP.
 fn do_substitute_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();
     let substitute_hp = pkmn.hp.value / 4;
@@ -1099,6 +1081,8 @@ fn do_substitute_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     }
 }
 
+/// Replace Sketch with the target's last used move, permanently.
+/// Fails if the target hasn't moved.
 fn do_sketch_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     let target_data = target.data.borrow();
     match target_data.last_move_used {
@@ -1118,6 +1102,7 @@ fn do_sketch_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     }
 }
 
+/// Transform into the target. Species, gender, ability, moves, and all stats (except HP) are copied.
 fn do_transform_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     let transform = TransformData::from(target);
     let target = target.borrow();
@@ -1130,6 +1115,14 @@ fn do_transform_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects>
     }]
 }
 
+/// Take the target's held item and give it to the user.
+/// Fails if the target has no item, or the user has an item already.
+/// Fails if the target is holding Mail.
+/// Fails if the target has Sticky Hold.
+/// Fails if either Pokemon are:
+///     Arceus, and the items swapping is a plate
+///     Giratina, and the items swapping is a Griseous Orb
+///     Genesect, and the items swapping is a Drive
 fn do_steal_item_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     let mut attacking_pkmn = attacker.borrow_mut();
     if attacking_pkmn.held_item.is_some() {
@@ -1196,16 +1189,20 @@ fn do_steal_item_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
     }
 }
 
+/// Prevent the Pokemon from leaving battle
 fn do_trap_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     target.data.borrow_mut().trapped = true;
     vec![ActionSideEffects::TrappedStart(target.id)]
 }
 
+/// Attacks by the user to the target will not miss
 fn do_lock_on_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
-    target.data.borrow_mut().locked_on = Some((2, target.id));
+    attacker.data.borrow_mut().locked_on = Some((2, target.id));
     vec![ActionSideEffects::LockedOn { user: attacker.id, target: target.id }]
 }
 
+/// Gives this Pokemon a nightmare. Nightmare's effect done at end of turn
+/// Fails if the Pokemon isn't asleep.
 fn do_nightmare_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     if target.borrow().status.sleep > 0 {
         target.data.borrow_mut().nightmare = true;
@@ -1215,11 +1212,14 @@ fn do_nightmare_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
     }
 }
 
+/// Curse the target. Curse effect done at the end of turn
 fn do_ghost_curse_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     target.data.borrow_mut().cursed = true;
     vec![ActionSideEffects::Curse(target.id)]
 }
 
+/// Reduces the PP of the target's last used move by 4.
+/// Fails if the target hasn't moved, the target doesn't know the move anymore, or PP is already 0.
 fn do_spite_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     if let Some(m) = target.data.borrow().last_move_used {
         let mut pkmn = target.borrow_mut();
@@ -1233,7 +1233,6 @@ fn do_spite_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
                 vec![ActionSideEffects::LostPP(target.id, slot.attack, pp_start, pp_end)]
             }
         } else {
-            println!("Here");
             vec![ActionSideEffects::Failed(Cause::Natural)]
         }
     } else {
@@ -1241,12 +1240,16 @@ fn do_spite_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     }
 }
 
+/// Mark the user as protected (also used for Endure, Wide Guard, and Quick Guard).
 fn do_protect_effect(attacker: &Slot, attack: Move) -> Vec<ActionSideEffects> {
     let mut data = attacker.data.borrow_mut();
     data.protected = Some(attack);
     vec![ActionSideEffects::StartProtection(attacker.id, attack)]
 }
 
+/// Reduce HP by 50%, and maxes Pokemon's Attack to +6.
+/// If the user has Contrary, Attack is reduced to -6.
+/// Fails if not enough HP.
 fn do_belly_drum_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     let has_contrary = attacker.get_effective_ability() == Ability::Contrary;
 
@@ -1271,6 +1274,8 @@ fn do_belly_drum_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     }
 }
 
+/// Sets up an Entry Hazard.
+/// Fails if attempting to use Spikes for a fourth time, Toxic Spikes for a third time, and Stealth Rock for a second time.
 fn do_hazard_effect(side: &RefCell<FieldSide>, hazard: &EntryHazardType) -> Vec<ActionSideEffects> {
     let mut side = side.borrow_mut();
     match hazard {
@@ -1301,6 +1306,7 @@ fn do_hazard_effect(side: &RefCell<FieldSide>, hazard: &EntryHazardType) -> Vec<
     }
 }
 
+/// Attacks from the attacker to the target ignore positive evasion changes.
 fn do_foresight_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     let mut target_data = target.data.borrow_mut();
     match target_data.foresight_by {

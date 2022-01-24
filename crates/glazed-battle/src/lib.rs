@@ -21,6 +21,7 @@ mod damage;
 mod turn;
 mod accuracy;
 mod constants;
+mod hooks;
 
 #[derive(Debug, Copy, Clone)]
 pub enum SelectedTarget {
