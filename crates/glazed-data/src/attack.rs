@@ -4035,7 +4035,7 @@ pub static Endure: MoveData = MoveData {
     contest_type: ContestType::Tough,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::Protect],
 };
 pub static Charm: MoveData = MoveData {
     pp: 20,

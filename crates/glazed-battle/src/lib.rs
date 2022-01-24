@@ -1261,6 +1261,7 @@ pub enum ActionSideEffects {
         end_hp: u16,
         cause: Cause
     },
+    HungOn (SlotId, Cause),
     Healed {
         healed: SlotId,
         start_hp: u16,

@@ -65,24 +65,39 @@ impl Battlefield { //region Damage
                 end_hp
             }]
         } else {
-            let defender_id = defender.id;
-            let mut pkmn = defender.borrow_mut();
-            let start_hp = pkmn.current_hp;
-            let end_hp = start_hp.saturating_sub(damage);
+            let was_full_hp = defender.borrow().is_full_health();
+            let start_hp = defender.borrow().current_hp;
+            let mut end_hp = start_hp.saturating_sub(damage);
 
-            pkmn.current_hp = end_hp;
+            let hang_on = if end_hp == 0 { Battlefield::do_hang_on_check(defender, was_full_hp) } else { None };
+            let mut effects = if let Some(action) = hang_on {
+                let mut pkmn = defender.borrow_mut();
+                pkmn.current_hp = 1;
+                let mut e = vec![ActionSideEffects::DirectDamage {
+                    damaged: defender.id,
+                    damager: attacker.id,
+                    attack,
+                    start_hp,
+                    end_hp: 1,
+                    critical_hit: is_crit,
+                    effectiveness
+                }];
+                e.extend(action);
+                e
+            } else {
+                let mut pkmn = defender.borrow_mut();
+                pkmn.current_hp = end_hp;
+                vec![ActionSideEffects::DirectDamage {
+                    damaged: defender.id,
+                    damager: attacker.id,
+                    attack,
+                    start_hp,
+                    end_hp,
+                    critical_hit: is_crit,
+                    effectiveness
+                }]
+            };
 
-            let mut effects = vec![ActionSideEffects::DirectDamage {
-                damaged: defender_id,
-                damager: attacker.id,
-                attack,
-                start_hp,
-                end_hp,
-                critical_hit: is_crit,
-                effectiveness
-            }];
-
-            drop(pkmn);
             effects.append(&mut Battlefield::do_after_damage(attacker, defender, attack, damage));
 
             effects
@@ -103,25 +118,45 @@ impl Battlefield { //region Damage
                 end_hp
             }]
         } else {
-            let defender_id = defender.id;
-            let mut pkmn = defender.borrow_mut();
-            let start_hp = pkmn.current_hp;
-            let end_hp = start_hp.saturating_sub(damage);
+            let was_full_hp = defender.borrow().is_full_health();
+            let start_hp = defender.borrow().current_hp;
+            let mut end_hp = start_hp.saturating_sub(damage);
 
-            pkmn.current_hp = end_hp;
+            let hang_on = if end_hp == 0 { Battlefield::do_hang_on_check(defender, was_full_hp) } else { None };
+            let mut effects = if let Some(action) = hang_on {
+                let mut pkmn = defender.borrow_mut();
+                pkmn.current_hp = 1;
+                let mut e = vec![ActionSideEffects::BasicDamage {
+                    damaged: defender.id,
+                    start_hp,
+                    end_hp: 1,
+                    cause
+                }];
+                e.extend(action);
+                e
+            } else {
+                let mut pkmn = defender.borrow_mut();
+                pkmn.current_hp = end_hp;
+                vec![ActionSideEffects::BasicDamage {
+                    damaged: defender.id,
+                    start_hp,
+                    end_hp,
+                    cause
+                }]
+            };
 
-            let mut effects = vec![ActionSideEffects::BasicDamage {
-                damaged: defender_id,
-                start_hp,
-                end_hp,
-                cause
-            }];
-
-            drop(pkmn);
             effects.append(&mut Battlefield::do_after_damage(attacker, defender, attack, damage));
 
             effects
         }
+    }
+
+    fn do_hang_on_check(damaged: &Slot, _was_full_hp: bool) -> Option<Vec<ActionSideEffects>> {
+        let data = damaged.data.borrow();
+        if let Some(Move::Endure) = data.protected {
+            return Some(vec![ActionSideEffects::HungOn(damaged.id, Cause::MoveSideEffect(Move::Endure))]);
+        }
+        None
     }
 
     fn do_after_damage(attacker: &Slot, defender: &Slot, attack: Move, damage: u16) -> Vec<ActionSideEffects> {

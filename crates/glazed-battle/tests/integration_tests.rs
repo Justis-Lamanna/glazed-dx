@@ -246,3 +246,17 @@ fn test_sandstorm_immune() {
     let fx = b.do_weather();
     assert_eq!(fx.len(), 1);
 }
+
+#[test]
+fn test_endure() {
+    // Insanely OP Pokemon to force a KO
+    let mut b = Battlefield::one_v_one(PokemonTemplate::pokemon(Species::Quilava, 20), PokemonTemplate::pokemon(Species::Lugia, 100));
+    b.do_attack(FORWARD, Move::Endure, SelectedTarget::Implied);
+    let fx = b.do_attack(BACK, Move::WaterGun, SelectedTarget::Implied);
+    assert!({
+        match fx.get(1) {
+            Some(ActionSideEffects::HungOn(_, Cause::MoveSideEffect(Move::Endure))) => true, _ => false
+        }
+    });
+    assert!(b.get_by_id(&FORWARD).borrow().has_health())
+}
