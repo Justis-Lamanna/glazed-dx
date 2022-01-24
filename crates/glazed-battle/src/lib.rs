@@ -810,6 +810,8 @@ pub struct BattleData {
     has_acted_this_turn: bool,
     /// If true, the pokemon managed to land a hit
     has_landed_attack_this_turn: bool,
+    /// If present, this move is the actual one that was used (e.g. Metronome)
+    proxy_move: Option<Move>,
     /// The last move that this pokemon used
     last_move_used: Option<Move>,
     /// The number of times the last move was used
@@ -1366,10 +1368,6 @@ pub enum ActionSideEffects {
         from: SlotId,
         to: SlotId,
         item: Item
-    }, CouldntStealItem {
-        from: SlotId,
-        to: SlotId,
-        cause: Cause
     },
     TrappedStart(SlotId),
     LockedOn {
@@ -1402,5 +1400,14 @@ impl ActionSideEffects {
             ActionSideEffects::BasicDamage {..} | ActionSideEffects::DirectDamage {..} => true,
             _ => false
         }
+    }
+
+    pub fn succeeded(list: Vec<ActionSideEffects>) -> bool {
+        list.iter()
+            .any(|e| match e {
+                ActionSideEffects::NoEffect(_) | ActionSideEffects::NoEffectSecondary(_) |
+                ActionSideEffects::Failed(_) | ActionSideEffects::NoTarget | ActionSideEffects::NothingHappened => false,
+                _ => true
+            })
     }
 }

@@ -260,3 +260,24 @@ fn test_endure() {
     });
     assert!(b.get_by_id(&FORWARD).borrow().has_health())
 }
+
+#[test]
+fn test_fury_cutter() {
+    let mut b = Battlefield::one_v_one(PokemonTemplate::pokemon(Species::Quilava, 20), PokemonTemplate::pokemon(Species::Lugia, 100));
+    let fx = b.do_attack(FORWARD, Move::FuryCutter, SelectedTarget::Implied);
+
+    let damage_one = if let ActionSideEffects::DirectDamage { start_hp, end_hp, .. } = fx.get(0).unwrap() {
+        *start_hp - *end_hp
+    } else {
+        0
+    };
+
+    let fx = b.do_attack(FORWARD, Move::FuryCutter, SelectedTarget::Implied);
+    let damage_two = if let ActionSideEffects::DirectDamage { start_hp, end_hp, .. } = fx.get(0).unwrap() {
+        *start_hp - *end_hp
+    } else {
+        0
+    };
+
+    assert_eq!(damage_two, 2 * damage_one)
+}

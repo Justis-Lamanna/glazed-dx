@@ -76,6 +76,8 @@ pub const MAX_TOXIC_SPIKES: u8 = 2;
 pub const WEATHER_TURN_COUNT: u8 = 5;
 /// The number of turns weather lasts, while holding the corresponding rock
 pub const WEATHER_WITH_ROCK_TURN_COUNT: u8 = 8;
+/// The number of turns Fury Cutter can double in power. Above this, it stays at 160.
+pub const FURY_CUTTER_CAP: u8 = 2;
 
 pub const SCREEN_TURN_COUNT: u8 = 5;
 

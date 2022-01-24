@@ -681,6 +681,7 @@ pub enum Power {
     BaseWithCrash(u8),
     BaseWithFaint(u8),
     BaseWithDrain(u8),
+    BaseWithTurnMultiplier(u8),
     WeightBased,
     WeightRatioBased,
     MultiHit(MultiHitFlavor),
@@ -4118,7 +4119,7 @@ pub static FuryCutter: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Physical,
     target: Target::AllyOrOpponent,
-    power: Power::Base(40),
+    power: Power::BaseWithTurnMultiplier(40),
 	crit_rate: None,
 	effects: &[],
 };
@@ -4144,7 +4145,7 @@ pub static MeanLook: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::Trap],
 };
 pub static Attract: MoveData = MoveData {
     pp: 15,

@@ -18,8 +18,11 @@ impl Battlefield {
             attacker.data.borrow_mut().rolling = None;
         }
 
+        let mut data = attacker.data.borrow_mut();
+        data.last_move_used = None;
+        data.last_move_used_counter = 0;
         if attack.is_protection_move() {
-            attacker.data.borrow_mut().protection_counter = 0;
+            data.protection_counter = 0;
         }
 
         effects
@@ -29,6 +32,12 @@ impl Battlefield {
     pub(crate) fn on_attack_succeed(&self, attacker: &Slot, attack: Move) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
         let mut data = attacker.data.borrow_mut();
+
+        if let Some(proxy) = data.proxy_move {
+            data.set_last_used_move(proxy)
+        } else {
+            data.set_last_used_move(attack)
+        }
 
         // Rage ends if the user is enraged, and they don't use a rage move
         if data.enraged && !attack.data().is_rage() {

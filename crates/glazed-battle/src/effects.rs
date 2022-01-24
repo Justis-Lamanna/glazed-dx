@@ -13,7 +13,6 @@ use glazed_data::types::{Effectiveness, PokemonType, Type};
 use glazed_core::math;
 
 use crate::*;
-use crate::core::ActionCheck;
 
 pub fn inflict_confusion(afflicted: &Slot) -> Vec<ActionSideEffects> {
     if afflicted.get_effective_ability() == Ability::OwnTempo {
@@ -172,11 +171,7 @@ impl Battlefield {
     /// Perform a regular attack
     pub fn do_attack(&mut self, attacker_id: SlotId, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let attacker = &self[attacker_id.side][attacker_id.individual];
-        {
-            let mut data = attacker.data.borrow_mut();
-            data.set_last_used_move(attack);
-            data.start_of_turn();
-        }
+        attacker.data.borrow_mut().start_of_turn();
 
         let move_data = attack.data();
 
@@ -1127,29 +1122,17 @@ fn do_steal_item_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
     let mut attacking_pkmn = attacker.borrow_mut();
     if attacking_pkmn.held_item.is_some() {
         // We can't steal when holding a held item, so we do nothing.
-        return vec![ActionSideEffects::CouldntStealItem {
-            from: attacker.id,
-            to: target.id,
-            cause: Cause::PokemonBattleState(attacker.id, PokemonState::HoldingItem)
-        }]
+        return vec![ActionSideEffects::Failed(Cause::PokemonBattleState(attacker.id, PokemonState::HoldingItem))];
     }
 
     if target.get_effective_ability() == Ability::StickyHold {
-        return vec![ActionSideEffects::CouldntStealItem {
-            from: attacker.id,
-            to: target.id,
-            cause: Cause::Ability(attacker.id, Ability::StickyHold)
-        }]
+        return vec![ActionSideEffects::Failed(Cause::Ability(attacker.id, Ability::StickyHold))];
     }
 
     let mut target_pkmn = target.borrow_mut();
     let can_steal = match &target_pkmn.held_item {
         None => {
-            return vec![ActionSideEffects::CouldntStealItem {
-                from: attacker.id,
-                to: target.id,
-                cause: Cause::PokemonBattleState(target.id, PokemonState::NotHoldingItem)
-            }]
+            return vec![ActionSideEffects::Failed(Cause::PokemonBattleState(target.id, PokemonState::NotHoldingItem))];
         },
         Some(i) if i.is_mail() => false,
         Some(Item::GriseousOrb) => {
@@ -1181,11 +1164,7 @@ fn do_steal_item_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
             item: attacking_pkmn.held_item.as_ref().unwrap().clone()
         }]
     } else {
-        vec![ActionSideEffects::CouldntStealItem {
-            from: attacker.id,
-            to: target.id,
-            cause: Cause::Natural
-        }]
+        vec![ActionSideEffects::Failed(Cause::Natural)]
     }
 }
 

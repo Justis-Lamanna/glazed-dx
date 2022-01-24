@@ -311,6 +311,24 @@ impl Battlefield { //region Damage
                     effects
                 }
             },
+            Power::BaseWithTurnMultiplier(b) => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    vec![ActionSideEffects::NoEffect(cause)]
+                } else {
+                    let power_of_two = attacker.data.borrow().last_move_used_counter.clamp(0, FURY_CUTTER_CAP);
+                    let context = MoveContext {
+                        attack,
+                        data: attack.data(),
+                        base_power: u16::from(*b) * (1 << power_of_two)
+                    };
+                    let is_crit = crit();
+                    let damage = self.calculate_full_damage(attacker, context, defender, is_multi_target, is_crit, effectiveness);
+                    let mut effects = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
+                    effects.append(&mut Battlefield::faint(attacker, Cause::Move(attacker.id, attack)));
+                    effects
+                }
+            }
             Power::WeightBased => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
@@ -358,7 +376,6 @@ impl Battlefield { //region Damage
                     Battlefield::lower_hp_basic(attacker, defender, attack, *damage as u16, Cause::Move(attacker.id, attack))
                 }
             }
-        //     Power::Variable => self.do_one_off_damage(attacker, attack, defender),
         //     Power::Percentage(_) => self.do_percent_damage(attacker, attack, defender),
             Power::Revenge(a, damage) => {
                 let data = attacker.data.borrow();
@@ -394,7 +411,7 @@ impl Battlefield { //region Damage
                     }
                 }
             },
-            Power::MultiTurn(base, turns) => {
+            Power::MultiTurn(base, _) => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
                     vec![ActionSideEffects::NoEffect(cause)]
