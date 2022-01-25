@@ -551,7 +551,6 @@ impl Battlefield {
                 }
 
                 if move_data.is_no_power_move() {
-                    println!("HH");
                     if defender.is_behind_substitute() && !attack.bypasses_substitute() {
                         effects.push(ActionSideEffects::Failed(Cause::Natural));
                         continue;

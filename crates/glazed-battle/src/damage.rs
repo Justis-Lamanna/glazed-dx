@@ -680,6 +680,24 @@ impl Battlefield { //region Damage
                                 }
                             }
                         }
+                    },
+                    Move::Magnitude => {
+                        let (effectiveness, cause) = effectiveness();
+                        if let Effectiveness::Immune = effectiveness {
+                            vec![ActionSideEffects::NoEffect(cause)]
+                        } else {
+                            let (magnitude, power) = rand::thread_rng().sample(MagnitudeDistribution);
+                            let context = MoveContext {
+                                attack,
+                                data: move_data,
+                                base_power: power
+                            };
+                            let mut effects = vec![ActionSideEffects::Magnitude(magnitude)];
+                            let is_crit = crit();
+                            let damage = self.calculate_full_damage(attacker, context, defender, is_multi_target, is_crit, effectiveness);
+                            effects.append(&mut Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness));
+                            effects
+                        }
                     }
                     a => panic!("Move {:?} has variable power, yet no implementation specified", a)
                 }

@@ -338,7 +338,21 @@ fn test_safeguard() {
 #[test]
 fn test_pain_split() {
     let mut b = create_battlefield();
-    println!("{:#?}", b);
     let fx = b.do_attack(FORWARD, Move::PainSplit, SelectedTarget::Implied);
-    println!("{:#?}", fx);
+    assert!(match fx.get(0) {
+        Some(ActionSideEffects::Healed {..}) => true, _ => false
+    }, "{:?}", fx);
+
+    assert!(match fx.get(1) {
+        Some(ActionSideEffects::BasicDamage {..}) => true, _ => false
+    }, "{:?}", fx);
+}
+
+#[test]
+fn test_magnitude() {
+    let mut b = create_battlefield();
+    let fx = b.do_attack(FORWARD, Move::Magnitude, SelectedTarget::Implied);
+    assert!(match fx.get(0) {
+        Some(ActionSideEffects::Magnitude(_)) => true, _ => false
+    }, "{:?}", fx);
 }

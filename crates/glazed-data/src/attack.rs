@@ -4271,7 +4271,7 @@ pub static SacredFire: MoveData = MoveData {
 pub static Magnitude: MoveData = MoveData {
     pp: 30,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Ground,

@@ -1427,6 +1427,7 @@ pub enum ActionSideEffects {
     StartProtection(SlotId, Move), IsProtected(SlotId, Move),
     EntryHazard(BattleSideId, Move, u8),
     Safeguard(BattleSideId),
+    Magnitude(u8),
     NothingHappened
 }
 impl ActionSideEffects {

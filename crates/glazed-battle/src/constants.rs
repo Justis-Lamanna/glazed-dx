@@ -125,7 +125,8 @@ pub fn get_spikes_damage(level: u8) -> u16 {
     }
 }
 
-/// One-off structure to allow configuration of the Multi-Hit Distribution
+/// Distribution for Multi-hit moves
+/// Moves of this nature can hit 2-5 times, being more likely to strike 2 or 3 times.
 pub struct MultiHitDistribution;
 impl Distribution<u8> for MultiHitDistribution {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
@@ -141,12 +142,27 @@ pub enum Present {
     Damage(u16),
     Heal
 }
-/// One-off structure to allow configuration of the Present distribution
+/// Distribution of Present's effects
+/// The effect is either damage, with base power of 40, 80, or 120, or healing.
 pub struct PresentDistribution;
 impl Distribution<Present> for PresentDistribution {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Present {
         const CHOICES: [Present; 4] = [Present::Damage(40), Present::Damage(80), Present::Damage(120), Present::Heal]; // Possible effects.
         const WEIGHTS: [u8; 4] = [40, 30, 10, 20]; // Probability of each choice. Weighted, so doesn't need to equal 100.
+        let dist = WeightedIndex::new(&WEIGHTS).unwrap();
+        CHOICES[dist.sample(rng)]
+    }
+}
+
+/// Distribution of Magnitude's power
+/// A roughly normal distribution from 4 to 10. 7 is the most likely.
+pub struct MagnitudeDistribution;
+impl Distribution<(u8, u16)> for MagnitudeDistribution {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> (u8, u16) {
+        const CHOICES: [(u8, u16); 7] = [
+            (4, 10), (5, 30), (6, 50), (7, 70), (8, 90), (9, 110), (10, 150)
+        ]; // Possible effects.
+        const WEIGHTS: [u8; 7] = [5, 10, 20, 30, 20, 10, 5]; // Probability of each choice. Weighted, so doesn't need to equal 100.
         let dist = WeightedIndex::new(&WEIGHTS).unwrap();
         CHOICES[dist.sample(rng)]
     }
