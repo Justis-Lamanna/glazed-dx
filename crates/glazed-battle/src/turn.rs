@@ -144,6 +144,9 @@ pub fn do_screen_countdown(side: &RefCell<FieldSide>) -> Vec<ActionSideEffects> 
             effects.push(ActionSideEffects::ScreenEnd(side.id, ScreenType::Reflect));
         }
     }
+    if side.safeguard > 0 {
+        side.safeguard = side.safeguard.saturating_sub(1);
+    }
     effects
 }
 

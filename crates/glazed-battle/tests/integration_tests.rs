@@ -241,7 +241,7 @@ fn test_sandstorm_immune() {
         match fx.get(0) {
             Some(ActionSideEffects::StartWeather(Weather::Sandstorm)) => true, _ => false
         }
-    });
+    }, "{:?}", fx);
 
     let fx = b.do_weather();
     assert_eq!(fx.len(), 1);
@@ -257,7 +257,7 @@ fn test_endure() {
         match fx.get(1) {
             Some(ActionSideEffects::HungOn(_, Cause::MoveSideEffect(Move::Endure))) => true, _ => false
         }
-    });
+    }, "{:?}", fx);
     assert!(b.get_by_id(&FORWARD).borrow().has_health())
 }
 
@@ -290,7 +290,7 @@ fn test_attract() {
     let fx = b.do_attack(FORWARD, Move::Attract, SelectedTarget::Implied);
     assert!(match fx.get(0) {
         Some(ActionSideEffects::Infatuated(_)) => true, _ => false
-    })
+    }, "{:?}", fx)
 }
 
 #[test]
@@ -301,7 +301,7 @@ fn test_attract_same_gender() {
     let fx = b.do_attack(FORWARD, Move::Attract, SelectedTarget::Implied);
     assert!(match fx.get(0) {
         Some(ActionSideEffects::NoEffectSecondary(_)) => true, _ => false
-    })
+    }, "{:?}", fx)
 }
 
 #[test]
@@ -312,5 +312,25 @@ fn test_sleep_talk() {
     let fx = b.do_attack(FORWARD, Move::SleepTalk, SelectedTarget::Implied);
     assert!(match fx.get(1) {
         Some(ActionSideEffects::SleepTalk(_, _)) => true, _ => false
-    })
+    }, "{:?}", fx)
+}
+
+#[test]
+fn test_present() {
+    let mut b = create_battlefield();
+    b.do_attack(FORWARD, Move::Tackle, SelectedTarget::Implied);
+    let fx = b.do_attack(FORWARD, Move::Present, SelectedTarget::Implied);
+    assert!(match fx.get(0) {
+        Some(ActionSideEffects::DirectDamage {..}) | Some(ActionSideEffects::Healed {..}) => true, _ => false
+    }, "{:?}", fx)
+}
+
+#[test]
+fn test_safeguard() {
+    let mut b = create_battlefield();
+    b.do_attack(FORWARD, Move::Safeguard, SelectedTarget::Implied);
+    let fx = b.do_attack(BACK, Move::Toxic, SelectedTarget::Implied);
+    assert!(match fx.get(0) {
+        Some(ActionSideEffects::NoEffectSecondary(_)) => true, _ => false
+    }, "{:?}", fx)
 }

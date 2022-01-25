@@ -100,7 +100,8 @@ pub struct FieldSide {
     aurora_veil: u8,
     light_screen: u8,
     reflect: u8,
-    mist: u8
+    mist: u8,
+    safeguard: u8
 }
 impl FieldSide {
     pub fn new(side: BattleSideId) -> FieldSide {
@@ -113,7 +114,8 @@ impl FieldSide {
             aurora_veil: 0,
             light_screen: 0,
             reflect: 0,
-            mist: 0
+            mist: 0,
+            safeguard: 0
         }
     }
 }
@@ -1271,7 +1273,8 @@ pub enum FieldCause {
     Spikes,
     ToxicSpikes,
     StealthRock,
-    Weather(Weather)
+    Weather(Weather),
+    Safeguard
 }
 
 /// Possible consequences of an Action
@@ -1423,6 +1426,7 @@ pub enum ActionSideEffects {
     StartPerishSong, PerishCount(SlotId, u8),
     StartProtection(SlotId, Move), IsProtected(SlotId, Move),
     EntryHazard(BattleSideId, Move, u8),
+    Safeguard(BattleSideId),
     NothingHappened
 }
 impl ActionSideEffects {

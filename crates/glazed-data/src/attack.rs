@@ -841,6 +841,7 @@ pub enum Effect {
     Foresight,
     DestinyBond,
     PerishSong,
+    Safeguard,
     EntryHazard(EntryHazardType),
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
@@ -4209,7 +4210,7 @@ pub static Return: MoveData = MoveData {
 pub static Present: MoveData = MoveData {
     pp: 15,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(90),
     _type: Type::Normal,
@@ -4240,7 +4241,7 @@ pub static Safeguard: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::UserAndAlly,
-    effects: &[],
+    effects: &[Effect::Safeguard],
 };
 pub static PainSplit: MoveData = MoveData {
     pp: 20,

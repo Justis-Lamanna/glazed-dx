@@ -625,8 +625,8 @@ impl Battlefield {
                     targets_for_secondary_damage.iter()
                         .filter(|_| self.activates_secondary_effect(attacker, *probability))
                         .flat_map(|defender| {
-                            if defender.is_behind_substitute() {
-                                vec![ActionSideEffects::Failed(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
+                            if self.get_side(&defender.id).borrow().safeguard > 0 {
+                                vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Safeguard))]
                             } else {
                                 inflict_non_volatile_status(defender, *ailment)
                             }
@@ -645,8 +645,8 @@ impl Battlefield {
                     targets_for_secondary_damage.iter()
                         .filter(|_| self.activates_secondary_effect(attacker, *probability))
                         .flat_map(|defender| {
-                            if defender.is_behind_substitute() {
-                                vec![ActionSideEffects::Failed(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))]
+                            if self.get_side(&defender.id).borrow().safeguard > 0 {
+                                vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Safeguard))]
                             } else {
                                 inflict_confusion(attacker)
                             }
@@ -865,6 +865,7 @@ impl Battlefield {
                         vec![ActionSideEffects::StartPerishSong]
                     }
                 }
+                Effect::Safeguard => do_safeguard_effect(self.get_side(&attacker.id))
             };
             effects.append(&mut secondary_effects);
         }
@@ -1341,5 +1342,15 @@ fn do_foresight_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects>
             target_data.foresight_by = Some(attacker.id);
             vec![ActionSideEffects::Foresighted { user: attacker.id, target: target.id }]
         }
+    }
+}
+
+fn do_safeguard_effect(side: &RefCell<FieldSide>) -> Vec<ActionSideEffects> {
+    let mut side = side.borrow_mut();
+    if side.safeguard > 0 {
+        vec![ActionSideEffects::Failed(Cause::PokemonFieldState(FieldCause::Safeguard))]
+    } else {
+        side.safeguard = SAFEGUARD_TURN_COUNT;
+        vec![ActionSideEffects::Safeguard(side.id)]
     }
 }

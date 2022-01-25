@@ -50,8 +50,6 @@ pub const BOUND_TURN_GRIP_CLAW: u8 = 7;
 pub const BOUND_HP: u8 = 8;
 /// Reciprocal of the relative damage a bound Pokemon takes at the end of a round, if the binder held a Binding Band. 1/6 of max HP
 pub const BOUND_HP_BINDING_BAND: u8 = 6;
-/// Weights for the number of turns for a multi-strike move. Can be any Distribution
-pub const MULTI_HIT_RANGE: MultiHitDistribution = MultiHitDistribution;
 /// Number of turns for a multi-strike move, if the user has Skill Link
 pub const MULTI_HIT_SKILL_LINK: u8 = 5;
 /// Number of turns a Pokemon may thrash for
@@ -78,6 +76,8 @@ pub const WEATHER_TURN_COUNT: u8 = 5;
 pub const WEATHER_WITH_ROCK_TURN_COUNT: u8 = 8;
 /// The number of turns Fury Cutter can double in power. Above this, it stays at 160.
 pub const FURY_CUTTER_CAP: u8 = 2;
+/// The number of turns Safeguard lasts.
+pub const SAFEGUARD_TURN_COUNT: u8 = 5;
 
 pub const SCREEN_TURN_COUNT: u8 = 5;
 
@@ -131,6 +131,22 @@ impl Distribution<u8> for MultiHitDistribution {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
         const CHOICES: [u8; 4] = [2, 3, 4, 5]; // Possible turn amounts.
         const WEIGHTS: [u8; 4] = [35, 35, 15, 15]; // Probability of each choice. Weighted, so doesn't need to equal 100.
+        let dist = WeightedIndex::new(&WEIGHTS).unwrap();
+        CHOICES[dist.sample(rng)]
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum Present {
+    Damage(u16),
+    Heal
+}
+/// One-off structure to allow configuration of the Present distribution
+pub struct PresentDistribution;
+impl Distribution<Present> for PresentDistribution {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Present {
+        const CHOICES: [Present; 4] = [Present::Damage(40), Present::Damage(80), Present::Damage(120), Present::Heal]; // Possible effects.
+        const WEIGHTS: [u8; 4] = [40, 30, 10, 20]; // Probability of each choice. Weighted, so doesn't need to equal 100.
         let dist = WeightedIndex::new(&WEIGHTS).unwrap();
         CHOICES[dist.sample(rng)]
     }

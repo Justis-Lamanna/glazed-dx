@@ -451,7 +451,7 @@ impl Battlefield { //region Damage
                 let n = if attacker.get_effective_ability() == Ability::SkillLink {
                     MULTI_HIT_SKILL_LINK
                 } else {
-                    rand::thread_rng().sample(MULTI_HIT_RANGE)
+                    rand::thread_rng().sample(MultiHitDistribution)
                 };
 
                 let mut effects = Vec::new();
@@ -623,7 +623,7 @@ impl Battlefield { //region Damage
                             let move_context = MoveContext {
                                 attack,
                                 data: move_data,
-                                base_power: math::cap_min(math::ratio(u16::from(attacker.borrow().friendship), 2, 5), 1)
+                                base_power: math::cap_min(math::ratio(u16::from(attacker.borrow().friendship), 2u16, 5u16), 1)
                             };
                             let is_crit = crit();
                             let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
@@ -639,11 +639,46 @@ impl Battlefield { //region Damage
                             let move_context = MoveContext {
                                 attack,
                                 data: move_data,
-                                base_power: math::cap_min(math::ratio(u16::from(u8::MAX - attacker.borrow().friendship), 2, 5), 1)
+                                base_power: math::cap_min(math::ratio(u16::from(u8::MAX - attacker.borrow().friendship), 2u16, 5u16), 1)
                             };
                             let is_crit = crit();
                             let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
                             Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
+                        }
+                    },
+                    Move::Present => {
+                        let (effectiveness, cause) = effectiveness();
+                        if let Effectiveness::Immune = effectiveness {
+                            vec![ActionSideEffects::NoEffect(cause)]
+                        } else {
+                            let present = rand::thread_rng().sample(PresentDistribution);
+                            match present {
+                                Present::Damage(base) => {
+                                    let move_context = MoveContext {
+                                        attack,
+                                        data: move_data,
+                                        base_power: base
+                                    };
+                                    let is_crit = crit();
+                                    let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
+                                    Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
+                                },
+                                Present::Heal => {
+                                    let mut pkmn = defender.borrow_mut();
+                                    if pkmn.is_full_health() {
+                                        vec![ActionSideEffects::Failed(Cause::Natural)]
+                                    } else {
+                                        let to_heal = pkmn.hp.value / 4;
+                                        let (start_hp, end_hp) = pkmn.add_hp(to_heal);
+                                        vec![ActionSideEffects::Healed {
+                                            healed: attacker.id,
+                                            start_hp,
+                                            end_hp,
+                                            cause: Cause::Move(attacker.id, Move::Present)
+                                        }]
+                                    }
+                                }
+                            }
                         }
                     }
                     a => panic!("Move {:?} has variable power, yet no implementation specified", a)
