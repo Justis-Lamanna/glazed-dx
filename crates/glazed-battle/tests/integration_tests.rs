@@ -2,7 +2,7 @@ use glazed_battle::*;
 use glazed_data::attack::{BattleStat, Move, Weather};
 use glazed_data::attack::StatChangeTarget::Target;
 use glazed_data::constants::Species;
-use glazed_data::pokemon::PokemonTemplate;
+use glazed_data::pokemon::{Gender, PokemonTemplate};
 
 const FORWARD: SlotId = SlotId {
     side: BattleSideId::Forward,
@@ -280,4 +280,26 @@ fn test_fury_cutter() {
     };
 
     assert_eq!(damage_two, 2 * damage_one)
+}
+
+#[test]
+fn test_attract() {
+    let mut b = Battlefield::one_v_one(
+        PokemonTemplate::pokemon(Species::Quilava, 20).gender(Gender::Male),
+        PokemonTemplate::pokemon(Species::Ivysaur, 20).gender(Gender::Female));
+    let fx = b.do_attack(FORWARD, Move::Attract, SelectedTarget::Implied);
+    assert!(match fx.get(0) {
+        Some(ActionSideEffects::Infatuated(_)) => true, _ => false
+    })
+}
+
+#[test]
+fn test_attract_same_gender() {
+    let mut b = Battlefield::one_v_one(
+        PokemonTemplate::pokemon(Species::Quilava, 20).gender(Gender::Male),
+        PokemonTemplate::pokemon(Species::Ivysaur, 20).gender(Gender::Male));
+    let fx = b.do_attack(FORWARD, Move::Attract, SelectedTarget::Implied);
+    assert!(match fx.get(0) {
+        Some(ActionSideEffects::NoEffectSecondary(_)) => true, _ => false
+    })
 }

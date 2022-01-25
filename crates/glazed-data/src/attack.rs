@@ -743,15 +743,6 @@ pub enum NonVolatileBattleAilment {
     Poison(PoisonType)
 }
 
-/// Represents a non-persistent status ailment
-#[derive(Debug, Copy, Clone)]
-pub enum VolatileBattleAilment {
-    Confusion,
-    Infatuation,
-    // Levitation,
-    // Rage
-}
-
 /// Represents a weather condition in battle
 #[derive(Debug, Copy, Clone)]
 pub enum Weather {
@@ -794,7 +785,8 @@ pub enum Effect {
     StatReset,
     NonVolatileStatus(NonVolatileBattleAilment, u8, StatChangeTarget),
     TriAttack,
-    VolatileStatus(VolatileBattleAilment, u8, StatChangeTarget),
+    Confuse(u8, StatChangeTarget),
+    Infatuate(u8),
     Heal(u8),
     Flinch(u8),
     ChangeWeather(Weather),
@@ -2170,7 +2162,7 @@ pub static Supersonic: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0, StatChangeTarget::Target)],
+    effects: &[Effect::Confuse(0, StatChangeTarget::Target)],
 };
 pub static SonicBoom: MoveData = MoveData {
     pp: 20,
@@ -2314,7 +2306,7 @@ pub static Psybeam: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(65),
 	crit_rate: None,
-	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10, StatChangeTarget::Target)],
+	effects: &[Effect::Confuse(10, StatChangeTarget::Target)],
 };
 pub static BubbleBeam: MoveData = MoveData {
     pp: 20,
@@ -2717,7 +2709,7 @@ pub static Confusion: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(50),
 	crit_rate: None,
-	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10, StatChangeTarget::Target)],
+	effects: &[Effect::Confuse(10, StatChangeTarget::Target)],
 };
 pub static Psychic: MoveData = MoveData {
     pp: 10,
@@ -2909,7 +2901,7 @@ pub static ConfuseRay: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0, StatChangeTarget::Target)],
+    effects: &[Effect::Confuse(0, StatChangeTarget::Target)],
 };
 pub static Withdraw: MoveData = MoveData {
     pp: 40,
@@ -3353,7 +3345,7 @@ pub static DizzyPunch: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(70),
 	crit_rate: None,
-	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20, StatChangeTarget::Target)],
+	effects: &[Effect::Confuse(20, StatChangeTarget::Target)],
 };
 pub static Spore: MoveData = MoveData {
     pp: 15,
@@ -3833,7 +3825,7 @@ pub static SweetKiss: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0, StatChangeTarget::Target)],
+    effects: &[Effect::Confuse(0, StatChangeTarget::Target)],
 };
 pub static BellyDrum: MoveData = MoveData {
     pp: 10,
@@ -4085,7 +4077,7 @@ pub static Swagger: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::StatChange(BattleStat::Attack, 2, 100, StatChangeTarget::Target), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0, StatChangeTarget::Target)],
+    effects: &[Effect::StatChange(BattleStat::Attack, 2, 100, StatChangeTarget::Target), Effect::Confuse(0, StatChangeTarget::Target)],
 };
 pub static MilkDrink: MoveData = MoveData {
     pp: 10,
@@ -4157,7 +4149,7 @@ pub static Attract: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::VolatileStatus(VolatileBattleAilment::Infatuation, 0, StatChangeTarget::Target)],
+    effects: &[Effect::Infatuate(0)],
 };
 pub static SleepTalk: MoveData = MoveData {
     pp: 10,
@@ -4277,7 +4269,7 @@ pub static DynamicPunch: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(100),
 	crit_rate: None,
-	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 100, StatChangeTarget::Target)],
+	effects: &[Effect::Confuse(100, StatChangeTarget::Target)],
 };
 pub static Megahorn: MoveData = MoveData {
     pp: 10,
@@ -4721,7 +4713,7 @@ pub static Flatter: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[Effect::StatChange(BattleStat::SpecialAttack, 1, 100, StatChangeTarget::Target), Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0, StatChangeTarget::Target)],
+    effects: &[Effect::StatChange(BattleStat::SpecialAttack, 1, 100, StatChangeTarget::Target), Effect::Confuse(0, StatChangeTarget::Target)],
 };
 pub static WillOWisp: MoveData = MoveData {
     pp: 15,
@@ -5177,7 +5169,7 @@ pub static TeeterDance: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::AllExceptUser,
-    effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 0, StatChangeTarget::Target)],
+    effects: &[Effect::Confuse(0, StatChangeTarget::Target)],
 };
 pub static BlazeKick: MoveData = MoveData {
     pp: 10,
@@ -5489,7 +5481,7 @@ pub static SignalBeam: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(75),
 	crit_rate: None,
-	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 10, StatChangeTarget::Target)],
+	effects: &[Effect::Confuse(10, StatChangeTarget::Target)],
 };
 pub static ShadowPunch: MoveData = MoveData {
     pp: 20,
@@ -5825,7 +5817,7 @@ pub static WaterPulse: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(60),
 	crit_rate: None,
-	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20, StatChangeTarget::Target)],
+	effects: &[Effect::Confuse(20, StatChangeTarget::Target)],
 };
 pub static DoomDesire: MoveData = MoveData {
     pp: 5,
@@ -6773,7 +6765,7 @@ pub static RockClimb: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(90),
 	crit_rate: None,
-	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 20, StatChangeTarget::Target)],
+	effects: &[Effect::Confuse(20, StatChangeTarget::Target)],
 };
 pub static Defog: MoveData = MoveData {
     pp: 15,
@@ -6977,7 +6969,7 @@ pub static Chatter: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(65),
 	crit_rate: None,
-	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 100, StatChangeTarget::Target)],
+	effects: &[Effect::Confuse(100, StatChangeTarget::Target)],
 };
 pub static Judgment: MoveData = MoveData {
     pp: 10,
@@ -8105,7 +8097,7 @@ pub static Hurricane: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(110),
 	crit_rate: None,
-	effects: &[Effect::VolatileStatus(VolatileBattleAilment::Confusion, 30, StatChangeTarget::Target)],
+	effects: &[Effect::Confuse(30, StatChangeTarget::Target)],
 };
 pub static HeadCharge: MoveData = MoveData {
     pp: 15,

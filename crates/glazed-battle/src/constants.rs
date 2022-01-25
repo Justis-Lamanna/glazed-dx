@@ -41,7 +41,7 @@ pub const CONFUSION_HIT_CHANCE: f64 = 0.5;
 /// Power of a self-inflicted hit from confusion
 pub const CONFUSION_POWER: u16 = 40;
 /// Chance an infatuated Pokemon will do nothing
-// pub const INFATUATION_INACTION_CHANCE: f64 = 0.5;
+pub const INFATUATION_INACTION_CHANCE: f64 = 0.5;
 /// Number of turns a Pokemon may be bound for
 pub const BOUND_TURN_RANGE: RangeInclusive<u8> = 4..=5;
 /// Number of turns a Pokemon will be bound for, if the attacker is holding the Grip Claw

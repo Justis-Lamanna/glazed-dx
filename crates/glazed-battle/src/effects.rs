@@ -6,7 +6,7 @@ use rand::Rng;
 use strum::IntoEnumIterator;
 
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{BattleStat, Effect, EffectPredicate, EntryHazardType, Move, MoveData, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, VolatileBattleAilment, Weather};
+use glazed_data::attack::{BattleStat, Effect, EffectPredicate, EntryHazardType, Move, MoveData, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, Weather};
 use glazed_data::constants::Species;
 use glazed_data::item::Item;
 use glazed_data::types::{Effectiveness, PokemonType, Type};
@@ -20,8 +20,30 @@ pub fn inflict_confusion(afflicted: &Slot) -> Vec<ActionSideEffects> {
     }
 
     let mut data = afflicted.data.borrow_mut();
-    data.confused = rand::thread_rng().gen_range(CONFUSION_TURN_RANGE);
-    vec![ActionSideEffects::Confuse(afflicted.id)]
+    if data.confused > 0 {
+        vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
+    } else {
+        data.confused = rand::thread_rng().gen_range(CONFUSION_TURN_RANGE);
+        vec![ActionSideEffects::Confuse(afflicted.id)]
+    }
+}
+
+pub fn inflict_infatuation(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
+    if attacker.get_effective_gender().can_infatuate(target.get_effective_gender()) {
+        if target.get_effective_ability() == Ability::Oblivious {
+            return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(target.id, Ability::Oblivious))]
+        }
+
+        let mut data = target.data.borrow_mut();
+        if data.infatuated {
+            vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
+        } else {
+            data.infatuated = true;
+            vec![ActionSideEffects::Infatuated(target.id)]
+        }
+    } else {
+        vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
+    }
 }
 
 fn _change_stat(affected: &Slot, stat: BattleStat, stages: i8, cause: Cause) -> ActionSideEffects {
@@ -414,6 +436,7 @@ impl Battlefield {
         if turn::do_freeze_check(attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
         if turn::do_sleep_check(attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
         if turn::do_paralysis_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
+        if turn::do_infatuation_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
         if turn::do_flinch_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
         if turn::do_confusion_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
 
@@ -587,7 +610,7 @@ impl Battlefield {
                         })
                         .collect()
                 },
-                Effect::VolatileStatus(VolatileBattleAilment::Confusion, probability, StatChangeTarget::User) => {
+                Effect::Confuse(probability, StatChangeTarget::User) => {
                     let triggers = self.activates_secondary_effect(attacker, *probability);
                     if triggers {
                         inflict_confusion(attacker)
@@ -595,7 +618,7 @@ impl Battlefield {
                         Vec::new()
                     }
                 },
-                Effect::VolatileStatus(VolatileBattleAilment::Confusion, probability, StatChangeTarget::Target) => {
+                Effect::Confuse(probability, StatChangeTarget::Target) => {
                     targets_for_secondary_damage.iter()
                         .filter(|_| self.activates_secondary_effect(attacker, *probability))
                         .flat_map(|defender| {
@@ -607,7 +630,8 @@ impl Battlefield {
                         })
                         .collect()
                 },
-                Effect::VolatileStatus(VolatileBattleAilment::Infatuation, _, _) => unimplemented!("No infatuation yet"),
+                Effect::Infatuate(probability) =>
+                    self.do_probable_effect_on_all_targets(attacker, &targets_for_secondary_damage, *probability, inflict_infatuation),
                 Effect::ForceSwitch(StatChangeTarget::User) => {
                     vec![ActionSideEffects::ForcePokemonSwap { must_leave: attacker.id }]
                 },

@@ -113,6 +113,21 @@ pub fn do_disable_check(attacker: &Slot, attack: Move) -> CheckResult<ActionSide
     }
 }
 
+pub fn do_infatuation_check(attacker: &Slot) -> CheckResult<ActionSideEffects> {
+    if attacker.data.borrow().infatuated {
+        if  rand::thread_rng().gen_bool(INFATUATION_INACTION_CHANCE) {
+            CheckResult::EffectsAndEnd(vec![
+                ActionSideEffects::Infatuated(attacker.id),
+                ActionSideEffects::TooInfatuatedToAttack(attacker.id)
+            ])
+        } else {
+            CheckResult::Effect(ActionSideEffects::Infatuated(attacker.id))
+        }
+    } else {
+        CheckResult::Nothing
+    }
+}
+
 pub fn do_screen_countdown(side: &RefCell<FieldSide>) -> Vec<ActionSideEffects> {
     let mut effects = Vec::new();
     let mut side = side.borrow_mut();

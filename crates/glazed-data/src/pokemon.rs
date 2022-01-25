@@ -32,6 +32,15 @@ pub enum Gender {
     Female,
     None
 }
+impl Gender {
+    /// Check if this gender is opposite another (M/F or F/M)
+    pub fn can_infatuate(&self, other: Gender) -> bool {
+        match (self, other) {
+            (Gender::Male, Gender::Female) | (Gender::Female, Gender::Male) => true,
+            _ => false
+        }
+    }
+}
 
 /// Represents an Egg Group, i.e. the Compatibility of two Pokemon
 #[derive(Debug)]
@@ -777,6 +786,13 @@ impl PokemonTemplate {
     /// Give this Pokemon an item to hold
     pub fn holding<B: Into<Item>>(mut self, item: B) -> Self {
         self.held_item = Some(item.into());
+
+        self
+    }
+
+    /// Force this Pokemon's gender
+    pub fn gender(mut self, gender: Gender) -> Self {
+        self.gender = Some(gender);
 
         self
     }

@@ -264,6 +264,14 @@ impl Slot {
         })
     }
 
+    /// Get the effective gender of this Pokemon. Takes Transform into effect
+    pub fn get_effective_gender(&self) -> Gender {
+        self.data.borrow().transformed
+            .as_ref()
+            .map(|t| t.gender)
+            .unwrap_or_else(|| self.borrow().gender)
+    }
+
     pub fn get_stat_stage(&self, stat: BattleStat) -> i8 {
         let data = self.data.borrow();
         match stat {
