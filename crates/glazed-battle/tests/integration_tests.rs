@@ -358,10 +358,35 @@ fn test_magnitude() {
 }
 
 #[test]
-fn test_baton_pass_one_member_party() {
+fn test_baton_pass() {
+    let mut b = Battlefield::single_battle(
+        Party::create([
+            PokemonTemplate::pokemon(Species::Quilava, 20),
+            PokemonTemplate::pokemon(Species::Furret, 20)
+        ]),
+        Party::create_one(
+            PokemonTemplate::pokemon(Species::Buizel, 20)
+        )
+    );
+    let fx = b.do_attack(FORWARD, Move::BatonPass, SelectedTarget::Implied);
+    assert!(match fx.get(0) {
+        Some(ActionSideEffects::PokemonLeftBatonPass(_, _)) => true, _ => false
+    }, "{:?}", fx);
+}
+
+#[test]
+fn test_baton_pass_fail_one_member_party() {
     let mut b = create_battlefield();
     let fx = b.do_attack(FORWARD, Move::BatonPass, SelectedTarget::Implied);
     assert!(match fx.get(0) {
         Some(ActionSideEffects::Failed(_)) => true, _ => false
     }, "{:?}", fx);
+}
+
+#[test]
+fn test_encore() {
+    let mut b = create_battlefield();
+    b.do_attack(FORWARD, Move::QuickAttack, SelectedTarget::Implied);
+    b.do_attack(BACK, Move::Encore, SelectedTarget::Implied);
+    assert_eq!(1, b.do_implicit_attack(FORWARD).len());
 }

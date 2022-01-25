@@ -225,7 +225,7 @@ impl Battlefield {
                 data.invulnerable = Some(s);
             }
 
-            data.charging = Some((defender, attack));
+            data.forced_action = Some(ForcedAction::FinishAttack(attack, defender));
 
             effects
         } else {
@@ -237,57 +237,68 @@ impl Battlefield {
     pub fn do_implicit_attack(&mut self, attacker_id: SlotId) -> Vec<ActionSideEffects> {
         let attacker = &self[attacker_id.side][attacker_id.individual];
         attacker.data.borrow_mut().start_of_turn();
-        let data = attacker.data.borrow();
-        if data.recharge {
-            drop(data);
-            let mut data = attacker.data.borrow_mut();
-            data.recharge = false;
-            vec![ActionSideEffects::Recharging(Cause::Natural)]
-        } else if let Some((defender, attack)) = data.charging {
-            drop(data);
-            let effects = self._do_attack(attacker_id, attack, defender);
-            attacker.data.borrow_mut().invulnerable = None;
-            attacker.data.borrow_mut().set_last_used_move(attack);
-            effects
-        } else if let Some((attack, counter)) = data.thrashing {
-            drop(data);
-            let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
-            let counter = counter - 1;
-            let damaged = effects.iter().any(|e| e.did_damage());
-            if counter == 0 {
-                effects.append(&mut inflict_confusion(&self[attacker_id.side][attacker_id.individual]));
-            }
 
-            let mut data = attacker.data.borrow_mut();
-            data.set_last_used_move(attack);
-            data.thrashing = if !damaged { None } else { Some((attack, counter)) };
-            effects
-        } else if let Some((counter, damage)) = data.bide {
-            let counter = counter - 1;
-            if counter == 0 {
-                let damage = damage.saturating_mul(2);
-                if let Some((defender, _)) = attacker.data.borrow().last_attacker {
-                    let defender = &self[defender.side][defender.individual];
-                    attacker.data.borrow_mut().set_last_used_move(Move::Bide);
-                    self.do_bide_damage(attacker, damage, defender)
-                } else {
-                    vec![ActionSideEffects::NoTarget]
+        let mut data = attacker.data.borrow_mut();
+        match data.forced_action {
+            Some(ForcedAction::DoNothing) => {
+                data.forced_action = None;
+                vec![ActionSideEffects::Recharging(Cause::Natural)]
+            },
+            Some(ForcedAction::FinishAttack(attack, target)) => {
+                data.invulnerable = None;
+                data.forced_action = None;
+                drop(data);
+                let effects = self._do_attack(attacker_id, attack, target);
+                attacker.data.borrow_mut().set_last_used_move(attack);
+                effects
+            },
+            Some(ForcedAction::AttackWithWeakCounter(attack, counter)) => {
+                drop(data);
+                let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
+                let damaged = effects.iter().any(|e| e.did_damage());
+
+                if counter == 1 && attack == Move::Thrash {
+                    effects.append(&mut inflict_confusion(&self[attacker_id.side][attacker_id.individual]));
                 }
-            } else {
-                vec![ActionSideEffects::BideContinue(attacker_id)]
+
+                let mut data = attacker.data.borrow_mut();
+                data.set_last_used_move(attack);
+                data.forced_action = if !damaged || counter == 1 {
+                    None
+                } else {
+                    Some(ForcedAction::AttackWithWeakCounter(attack, counter - 1))
+                };
+                effects
+            },
+            Some(ForcedAction::AttackWithCounter(attack, counter)) => {
+                drop(data);
+                let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
+
+                let mut data = attacker.data.borrow_mut();
+                data.set_last_used_move(attack);
+                data.forced_action = if counter == 1 {
+                    None
+                } else {
+                    Some(ForcedAction::AttackWithWeakCounter(attack, counter - 1))
+                };
+                effects
+            },
+            Some(ForcedAction::Bide(damage, counter)) => {
+                if counter == 1 {
+                    let damage = damage.saturating_mul(2);
+                    let effects = if let Some((defender, _)) = attacker.data.borrow().last_attacker {
+                        attacker.data.borrow_mut().set_last_used_move(Move::Bide);
+                        self.do_bide_damage(attacker, damage, self.get_by_id(&defender))
+                    } else {
+                        vec![ActionSideEffects::NoTarget]
+                    };
+                    attacker.data.borrow_mut().forced_action = None;
+                    effects
+                } else {
+                    vec![ActionSideEffects::BideContinue(attacker_id)]
+                }
             }
-        } else if let Some((attack, ctr)) = data.rolling {
-            drop(data);
-            let effects = self._do_attack(attacker.id, attack, SelectedTarget::Implied);
-            if ctr < 5 && effects.iter().any(|e| e.did_damage()) {
-                attacker.data.borrow_mut().rolling = Some((attack, ctr + 1));
-            } else {
-                attacker.data.borrow_mut().rolling = None;
-            }
-            effects
-        }
-        else {
-            vec![]
+            None => vec![],
         }
     }
 
@@ -708,8 +719,8 @@ impl Battlefield {
                 Effect::Flinch(probability) => self.do_probable_effect_on_all_targets(attacker, &targets_for_secondary_damage, *probability, do_flinch_effect),
                 Effect::Thrash => {
                     let mut data = attacker.data.borrow_mut();
-                    if data.thrashing.is_none() {
-                        data.thrashing = Some((attack, rand::thread_rng().gen_range(THRASH_RANGE)))
+                    if data.forced_action.is_none() {
+                        data.forced_action = Some(ForcedAction::AttackWithWeakCounter(attack, rand::thread_rng().gen_range(THRASH_RANGE)))
                     }
                     vec![]
                 },
@@ -738,7 +749,7 @@ impl Battlefield {
                 },
                 Effect::Recharge => {
                     let mut data = attacker.data.borrow_mut();
-                    data.recharge = true;
+                    data.forced_action = Some(ForcedAction::DoNothing);
                     vec![]
                 },
                 Effect::Heal(percentage) => do_heal_effect(attacker, *percentage),
@@ -820,7 +831,7 @@ impl Battlefield {
                 Effect::StatReset => do_stat_reset_effect(&targets_for_secondary_damage),
                 Effect::Bide => {
                     let mut data = attacker.data.borrow_mut();
-                    data.bide = Some((BIDE_TURN_COUNT, 0));
+                    data.forced_action = Some(ForcedAction::Bide(0, BIDE_TURN_COUNT));
                     vec![ActionSideEffects::BideStart(attacker.id)]
                 },
                 Effect::Transform => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_transform_effect),
@@ -873,7 +884,8 @@ impl Battlefield {
                 }
                 Effect::Safeguard => do_safeguard_effect(self.get_side(&attacker.id)),
                 Effect::PainSplit => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_pain_split_effect),
-                Effect::BatonPass => do_baton_pass_effect(attacker)
+                Effect::BatonPass => do_baton_pass_effect(attacker),
+                Effect::Encore => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_encore_effect)
             };
             effects.append(&mut secondary_effects);
         }
@@ -1413,5 +1425,28 @@ fn do_baton_pass_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
         vec![ActionSideEffects::PokemonLeftBatonPass(attacker.id, attacker.pokemon)]
     } else {
         vec![ActionSideEffects::Failed(Cause::Natural)]
+    }
+}
+
+fn do_encore_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
+    let mut target_data = target.data.borrow_mut();
+    println!("{:#?}", target_data);
+    if target_data.forced_action.is_some() {
+        vec![ActionSideEffects::Failed(Cause::Natural)]
+    } else {
+        match target_data.last_move_used {
+            Some(m) if m.can_be_encored() => {
+                let pp = target.borrow().get_move_slot(m)
+                    .map(|s| s.pp)
+                    .unwrap_or(0);
+                if pp == 0 {
+                    vec![ActionSideEffects::Failed(Cause::Natural)]
+                } else {
+                    target_data.forced_action = Some(ForcedAction::AttackWithCounter(m, ENCORE_TURN_COUNT));
+                    vec![ActionSideEffects::Encore(target.id, m)]
+                }
+            },
+            _ => vec![ActionSideEffects::Failed(Cause::Natural)]
+        }
     }
 }

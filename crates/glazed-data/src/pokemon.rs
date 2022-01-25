@@ -630,6 +630,26 @@ impl Pokemon {
         }
     }
 
+    pub fn get_move_slot(&self, check_attack: Move) -> Option<&MoveSlot> {
+        if let Some(m) = &self.move_1 {
+            if m.attack == check_attack { return Some(m); }
+        }
+
+        if let Some(m) = &self.move_2 {
+            if m.attack == check_attack { return Some(m); }
+        }
+
+        if let Some(m) = &self.move_3 {
+            if m.attack == check_attack { return Some(m); }
+        }
+
+        if let Some(m) = &self.move_4 {
+            if m.attack == check_attack { return Some(m); }
+        }
+
+        None
+    }
+
     pub fn get_move_slot_mut(&mut self, check_attack: Move) -> Option<&mut MoveSlot> {
         if let Some(m) = &mut self.move_1 {
             if m.attack == check_attack { return Some(m); }

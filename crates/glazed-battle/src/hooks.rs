@@ -15,7 +15,7 @@ impl Battlefield {
         if let Power::BaseWithCrash(_) = move_data.power {
             effects.push(attacker.take_crash_damage());
         } else if let Power::MultiTurn(_, _) = move_data.power {
-            attacker.data.borrow_mut().rolling = None;
+            attacker.data.borrow_mut().forced_action = None;
         }
 
         let mut data = attacker.data.borrow_mut();

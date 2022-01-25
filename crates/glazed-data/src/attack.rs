@@ -649,6 +649,14 @@ impl Move {
         }
     }
 
+    /// If true, this attack can be the subject of an encore
+    pub fn can_be_encored(&self) -> bool {
+        match self {
+            Move::Transform | Move::Mimic | Move::Sketch | Move::MirrorMove | Move::SleepTalk | Move::Encore => false,
+            _ => true
+        }
+    }
+
     /// If true, this Move does double damage on a target that has used Minimize
     pub fn double_damage_on_minimized_target(&self) -> bool {
         match self {
@@ -844,6 +852,7 @@ pub enum Effect {
     Safeguard,
     PainSplit,
     BatonPass,
+    Encore,
     EntryHazard(EntryHazardType),
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
@@ -4339,7 +4348,7 @@ pub static Encore: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::Encore],
 };
 pub static Pursuit: MoveData = MoveData {
     pp: 20,

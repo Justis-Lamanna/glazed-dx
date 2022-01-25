@@ -7,7 +7,7 @@ use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage, ForcedAction};
 use crate::core;
 use crate::core::MoveContext;
 use crate::constants::*;
@@ -171,8 +171,8 @@ impl Battlefield { //region Damage
         data.damage_this_turn.push((attacker.id, attack, damage));
         data.last_attacker = Some((attacker.id, attack));
 
-        if let Some((counter, acc)) = data.bide {
-            data.bide = Some((counter, acc + damage));
+        if let Some(ForcedAction::Bide(acc, counter)) = data.forced_action {
+            data.forced_action = Some(ForcedAction::Bide(acc + damage, counter));
         }
 
         if data.enraged {
@@ -224,7 +224,7 @@ impl Battlefield { //region Damage
 
                 // Clear charging data
                 let mut data = attacker.data.borrow_mut();
-                data.charging = None;
+                data.forced_action = None;
                 data.invulnerable = None;
                 effects
             },
@@ -411,18 +411,17 @@ impl Battlefield { //region Damage
                     }
                 }
             },
-            Power::MultiTurn(base, _) => {
+            Power::MultiTurn(base, turns_to_do) => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
                     vec![ActionSideEffects::NoEffect(cause)]
                 } else {
                     let curl_multiplier = if attacker.data.borrow().curled { 2 } else { 1 };
-                    let context = if let Some((_, turn_ctr)) = attacker.data.borrow().rolling {
-                        println!("{:?}", turn_ctr);
+                    let context = if let Some(ForcedAction::AttackWithWeakCounter(_, turn_ctr)) = attacker.data.borrow().forced_action {
                         MoveContext {
                             attack,
                             data: attack.data(),
-                            base_power: u16::from(*base).saturating_mul(1 << turn_ctr).saturating_mul(curl_multiplier)
+                            base_power: u16::from(*base).saturating_mul(1 << (*turns_to_do - turn_ctr)).saturating_mul(curl_multiplier)
                         }
                     } else {
                         let mut ctx = MoveContext::from(attack);
@@ -432,8 +431,8 @@ impl Battlefield { //region Damage
 
                     {
                         let mut data = attacker.data.borrow_mut();
-                        if data.rolling.is_none() {
-                            data.rolling = Some((attack, 1));
+                        if data.forced_action.is_none() {
+                            data.forced_action = Some(ForcedAction::AttackWithWeakCounter(attack, 4));
                         }
                     }
 

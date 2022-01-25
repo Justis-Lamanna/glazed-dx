@@ -78,6 +78,8 @@ pub const WEATHER_WITH_ROCK_TURN_COUNT: u8 = 8;
 pub const FURY_CUTTER_CAP: u8 = 2;
 /// The number of turns Safeguard lasts.
 pub const SAFEGUARD_TURN_COUNT: u8 = 5;
+/// The number of turns Encore lasts.
+pub const ENCORE_TURN_COUNT: u8 = 3;
 
 pub const SCREEN_TURN_COUNT: u8 = 5;
 

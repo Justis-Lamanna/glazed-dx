@@ -896,8 +896,6 @@ pub struct BattleData {
     last_move_used_counter: u8,
     /// If present, contains the amount of damage this Pokemon encountered last
     damage_this_turn: Vec<(SlotId, Move, u16)>,
-    /// If present, the user is biding (turns left, damage accumulated)
-    bide: Option<(u8, u16)>,
     /// Number of turns poisoned. 0 indicates not badly poison
     poison_counter: u8,
     /// The Pokemon that have targeted this Pokemon, in order. Index 0 == Most recent, For Mirror Move (not reset at end of round)
@@ -926,6 +924,9 @@ pub struct BattleData {
     temp_move_3: Option<MoveSlot>,
     temp_move_4: Option<MoveSlot>,
 
+    /// An action this Pokemon must do on the next turn(s).
+    forced_action: Option<ForcedAction>,
+
     /// If present, the turns remaining bound, and whether a Binding Band was used
     bound: Option<(u8, bool)>,
     /// Turns remaining where this Pokemon is confused (0 == no confusion)
@@ -934,12 +935,6 @@ pub struct BattleData {
     infatuated: bool,
     /// If true, this Pokemon will flinch instead of attack this turn
     flinch: bool,
-    /// If present, this Pokemon is charging, and will use Move on the next turn
-    charging: Option<(SelectedTarget, Move)>,
-    /// If true, this Pokemon is resting from a previously-used move
-    recharge: bool,
-    /// If present, this Pokemon is thrashing.
-    thrashing: Option<(Move, u8)>,
     /// A list of disabled moves, and the amount of time left before they are enabled
     disabled: Vec<(Move, u8)>,
     /// If present, this Pokemon is seeded by the contained Pokemon
@@ -971,8 +966,6 @@ pub struct BattleData {
     perish_song_counter: u8,
     /// If true, this user is rooted
     rooted: bool,
-    /// If present, this user is using a multi-turn move (Rollout or Ice Ball). u8 is the # turns left
-    rolling: Option<(Move, u8)>,
     /// If >0, levitating. Decrement after each turn
     levitating: u8,
     /// If present, the Pokemon is semi-invulnerable
@@ -1153,6 +1146,21 @@ impl BattleData {
             }
         }
     }
+}
+
+/// A type of action the Pokemon must do on the next turn
+#[derive(Debug, Copy, Clone)]
+pub enum ForcedAction {
+    /// Do nothing (recharge)
+    DoNothing,
+    /// Finish attach (charge attack)
+    FinishAttack(Move, SelectedTarget),
+    /// Attack with this move for the next x turns. If the attack fails, the forced action ends
+    AttackWithWeakCounter(Move, u8),
+    /// Attack with this move for the next x turns
+    AttackWithCounter(Move, u8),
+    /// Do nothing, but keep track of damage. (Damage accumulated, turns left)
+    Bide(u16, u8)
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -1489,6 +1497,7 @@ pub enum ActionSideEffects {
     EntryHazard(BattleSideId, Move, u8),
     Safeguard(BattleSideId),
     Magnitude(u8),
+    Encore(SlotId, Move),
     NothingHappened
 }
 impl ActionSideEffects {
