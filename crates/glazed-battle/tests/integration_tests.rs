@@ -334,3 +334,11 @@ fn test_safeguard() {
         Some(ActionSideEffects::NoEffectSecondary(_)) => true, _ => false
     }, "{:?}", fx)
 }
+
+#[test]
+fn test_pain_split() {
+    let mut b = create_battlefield();
+    println!("{:#?}", b);
+    let fx = b.do_attack(FORWARD, Move::PainSplit, SelectedTarget::Implied);
+    println!("{:#?}", fx);
+}

@@ -842,6 +842,7 @@ pub enum Effect {
     DestinyBond,
     PerishSong,
     Safeguard,
+    PainSplit,
     EntryHazard(EntryHazardType),
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
@@ -4246,14 +4247,14 @@ pub static Safeguard: MoveData = MoveData {
 pub static PainSplit: MoveData = MoveData {
     pp: 20,
     priority: 0,
-    power: Power::Variable,
+    power: Power::None,
     crit_rate: None,
     accuracy: Accuracy::AlwaysHits,
     _type: Type::Normal,
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::AllyOrOpponent,
-    effects: &[],
+    effects: &[Effect::PainSplit],
 };
 pub static SacredFire: MoveData = MoveData {
     pp: 5,

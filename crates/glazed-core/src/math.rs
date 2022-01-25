@@ -29,17 +29,19 @@ pub fn fraction<F, G>(value: F, fraction: (G, G)) -> F
 /// Cap a value to a certain max
 /// If value > max, max is returned. Else, value is returned
 pub fn cap_max<T: Ord>(value: T, max: T) -> T {
-    match value.cmp(&max) {
-        Ordering::Greater => max,
-        Ordering::Equal | Ordering::Less => value
+    if value > max {
+        max
+    } else {
+        value
     }
 }
 
 /// Cap a value to a certain max
 /// If value < min, min is returned. Else, value is returned
 pub fn cap_min<T: Ord>(value: T, min: T) -> T {
-    match value.cmp(&min) {
-        Ordering::Less => min,
-        Ordering::Equal | Ordering::Greater => value
+    if value < min {
+        min
+    } else {
+        value
     }
 }

@@ -865,7 +865,8 @@ impl Battlefield {
                         vec![ActionSideEffects::StartPerishSong]
                     }
                 }
-                Effect::Safeguard => do_safeguard_effect(self.get_side(&attacker.id))
+                Effect::Safeguard => do_safeguard_effect(self.get_side(&attacker.id)),
+                Effect::PainSplit => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_pain_split_effect)
             };
             effects.append(&mut secondary_effects);
         }
@@ -1353,4 +1354,49 @@ fn do_safeguard_effect(side: &RefCell<FieldSide>) -> Vec<ActionSideEffects> {
         side.safeguard = SAFEGUARD_TURN_COUNT;
         vec![ActionSideEffects::Safeguard(side.id)]
     }
+}
+
+fn do_pain_split_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
+    let mut attacker_pkmn = attacker.borrow_mut();
+    let attacker_start_hp = attacker_pkmn.current_hp;
+    let mut defender_pkmn = target.borrow_mut();
+    let defender_start_hp = defender_pkmn.current_hp;
+    let end_hp = (attacker_start_hp + defender_start_hp) / 2;
+
+    attacker_pkmn.current_hp = math::cap_max(end_hp, attacker_pkmn.hp.value);
+    defender_pkmn.current_hp = math::cap_max(end_hp, defender_pkmn.hp.value);
+
+    let attack_fx = if end_hp < attacker_start_hp {
+        ActionSideEffects::BasicDamage {
+            damaged: attacker.id,
+            start_hp: attacker_start_hp,
+            end_hp: attacker_pkmn.current_hp,
+            cause: Cause::Natural
+        }
+    } else {
+        ActionSideEffects::Healed {
+            healed: attacker.id,
+            start_hp: attacker_start_hp,
+            end_hp: attacker_pkmn.current_hp,
+            cause: Cause::Natural
+        }
+    };
+
+    let defender_fx = if end_hp < defender_start_hp {
+        ActionSideEffects::BasicDamage {
+            damaged: target.id,
+            start_hp: defender_start_hp,
+            end_hp: defender_pkmn.current_hp,
+            cause: Cause::Natural
+        }
+    } else {
+        ActionSideEffects::Healed {
+            healed: target.id,
+            start_hp: defender_start_hp,
+            end_hp: defender_pkmn.current_hp,
+            cause: Cause::Natural
+        }
+    };
+
+    vec![attack_fx, defender_fx]
 }
