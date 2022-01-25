@@ -168,7 +168,7 @@ impl Battlefield {
     }
 
     /// Called when swapping to a new Pokemon
-    pub fn swap_pokemon(&mut self, slot: SlotId, member: usize) -> Vec<ActionSideEffects> {
+    pub fn swap_pokemon(&mut self, slot: SlotId, member: usize, baton_pass: bool) -> Vec<ActionSideEffects> {
         let s = self.get_by_id(&slot);
         // Call hook for when a Pokemon swaps out
         for e_slot in self.get_everyone() {
@@ -178,6 +178,13 @@ impl Battlefield {
         }
 
         let mut s = self.get_by_id_mut(&slot);
+
+        // Clear data. Baton pass is just a partial clear
+        if baton_pass {
+            s.data.replace_with(|t| t.baton_pass());
+        } else {
+            s.data.replace(BattleData::default());
+        }
 
         // Call hook for start of turn action
         s.data.borrow_mut().start_of_turn();
@@ -865,7 +872,8 @@ impl Battlefield {
                     }
                 }
                 Effect::Safeguard => do_safeguard_effect(self.get_side(&attacker.id)),
-                Effect::PainSplit => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_pain_split_effect)
+                Effect::PainSplit => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_pain_split_effect),
+                Effect::BatonPass => do_baton_pass_effect(attacker)
             };
             effects.append(&mut secondary_effects);
         }
@@ -1398,4 +1406,12 @@ fn do_pain_split_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
     };
 
     vec![attack_fx, defender_fx]
+}
+
+fn do_baton_pass_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
+    if attacker.has_anyone_to_swap_to() {
+        vec![ActionSideEffects::PokemonLeftBatonPass(attacker.id, attacker.pokemon)]
+    } else {
+        vec![ActionSideEffects::Failed(Cause::Natural)]
+    }
 }

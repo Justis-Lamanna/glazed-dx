@@ -843,6 +843,7 @@ pub enum Effect {
     PerishSong,
     Safeguard,
     PainSplit,
+    BatonPass,
     EntryHazard(EntryHazardType),
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
@@ -4326,7 +4327,7 @@ pub static BatonPass: MoveData = MoveData {
     contest_type: ContestType::Cute,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[],
+    effects: &[Effect::BatonPass],
 };
 pub static Encore: MoveData = MoveData {
     pp: 5,

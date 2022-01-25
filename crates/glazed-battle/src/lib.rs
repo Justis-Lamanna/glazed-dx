@@ -8,6 +8,7 @@ use rand::Rng;
 
 use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, PoisonType, ScreenType, SemiInvulnerableLocation, Target, Weather};
+use glazed_data::attack::BattleStat::Defense;
 use glazed_data::constants::Species;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, Pokemon, StatSlot};
@@ -123,7 +124,7 @@ impl FieldSide {
 /// A group of between 1 and 6 Pokemon, which a trainer owns
 #[derive(Debug)]
 pub struct Party {
-    pub one: RefCell<Pokemon>,
+    pub one: Option<RefCell<Pokemon>>,
     pub two: Option<RefCell<Pokemon>>,
     pub three: Option<RefCell<Pokemon>>,
     pub four: Option<RefCell<Pokemon>>,
@@ -141,7 +142,7 @@ impl Party {
         let size = party.len();
         let mut party = party.drain(..);
         Party {
-            one: RefCell::from(party.next().unwrap()),
+            one: party.next().map(|i| RefCell::from(i)),
             two: party.next().map(|i| RefCell::from(i)),
             three: party.next().map(|i| RefCell::from(i)),
             four: party.next().map(|i| RefCell::from(i)),
@@ -154,7 +155,7 @@ impl Party {
     pub fn create_one<T>(one: T) -> Party
         where T: Into<Pokemon> {
         Party {
-            one: RefCell::from(one.into()),
+            one: Some(RefCell::from(one.into())),
             two: None,
             three: None,
             four: None,
@@ -166,6 +167,21 @@ impl Party {
 
     pub fn len(&self) -> usize {
         self.size
+    }
+}
+impl Index<usize> for Party {
+    type Output = Option<RefCell<Pokemon>>;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.one,
+            1 => &self.two,
+            2 => &self.three,
+            3 => &self.four,
+            4 => &self.five,
+            5 => &self.six,
+            _ => panic!("Unknown pokemon index")
+        }
     }
 }
 
@@ -238,6 +254,36 @@ pub struct Slot {
     pub data: RefCell<BattleData>,
 }
 impl Slot {
+    /// Return true if every member of the party has no HP
+    pub fn is_everyone_koed(&self) -> bool {
+        for idx in 0..6 {
+            let pkmn = &self.party[idx];
+            match pkmn {
+                Some(p) if p.borrow().has_health() => {
+                    return false;
+                },
+                _ => {}
+            }
+        }
+        true
+    }
+
+    /// Return true if any member of the party, aside from the active Pokemon, has HP
+    pub fn has_anyone_to_swap_to(&self) -> bool {
+        for idx in 0..6 {
+            if idx != self.pokemon {
+                let pkmn = &self.party[idx];
+                match pkmn {
+                    Some(p) if p.borrow().has_health() => {
+                        return true;
+                    },
+                    _ => {}
+                }
+            }
+        }
+        false
+    }
+
     /// Get the effective species of this Pokemon. Takes Transform into effect
     pub fn get_effective_species(&self) -> Species {
         match &self.data.borrow().transformed {
@@ -524,15 +570,7 @@ impl Deref for Slot {
     type Target = RefCell<Pokemon>;
 
     fn deref(&self) -> &Self::Target {
-        match self.pokemon {
-            0 => &self.party.one,
-            1 => &self.party.two.as_ref().unwrap(),
-            2 => &self.party.three.as_ref().unwrap(),
-            3 => &self.party.four.as_ref().unwrap(),
-            4 => &self.party.five.as_ref().unwrap(),
-            5 => &self.party.six.as_ref().unwrap(),
-            _ => panic!("Unknown pokemon index")
-        }
+        self.party[self.pokemon].as_ref().unwrap()
     }
 }
 
@@ -951,6 +989,29 @@ pub struct BattleData {
     temp_weight: Option<u16>,
 }
 impl BattleData {
+    pub fn baton_pass(&self) -> BattleData {
+        BattleData {
+            attack_stage: self.attack_stage,
+            defense_stage: self.defense_stage,
+            special_attack_stage: self.special_attack_stage,
+            special_defense_stage: self.special_defense_stage,
+            speed_stage: self.speed_stage,
+            accuracy_stage: self.accuracy_stage,
+            evasion_stage: self.evasion_stage,
+            crit_stage: self.crit_stage,
+            confused: self.confused,
+            locked_on: self.locked_on,
+            trapped: self.trapped,
+            seeded: self.seeded,
+            cursed: self.cursed,
+            substituted: self.substituted,
+            rooted: self.rooted,
+            perish_song_counter: self.perish_song_counter,
+            levitating: self.levitating,
+            ..Default::default()
+        }
+    }
+
     pub fn is_confused(&self) -> bool {
         self.confused > 0
     }
@@ -1327,7 +1388,7 @@ pub enum ActionSideEffects {
         end_hp: u16
     },
     ConsumedItem(SlotId, Item), GainedItem(SlotId, Item),
-    PokemonLeft(SlotId, usize), PokemonEntered(SlotId, usize),
+    PokemonLeft(SlotId, usize), PokemonEntered(SlotId, usize), PokemonLeftBatonPass(SlotId, usize),
     LostPP(SlotId, Move, u8, u8),
     NoTarget,
 

@@ -356,3 +356,12 @@ fn test_magnitude() {
         Some(ActionSideEffects::Magnitude(_)) => true, _ => false
     }, "{:?}", fx);
 }
+
+#[test]
+fn test_baton_pass_one_member_party() {
+    let mut b = create_battlefield();
+    let fx = b.do_attack(FORWARD, Move::BatonPass, SelectedTarget::Implied);
+    assert!(match fx.get(0) {
+        Some(ActionSideEffects::Failed(_)) => true, _ => false
+    }, "{:?}", fx);
+}
