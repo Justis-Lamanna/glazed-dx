@@ -2,7 +2,7 @@ use glazed_battle::*;
 use glazed_data::attack::{BattleStat, Move, Weather};
 use glazed_data::attack::StatChangeTarget::Target;
 use glazed_data::constants::Species;
-use glazed_data::pokemon::{Gender, PokemonTemplate};
+use glazed_data::pokemon::{Gender, PokemonStatusCondition, PokemonTemplate};
 
 const FORWARD: SlotId = SlotId {
     side: BattleSideId::Forward,
@@ -301,5 +301,16 @@ fn test_attract_same_gender() {
     let fx = b.do_attack(FORWARD, Move::Attract, SelectedTarget::Implied);
     assert!(match fx.get(0) {
         Some(ActionSideEffects::NoEffectSecondary(_)) => true, _ => false
+    })
+}
+
+#[test]
+fn test_sleep_talk() {
+    let mut b = Battlefield::one_v_one(
+        PokemonTemplate::pokemon(Species::Quilava, 20).custom(|mut p| p.status = Some(PokemonStatusCondition::asleep())),
+        PokemonTemplate::pokemon(Species::Ivysaur, 20));
+    let fx = b.do_attack(FORWARD, Move::SleepTalk, SelectedTarget::Implied);
+    assert!(match fx.get(1) {
+        Some(ActionSideEffects::SleepTalk(_, _)) => true, _ => false
     })
 }

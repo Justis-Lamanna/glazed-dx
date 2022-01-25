@@ -241,6 +241,13 @@ pub struct PokemonStatusCondition {
     pub paralysis: bool
 }
 impl PokemonStatusCondition {
+    pub fn asleep() -> PokemonStatusCondition {
+        PokemonStatusCondition {
+            sleep: 5,
+            ..Default::default()
+        }
+    }
+
     pub fn has_status_condition(&self) -> bool {
         self.sleep > 0 || self.poison || self.burn || self.freeze || self.paralysis
     }
@@ -604,6 +611,15 @@ impl Pokemon {
         }
     }
 
+    pub fn get_moves(&self) -> Vec<Move> {
+        let mut moves = Vec::new();
+        if let Some(m) = self.move_1 { moves.push(m.attack); }
+        if let Some(m) = self.move_2 { moves.push(m.attack); }
+        if let Some(m) = self.move_3 { moves.push(m.attack); }
+        if let Some(m) = self.move_4 { moves.push(m.attack); }
+        moves
+    }
+
     pub fn knows_move(&self, check_attack: Move) -> bool {
         match (&self.move_1, &self.move_2, &self.move_3, &self.move_4) {
             (Some(MoveSlot{attack, ..}), _, _, _) if *attack == check_attack => true,
@@ -794,6 +810,12 @@ impl PokemonTemplate {
     pub fn gender(mut self, gender: Gender) -> Self {
         self.gender = Some(gender);
 
+        self
+    }
+
+    /// Customize this Pokemon in a builder-friendly way
+    pub fn custom<F: Fn(&mut PokemonTemplate)>(mut self, func: F) -> Self {
+        func(&mut self);
         self
     }
 

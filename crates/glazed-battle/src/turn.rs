@@ -27,6 +27,7 @@ pub fn do_freeze_check(attacker: &Slot, attack: Move) -> CheckResult<ActionSideE
 
 pub fn do_sleep_check(attacker: &Slot, attack: Move) -> CheckResult<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();
+    let attack = attacker.data.borrow().proxy_move.unwrap_or(attack);
     if pkmn.status.sleep > 0 {
         pkmn.status.sleep -= 1;
         if pkmn.status.sleep == 0 {

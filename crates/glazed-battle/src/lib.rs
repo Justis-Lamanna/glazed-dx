@@ -272,6 +272,36 @@ impl Slot {
             .unwrap_or_else(|| self.borrow().gender)
     }
 
+    /// Get the effective known moves of this Pokemon, taking Temporary moves and Transform into effect
+    /// Priority is to temp moves, then transform, then regular known moves
+    pub fn get_effective_known_moves(&self) -> Vec<Move> {
+        let pkmn = self.borrow();
+        let data = self.data.borrow();
+        let mut moves = Vec::new();
+        if let Some(m) = data.temp_move_1
+            .or_else(|| data.transformed.as_ref().and_then(|s| s.move_1))
+            .or_else(|| pkmn.move_1) {
+            moves.push(m.attack);
+        }
+        if let Some(m) = data.temp_move_2
+            .or_else(|| data.transformed.as_ref().and_then(|s| s.move_2))
+            .or_else(|| pkmn.move_2) {
+            moves.push(m.attack);
+        }
+        if let Some(m) = data.temp_move_3
+            .or_else(|| data.transformed.as_ref().and_then(|s| s.move_3))
+            .or_else(|| pkmn.move_3) {
+            moves.push(m.attack);
+        }
+        if let Some(m) = data.temp_move_4
+            .or_else(|| data.transformed.as_ref().and_then(|s| s.move_4))
+            .or_else(|| pkmn.move_4) {
+            moves.push(m.attack);
+        }
+
+        moves
+    }
+
     pub fn get_stat_stage(&self, stat: BattleStat) -> i8 {
         let data = self.data.borrow();
         match stat {
@@ -1360,6 +1390,7 @@ pub enum ActionSideEffects {
     ScreenStart(BattleSideId, ScreenType), ScreenEnd(BattleSideId, ScreenType),
     BideStart(SlotId), BideContinue(SlotId),
     Metronome(SlotId, Move),
+    SleepTalk(SlotId, Move),
     Transform {
         id: SlotId,
         species: Species,

@@ -580,6 +580,7 @@ impl Distribution<Move> for Standard {
     }
 }
 impl Move {
+    /// Retrieve a random Move for Metronome. Will not return certain blacklisted moves.
     pub fn metronome() -> Move {
         loop {
             let attack = rand::thread_rng().gen::<Move>();
@@ -596,6 +597,7 @@ impl Move {
         }
     }
 
+    /// If true, this Move can be used while frozen, and will remove the Frozen condition.
     pub fn can_thaw_user(&self) -> bool {
         match self {
             Move::FlameWheel | Move::FlareBlitz | Move::FusionFlare | Move::SacredFire | Move::Scald => true,
@@ -603,6 +605,7 @@ impl Move {
         }
     }
 
+    /// If true, this Move can only be used when the user is asleep.
     pub fn can_only_be_used_while_sleeping(&self) -> bool {
         match self {
             Move::SleepTalk | Move::Snore => true,
@@ -610,6 +613,7 @@ impl Move {
         }
     }
 
+    /// If true, this Move can only be used when the *target* is asleep.
     pub fn can_only_be_used_on_sleeping_target(&self) -> bool {
         match self {
             Move::DreamEater | Move::Nightmare => true,
@@ -617,6 +621,7 @@ impl Move {
         }
     }
 
+    /// If true, this attack can be learned via Mimic
     pub fn can_be_mimicked(&self) -> bool {
         match self {
             Move::Sketch | Move::Transform | Move::Metronome => false,
@@ -624,6 +629,7 @@ impl Move {
         }
     }
 
+    /// If true, this attack can be learned via Sketch
     pub fn can_be_sketched(&self) -> bool {
         match self {
             Move::MirrorMove | Move::SleepTalk | Move::Sketch => false,
@@ -631,6 +637,19 @@ impl Move {
         }
     }
 
+    /// If true, this attack can be called by Sleep Talk
+    pub fn can_be_sleep_talked(&self) -> bool {
+        match self {
+            Move::Assist | Move::Bide | Move::Bounce | Move::Copycat | Move::Dig |
+            Move::Dive | Move::FreezeShock | Move::Fly | Move::FocusPunch | Move::IceBurn |
+            Move::MeFirst | Move::Metronome | Move::MirrorMove | Move::Mimic | Move::RazorWind |
+            Move::ShadowForce | Move::Sketch | Move::SkullBash | Move::SkyAttack | Move::SkyDrop |
+            Move::SolarBeam | Move::Uproar | Move::SleepTalk => false,
+            _ => true
+        }
+    }
+
+    /// If true, this Move does double damage on a target that has used Minimize
     pub fn double_damage_on_minimized_target(&self) -> bool {
         match self {
             Move::BodySlam | Move::Stomp | Move::DragonRush | Move::ShadowForce | Move::Steamroller | Move::HeatCrash | Move::HeavySlam => true,

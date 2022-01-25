@@ -194,24 +194,11 @@ impl Battlefield {
     pub fn do_attack(&mut self, attacker_id: SlotId, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let attacker = &self[attacker_id.side][attacker_id.individual];
         attacker.data.borrow_mut().start_of_turn();
+        attacker.data.borrow_mut().proxy_move = Some(attack);
 
         let move_data = attack.data();
 
-        if attack == Move::Metronome {
-            let rand_attack = Move::metronome();
-            let mut effects = vec![ActionSideEffects::Metronome(attacker_id, rand_attack)];
-            effects.append(&mut self._do_attack(attacker_id, rand_attack, SelectedTarget::Implied));
-            effects
-        } else if attack == Move::MirrorMove {
-            let attacker = &self[attacker_id.side][attacker_id.individual];
-            let data = attacker.data.borrow_mut();
-            if let Some((_, attack)) = data.get_last_targeted_attack() {
-                drop(data);
-                self._do_attack(attacker_id, attack, SelectedTarget::Implied)
-            } else {
-                vec![ActionSideEffects::Failed(Cause::Natural)]
-            }
-        } else if let Power::BaseWithCharge(_, place) = move_data.power {
+        if let Power::BaseWithCharge(_, place) = move_data.power {
             let attacker = &self[attacker_id.side][attacker_id.individual];
 
             let mut effects = vec![ActionSideEffects::Charging(attacker_id, attack)];
@@ -428,8 +415,6 @@ impl Battlefield {
         let mut effects = Vec::new();
         let attacker = &self[attacker_id.side][attacker_id.individual];
 
-        let move_data = attack.data();
-
         // Check for reasons this Pokemon can't perform this move
         //region start-of-turn checks
         if turn::do_disable_check(attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
@@ -441,6 +426,43 @@ impl Battlefield {
         if turn::do_confusion_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
 
         //endregion
+
+        let (attack, defender) = if attack == Move::Metronome {
+            let rand_attack = Move::metronome();
+            effects.push(ActionSideEffects::Metronome(attacker_id, rand_attack));
+            attacker.data.borrow_mut().proxy_move = Some(Move::Metronome);
+            (rand_attack, SelectedTarget::Implied)
+        } else if attack == Move::MirrorMove {
+            let data = attacker.data.borrow_mut();
+            if let Some((_, attack)) = data.get_last_targeted_attack() {
+                (attack, SelectedTarget::Implied)
+            } else {
+                effects.push(ActionSideEffects::Failed(Cause::Natural));
+                return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
+            }
+        } else if attack == Move::SleepTalk {
+            let candidates = attacker.get_effective_known_moves()
+                .iter()
+                .filter(|m| m.can_be_sleep_talked())
+                .map(|m| *m)
+                .collect::<Vec<Move>>();
+            if candidates.is_empty() {
+                effects.push(ActionSideEffects::Failed(Cause::Natural));
+                return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
+            } else {
+                let selected = if candidates.len() == 1 {
+                    candidates.get(0).unwrap()
+                } else {
+                    candidates.get(rand::thread_rng().gen_range(0..candidates.len())).unwrap()
+                };
+                effects.push(ActionSideEffects::SleepTalk(attacker_id, *selected));
+                (*selected, SelectedTarget::Implied)
+            }
+        } else {
+            (attack, defender)
+        };
+
+        let move_data = attack.data();
 
         // 0. Test if the attacker can use the move
         match accuracy::cannot_use_attack(attacker, attack) {
@@ -529,6 +551,7 @@ impl Battlefield {
                 }
 
                 if move_data.is_no_power_move() {
+                    println!("HH");
                     if defender.is_behind_substitute() && !attack.bypasses_substitute() {
                         effects.push(ActionSideEffects::Failed(Cause::Natural));
                         continue;
