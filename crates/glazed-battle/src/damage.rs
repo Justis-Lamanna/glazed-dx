@@ -614,6 +614,38 @@ impl Battlefield { //region Damage
                             Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
                         }
                     },
+                    Move::Return => {
+                        let (effectiveness, cause) = effectiveness();
+                        if let Effectiveness::Immune = effectiveness {
+                            vec![ActionSideEffects::NoEffect(cause)]
+                        } else {
+                            // Base Power of Return == Friendship / 2.5 == Friendship * 2 / 5
+                            let move_context = MoveContext {
+                                attack,
+                                data: move_data,
+                                base_power: math::cap_min(math::ratio(u16::from(attacker.borrow().friendship), 2, 5), 1)
+                            };
+                            let is_crit = crit();
+                            let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
+                            Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
+                        }
+                    },
+                    Move::Frustration => {
+                        let (effectiveness, cause) = effectiveness();
+                        if let Effectiveness::Immune = effectiveness {
+                            vec![ActionSideEffects::NoEffect(cause)]
+                        } else {
+                            // Base Power of Frustration == (255 - Friendship) / 2.5 == (255 - Friendship) * 2 / 5
+                            let move_context = MoveContext {
+                                attack,
+                                data: move_data,
+                                base_power: math::cap_min(math::ratio(u16::from(u8::MAX - attacker.borrow().friendship), 2, 5), 1)
+                            };
+                            let is_crit = crit();
+                            let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
+                            Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
+                        }
+                    }
                     a => panic!("Move {:?} has variable power, yet no implementation specified", a)
                 }
             }

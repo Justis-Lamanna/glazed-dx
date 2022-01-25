@@ -4197,7 +4197,7 @@ pub static HealBell: MoveData = MoveData {
 pub static Return: MoveData = MoveData {
     pp: 20,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
@@ -4221,7 +4221,7 @@ pub static Present: MoveData = MoveData {
 pub static Frustration: MoveData = MoveData {
     pp: 20,
     priority: 0,
-    power: Power::None,
+    power: Power::Variable,
     crit_rate: None,
     accuracy: Accuracy::Percentage(100),
     _type: Type::Normal,
