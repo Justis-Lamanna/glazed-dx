@@ -574,7 +574,7 @@ impl Pokemon {
         }
     }
 
-    pub fn get_hidden_power_power(&self) -> u8 {
+    pub fn get_hidden_power_power(&self) -> u16 {
         let bit = (self.hp.iv & 2) >> 1 |
             (self.attack.iv & 2) |
             (self.defense.iv & 2) << 1 |
@@ -582,7 +582,7 @@ impl Pokemon {
             (self.special_attack.iv & 2) << 3 |
             (self.special_defense.iv & 2) << 4;
         let number = ((u32::from(bit) * 40u32) / 63u32) + 30u32;
-        number as u8
+        number as u16
     }
 
     pub fn is_full_health(&self) -> bool {

@@ -752,7 +752,17 @@ impl Battlefield {
                     data.forced_action = Some(ForcedAction::DoNothing);
                     vec![]
                 },
-                Effect::Heal(percentage) => do_heal_effect(attacker, *percentage),
+                Effect::Heal(percentage) => do_heal_effect(attacker, (*percentage, 100)),
+                Effect::WeatherHeal { no_weather, sun, other_weather } => {
+                    let field = self.field.borrow();
+                    if field.is_clear() {
+                        do_heal_effect(attacker, *no_weather)
+                    } else if field.is_sunny() {
+                        do_heal_effect(attacker, *sun)
+                    } else {
+                        do_heal_effect(attacker, *other_weather)
+                    }
+                }
                 Effect::Leech => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_leech_effect),
                 Effect::Rage => {
                     let mut data = attacker.data.borrow_mut();
@@ -885,7 +895,8 @@ impl Battlefield {
                 Effect::Safeguard => do_safeguard_effect(self.get_side(&attacker.id)),
                 Effect::PainSplit => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_pain_split_effect),
                 Effect::BatonPass => do_baton_pass_effect(attacker),
-                Effect::Encore => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_encore_effect)
+                Effect::Encore => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_encore_effect),
+                Effect::ClearHazards => clear_hazards(attacker, self.get_side(&attacker.id))
             };
             effects.append(&mut secondary_effects);
         }
@@ -961,10 +972,10 @@ fn do_flinch_effect(_attacker: &Slot, defender: &Slot) -> Vec<ActionSideEffects>
 }
 
 /// Heal a percentage of the attacker's max HP
-fn do_heal_effect(attacker: &Slot, percentage: u8) -> Vec<ActionSideEffects> {
+fn do_heal_effect(attacker: &Slot, percentage: (u8, u8)) -> Vec<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();
     let start_hp = pkmn.current_hp;
-    let delta = math::ratio(pkmn.hp.value, percentage, 100);
+    let delta = math::fraction(pkmn.hp.value, percentage);
     let end_hp = start_hp.saturating_add(delta).clamp(0, pkmn.hp.value);
     pkmn.current_hp = end_hp;
 
@@ -1448,5 +1459,37 @@ fn do_encore_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
             },
             _ => vec![ActionSideEffects::Failed(Cause::Natural)]
         }
+    }
+}
+
+fn clear_hazards(attacker: &Slot, side: &RefCell<FieldSide>) -> Vec<ActionSideEffects> {
+    let mut removed_anything = false;
+    let mut data = attacker.data.borrow_mut();
+    let mut side = side.borrow_mut();
+
+    if data.bound.is_some() {
+        removed_anything = true; data.bound = None;
+    }
+
+    if data.seeded.is_some() {
+        removed_anything = true; data.bound = None;
+    }
+
+    if side.pointed_stones {
+        removed_anything = true; side.pointed_stones = false;
+    }
+
+    if side.toxic_spikes > 0 {
+        removed_anything = true; side.toxic_spikes = 0;
+    }
+
+    if side.spikes > 0 {
+        removed_anything = true; side.spikes = 0;
+    }
+
+    if removed_anything {
+        vec![ActionSideEffects::ClearedHazards]
+    } else {
+        vec![]
     }
 }

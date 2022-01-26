@@ -815,6 +815,11 @@ pub enum Effect {
     Confuse(u8, StatChangeTarget),
     Infatuate(u8),
     Heal(u8),
+    WeatherHeal {
+        no_weather: (u8, u8),
+        sun: (u8, u8),
+        other_weather: (u8, u8)
+    },
     Flinch(u8),
     ChangeWeather(Weather),
     DispelWeather,
@@ -854,6 +859,7 @@ pub enum Effect {
     BatonPass,
     Encore,
     EntryHazard(EntryHazardType),
+    ClearHazards,
     Predicated(EffectPredicate, &'static Effect, &'static Effect),
     Custom
 }
@@ -4372,7 +4378,7 @@ pub static RapidSpin: MoveData = MoveData {
     target: Target::AllyOrOpponent,
     power: Power::Base(50),
 	crit_rate: None,
-	effects: &[],
+	effects: &[Effect::ClearHazards],
 };
 pub static SweetScent: MoveData = MoveData {
     pp: 20,
@@ -4432,7 +4438,11 @@ pub static MorningSun: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[Effect::Heal(50)],
+    effects: &[Effect::WeatherHeal{
+        no_weather: (1, 2),
+        sun: (2, 3),
+        other_weather: (1,4)
+    }],
 };
 pub static Synthesis: MoveData = MoveData {
     pp: 5,
@@ -4444,7 +4454,11 @@ pub static Synthesis: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[Effect::Heal(50)],
+    effects: &[Effect::WeatherHeal{
+        no_weather: (1, 2),
+        sun: (2, 3),
+        other_weather: (1,4)
+    }],
 };
 pub static Moonlight: MoveData = MoveData {
     pp: 5,
@@ -4456,7 +4470,11 @@ pub static Moonlight: MoveData = MoveData {
     contest_type: ContestType::Beauty,
     damage_type: DamageType::Status,
     target: Target::User,
-    effects: &[Effect::Heal(50)],
+    effects: &[Effect::WeatherHeal{
+        no_weather: (1, 2),
+        sun: (2, 3),
+        other_weather: (1,4)
+    }],
 };
 pub static HiddenPower: MoveData = MoveData {
     pp: 15,
@@ -4466,7 +4484,7 @@ pub static HiddenPower: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    power: Power::Base(60),
+    power: Power::Variable,
 	crit_rate: None,
 	effects: &[],
 };

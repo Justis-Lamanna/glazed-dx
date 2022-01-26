@@ -697,6 +697,21 @@ impl Battlefield { //region Damage
                             effects.append(&mut Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness));
                             effects
                         }
+                    },
+                    Move::HiddenPower => {
+                        let (effectiveness, cause) = effectiveness();
+                        if let Effectiveness::Immune = effectiveness {
+                            vec![ActionSideEffects::NoEffect(cause)]
+                        } else {
+                            let is_crit = crit();
+                            let context = MoveContext {
+                                attack,
+                                data: move_data,
+                                base_power: attacker.borrow().get_hidden_power_power()
+                            };
+                            let damage = self.calculate_full_damage(attacker, context, defender, is_multi_target, is_crit, effectiveness);
+                            Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness)
+                        }
                     }
                     a => panic!("Move {:?} has variable power, yet no implementation specified", a)
                 }

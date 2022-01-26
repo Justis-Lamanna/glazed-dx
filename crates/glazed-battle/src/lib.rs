@@ -1498,6 +1498,7 @@ pub enum ActionSideEffects {
     Safeguard(BattleSideId),
     Magnitude(u8),
     Encore(SlotId, Move),
+    ClearedHazards,
     NothingHappened
 }
 impl ActionSideEffects {
