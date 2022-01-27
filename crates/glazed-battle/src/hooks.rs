@@ -42,7 +42,7 @@ impl Battlefield {
         // Rage ends if the user is enraged, and they don't use a rage move
         if data.enraged && !attack.data().is_rage() {
             data.enraged = false;
-            effects.push(ActionSideEffects::RageEnd(attacker.id))
+            effects.push(ActionSideEffects::RageEnd(attacker.slot_id))
         }
 
         // Increment the protection counter for any protection moves. Reset it if anything else is used.

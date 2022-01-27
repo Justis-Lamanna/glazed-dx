@@ -16,7 +16,7 @@ use crate::*;
 
 pub fn inflict_confusion(afflicted: &Slot) -> Vec<ActionSideEffects> {
     if afflicted.get_effective_ability() == Ability::OwnTempo {
-        return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(afflicted.id, Ability::OwnTempo))]
+        return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(afflicted.id(), Ability::OwnTempo))]
     }
 
     let mut data = afflicted.data.borrow_mut();
@@ -24,14 +24,14 @@ pub fn inflict_confusion(afflicted: &Slot) -> Vec<ActionSideEffects> {
         vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
     } else {
         data.confused = rand::thread_rng().gen_range(CONFUSION_TURN_RANGE);
-        vec![ActionSideEffects::Confuse(afflicted.id)]
+        vec![ActionSideEffects::Confuse(afflicted.slot_id)]
     }
 }
 
 pub fn inflict_infatuation(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     if attacker.get_effective_gender().can_infatuate(target.get_effective_gender()) {
         if target.get_effective_ability() == Ability::Oblivious {
-            return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(target.id, Ability::Oblivious))]
+            return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(target.id(), Ability::Oblivious))]
         }
 
         let mut data = target.data.borrow_mut();
@@ -39,7 +39,7 @@ pub fn inflict_infatuation(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffe
             vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
         } else {
             data.infatuated = true;
-            vec![ActionSideEffects::Infatuated(target.id)]
+            vec![ActionSideEffects::Infatuated(target.slot_id)]
         }
     } else {
         vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
@@ -50,9 +50,9 @@ fn _change_stat(affected: &Slot, stat: BattleStat, stages: i8, cause: Cause) -> 
     let current = affected.get_stat_stage(stat);
     let next = current + stages;
     return if next > MAX_STAGE {
-        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.id, PokemonState::StatsMaxed(StatsCause::TooHigh)))
+        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.slot_id, PokemonState::StatsMaxed(StatsCause::TooHigh)))
     } else if next < MIN_STAGE {
-        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.id, PokemonState::StatsMaxed(StatsCause::TooLow)))
+        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.slot_id, PokemonState::StatsMaxed(StatsCause::TooLow)))
     } else {
         let mut data = affected.data.borrow_mut();
         match stat {
@@ -67,7 +67,7 @@ fn _change_stat(affected: &Slot, stat: BattleStat, stages: i8, cause: Cause) -> 
         };
         ActionSideEffects::StatChanged {
             stat,
-            affected: affected.id,
+            affected: affected.slot_id,
             cause,
             start: current,
             end: next
@@ -77,8 +77,8 @@ fn _change_stat(affected: &Slot, stat: BattleStat, stages: i8, cause: Cause) -> 
 
 pub fn change_self_stat(affected: &Slot, stat: BattleStat, stages: i8) -> ActionSideEffects {
     let (ability_cause, stages) = match affected.get_effective_ability() {
-        Ability::Simple => (Cause::Ability(affected.id, Ability::Simple), stages * 2),
-        Ability::Contrary => (Cause::Ability(affected.id, Ability::Contrary), -stages),
+        Ability::Simple => (Cause::Ability(affected.id(), Ability::Simple), stages * 2),
+        Ability::Contrary => (Cause::Ability(affected.id(), Ability::Contrary), -stages),
         _ => (Cause::Natural, stages)
     };
 
@@ -86,26 +86,26 @@ pub fn change_self_stat(affected: &Slot, stat: BattleStat, stages: i8) -> Action
 }
 
 pub fn change_opponent_stat(field: &Battlefield, affecter: &Slot, affected: &Slot, stat: BattleStat, stages: i8) -> ActionSideEffects {
-    let affected_side = field.get_side(&affected.id);
+    let affected_side = field.get_side_by_party_id(affected.party_id);
 
     if affected_side.borrow().mist > 0 {
         return ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Mist))
     }
 
     let (ability_cause, stages) = match affected.get_effective_ability() {
-        Ability::Simple => (Cause::Ability(affected.id, Ability::Simple), stages * 2),
+        Ability::Simple => (Cause::Ability(affected.id(), Ability::Simple), stages * 2),
         Ability::Contrary  => {
-            let cause = Cause::Ability(affected.id, Ability::Contrary);
+            let cause = Cause::Ability(affected.id(), Ability::Contrary);
             match affected.get_effective_ability() {
-                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id, oc)), -stages),
+                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id(), oc)), -stages),
                 _ => (cause, stages)
             }
         },
         oc@ (Ability::ClearBody | Ability::WhiteSmoke) => {
-            let cause = Cause::Ability(affected.id, oc);
+            let cause = Cause::Ability(affected.id(), oc);
             match affected.get_effective_ability() {
-                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id, oc)), stages),
-                _ => return ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id, oc))
+                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id(), oc)), stages),
+                _ => return ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id(), oc))
             }
         }
         _ => (Cause::Natural, stages)
@@ -132,7 +132,7 @@ pub fn inflict_non_volatile_status(affected: &Slot, status: NonVolatileBattleAil
         }
     }
     vec![ActionSideEffects::NonVolatileStatusAilment {
-        affected: affected.id,
+        affected: affected.slot_id,
         status
     }]
 }
@@ -141,8 +141,8 @@ impl Battlefield {
     /// Called when a Pokemon enters battle (either at start, or when swapped out)
     pub fn enter_battle(&mut self, slot: SlotId) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
-        let side = self.get_side(&slot).borrow();
-        let mut pkmn = self.get_by_id(&slot);
+        let side = self.get_side_by_active_id(slot).borrow();
+        let mut pkmn = self.get_active_pokemon_by_active_id(slot);
         let pkmn_ability = pkmn.get_effective_ability();
 
         let grounded = || self.field.borrow().gravity > 0 || pkmn.borrow().is_holding(Item::IronBall) || pkmn.data.borrow().rooted;
@@ -168,16 +168,16 @@ impl Battlefield {
     }
 
     /// Called when swapping to a new Pokemon
-    pub fn swap_pokemon(&mut self, slot: SlotId, member: usize, baton_pass: bool) -> Vec<ActionSideEffects> {
-        let s = self.get_by_id(&slot);
+    pub fn swap_pokemon(&mut self, slot: SlotId, member: PartyMemberId, baton_pass: bool) -> Vec<ActionSideEffects> {
+        let s = self.get_active_pokemon_by_active_id(slot);
         // Call hook for when a Pokemon swaps out
         for e_slot in self.get_everyone() {
-            if e_slot.id != slot {
-                e_slot.data.borrow_mut().other_swapped_out(s);
+            if e_slot.slot_id != slot {
+                e_slot.data.borrow_mut().other_swapped_out(&s);
             }
         }
 
-        let mut s = self.get_by_id_mut(&slot);
+        let mut s = self.get_active_pokemon_by_active_id(slot);
 
         // Clear data. Baton pass is just a partial clear
         if baton_pass {
@@ -189,8 +189,8 @@ impl Battlefield {
         // Call hook for start of turn action
         s.data.borrow_mut().start_of_turn();
 
-        let old_member = s.pokemon;
-        s.pokemon = member;
+        let old_member = s.id();
+        s.party_slot_id = member;
 
         let mut effects = vec![ActionSideEffects::PokemonLeft(slot, old_member)];
         effects.append(&mut self.enter_battle(slot));
@@ -199,20 +199,18 @@ impl Battlefield {
 
     /// Perform a regular attack
     pub fn do_attack(&mut self, attacker_id: SlotId, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
-        let attacker = &self[attacker_id.side][attacker_id.individual];
+        let attacker = self.get_active_pokemon_by_active_id(attacker_id);
         attacker.data.borrow_mut().start_of_turn();
         attacker.data.borrow_mut().proxy_move = Some(attack);
 
         let move_data = attack.data();
 
         if let Power::BaseWithCharge(_, place) = move_data.power {
-            let attacker = &self[attacker_id.side][attacker_id.individual];
-
             let mut effects = vec![ActionSideEffects::Charging(attacker_id, attack)];
 
             // Skull Bash has a unique effect where it raises user defense on its charging turn
             if attack == Move::SkullBash {
-                let effect = change_self_stat(attacker, BattleStat::Defense, 1);
+                let effect = change_self_stat(&attacker, BattleStat::Defense, 1);
                 if let ActionSideEffects::NoEffectSecondary(_) = effect { }
                 else {
                     effects.push(effect);
@@ -235,7 +233,7 @@ impl Battlefield {
 
     /// Do an attack a Pokemon is locked in to (example: charge attack selected the previous turn)
     pub fn do_implicit_attack(&mut self, attacker_id: SlotId) -> Vec<ActionSideEffects> {
-        let attacker = &self[attacker_id.side][attacker_id.individual];
+        let attacker = self.get_active_pokemon_by_active_id(attacker_id);
         attacker.data.borrow_mut().start_of_turn();
 
         let mut data = attacker.data.borrow_mut();
@@ -258,7 +256,7 @@ impl Battlefield {
                 let damaged = effects.iter().any(|e| e.did_damage());
 
                 if counter == 1 && attack == Move::Thrash {
-                    effects.append(&mut inflict_confusion(&self[attacker_id.side][attacker_id.individual]));
+                    effects.append(&mut inflict_confusion(&self.get_active_pokemon_by_active_id(attacker_id)));
                 }
 
                 let mut data = attacker.data.borrow_mut();
@@ -288,7 +286,7 @@ impl Battlefield {
                     let damage = damage.saturating_mul(2);
                     let effects = if let Some((defender, _)) = attacker.data.borrow().last_attacker {
                         attacker.data.borrow_mut().set_last_used_move(Move::Bide);
-                        self.do_bide_damage(attacker, damage, self.get_by_id(&defender))
+                        self.do_bide_damage(&attacker, damage, &self.get_active_pokemon_by_active_id(defender))
                     } else {
                         vec![ActionSideEffects::NoTarget]
                     };
@@ -305,9 +303,9 @@ impl Battlefield {
     /// Do all the end-of-turn things
     pub fn end_of_round(&mut self) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
-        let both_sides = vec![&self.user_side, &self.opponent_side];
-        for side in both_sides {
-            effects.append(&mut turn::do_screen_countdown(side));
+        let both_sides = self.get_sides_with_id();
+        for (id, side) in both_sides {
+            effects.append(&mut turn::do_screen_countdown(id, side));
         }
 
         let everyone = self.get_everyone();
@@ -315,21 +313,21 @@ impl Battlefield {
             pokemon.data.borrow_mut().end_of_round();
 
             if pokemon.borrow().is_fainted() { continue; }
-            effects.append(&mut turn::do_poison_damage(pokemon));
+            effects.append(&mut turn::do_poison_damage(&pokemon));
             if pokemon.borrow().is_fainted() { continue; }
-            effects.append(&mut turn::do_binding_damage(pokemon));
+            effects.append(&mut turn::do_binding_damage(&pokemon));
             if pokemon.borrow().is_fainted() { continue; }
-            effects.append(&mut turn::do_nightmare_damage(pokemon));
+            effects.append(&mut turn::do_nightmare_damage(&pokemon));
             if pokemon.borrow().is_fainted() { continue; }
-            effects.append(&mut turn::do_curse_damage(pokemon));
+            effects.append(&mut turn::do_curse_damage(&pokemon));
             if pokemon.borrow().is_fainted() { continue; }
 
             let mut data = pokemon.data.borrow_mut();
             if data.perish_song_counter > 0 {
                 data.perish_song_counter = data.perish_song_counter.saturating_sub(1);
-                effects.push(ActionSideEffects::PerishCount(pokemon.id, data.perish_song_counter));
+                effects.push(ActionSideEffects::PerishCount(pokemon.slot_id, data.perish_song_counter));
                 if data.perish_song_counter == 0 {
-                    effects.append(&mut Battlefield::faint(pokemon, Cause::MoveSideEffect(Move::PerishSong)));
+                    effects.append(&mut Battlefield::faint(&pokemon, Cause::MoveSideEffect(Move::PerishSong)));
                     continue;
                 }
             }
@@ -386,7 +384,7 @@ impl Battlefield {
                                 let damage = pkmn.borrow().hp.value / 16;
                                 let (start_hp, end_hp) = pkmn.borrow_mut().subtract_hp(damage);
                                 effects.push(ActionSideEffects::BasicDamage {
-                                    damaged: pkmn.id,
+                                    damaged: pkmn.slot_id,
                                     start_hp,
                                     end_hp,
                                     cause: Cause::PokemonFieldState(FieldCause::Weather(Weather::Hail))
@@ -414,7 +412,7 @@ impl Battlefield {
                                 let damage = pkmn.borrow().hp.value / 16;
                                 let (start_hp, end_hp) = pkmn.borrow_mut().subtract_hp(damage);
                                 effects.push(ActionSideEffects::BasicDamage {
-                                    damaged: pkmn.id,
+                                    damaged: pkmn.slot_id,
                                     start_hp,
                                     end_hp,
                                     cause: Cause::PokemonFieldState(FieldCause::Weather(Weather::Sandstorm))
@@ -431,17 +429,17 @@ impl Battlefield {
     /// Internal method to perform an attack
     fn _do_attack(&self, attacker_id: SlotId, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
-        let attacker = &self[attacker_id.side][attacker_id.individual];
+        let attacker = self.get_active_pokemon_by_active_id(attacker_id);
 
         // Check for reasons this Pokemon can't perform this move
         //region start-of-turn checks
-        if turn::do_disable_check(attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
-        if turn::do_freeze_check(attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
-        if turn::do_sleep_check(attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
-        if turn::do_paralysis_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
-        if turn::do_infatuation_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
-        if turn::do_flinch_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
-        if turn::do_confusion_check(attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
+        if turn::do_disable_check(&attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        if turn::do_freeze_check(&attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        if turn::do_sleep_check(&attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        if turn::do_paralysis_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        if turn::do_infatuation_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        if turn::do_flinch_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        if turn::do_confusion_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
 
         //endregion
 
@@ -456,7 +454,7 @@ impl Battlefield {
                 (attack, SelectedTarget::Implied)
             } else {
                 effects.push(ActionSideEffects::Failed(Cause::Natural));
-                return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
+                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
             }
         } else if attack == Move::SleepTalk {
             let candidates = attacker.get_effective_known_moves()
@@ -466,7 +464,7 @@ impl Battlefield {
                 .collect::<Vec<Move>>();
             if candidates.is_empty() {
                 effects.push(ActionSideEffects::Failed(Cause::Natural));
-                return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
+                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
             } else {
                 let selected = if candidates.len() == 1 {
                     candidates.get(0).unwrap()
@@ -483,37 +481,37 @@ impl Battlefield {
         let move_data = attack.data();
 
         // 0. Test if the attacker can use the move
-        match accuracy::cannot_use_attack(attacker, attack) {
+        match accuracy::cannot_use_attack(&attacker, attack) {
             Ok(b) => {
-                if !b { effects.push(ActionSideEffects::Failed(Cause::Natural)); return self.run_on_attack_interrupt_hooks(attacker, attack, effects); }
+                if !b { effects.push(ActionSideEffects::Failed(Cause::Natural)); return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
             }
             Err(effect) => {
-                effects.push(effect); return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
+                effects.push(effect); return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
             }
         }
 
         // 1. Get the target(s)
-        let targets = self.get_targets(attacker.id, attack, defender);
+        let targets = self.get_targets(attacker.slot_id, attack, defender);
         if targets.is_empty() {
             effects.push(ActionSideEffects::NoTarget);
-            return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
+            return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
         }
 
         for t in targets.iter() {
-            t.data.borrow_mut().targeted_by(attacker, attack);
+            t.data.borrow_mut().targeted_by(&attacker, attack);
         }
 
         // 2. For each target, determine if the move hits
         //region Accuracy Check
         let mut targets_hit = Vec::new();
         for defender in targets {
-            let hit = accuracy::do_accuracy_check(&self, attacker, attack, defender);
+            let hit = accuracy::do_accuracy_check(&self, &attacker, attack, &defender);
             match hit {
                 Ok(b) => {
                     if b {
                         targets_hit.push(defender);
                     } else {
-                        effects.push(ActionSideEffects::Missed(defender.id, Cause::Natural));
+                        effects.push(ActionSideEffects::Missed(defender.slot_id, Cause::Natural));
                     }
                 }
                 Err(a) => {
@@ -523,11 +521,11 @@ impl Battlefield {
         }
 
         if targets_hit.is_empty() {
-            return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
+            return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
         }
         //endregion
 
-        effects.append(&mut self._do_damage_and_effects(attacker, targets_hit, attack, move_data));
+        effects.append(&mut self._do_damage_and_effects(&attacker, &targets_hit, attack, move_data));
 
         if effects.is_empty() {
             effects.push(ActionSideEffects::NothingHappened)
@@ -545,7 +543,7 @@ impl Battlefield {
         effects
     }
 
-    pub(crate) fn _do_damage_and_effects(&self, attacker: &Slot, targets_hit: Vec<&Slot>, attack: Move, move_data: &MoveData) -> Vec<ActionSideEffects> {
+    pub(crate) fn _do_damage_and_effects(&self, attacker: &Slot, targets_hit: &Vec<Slot>, attack: Move, move_data: &MoveData) -> Vec<ActionSideEffects> {
         let is_multi_target = targets_hit.len() > 1;
         let mut effects = Vec::new();
 
@@ -576,8 +574,7 @@ impl Battlefield {
                         damaged.push(defender);
                     }
                 } else {
-                    let attacker = &self[attacker.id.side][attacker.id.individual];
-                    let mut individual_effects = self.do_damage(attacker, attack, defender, is_multi_target);
+                    let mut individual_effects = self.do_damage(attacker, attack, &defender, is_multi_target);
 
                     let hit_substitute = individual_effects.iter().any(|e| e.hit_substitute());
                     let defender_fainted = defender.borrow().is_fainted();
@@ -642,7 +639,7 @@ impl Battlefield {
                     targets_for_secondary_damage.iter()
                         .filter(|_| self.activates_secondary_effect(attacker, *probability))
                         .flat_map(|defender| {
-                            if self.get_side(&defender.id).borrow().safeguard > 0 {
+                            if self.get_side_by_party_id(defender.party_id).borrow().safeguard > 0 {
                                 vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Safeguard))]
                             } else {
                                 inflict_non_volatile_status(defender, *ailment)
@@ -662,7 +659,7 @@ impl Battlefield {
                     targets_for_secondary_damage.iter()
                         .filter(|_| self.activates_secondary_effect(attacker, *probability))
                         .flat_map(|defender| {
-                            if self.get_side(&defender.id).borrow().safeguard > 0 {
+                            if self.get_side_by_party_id(defender.party_id).borrow().safeguard > 0 {
                                 vec![ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Safeguard))]
                             } else {
                                 inflict_confusion(attacker)
@@ -673,19 +670,19 @@ impl Battlefield {
                 Effect::Infatuate(probability) =>
                     self.do_probable_effect_on_all_targets(attacker, &targets_for_secondary_damage, *probability, inflict_infatuation),
                 Effect::ForceSwitch(StatChangeTarget::User) => {
-                    vec![ActionSideEffects::ForcePokemonSwap { must_leave: attacker.id }]
+                    vec![ActionSideEffects::ForcePokemonSwap { must_leave: attacker.id() }]
                 },
                 Effect::ForceSwitch(StatChangeTarget::Target) => {
                     targets_for_secondary_damage.iter()
                         .map(|defender| {
                             if defender.is_behind_substitute() {
-                                ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(defender.id, PokemonState::Substituted))
+                                ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(defender.slot_id, PokemonState::Substituted))
                             } else if defender.get_effective_ability() == Ability::SuctionCups {
-                                ActionSideEffects::NoEffectSecondary(Cause::Ability(defender.id, Ability::SuctionCups))
+                                ActionSideEffects::NoEffectSecondary(Cause::Ability(defender.id(), Ability::SuctionCups))
                             } else if defender.data.borrow().rooted {
-                                ActionSideEffects::NoEffectSecondary(Cause::Move(defender.id, Move::Ingrain))
+                                ActionSideEffects::NoEffectSecondary(Cause::Move(defender.id(), Move::Ingrain))
                             } else {
-                                ActionSideEffects::ForcePokemonSwap { must_leave: defender.id }
+                                ActionSideEffects::ForcePokemonSwap { must_leave: defender.id() }
                             }
                         })
                         .collect()
@@ -708,8 +705,8 @@ impl Battlefield {
                             };
                             data.bound = Some((turns_bound, has_binding_band));
                             ActionSideEffects::Bound {
-                                binder: attacker.id,
-                                bound: defender.id,
+                                binder: attacker.slot_id,
+                                bound: defender.slot_id,
                                 turns: turns_bound,
                                 attack
                             }
@@ -732,17 +729,17 @@ impl Battlefield {
                                 None => ActionSideEffects::Failed(Cause::Natural),
                                 Some(m) => {
                                     data.disabled.push((m, DISABLE_TURN_COUNT));
-                                    ActionSideEffects::Disabled(defender.id, m)
+                                    ActionSideEffects::Disabled(defender.slot_id, m)
                                 }
                             }
                         })
                         .collect()
                 },
                 Effect::Mist => {
-                    let mut side = self.get_side(&attacker.id).borrow_mut();
+                    let mut side = self.get_side_by_party_id(attacker.party_id).borrow_mut();
                     if side.mist == 0 {
                         side.mist = MIST_TURN_COUNT;
-                        vec![ActionSideEffects::MistStart(attacker.id.side)]
+                        vec![ActionSideEffects::MistStart(self.get_side_id_by_party_id(attacker.party_id))]
                     } else {
                         vec![]
                     }
@@ -767,10 +764,10 @@ impl Battlefield {
                 Effect::Rage => {
                     let mut data = attacker.data.borrow_mut();
                     if data.enraged {
-                        vec![ActionSideEffects::RageContinue(attacker.id)]
+                        vec![ActionSideEffects::RageContinue(attacker.slot_id)]
                     } else {
                         data.enraged = true;
-                        vec![ActionSideEffects::RageStart(attacker.id)]
+                        vec![ActionSideEffects::RageStart(attacker.slot_id)]
                     }
                 },
                 Effect::Mimic => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_mimic_effect),
@@ -829,20 +826,20 @@ impl Battlefield {
                     Vec::new()
                 },
                 Effect::Screen(screen) => {
-                    let mut side = self.get_side(&attacker.id).borrow_mut();
+                    let mut side = self.get_side_by_party_id(attacker.party_id).borrow_mut();
                     let turn_count = if attacker.borrow().is_holding(Item::LightClay) {
                         SCREEN_TURN_COUNT_LIGHT_CLAY
                     } else {
                         SCREEN_TURN_COUNT
                     };
 
-                    do_screen_effect(&mut side, screen, turn_count)
+                    do_screen_effect(self.get_side_id_by_party_id(attacker.party_id), &mut side, screen, turn_count)
                 },
                 Effect::StatReset => do_stat_reset_effect(&targets_for_secondary_damage),
                 Effect::Bide => {
                     let mut data = attacker.data.borrow_mut();
                     data.forced_action = Some(ForcedAction::Bide(0, BIDE_TURN_COUNT));
-                    vec![ActionSideEffects::BideStart(attacker.id)]
+                    vec![ActionSideEffects::BideStart(attacker.slot_id)]
                 },
                 Effect::Transform => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_transform_effect),
                 Effect::Rest => do_rest_effect(attacker),
@@ -873,13 +870,13 @@ impl Battlefield {
                 Effect::EntryHazard(eh) => {
                     match targets_for_secondary_damage.last() {
                         None => vec![ActionSideEffects::NoTarget],
-                        Some(t) => do_hazard_effect(self.get_side(&t.id), eh)
+                        Some(t) => do_hazard_effect(self.get_side_id_by_party_id(t.party_id), self.get_side_by_party_id(t.party_id), eh)
                     }
                 }
                 Effect::Foresight => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_foresight_effect),
                 Effect::DestinyBond => {
                     attacker.data.borrow_mut().destiny_bond = true;
-                    vec![ActionSideEffects::DestinyBond(attacker.id)]
+                    vec![ActionSideEffects::DestinyBond(attacker.slot_id)]
                 },
                 Effect::PerishSong => {
                     let affected_count = targets_for_secondary_damage.iter()
@@ -892,11 +889,11 @@ impl Battlefield {
                         vec![ActionSideEffects::StartPerishSong]
                     }
                 }
-                Effect::Safeguard => do_safeguard_effect(self.get_side(&attacker.id)),
+                Effect::Safeguard => do_safeguard_effect(self.get_side_id_by_party_id(attacker.party_id),self.get_side_by_party_id(attacker.party_id)),
                 Effect::PainSplit => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_pain_split_effect),
                 Effect::BatonPass => do_baton_pass_effect(attacker),
                 Effect::Encore => do_effect_on_last_target(attacker, &targets_for_secondary_damage, do_encore_effect),
-                Effect::ClearHazards => clear_hazards(attacker, self.get_side(&attacker.id))
+                Effect::ClearHazards => clear_hazards(attacker, self.get_side_by_party_id(attacker.party_id))
             };
             effects.append(&mut secondary_effects);
         }
@@ -926,7 +923,7 @@ impl Battlefield {
     {
         targets.iter()
             .filter(|_| self.activates_secondary_effect(attacker, probability))
-            .flat_map(|target| effect(attacker, *target))
+            .flat_map(|target| effect(attacker, target))
             .collect()
     }
 }
@@ -936,7 +933,7 @@ fn do_effect_on_all_targets<F>(attacker: &Slot, to_effect: &Vec<&Slot>, effect: 
 where F: Fn(&Slot, &Slot) -> Vec<ActionSideEffects>
 {
     to_effect.iter()
-        .flat_map(|pkmn| effect(attacker, *pkmn))
+        .flat_map(|pkmn| effect(attacker, pkmn))
         .collect()
 }
 
@@ -947,7 +944,7 @@ fn do_effect_on_last_target<F>(attacker: &Slot, to_effect: &Vec<&Slot>, effect: 
     where F: Fn(&Slot, &Slot) -> Vec<ActionSideEffects>
 {
     match to_effect.last() {
-        Some(t) => effect(attacker, *t),
+        Some(t) => effect(attacker, t),
         None => vec![ActionSideEffects::NoTarget]
     }
 }
@@ -959,7 +956,7 @@ fn do_optional_effect_on_last_target<F>(attacker: &Slot, to_effect: &Vec<&Slot>,
     where F: Fn(&Slot, &Slot) -> Vec<ActionSideEffects>
 {
     match to_effect.last() {
-        Some(t) => effect(attacker, *t),
+        Some(t) => effect(attacker, t),
         None => vec![]
     }
 }
@@ -968,7 +965,7 @@ fn do_optional_effect_on_last_target<F>(attacker: &Slot, to_effect: &Vec<&Slot>,
 /// Note that this doesn't make the target flinch *yet*. The target won't flinch until it is their turn.
 fn do_flinch_effect(_attacker: &Slot, defender: &Slot) -> Vec<ActionSideEffects> {
     defender.data.borrow_mut().flinch = true;
-    vec![ActionSideEffects::WillFlinch(defender.id)]
+    vec![ActionSideEffects::WillFlinch(defender.slot_id)]
 }
 
 /// Heal a percentage of the attacker's max HP
@@ -980,7 +977,7 @@ fn do_heal_effect(attacker: &Slot, percentage: (u8, u8)) -> Vec<ActionSideEffect
     pkmn.current_hp = end_hp;
 
     vec![ActionSideEffects::Healed {
-        healed: attacker.id,
+        healed: attacker.slot_id,
         start_hp,
         end_hp,
         cause: Cause::Natural
@@ -991,10 +988,10 @@ fn do_heal_effect(attacker: &Slot, percentage: (u8, u8)) -> Vec<ActionSideEffect
 fn do_leech_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     let mut data = target.data.borrow_mut();
     let effect = if data.seeded.is_none() {
-        data.seeded = Some(attacker.id);
+        data.seeded = Some(attacker.slot_id);
         ActionSideEffects::SeedStart {
-            from: target.id,
-            to: attacker.id
+            from: target.slot_id,
+            to: attacker.slot_id
         }
     } else {
         ActionSideEffects::Failed(Cause::Natural)
@@ -1011,7 +1008,7 @@ fn do_mimic_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
         Some(m) => {
             if m.can_be_mimicked() && !attacker.borrow().knows_move(m) {
                 attacker.replace_mimic_with(m);
-                ActionSideEffects::Mimicked(attacker.id, m)
+                ActionSideEffects::Mimicked(attacker.slot_id, m)
             } else {
                 ActionSideEffects::Failed(Cause::Natural)
             }
@@ -1021,14 +1018,14 @@ fn do_mimic_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
 }
 
 /// Set up screen (Light Screen or Reflect) for some number of turns
-fn do_screen_effect(side: &mut RefMut<FieldSide>, screen: &ScreenType, turns: u8) -> Vec<ActionSideEffects> {
+fn do_screen_effect(id: BattleSideId, side: &mut RefMut<FieldSide>, screen: &ScreenType, turns: u8) -> Vec<ActionSideEffects> {
     let effect = match screen {
         ScreenType::LightScreen => {
             if side.light_screen > 0 {
                 ActionSideEffects::NoEffectSecondary(Cause::Natural)
             } else {
                 side.light_screen = turns;
-                ActionSideEffects::ScreenStart(side.id, ScreenType::LightScreen)
+                ActionSideEffects::ScreenStart(id, ScreenType::LightScreen)
             }
         }
         ScreenType::Reflect => {
@@ -1036,7 +1033,7 @@ fn do_screen_effect(side: &mut RefMut<FieldSide>, screen: &ScreenType, turns: u8
                 ActionSideEffects::NoEffectSecondary(Cause::Natural)
             } else {
                 side.reflect = turns;
-                ActionSideEffects::ScreenStart(side.id, ScreenType::Reflect)
+                ActionSideEffects::ScreenStart(id, ScreenType::Reflect)
             }
         }
     };
@@ -1056,7 +1053,7 @@ fn do_stat_reset_effect(targets: &Vec<&Slot>) -> Vec<ActionSideEffects> {
         data.accuracy_stage = 0;
         data.evasion_stage = 0;
         data.crit_stage = 0;
-        effects.push(ActionSideEffects::StatsReset(pkmn.id));
+        effects.push(ActionSideEffects::StatsReset(pkmn.slot_id));
     }
     effects
 }
@@ -1074,8 +1071,8 @@ fn do_rest_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
         pkmn.status.burn = false;
         pkmn.status.paralysis = false;
         pkmn.heal();
-        vec![ActionSideEffects::Sleep(attacker.id), ActionSideEffects::Healed {
-            healed: attacker.id,
+        vec![ActionSideEffects::Sleep(attacker.slot_id), ActionSideEffects::Healed {
+            healed: attacker.slot_id,
             start_hp,
             end_hp: pkmn.current_hp,
             cause: Cause::Natural
@@ -1092,7 +1089,7 @@ fn do_conversion_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     };
     let new_type = slot.attack.data()._type;
     attacker.data.borrow_mut().temp_type = Some(PokemonType::Single(new_type));
-    vec![ActionSideEffects::ChangeType(attacker.id, new_type)]
+    vec![ActionSideEffects::ChangeType(attacker.slot_id, new_type)]
 }
 
 /// Pick a random type that is immune or not very effective to the target's last used move.
@@ -1116,7 +1113,7 @@ fn do_conversion_2_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
             candidates.get(idx).unwrap()
         };
         data.temp_type = Some(PokemonType::Single(*new_type));
-        vec![ActionSideEffects::ChangeType(attacker.id, *new_type)]
+        vec![ActionSideEffects::ChangeType(attacker.slot_id, *new_type)]
     } else {
         vec![ActionSideEffects::Failed(Cause::Natural)]
     }
@@ -1141,17 +1138,17 @@ fn do_substitute_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     let mut pkmn = attacker.borrow_mut();
     let substitute_hp = pkmn.hp.value / 4;
     if pkmn.current_hp <= substitute_hp {
-        vec![ActionSideEffects::Failed(Cause::PokemonBattleState(attacker.id, PokemonState::TooWeak))]
+        vec![ActionSideEffects::Failed(Cause::PokemonBattleState(attacker.slot_id, PokemonState::TooWeak))]
     } else {
         let (start_hp, end_hp) = pkmn.subtract_hp(substitute_hp);
         let mut data = attacker.data.borrow_mut();
         data.substituted = substitute_hp + 1;
         vec![ActionSideEffects::BasicDamage {
-            damaged: attacker.id,
+            damaged: attacker.slot_id,
             start_hp,
             end_hp,
-            cause: Cause::PokemonBattleState(attacker.id, PokemonState::Substituted)
-        }, ActionSideEffects::CreatedSubstitute(attacker.id)]
+            cause: Cause::PokemonBattleState(attacker.slot_id, PokemonState::Substituted)
+        }, ActionSideEffects::CreatedSubstitute(attacker.slot_id)]
     }
 }
 
@@ -1166,8 +1163,8 @@ fn do_sketch_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
             } else {
                 attacker.replace_sketch_with(m);
                 vec![ActionSideEffects::Sketched {
-                    user: attacker.id,
-                    target: target.id,
+                    user: attacker.slot_id,
+                    target: target.slot_id,
                     attack: m
                 }]
             }
@@ -1182,7 +1179,7 @@ fn do_transform_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects>
     let target = target.borrow();
     attacker.data.borrow_mut().transformed = Some(transform);
     vec![ActionSideEffects::Transform {
-        id: attacker.id,
+        id: attacker.slot_id,
         species: target.species,
         gender: target.gender,
         shiny: target.is_shiny()
@@ -1201,17 +1198,17 @@ fn do_steal_item_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
     let mut attacking_pkmn = attacker.borrow_mut();
     if attacking_pkmn.held_item.is_some() {
         // We can't steal when holding a held item, so we do nothing.
-        return vec![ActionSideEffects::Failed(Cause::PokemonBattleState(attacker.id, PokemonState::HoldingItem))];
+        return vec![ActionSideEffects::Failed(Cause::PokemonBattleState(attacker.slot_id, PokemonState::HoldingItem))];
     }
 
     if target.get_effective_ability() == Ability::StickyHold {
-        return vec![ActionSideEffects::Failed(Cause::Ability(attacker.id, Ability::StickyHold))];
+        return vec![ActionSideEffects::Failed(Cause::Ability(attacker.id(), Ability::StickyHold))];
     }
 
     let mut target_pkmn = target.borrow_mut();
     let can_steal = match &target_pkmn.held_item {
         None => {
-            return vec![ActionSideEffects::Failed(Cause::PokemonBattleState(target.id, PokemonState::NotHoldingItem))];
+            return vec![ActionSideEffects::Failed(Cause::PokemonBattleState(target.slot_id, PokemonState::NotHoldingItem))];
         },
         Some(i) if i.is_mail() => false,
         Some(Item::GriseousOrb) => {
@@ -1238,8 +1235,8 @@ fn do_steal_item_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
     if can_steal {
         attacking_pkmn.held_item = take(&mut target_pkmn.held_item);
         vec![ActionSideEffects::StoleItem {
-            from: target.id,
-            to: attacker.id,
+            from: target.slot_id,
+            to: attacker.slot_id,
             item: attacking_pkmn.held_item.as_ref().unwrap().clone()
         }]
     } else {
@@ -1250,13 +1247,13 @@ fn do_steal_item_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
 /// Prevent the Pokemon from leaving battle
 fn do_trap_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     target.data.borrow_mut().trapped = true;
-    vec![ActionSideEffects::TrappedStart(target.id)]
+    vec![ActionSideEffects::TrappedStart(target.slot_id)]
 }
 
 /// Attacks by the user to the target will not miss
 fn do_lock_on_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
-    attacker.data.borrow_mut().locked_on = Some((2, target.id));
-    vec![ActionSideEffects::LockedOn { user: attacker.id, target: target.id }]
+    attacker.data.borrow_mut().locked_on = Some((2, target.slot_id));
+    vec![ActionSideEffects::LockedOn { user: attacker.slot_id, target: target.slot_id }]
 }
 
 /// Gives this Pokemon a nightmare. Nightmare's effect done at end of turn
@@ -1264,7 +1261,7 @@ fn do_lock_on_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
 fn do_nightmare_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     if target.borrow().status.sleep > 0 {
         target.data.borrow_mut().nightmare = true;
-        vec![ActionSideEffects::Nightmare(target.id)]
+        vec![ActionSideEffects::Nightmare(target.slot_id)]
     } else {
         vec![ActionSideEffects::Failed(Cause::Natural)]
     }
@@ -1273,7 +1270,7 @@ fn do_nightmare_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
 /// Curse the target. Curse effect done at the end of turn
 fn do_ghost_curse_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     target.data.borrow_mut().cursed = true;
-    vec![ActionSideEffects::Curse(target.id)]
+    vec![ActionSideEffects::Curse(target.slot_id)]
 }
 
 /// Reduces the PP of the target's last used move by 4.
@@ -1288,7 +1285,7 @@ fn do_spite_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
             } else {
                 let pp_end = pp_start.saturating_sub(SPITE_PP_COUNT);
                 slot.pp = pp_end;
-                vec![ActionSideEffects::LostPP(target.id, slot.attack, pp_start, pp_end)]
+                vec![ActionSideEffects::LostPP(target.slot_id, slot.attack, pp_start, pp_end)]
             }
         } else {
             vec![ActionSideEffects::Failed(Cause::Natural)]
@@ -1302,7 +1299,7 @@ fn do_spite_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
 fn do_protect_effect(attacker: &Slot, attack: Move) -> Vec<ActionSideEffects> {
     let mut data = attacker.data.borrow_mut();
     data.protected = Some(attack);
-    vec![ActionSideEffects::StartProtection(attacker.id, attack)]
+    vec![ActionSideEffects::StartProtection(attacker.slot_id, attack)]
 }
 
 /// Reduce HP by 50%, and maxes Pokemon's Attack to +6.
@@ -1324,23 +1321,23 @@ fn do_belly_drum_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
             data.attack_stage = MAX_STAGE;
         }
         vec![ActionSideEffects::BasicDamage {
-            damaged: attacker.id,
+            damaged: attacker.slot_id,
             start_hp,
             end_hp,
             cause: Cause::MoveSideEffect(Move::BellyDrum)
-        }, ActionSideEffects::StatMaxed(attacker.id, BattleStat::Attack)]
+        }, ActionSideEffects::StatMaxed(attacker.slot_id, BattleStat::Attack)]
     }
 }
 
 /// Sets up an Entry Hazard.
 /// Fails if attempting to use Spikes for a fourth time, Toxic Spikes for a third time, and Stealth Rock for a second time.
-fn do_hazard_effect(side: &RefCell<FieldSide>, hazard: &EntryHazardType) -> Vec<ActionSideEffects> {
+fn do_hazard_effect(id: BattleSideId, side: &RefCell<FieldSide>, hazard: &EntryHazardType) -> Vec<ActionSideEffects> {
     let mut side = side.borrow_mut();
     match hazard {
         EntryHazardType::Spikes => {
             if side.spikes < MAX_SPIKES {
                 side.spikes = side.spikes + 1;
-                vec![ActionSideEffects::EntryHazard(side.id, Move::Spikes, side.spikes)]
+                vec![ActionSideEffects::EntryHazard(id, Move::Spikes, side.spikes)]
             } else {
                 vec![ActionSideEffects::Failed(Cause::Natural)]
             }
@@ -1348,7 +1345,7 @@ fn do_hazard_effect(side: &RefCell<FieldSide>, hazard: &EntryHazardType) -> Vec<
         EntryHazardType::ToxicSpikes => {
             if side.toxic_spikes < MAX_TOXIC_SPIKES {
                 side.toxic_spikes = side.toxic_spikes + 1;
-                vec![ActionSideEffects::EntryHazard(side.id, Move::ToxicSpikes, side.toxic_spikes)]
+                vec![ActionSideEffects::EntryHazard(id, Move::ToxicSpikes, side.toxic_spikes)]
             } else {
                 vec![ActionSideEffects::Failed(Cause::Natural)]
             }
@@ -1358,7 +1355,7 @@ fn do_hazard_effect(side: &RefCell<FieldSide>, hazard: &EntryHazardType) -> Vec<
                 vec![ActionSideEffects::Failed(Cause::Natural)]
             } else {
                 side.pointed_stones = true;
-                vec![ActionSideEffects::EntryHazard(side.id, Move::StealthRock, 1)]
+                vec![ActionSideEffects::EntryHazard(id, Move::StealthRock, 1)]
             }
         }
     }
@@ -1370,19 +1367,19 @@ fn do_foresight_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects>
     match target_data.foresight_by {
         Some(_) => vec![ActionSideEffects::Failed(Cause::Natural)],
         None => {
-            target_data.foresight_by = Some(attacker.id);
-            vec![ActionSideEffects::Foresighted { user: attacker.id, target: target.id }]
+            target_data.foresight_by = Some(attacker.slot_id);
+            vec![ActionSideEffects::Foresighted { user: attacker.slot_id, target: target.slot_id }]
         }
     }
 }
 
-fn do_safeguard_effect(side: &RefCell<FieldSide>) -> Vec<ActionSideEffects> {
+fn do_safeguard_effect(id: BattleSideId, side: &RefCell<FieldSide>) -> Vec<ActionSideEffects> {
     let mut side = side.borrow_mut();
     if side.safeguard > 0 {
         vec![ActionSideEffects::Failed(Cause::PokemonFieldState(FieldCause::Safeguard))]
     } else {
         side.safeguard = SAFEGUARD_TURN_COUNT;
-        vec![ActionSideEffects::Safeguard(side.id)]
+        vec![ActionSideEffects::Safeguard(id)]
     }
 }
 
@@ -1398,14 +1395,14 @@ fn do_pain_split_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
 
     let attack_fx = if end_hp < attacker_start_hp {
         ActionSideEffects::BasicDamage {
-            damaged: attacker.id,
+            damaged: attacker.slot_id,
             start_hp: attacker_start_hp,
             end_hp: attacker_pkmn.current_hp,
             cause: Cause::Natural
         }
     } else {
         ActionSideEffects::Healed {
-            healed: attacker.id,
+            healed: attacker.slot_id,
             start_hp: attacker_start_hp,
             end_hp: attacker_pkmn.current_hp,
             cause: Cause::Natural
@@ -1414,14 +1411,14 @@ fn do_pain_split_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
 
     let defender_fx = if end_hp < defender_start_hp {
         ActionSideEffects::BasicDamage {
-            damaged: target.id,
+            damaged: target.slot_id,
             start_hp: defender_start_hp,
             end_hp: defender_pkmn.current_hp,
             cause: Cause::Natural
         }
     } else {
         ActionSideEffects::Healed {
-            healed: target.id,
+            healed: target.slot_id,
             start_hp: defender_start_hp,
             end_hp: defender_pkmn.current_hp,
             cause: Cause::Natural
@@ -1433,7 +1430,7 @@ fn do_pain_split_effect(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects
 
 fn do_baton_pass_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     if attacker.has_anyone_to_swap_to() {
-        vec![ActionSideEffects::PokemonLeftBatonPass(attacker.id, attacker.pokemon)]
+        vec![ActionSideEffects::PokemonLeftBatonPass(attacker.slot_id, attacker.id())]
     } else {
         vec![ActionSideEffects::Failed(Cause::Natural)]
     }
@@ -1454,7 +1451,7 @@ fn do_encore_effect(_attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
                     vec![ActionSideEffects::Failed(Cause::Natural)]
                 } else {
                     target_data.forced_action = Some(ForcedAction::AttackWithCounter(m, ENCORE_TURN_COUNT));
-                    vec![ActionSideEffects::Encore(target.id, m)]
+                    vec![ActionSideEffects::Encore(target.slot_id, m)]
                 }
             },
             _ => vec![ActionSideEffects::Failed(Cause::Natural)]

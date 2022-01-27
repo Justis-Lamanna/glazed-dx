@@ -1,6 +1,6 @@
-use std::cell::{RefCell};
+use std::cell::{Ref, RefCell};
 use std::convert::TryFrom;
-use std::ops::{Deref, Index, IndexMut};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::option::Option::Some;
 use std::rc::Rc;
 
@@ -24,13 +24,19 @@ mod accuracy;
 mod constants;
 mod hooks;
 
+/// The target selected in a multi-battle
+/// All targets for a move are well-defined, except in the case of moves that target one opponent
+/// in a double-battle.
+/// Implied should *always* provide at least one target, to the best of its ability.
 #[derive(Debug, Copy, Clone)]
 pub enum SelectedTarget {
+    /// The engine will do its best to determine a valid target.
     Implied,
-    One(SlotId)
+    /// One specific Pokemon is the target.
+    One(usize)
 }
 
-/// Represents the entire battlefield
+/// Represents the effects of the entire battlefield
 #[derive(Default, Debug)]
 pub struct Field {
     weather: Option<WeatherCounter>,
@@ -71,6 +77,7 @@ impl Field {
         }
     }
 
+    /// Returns if there is fog on the field
     pub fn is_foggy(&self) -> bool {
         match self.weather {
             Some(WeatherCounter::Fog) => true,
@@ -78,6 +85,7 @@ impl Field {
         }
     }
 
+    /// Returns if no weather is present
     pub fn is_clear(&self) -> bool {
         match self.weather {
             None => true,
@@ -85,15 +93,15 @@ impl Field {
         }
     }
 
+    /// Scatter coins on the field.
     pub fn drop_coins(&mut self, coins: u16) {
         self.coins_on_ground = self.coins_on_ground.saturating_add(coins);
     }
 }
 
 /// Represents one side of a battlefield
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct FieldSide {
-    id: BattleSideId,
     spikes: u8,
     toxic_spikes: u8,
     pointed_stones: bool,
@@ -103,22 +111,6 @@ pub struct FieldSide {
     reflect: u8,
     mist: u8,
     safeguard: u8
-}
-impl FieldSide {
-    pub fn new(side: BattleSideId) -> FieldSide {
-        FieldSide {
-            id: side,
-            spikes: 0,
-            toxic_spikes: 0,
-            pointed_stones: false,
-            tailwind: 0,
-            aurora_veil: 0,
-            light_screen: 0,
-            reflect: 0,
-            mist: 0,
-            safeguard: 0
-        }
-    }
 }
 
 /// A group of between 1 and 6 Pokemon, which a trainer owns
@@ -138,6 +130,7 @@ impl Party {
     {
         let mut party = party.into_iter()
             .map(|f| f.into())
+            .take(6)
             .collect::<Vec<Pokemon>>();
         let size = party.len();
         let mut party = party.drain(..);
@@ -184,80 +177,60 @@ impl Index<usize> for Party {
         }
     }
 }
-
-#[derive(Debug)]
-pub enum Side {
-    Single (Slot),
-    Double (Slot, Slot),
-    Tag (Slot, Slot)
-}
-impl Side {
-    pub fn left(&self) -> &Slot {
-        match self {
-            Side::Single(p) | Side::Double(p, _) | Side::Tag(p, _) => p
-        }
-    }
-    pub fn right(&self) -> &Slot {
-        match self {
-            Side::Single(p) | Side::Double(_, p) | Side::Tag(_, p) => p
-        }
-    }
-    pub fn both(&self) -> Vec<&Slot> {
-        match self {
-            Side::Single(p) => vec![p],
-            Side::Double(a, b) | Side::Tag(a, b) => vec![a, b]
-        }
-    }
-    pub fn ally_of(&self, me: &DoubleBattleSideId) -> &Slot {
-        match me {
-            DoubleBattleSideId::Left => self.right(),
-            DoubleBattleSideId::Right => self.left()
-        }
-    }
-
-    pub fn left_mut(&mut self) -> &mut Slot {
-        match self {
-            Side::Single(p) | Side::Double(p, _) | Side::Tag(p, _) => p
-        }
-    }
-    pub fn right_mut(&mut self) -> &mut Slot {
-        match self {
-            Side::Single(p) | Side::Double(_, p) | Side::Tag(_, p) => p
-        }
-    }
-}
-impl Index<DoubleBattleSideId> for Side {
-    type Output = Slot;
-
-    fn index(&self, index: DoubleBattleSideId) -> &Self::Output {
+impl IndexMut<usize> for Party {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match index {
-            DoubleBattleSideId::Left => self.left(),
-            DoubleBattleSideId::Right => self.right()
-        }
-    }
-}
-impl IndexMut<DoubleBattleSideId> for Side {
-    fn index_mut(&mut self, index: DoubleBattleSideId) -> &mut Self::Output {
-        match index {
-            DoubleBattleSideId::Left => self.left_mut(),
-            DoubleBattleSideId::Right => self.right_mut()
+            0 => &mut self.one,
+            1 => &mut self.two,
+            2 => &mut self.three,
+            3 => &mut self.four,
+            4 => &mut self.five,
+            5 => &mut self.six,
+            _ => panic!("Unknown pokemon index")
         }
     }
 }
 
-/// Smart pointer that points to the current active Pokemon
-#[derive(Debug)]
-pub struct Slot {
-    pub id: SlotId,
-    party: Rc<Party>,
-    pokemon: usize,
-    pub data: RefCell<BattleData>,
+/// Represents an individual Pokemon somewhere in the battle.
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct PokemonId {
+    pub party_id: PartyId,
+    pub party_slot_id: PartyMemberId
 }
-impl Slot {
+
+/// Represents one of the parties in battle
+/// (In most battles, Player is 0, Opponent is 1)
+/// There may be more parties if the opponent is in a tag battle, a 1v2 battle, or a free-for-all.
+type PartyId = usize;
+/// Represents a Pokemon's ID within a party
+/// 0 to 5
+type PartyMemberId = usize;
+/// A specific, targettable place in battle
+/// (In a single battle, Player is 0, Opponent is 1.
+/// In a double battle, Player is 0 and 1, Opponents are 2 and 3)
+type SlotId = usize;
+/// A specific side of the battle (Player is 0, Opponent is 1)
+type BattleSideId = usize;
+
+trait BaseSlot {
+    fn id(&self) -> PokemonId {
+        PokemonId {
+            party_id: self.party_id(),
+            party_slot_id: self.party_slot_id()
+        }
+    }
+    fn party_id(&self) -> PartyId;
+    fn party_slot_id(&self) -> PartyMemberId;
+    fn pokemon(&self, idx: PartyMemberId) -> Option<&RefCell<Pokemon>>;
+    fn active_pokemon(&self) -> &RefCell<Pokemon> {
+        self.pokemon(self.party_slot_id()).unwrap()
+    }
+    fn data(&self) -> Ref<BattleData>;
+
     /// Return true if every member of the party has no HP
-    pub fn is_everyone_koed(&self) -> bool {
+    fn is_everyone_koed(&self) -> bool {
         for idx in 0..6 {
-            let pkmn = &self.party[idx];
+            let pkmn = self.pokemon(idx);
             match pkmn {
                 Some(p) if p.borrow().has_health() => {
                     return false;
@@ -269,10 +242,10 @@ impl Slot {
     }
 
     /// Return true if any member of the party, aside from the active Pokemon, has HP
-    pub fn has_anyone_to_swap_to(&self) -> bool {
+    fn has_anyone_to_swap_to(&self) -> bool {
         for idx in 0..6 {
-            if idx != self.pokemon {
-                let pkmn = &self.party[idx];
+            if idx != self.party_slot_id() {
+                let pkmn = &self.pokemon(idx);
                 match pkmn {
                     Some(p) if p.borrow().has_health() => {
                         return true;
@@ -285,46 +258,46 @@ impl Slot {
     }
 
     /// Get the effective species of this Pokemon. Takes Transform into effect
-    pub fn get_effective_species(&self) -> Species {
-        match &self.data.borrow().transformed {
-            None => self.borrow().species,
+    fn get_effective_species(&self) -> Species {
+        match &self.data().transformed {
+            None => self.active_pokemon().borrow().species,
             Some(t) => t.species
         }
     }
 
     /// Get the effective ability of this Pokemon. Takes Transform and temporary Ability changes into effect
-    pub fn get_effective_ability(&self) -> Ability {
-        self.data.borrow().temp_ability.unwrap_or_else(|| {
-            match &self.data.borrow().transformed {
-                None => self.borrow().get_ability(),
+    fn get_effective_ability(&self) -> Ability {
+        self.data().temp_ability.unwrap_or_else(|| {
+            match &self.data().transformed {
+                None => self.active_pokemon().borrow().get_ability(),
                 Some(t) => *t.get_ability()
             }
         })
     }
 
     /// Get the effective type(s) of this Pokemon. Takes Transform and temporary Type changes into effect
-    pub fn get_effective_type(&self) -> PokemonType {
-        self.data.borrow().temp_type.unwrap_or_else(|| {
-            match &self.data.borrow().transformed {
+    fn get_effective_type(&self) -> PokemonType {
+        self.data().temp_type.unwrap_or_else(|| {
+            match &self.data().transformed {
                 Some(t) => t.species.data()._type,
-                None => self.borrow().species.data()._type,
+                None => self.active_pokemon().borrow().species.data()._type,
             }
         })
     }
 
     /// Get the effective gender of this Pokemon. Takes Transform into effect
-    pub fn get_effective_gender(&self) -> Gender {
-        self.data.borrow().transformed
+    fn get_effective_gender(&self) -> Gender {
+        self.data().transformed
             .as_ref()
             .map(|t| t.gender)
-            .unwrap_or_else(|| self.borrow().gender)
+            .unwrap_or_else(|| self.active_pokemon().borrow().gender)
     }
 
     /// Get the effective known moves of this Pokemon, taking Temporary moves and Transform into effect
     /// Priority is to temp moves, then transform, then regular known moves
-    pub fn get_effective_known_moves(&self) -> Vec<Move> {
-        let pkmn = self.borrow();
-        let data = self.data.borrow();
+    fn get_effective_known_moves(&self) -> Vec<Move> {
+        let pkmn = self.active_pokemon().borrow();
+        let data = self.data();
         let mut moves = Vec::new();
         if let Some(m) = data.temp_move_1
             .or_else(|| data.transformed.as_ref().and_then(|s| s.move_1))
@@ -350,8 +323,8 @@ impl Slot {
         moves
     }
 
-    pub fn get_stat_stage(&self, stat: BattleStat) -> i8 {
-        let data = self.data.borrow();
+    fn get_stat_stage(&self, stat: BattleStat) -> i8 {
+        let data = self.data();
         match stat {
             BattleStat::Attack => data.attack_stage,
             BattleStat::Defense => data.defense_stage,
@@ -365,9 +338,9 @@ impl Slot {
     }
 
     /// Get the effective stat of this Pokemon. Takes Transform and stages into effect
-    pub fn get_effective_stat(&self, stat: BattleStat) -> u16 {
-        let pkmn = self.borrow();
-        let data = self.data.borrow();
+    fn get_effective_stat(&self, stat: BattleStat) -> u16 {
+        let pkmn = self.active_pokemon().borrow();
+        let data = self.data();
         let base = match stat {
             BattleStat::Attack => data.transformed.as_ref().map(|t| t.attack.value).or(data.temp_attack).unwrap_or(pkmn.attack.value),
             BattleStat::Defense => data.transformed.as_ref().map(|t| t.defense.value).or(data.temp_defense).unwrap_or(pkmn.defense.value),
@@ -399,9 +372,9 @@ impl Slot {
     }
 
     /// Get the raw critical hit stage of this Pokemon. Takes held item and ability into account
-    pub fn get_raw_critical_hit(&self) -> u8 {
-        let mut value = self.data.borrow().crit_stage;
-        value += match self.borrow().held_item {
+    fn get_raw_critical_hit(&self) -> u8 {
+        let mut value = self.data().crit_stage;
+        value += match self.active_pokemon().borrow().held_item {
             Some(Item::EvolutionHeldItem(EvolutionHeldItem::RazorClaw)) => 1,
             Some(Item::ScopeLens) => 1,
             Some(Item::Leek) if self.get_effective_species() == Species::Farfetchd => 2,
@@ -416,8 +389,8 @@ impl Slot {
     }
 
     /// Get the effective weight of this Pokemon. Takes Ability, held item, and Autotomize into account
-    pub fn get_effective_weight(&self) -> u16 {
-        let mut weight = self.data.borrow().temp_weight.unwrap_or_else(|| self.get_effective_species().data().weight);
+    fn get_effective_weight(&self) -> u16 {
+        let mut weight = self.data().temp_weight.unwrap_or_else(|| self.get_effective_species().data().weight);
         let ability = self.get_effective_ability();
 
         if ability == Ability::HeavyMetal {
@@ -426,16 +399,16 @@ impl Slot {
             weight = weight / 2;
         }
 
-        if let Some(Item::FloatStone) = self.borrow().held_item {
+        if let Some(Item::FloatStone) = self.active_pokemon().borrow().held_item {
             weight = weight/ 2;
         }
 
         if weight == 0 { 1 } else { weight }
     }
 
-    pub fn get_effective_move(&self, slot: usize) -> Option<MoveSlot> {
-        let pkmn = self.borrow();
-        let data = self.data.borrow();
+    fn get_effective_move(&self, slot: usize) -> Option<MoveSlot> {
+        let pkmn = self.active_pokemon().borrow();
+        let data = self.data();
         match slot {
             0 => data.temp_move_1.or(pkmn.move_1),
             1 => data.temp_move_2.or(pkmn.move_2),
@@ -444,23 +417,59 @@ impl Slot {
         }
     }
 
-    pub fn is_grounded(&self) -> (bool, Cause) {
-        if let Some(Item::IronBall) = self.borrow().held_item {
-            return (true, Cause::HeldItem(self.id, Item::IronBall))
+    fn is_grounded(&self) -> (bool, Cause) {
+        if let Some(Item::IronBall) = self.active_pokemon().borrow().held_item {
+            return (true, Cause::HeldItem(self.id(), Item::IronBall))
         }
         (false, Cause::Natural)
     }
 
-    pub fn is_behind_substitute(&self) -> bool {
-        self.data.borrow().substituted > 0
+    fn is_behind_substitute(&self) -> bool {
+        self.data().substituted > 0
+    }
+}
+
+/// Smart pointer that points to the current active Pokemon
+#[derive(Debug, Clone)]
+pub struct Slot {
+    pub slot_id: SlotId,
+    pub party_id: PartyId,
+    pub party_slot_id: PartyMemberId,
+    party: Rc<Party>,
+    pub data: Rc<RefCell<BattleData>>,
+}
+impl BaseSlot for Slot {
+    fn party_id(&self) -> PartyId {
+        self.party_id
     }
 
+    fn party_slot_id(&self) -> PartyMemberId {
+        self.party_slot_id
+    }
+
+    fn pokemon(&self, idx: PartyMemberId) -> Option<&RefCell<Pokemon>> {
+        self.party.index(idx).as_ref()
+    }
+
+    fn data(&self) -> Ref<BattleData> {
+        self.data.borrow()
+    }
+}
+impl Deref for Slot {
+    type Target = RefCell<Pokemon>;
+
+    fn deref(&self) -> &Self::Target {
+        self.party[self.party_slot_id].as_ref().unwrap()
+    }
+}
+
+impl Slot {
     pub fn lower_hp(&mut self, amount: u16) -> Vec<ActionSideEffects> {
         let start_hp = self.borrow().current_hp;
         let end_hp = start_hp.saturating_sub(amount);
         self.borrow_mut().current_hp = end_hp;
         vec![ActionSideEffects::BasicDamage {
-            damaged: self.id,
+            damaged: self.slot_id,
             start_hp,
             end_hp,
             cause: Cause::Natural
@@ -475,7 +484,7 @@ impl Slot {
         pkmn.current_hp = end_hp;
 
         ActionSideEffects::Crash {
-            damaged: self.id,
+            damaged: self.slot_id,
             start_hp,
             end_hp
         }
@@ -483,7 +492,7 @@ impl Slot {
 
     pub fn take_poison_damage(&self) -> ActionSideEffects {
         let mut pkmn = self.borrow_mut();
-        let data = self.data.borrow();
+        let data = self.data.borrow_mut();
         if data.poison_counter > 0 {
             let mut d = pkmn.hp.value / 16;
             d *= data.poison_counter as u16;
@@ -493,7 +502,7 @@ impl Slot {
             pkmn.current_hp = end_hp;
 
             ActionSideEffects::BasicDamage {
-                damaged: self.id,
+                damaged: self.slot_id,
                 start_hp,
                 end_hp,
                 cause: Cause::Ailment(NonVolatileBattleAilment::Poison(PoisonType::BadlyPoisoned))
@@ -506,7 +515,7 @@ impl Slot {
             pkmn.current_hp = end_hp;
 
             ActionSideEffects::BasicDamage {
-                damaged: self.id,
+                damaged: self.slot_id,
                 start_hp,
                 end_hp,
                 cause: Cause::Ailment(NonVolatileBattleAilment::Poison(PoisonType::Poison))
@@ -514,12 +523,12 @@ impl Slot {
         }
     }
 
-    pub fn consume_item(&self) -> Option<ActionSideEffects> {
+    pub fn consume_item(&mut self) -> Option<ActionSideEffects> {
         let mut pkmn = self.borrow_mut();
         if let Some(i) = &pkmn.held_item {
             let i = i.clone();
             pkmn.held_item = None;
-            Some(ActionSideEffects::ConsumedItem(self.id, i))
+            Some(ActionSideEffects::ConsumedItem(self.slot_id, i))
         } else {
             None
         }
@@ -566,25 +575,273 @@ impl Slot {
         }
     }
 }
-impl Deref for Slot {
-    type Target = RefCell<Pokemon>;
-
-    fn deref(&self) -> &Self::Target {
-        self.party[self.pokemon].as_ref().unwrap()
-    }
-}
 
 /// Represents the current battlefield
 #[derive(Debug)]
 pub struct Battlefield {
-    user: Side,
-    user_side: RefCell<FieldSide>,
-    opponent: Side,
-    opponent_side: RefCell<FieldSide>,
+    sides: Vec<RefCell<FieldSide>>,
+    parties: Vec<(BattleSideId, Rc<Party>)>, //(side_index, party)
+    active: Vec<(PartyId, PartyMemberId, Rc<RefCell<BattleData>>)>, //(party_index, active slot, data)
     field: RefCell<Field>,
     wild_battle: bool
 }
 impl Battlefield {
+    // Hierarchy:
+    // Each battle has X sides
+    // Each Side has Y Parties
+    // Each Party has Z Active Pokemon
+    // Typical Values:
+    // Single Battle:   X=2, Y=1, Z=1
+    // Double Battle:   X=2, Y=1, Z=2
+    // Triple Battle:   X=2, Y=1, Z=3
+    // Tag Battle:      X=2, Y=2, Z=1
+    // 1-on-2:          X=2, Y=1/2, Z=2/1
+    // Free For All:    X=4, Y=1, Z=1
+
+    // Side Lookups
+    /// Get all sides
+    pub fn get_sides(&self) -> &Vec<RefCell<FieldSide>> {
+        &self.sides
+    }
+
+    pub fn get_sides_with_id(&self) -> Vec<(BattleSideId, &RefCell<FieldSide>)> {
+        self.sides
+            .iter()
+            .enumerate()
+            .collect()
+    }
+
+    /// Given a Side ID, return the Side
+    pub fn get_side_by_side_id(&self, side: BattleSideId) -> &RefCell<FieldSide> { self.sides.get(side).unwrap() }
+
+    /// Given a Party ID, return the Side
+    pub fn get_side_by_party_id(&self, id: PartyId) -> &RefCell<FieldSide> {
+        let (side_id, _) = self.parties.get(id).unwrap();
+        self.get_side_by_side_id(*side_id)
+    }
+
+    /// Given a Party ID, return the Side
+    pub fn get_side_id_by_party_id(&self, id: PartyId) -> BattleSideId {
+        let (side_id, _) = self.parties.get(id).unwrap();
+        *side_id
+    }
+
+    /// Given an Active ID, return the Side
+    pub fn get_side_by_active_id(&self, id: SlotId) -> &RefCell<FieldSide> {
+        let (party_id, _, _) = self.active.get(id).unwrap();
+        self.get_side_by_party_id(*party_id)
+    }
+
+    // Party Lookups
+    /// Given a Side ID, return all Partys on that side
+    pub fn get_parties_by_side_id(&self, side: BattleSideId) -> Vec<Rc<Party>> {
+        self.parties.iter()
+            .filter_map(|(side_id, party)| {
+                if side == *side_id {
+                    Some(party.clone())
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Given a Party ID, return the Party
+    pub fn get_party_by_party_id(&self, party: PartyId) -> Rc<Party> {
+        let (_, p) = self.parties.get(party).unwrap();
+        p.clone()
+    }
+
+    /// Given an Active ID, return the Party
+    pub fn get_party_by_active_id(&self, id: SlotId) -> Rc<Party> {
+        let (party_id, _, _) = self.active.get(id).unwrap();
+        self.get_party_by_party_id(*party_id)
+    }
+
+    // Active Pokemon lookups
+    /// Given a Side ID, return all Active Pokemon on that side
+    pub fn get_active_pokemon_by_side_id(&self, id: BattleSideId) -> Vec<Slot> {
+        self.parties.iter()
+            .enumerate()
+            .filter_map(|(party_idx, (side_idx, party))| {
+                if *side_idx == id {
+                    Some(party_idx)
+                } else {
+                    None
+                }
+            })
+            .flat_map(|party_idx| {
+                self.get_active_pokemon_by_party_id(party_idx)
+            })
+            .collect()
+    }
+
+    /// Given a Party ID, return all Active Pokemon in the party
+    pub fn get_active_pokemon_by_party_id(&self, id: PartyId) -> Vec<Slot> {
+        let party = self.get_party_by_party_id(id);
+        self.active.iter()
+            .enumerate()
+            .filter_map(|(active_id, (party_id, slot_id, data))| {
+                if *party_id == id {
+                    Some(Slot {
+                        slot_id: active_id,
+                        party_id: *party_id,
+                        party_slot_id: *slot_id,
+                        party: party.clone(),
+                        data: data.clone()
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Given a Active ID, return the Active Pokemon on that side
+    pub fn get_active_pokemon_by_active_id(&self, id: SlotId) -> Slot {
+        let (party_id, party_slot_id, data) = self.active.get(id).unwrap();
+        let party = self.get_party_by_party_id(*party_id);
+        Slot {
+            slot_id: id,
+            party_id: *party_id,
+            party_slot_id: *party_slot_id,
+            party: party.clone(),
+            data: data.clone()
+        }
+    }
+
+    /// Given an Active Pokemon ID, return the Active Pokemon directly opposite
+    pub fn get_opposite_slots(&self, id: SlotId) -> Vec<SlotId> {
+        if self.active.len() == 2 {
+            match id {
+                0 => vec![1],
+                1 => vec![0],
+                _ => panic!("Unknown slot {:}", id)
+            }
+        } else {
+            match id {
+                0 => vec![2, 3],
+                1 => vec![3, 2],
+                2 => vec![0, 1],
+                3 => vec![1, 0],
+                _ => panic!("Unknown slot {:}", id)
+            }
+        }
+    }
+
+    /// Given an Active Pokemon ID, return the Active Pokemon on the opposite side, starting with first_choice
+    pub fn get_opposite_slots_starting_with(&self, id: SlotId, first_choice: SlotId) -> Vec<SlotId> {
+        if self.active.len() == 2 {
+            match id {
+                0 => vec![1],
+                1 => vec![0],
+                _ => panic!("Unknown slot {:}", id)
+            }
+        } else {
+            match id {
+                0 | 1 => if first_choice == 2 { vec![2, 3] } else { vec![3, 2] },
+                2 | 3 => if first_choice == 0 { vec![0, 1] } else { vec![1, 0] },
+                _ => panic!("Unknown slot {:}", id)
+            }
+        }
+    }
+
+    /// Check if two slots are allies (not on opposite sides, and not the same Pokemon)
+    pub fn is_ally(&self, id: SlotId, id2: SlotId) -> bool {
+        if self.active.len() == 2 {
+            false // No allies for a single battle
+        } else {
+            match (id, id2) {
+                (0, 1) | (1, 0) | (2, 3) | (3, 2) => true,
+                _ => false
+            }
+        }
+    }
+
+    /// Given an Active Pokemon ID, return all Active Pokemon on the other sides
+    pub fn get_active_opponents_by_active_id(&self, id: SlotId) -> Vec<Slot> {
+        let (party_id, _, _) = self.active.get(id).unwrap(); // Get the party you're on
+        let (side_id, _) = self.parties.get(*party_id).unwrap(); // Get the side you're on
+        self.active.iter()
+            .enumerate()
+            .filter_map(|(idx, (candidate_party_id, candidate_party_slot, candidate_data))| {
+                let (candidate_side_id, candidate_party) = self.parties.get(*candidate_party_id).unwrap();
+                if *candidate_side_id != *side_id {
+                    Some(Slot {
+                        slot_id: idx,
+                        party_id: *candidate_party_id,
+                        party_slot_id: *candidate_party_slot,
+                        party: candidate_party.clone(),
+                        data: candidate_data.clone()
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Given an Active Pokemon ID, return all Active Pokemon on this side (including the user)
+    pub fn get_active_pokemon_on_side_by_active_id(&self, id: SlotId) -> Vec<Slot> {
+        let (party_id, _, _) = self.active.get(id).unwrap(); // Get the party you're on
+        let (side_id, _) = self.parties.get(*party_id).unwrap(); // Get the side you're on
+        self.active.iter()
+            .enumerate()
+            .filter_map(|(idx, (candidate_party_id, candidate_party_slot, candidate_data))| {
+                let (candidate_side_id, candidate_party) = self.parties.get(*candidate_party_id).unwrap();
+                if *candidate_side_id == *side_id {
+                    Some(Slot {
+                        slot_id: idx,
+                        party_id: *candidate_party_id,
+                        party_slot_id: *candidate_party_slot,
+                        party: candidate_party.clone(),
+                        data: candidate_data.clone()
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Given an Active Pokemon ID, return all other Active Pokemon on this side
+    pub fn get_active_allies_by_active_id(&self, id: SlotId) -> Vec<Slot> {
+        let (party_id, _, _) = self.active.get(id).unwrap(); // Get the party you're on
+        let (side_id, _) = self.parties.get(*party_id).unwrap(); // Get the side you're on
+        self.active.iter()
+            .enumerate()
+            .filter_map(|(candidate_idx, (candidate_party_id, candidate_party_slot, candidate_data))| {
+                let (candidate_side_id, candidate_party) = self.parties.get(*candidate_party_id).unwrap();
+                if *candidate_side_id == *side_id && candidate_idx != id {
+                    Some(Slot {
+                        slot_id: candidate_idx,
+                        party_id: *candidate_party_id,
+                        party_slot_id: *candidate_party_slot,
+                        party: candidate_party.clone(),
+                        data: candidate_data.clone()
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    pub fn get_everyone(&self) -> Vec<Slot> {
+        self.active.iter()
+            .enumerate()
+            .map(|(idx, (party_id, active_id, data))| {
+                Slot {
+                    slot_id: idx,
+                    party_id: *party_id,
+                    party_slot_id: *active_id,
+                    party: self.get_party_by_party_id(*party_id).clone(),
+                    data: data.clone()
+                }
+            })
+            .collect()
+    }
+
     pub fn one_v_one<F, G>(left: F, right: G) -> Battlefield
         where F: Into<Pokemon>, G: Into<Pokemon>
     {
@@ -595,104 +852,58 @@ impl Battlefield {
     /// This should only be used for trainer battles
     pub fn single_battle(player: Party, opponent: Party) -> Battlefield {
         Battlefield {
-            user: Side::Single(Slot {
-                id: SlotId { side: BattleSideId::Forward, individual: DoubleBattleSideId::Left },
-                party: Rc::new(player),
-                pokemon: 0,
-                data: Default::default()
-            }),
-            user_side: RefCell::from(FieldSide::new(BattleSideId::Forward)),
-            opponent: Side::Single(Slot {
-                id: SlotId { side: BattleSideId::Back, individual: DoubleBattleSideId::Left },
-                party: Rc::new(opponent),
-                pokemon: 0,
-                data: Default::default()
-            }),
-            opponent_side: RefCell::from(FieldSide::new(BattleSideId::Back)),
+            sides: vec![RefCell::from(FieldSide::default()), RefCell::from(FieldSide::default())],
+            parties: vec![(0, Rc::new(player)), (1, Rc::new(opponent))],
+            active: vec![(0, 0, Rc::new(RefCell::default())), (1, 0, Rc::new(RefCell::default()))],
             field: RefCell::from(Field::default()),
-            wild_battle: false
+            wild_battle: false,
         }
     }
 
-    pub fn get_by_id(&self, id: &SlotId) -> &Slot {
-        self.index(id.side).index(id.individual)
-    }
-
-    pub fn get_by_id_mut(&mut self, id: &SlotId) -> &mut Slot {
-        self.index_mut(id.side).index_mut(id.individual)
-    }
-
-    fn opposite_of(&self, side: &BattleSideId) -> &Side {
-        match side {
-            BattleSideId::Forward => &self.opponent,
-            BattleSideId::Back => &self.user
-        }
-    }
-
-    pub fn get_targets(&self, attacker: SlotId, attack: Move, selected: SelectedTarget) -> Vec<&Slot> {
+    pub fn get_targets(&self, attacker: SlotId, attack: Move, selected: SelectedTarget) -> Vec<Slot> {
         let implied_opponent = || {
-            let default_target = self.opposite_of(&attacker.side).index(attacker.individual);
-            if default_target.borrow().is_fainted() {
-                let default_target = self.opposite_of(&attacker.side).ally_of(&attacker.individual);
-                if default_target.borrow().is_fainted() {
-                    None
-                } else {
-                    Some(default_target)
-                }
-            } else {
-                Some(default_target)
-            }
+            self.get_opposite_slots(attacker)
+                .iter()
+                .map(|s| self.get_active_pokemon_by_active_id(*s))
+                .filter(|s| s.borrow().has_health())
+                .nth(0)
         };
         let unimplied_opponent = |b: SlotId| {
-            let default_target = &self[b.side][b.individual];
-            if default_target.borrow().is_fainted() {
-                let default_target = self.opposite_of(&attacker.side).ally_of(&attacker.individual);
-                if default_target.borrow().is_fainted() {
-                    None
-                } else {
-                    Some(default_target)
-                }
-            } else {
-                Some(default_target)
-            }
+            self.get_opposite_slots_starting_with(attacker, b)
+                .iter()
+                .map(|s| self.get_active_pokemon_by_active_id(*s))
+                .filter(|s| s.borrow().has_health())
+                .nth(0)
         };
-        let user = || &self[attacker.side][attacker.individual];
-        let ally = || {
-            match self.user {
-                Side::Single(_) => None,
-                Side::Double(_, _) | Side::Tag(_, _) => {
-                    let ally = self[attacker.side].ally_of(&attacker.individual);
-                    if ally.borrow().is_fainted() {
-                        Some(ally)
-                    } else {
-                        None
-                    }
-                }
-            }
-        };
+        let user = || self.get_active_pokemon_by_active_id(attacker);
+        let ally = || self.get_active_allies_by_active_id(attacker)
+            .iter()
+            .filter(|s| s.borrow().has_health())
+            .map(|s| s.clone())
+            .collect::<Vec<Slot>>();
 
         let move_data = attack.data();
 
         match move_data.target {
             Target::User | Target::Implicit => vec![user()],
-            Target::Ally => {
-                match ally() {
-                    None => vec![],
-                    Some(a) => vec![a]
-                }
-            },
+            Target::Ally => ally(),
             Target::UserAndAlly => {
-                match ally() {
-                    None => vec![user()],
-                    Some(a) => vec![user(), a]
-                }
+                let mut v = vec![user()];
+                v.append(&mut ally());
+                v
             },
             Target::UserOrAlly => {
                 match selected {
-                    SelectedTarget::Implied => vec![user()],
-                    SelectedTarget::One(b) => {
-                        let pkmn = &self[b.side][b.individual];
-                        if pkmn.borrow().is_fainted() { vec![] } else { vec![pkmn] }
+                    SelectedTarget::Implied => {
+                        vec![user()]
+                    }
+                    SelectedTarget::One(a) => {
+                        let pkmn = self.get_active_pokemon_by_active_id(a);
+                        if pkmn.borrow().has_health() {
+                            vec![pkmn]
+                        } else {
+                            vec![]
+                        }
                     }
                 }
             },
@@ -713,10 +924,10 @@ impl Battlefield {
                 }
             },
             Target::Opponents => {
-                self.opposite_of(&attacker.side).both()
+                self.get_active_opponents_by_active_id(attacker)
                     .iter()
-                    .map(|p| *p)
                     .filter(|p| p.borrow().has_health())
+                    .map(|s| s.clone())
                     .collect()
             },
             Target::AllyOrOpponent => {
@@ -728,11 +939,8 @@ impl Battlefield {
                         }
                     }
                     SelectedTarget::One(b) => {
-                        if attacker.is_ally(&b) {
-                            match ally() {
-                                None => vec![],
-                                Some(a) => vec![a]
-                            }
+                        if self.is_ally(attacker, b) {
+                            ally()
                         } else {
                             match unimplied_opponent(b) {
                                 None => vec![],
@@ -743,24 +951,19 @@ impl Battlefield {
                 }
             },
             Target::RandomOpponent => {
-                match self.opposite_of(&attacker.side) {
-                    Side::Single(p) => {
-                        if p.borrow().is_fainted() { vec![] } else { vec![p] }
-                    },
-                    Side::Double(a, b) |
-                    Side::Tag(a, b) => {
-                        let a_fainted = a.borrow().is_fainted();
-                        let b_fainted = b.borrow().is_fainted();
-                        if a_fainted && b_fainted {
-                            vec![]
-                        } else if a_fainted {
-                            vec![b]
-                        } else if b_fainted {
-                            vec![a]
-                        } else {
-                            vec![if rand::thread_rng().gen_bool(0.5) { a } else { b }]
-                        }
-                    }
+                let e = self.get_active_opponents_by_active_id(attacker)
+                    .iter()
+                    .filter(|s| s.borrow().has_health())
+                    .map(|s| s.clone())
+                    .collect::<Vec<Slot>>();
+                let opt = if e.len() > 1 {
+                    e.get(rand::thread_rng().gen_range(0..e.len()))
+                } else {
+                    e.get(0)
+                };
+                match opt {
+                    Some(a) => vec![a.clone()],
+                    None => vec![]
                 }
             }
             Target::Any => {
@@ -774,11 +977,8 @@ impl Battlefield {
                     SelectedTarget::One(a) => {
                         if attacker == a {
                             vec![user()]
-                        } else if attacker.is_ally(&a) {
-                            match ally() {
-                                None => vec![],
-                                Some(a) => vec![a]
-                            }
+                        } else if self.is_ally(attacker, a) {
+                            ally()
                         } else {
                             match unimplied_opponent(a) {
                                 None => vec![],
@@ -789,26 +989,23 @@ impl Battlefield {
                 }
             },
             Target::AllExceptUser => {
-                let mut targets: Vec<&Slot> = self.opposite_of(&attacker.side).both()
-                    .iter()
-                    .map(|p| *p)
-                    .filter(|p| p.borrow().has_health())
-                    .collect();
-                match ally() {
-                    None => {}
-                    Some(a) => targets.push(a)
-                }
+                let mut targets = self.get_active_opponents_by_active_id(attacker);
+                targets.append(&mut self.get_active_allies_by_active_id(attacker));
                 targets
+                    .iter()
+                    .map(|p| p.clone())
+                    .filter(|p| p.borrow().has_health())
+                    .collect()
             },
             Target::All => {
-                let mut targets: Vec<&Slot> = self[attacker.side].both()
+                let mut targets: Vec<Slot> = self.get_active_opponents_by_active_id(attacker)
                     .iter()
-                    .map(|p| *p)
+                    .map(|p| p.clone())
                     .filter(|a| a.borrow().has_health())
                     .collect();
-                let mut opponent_side: Vec<&Slot> = self.opposite_of(&attacker.side).both()
+                let mut opponent_side: Vec<Slot> = self.get_active_pokemon_on_side_by_active_id(attacker)
                     .iter()
-                    .map(|p| *p)
+                    .map(|p| p.clone())
                     .filter(|a| a.borrow().has_health())
                     .collect();
                 targets.append(&mut opponent_side);
@@ -821,8 +1018,9 @@ impl Battlefield {
                     None => data.damage_this_turn
                         .iter()
                         .filter(|(battler, _, _)| {
-                            let potential_target = &self[battler.side][battler.individual];
-                            potential_target.borrow().has_health()
+                            let potential_target = self.get_active_pokemon_by_active_id(*battler);
+                            let potential_target = potential_target.borrow();
+                            potential_target.has_health()
                         })
                         .last()
                     ,
@@ -831,49 +1029,18 @@ impl Battlefield {
                             .iter()
                             .filter(|(_, attack, _)| attack.data().damage_type == dt)
                             .filter(|(battler, _, _)| {
-                                let potential_target = &self[battler.side][battler.individual];
-                                potential_target.borrow().has_health()
+                                let potential_target = self.get_active_pokemon_by_active_id(*battler);
+                                let potential_target = potential_target.borrow();
+                                potential_target.has_health()
                             })
                             .last()
                     }
                 };
                 match target {
                     None => vec![],
-                    Some((battler, _, _)) => vec![&self[battler.side][battler.individual]]
+                    Some((battler, _, _)) => vec![self.get_active_pokemon_by_active_id(*battler)]
                 }
             }
-        }
-    }
-
-    /// Get the side associated with a battler
-    fn get_side(&self, id: &SlotId) -> &RefCell<FieldSide> {
-        match id.side {
-            BattleSideId::Forward => &self.user_side,
-            BattleSideId::Back => &self.opponent_side
-        }
-    }
-
-    fn get_everyone(&self) -> Vec<&Slot> {
-        let mut active = self.user.both();
-        active.append(&mut self.opponent.both());
-        active
-    }
-}
-impl Index<BattleSideId> for Battlefield {
-    type Output = Side;
-
-    fn index(&self, index: BattleSideId) -> &Self::Output {
-        match index {
-            BattleSideId::Forward => &self.user,
-            BattleSideId::Back => &self.opponent
-        }
-    }
-}
-impl IndexMut<BattleSideId> for Battlefield {
-    fn index_mut(&mut self, index: BattleSideId) -> &mut Self::Output {
-        match index {
-            BattleSideId::Forward => &mut self.user,
-            BattleSideId::Back => &mut self.opponent
         }
     }
 }
@@ -1090,11 +1257,11 @@ impl BattleData {
 
     pub fn targeted_by(&mut self, pkmn: &Slot, attack: Move) {
         self.remove_from_targeted_by(pkmn);
-        self.last_targeted.insert(0, (pkmn.id, attack));
+        self.last_targeted.insert(0, (pkmn.slot_id, attack));
     }
 
     fn remove_from_targeted_by(&mut self, pkmn: &Slot) {
-        self.last_targeted.retain(|(e, _)| *e != pkmn.id);
+        self.last_targeted.retain(|(e, _)| *e != pkmn.slot_id);
     }
 
     pub fn get_last_targeted_attack(&self) -> Option<(SlotId, Move)> {
@@ -1104,7 +1271,7 @@ impl BattleData {
 
     pub fn is_locked_on_to(&self, pkmn: &Slot) -> bool {
         if let Some((_, battler)) = self.locked_on {
-            pkmn.id == battler
+            pkmn.slot_id == battler
         } else {
             false
         }
@@ -1114,7 +1281,7 @@ impl BattleData {
     pub fn other_swapped_out(&mut self, pkmn: &Slot) {
         self.remove_from_targeted_by(pkmn);
         if let Some(b) = self.foresight_by {
-            if b == pkmn.id {
+            if b == pkmn.slot_id {
                 self.foresight_by = None;
             }
         }
@@ -1162,50 +1329,50 @@ pub enum ForcedAction {
     /// Do nothing, but keep track of damage. (Damage accumulated, turns left)
     Bide(u16, u8)
 }
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum BattleSideId {
-    Forward,
-    Back
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum DoubleBattleSideId {
-    Left, Right
-}
-
-/// Identifier of a member on the field (more specifically, a "place" on the battlefield)
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub struct SlotId {
-    pub side: BattleSideId,
-    pub individual: DoubleBattleSideId
-}
-impl SlotId {
-    pub fn single(side: BattleSideId) -> SlotId {
-        SlotId {
-            side,
-            individual: DoubleBattleSideId::Left
-        }
-    }
-
-    pub fn double(side: BattleSideId, side2: DoubleBattleSideId) -> SlotId {
-        SlotId {
-            side,
-            individual: side2
-        }
-    }
-
-    /// Test if other battler and this battler are allies
-    /// Note that this returns false if self == other!
-    pub fn is_ally(&self, other: &SlotId) -> bool {
-        self.side == other.side && self.individual != other.individual
-    }
-
-    /// Test if other battler and this battler are either the same, or an ally
-    pub fn is_self_or_ally(&self, other: &SlotId) -> bool {
-        self.side == other.side
-    }
-}
+//
+// #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+// pub enum BattleSideId {
+//     Forward,
+//     Back
+// }
+//
+// #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+// pub enum DoubleBattleSideId {
+//     Left, Right
+// }
+//
+// /// Identifier of a member on the field (more specifically, a "place" on the battlefield)
+// #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+// pub struct SlotId {
+//     pub side: BattleSideId,
+//     pub individual: DoubleBattleSideId
+// }
+// impl SlotId {
+//     pub fn single(side: BattleSideId) -> SlotId {
+//         SlotId {
+//             side,
+//             individual: DoubleBattleSideId::Left
+//         }
+//     }
+//
+//     pub fn double(side: BattleSideId, side2: DoubleBattleSideId) -> SlotId {
+//         SlotId {
+//             side,
+//             individual: side2
+//         }
+//     }
+//
+//     /// Test if other battler and this battler are allies
+//     /// Note that this returns false if self == other!
+//     pub fn is_ally(&self, other: &SlotId) -> bool {
+//         self.side == other.side && self.individual != other.individual
+//     }
+//
+//     /// Test if other battler and this battler are either the same, or an ally
+//     pub fn is_self_or_ally(&self, other: &SlotId) -> bool {
+//         self.side == other.side
+//     }
+// }
 
 /// Temporary data for when transforming into a Pokemon.
 #[derive(Debug)]
@@ -1288,9 +1455,9 @@ pub enum Cause {
     /// This is just what normally happens
     Natural,
     /// A battler's ability caused the side effect
-    Ability(SlotId, Ability),
+    Ability(PokemonId, Ability),
     /// A used move caused the side effect (this is things that happen directly during the move)
-    Move(SlotId, Move),
+    Move(PokemonId, Move),
     /// A used move caused the side effect (this is things that happen later, such as Curse at the end of each turn)
     MoveSideEffect(Move),
     /// The cause is related to the Pokemon's type
@@ -1298,7 +1465,7 @@ pub enum Cause {
     /// The side effect was the cause of a user's non-volatile ailment
     Ailment(NonVolatileBattleAilment),
     /// A battler's held item caused the side effect
-    HeldItem(SlotId, Item),
+    HeldItem(PokemonId, Item),
     /// One cause was about to occur, but another one overwrote it
     Overwrite{
         initial: Box<Cause>,
@@ -1396,7 +1563,7 @@ pub enum ActionSideEffects {
         end_hp: u16
     },
     ConsumedItem(SlotId, Item), GainedItem(SlotId, Item),
-    PokemonLeft(SlotId, usize), PokemonEntered(SlotId, usize), PokemonLeftBatonPass(SlotId, usize),
+    PokemonLeft(SlotId, PokemonId), PokemonEntered(SlotId, PokemonId), PokemonLeftBatonPass(SlotId, PokemonId),
     LostPP(SlotId, Move, u8, u8),
     NoTarget,
 
@@ -1427,7 +1594,7 @@ pub enum ActionSideEffects {
     SnappedOutOfConfusion(SlotId),
     Infatuated(SlotId), TooInfatuatedToAttack(SlotId),
     ForcePokemonSwap {
-        must_leave: SlotId
+        must_leave: PokemonId
     },
     StartWeather(glazed_data::attack::Weather), ContinueWeather(glazed_data::attack::Weather), EndWeather(glazed_data::attack::Weather),
     DroppedCoins,

@@ -7,7 +7,7 @@ use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage, ForcedAction};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage, ForcedAction, BaseSlot};
 use crate::core;
 use crate::core::MoveContext;
 use crate::constants::*;
@@ -60,7 +60,7 @@ impl Battlefield { //region Damage
             defender_data.substituted = end_hp;
 
             vec![ActionSideEffects::DamagedSubstitute {
-                damaged: defender.id,
+                damaged: defender.slot_id,
                 start_hp,
                 end_hp
             }]
@@ -74,8 +74,8 @@ impl Battlefield { //region Damage
                 let mut pkmn = defender.borrow_mut();
                 pkmn.current_hp = 1;
                 let mut e = vec![ActionSideEffects::DirectDamage {
-                    damaged: defender.id,
-                    damager: attacker.id,
+                    damaged: defender.slot_id,
+                    damager: attacker.slot_id,
                     attack,
                     start_hp,
                     end_hp: 1,
@@ -88,8 +88,8 @@ impl Battlefield { //region Damage
                 let mut pkmn = defender.borrow_mut();
                 pkmn.current_hp = end_hp;
                 vec![ActionSideEffects::DirectDamage {
-                    damaged: defender.id,
-                    damager: attacker.id,
+                    damaged: defender.slot_id,
+                    damager: attacker.slot_id,
                     attack,
                     start_hp,
                     end_hp,
@@ -113,7 +113,7 @@ impl Battlefield { //region Damage
             defender_data.substituted = end_hp;
 
             vec![ActionSideEffects::DamagedSubstitute {
-                damaged: defender.id,
+                damaged: defender.slot_id,
                 start_hp,
                 end_hp
             }]
@@ -127,7 +127,7 @@ impl Battlefield { //region Damage
                 let mut pkmn = defender.borrow_mut();
                 pkmn.current_hp = 1;
                 let mut e = vec![ActionSideEffects::BasicDamage {
-                    damaged: defender.id,
+                    damaged: defender.slot_id,
                     start_hp,
                     end_hp: 1,
                     cause
@@ -138,7 +138,7 @@ impl Battlefield { //region Damage
                 let mut pkmn = defender.borrow_mut();
                 pkmn.current_hp = end_hp;
                 vec![ActionSideEffects::BasicDamage {
-                    damaged: defender.id,
+                    damaged: defender.slot_id,
                     start_hp,
                     end_hp,
                     cause
@@ -154,7 +154,7 @@ impl Battlefield { //region Damage
     fn do_hang_on_check(damaged: &Slot, _was_full_hp: bool) -> Option<Vec<ActionSideEffects>> {
         let data = damaged.data.borrow();
         if let Some(Move::Endure) = data.protected {
-            return Some(vec![ActionSideEffects::HungOn(damaged.id, Cause::MoveSideEffect(Move::Endure))]);
+            return Some(vec![ActionSideEffects::HungOn(damaged.slot_id, Cause::MoveSideEffect(Move::Endure))]);
         }
         None
     }
@@ -168,8 +168,8 @@ impl Battlefield { //region Damage
             return vec;
         }
 
-        data.damage_this_turn.push((attacker.id, attack, damage));
-        data.last_attacker = Some((attacker.id, attack));
+        data.damage_this_turn.push((attacker.slot_id, attack, damage));
+        data.last_attacker = Some((attacker.slot_id, attack));
 
         if let Some(ForcedAction::Bide(acc, counter)) = data.forced_action {
             data.forced_action = Some(ForcedAction::Bide(acc + damage, counter));
@@ -189,7 +189,7 @@ impl Battlefield { //region Damage
         pkmn.current_hp = 0;
 
         vec![ActionSideEffects::BasicDamage {
-            damaged: active.id,
+            damaged: active.slot_id,
             start_hp,
             end_hp,
             cause
@@ -247,10 +247,10 @@ impl Battlefield { //region Damage
                             let end_hp = start_hp.saturating_sub(recoil_damage);
                             attacker_pkmn.current_hp = end_hp;
                             effects.push(ActionSideEffects::Recoil {
-                                damaged: attacker.id,
+                                damaged: attacker.slot_id,
                                 start_hp,
                                 end_hp,
-                                cause: Cause::Move(attacker.id, attack)
+                                cause: Cause::Move(attacker.id(), attack)
                             });
                         }
                     }
@@ -276,7 +276,7 @@ impl Battlefield { //region Damage
                     let is_crit = crit();
                     let damage = self.calculate_full_damage(attacker, attack, defender, is_multi_target, is_crit, effectiveness);
                     let mut effects = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
-                    effects.append(&mut Battlefield::faint(attacker, Cause::Move(attacker.id, attack)));
+                    effects.append(&mut Battlefield::faint(attacker, Cause::Move(attacker.id(), attack)));
                     effects
                 }
             },
@@ -294,18 +294,18 @@ impl Battlefield { //region Damage
                     if defender.get_effective_ability() == Ability::LiquidOoze {
                         let (start_hp, end_hp) = pkmn.subtract_hp(heal_amount);
                         effects.push(ActionSideEffects::BasicDamage {
-                            damaged: attacker.id,
+                            damaged: attacker.slot_id,
                             start_hp,
                             end_hp,
-                            cause: Cause::Ability(defender.id, Ability::LiquidOoze)
+                            cause: Cause::Ability(defender.id(), Ability::LiquidOoze)
                         })
                     } else {
                         let (start_hp, end_hp) = pkmn.add_hp(heal_amount);
                         effects.push(ActionSideEffects::Healed {
-                            healed: attacker.id,
+                            healed: attacker.slot_id,
                             start_hp,
                             end_hp,
-                            cause: Cause::Move(attacker.id, attack)
+                            cause: Cause::Move(attacker.id(), attack)
                         })
                     }
                     effects
@@ -325,7 +325,7 @@ impl Battlefield { //region Damage
                     let is_crit = crit();
                     let damage = self.calculate_full_damage(attacker, context, defender, is_multi_target, is_crit, effectiveness);
                     let mut effects = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
-                    effects.append(&mut Battlefield::faint(attacker, Cause::Move(attacker.id, attack)));
+                    effects.append(&mut Battlefield::faint(attacker, Cause::Move(attacker.id(), attack)));
                     effects
                 }
             }
@@ -365,7 +365,7 @@ impl Battlefield { //region Damage
                 if let Effectiveness::Immune = effectiveness {
                     vec![ActionSideEffects::NoEffect(cause)]
                 } else {
-                    Battlefield::lower_hp_basic(attacker, defender, attack, u16::MAX, Cause::Move(attacker.id, attack))
+                    Battlefield::lower_hp_basic(attacker, defender, attack, u16::MAX, Cause::Move(attacker.id(), attack))
                 }
             },
             Power::Exact(damage) => {
@@ -373,7 +373,7 @@ impl Battlefield { //region Damage
                 if let Effectiveness::Immune = effectiveness {
                     vec![ActionSideEffects::NoEffect(cause)]
                 } else {
-                    Battlefield::lower_hp_basic(attacker, defender, attack, *damage as u16, Cause::Move(attacker.id, attack))
+                    Battlefield::lower_hp_basic(attacker, defender, attack, *damage as u16, Cause::Move(attacker.id(), attack))
                 }
             }
         //     Power::Percentage(_) => self.do_percent_damage(attacker, attack, defender),
@@ -381,7 +381,7 @@ impl Battlefield { //region Damage
                 let data = attacker.data.borrow();
                 let candidates = data.damage_this_turn.iter()
                     .filter_map(|(attacker, attack, damage)| {
-                        let pkmn = &self[attacker.side][attacker.individual];
+                        let pkmn = self.get_active_pokemon_by_active_id(*attacker);
                         if pkmn.borrow().has_health() {
                             Some((pkmn, *attack, *damage))
                         } else {
@@ -407,7 +407,7 @@ impl Battlefield { //region Damage
                     Some((defender, damage)) => {
                         let (numerator, denominator) = *a;
                         let return_damage = u32::from(damage) * u32::from(numerator) / u32::from(denominator);
-                        Battlefield::lower_hp_basic(attacker, defender, attack, return_damage as u16, Cause::Natural)
+                        Battlefield::lower_hp_basic(attacker, &defender, attack, return_damage as u16, Cause::Natural)
                     }
                 }
             },
@@ -456,7 +456,7 @@ impl Battlefield { //region Damage
                 let mut effects = Vec::new();
                 let mut counter = 0;
                 for _ in 0..n {
-                    let damage_action = self._do_damage_and_effects(attacker, vec![defender], attack, move_data);
+                    let damage_action = self._do_damage_and_effects(attacker, &vec![defender.clone()], attack, move_data);
 
                     effects.push(damage_action);
                     counter += 1;
@@ -585,7 +585,7 @@ impl Battlefield { //region Damage
                         }
 
                         let damage = attacker.borrow().level as u16;
-                        Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id, attack))
+                        Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id(), attack))
                     },
                     Move::Psywave => {
                         let (effectiveness, cause) = effectiveness();
@@ -596,7 +596,7 @@ impl Battlefield { //region Damage
                         let r = rand::thread_rng().gen_range(0..=100);
                         let mut damage = (attacker.borrow().level as u16 * (r + 50)) / 100;
                         if damage == 0 { damage = 1; }
-                        Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id, attack))
+                        Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id(), attack))
                     },
                     Move::Flail | Move::Reversal => {
                         let (effectiveness, cause) = effectiveness();
@@ -670,10 +670,10 @@ impl Battlefield { //region Damage
                                         let to_heal = pkmn.hp.value / 4;
                                         let (start_hp, end_hp) = pkmn.add_hp(to_heal);
                                         vec![ActionSideEffects::Healed {
-                                            healed: attacker.id,
+                                            healed: attacker.slot_id,
                                             start_hp,
                                             end_hp,
-                                            cause: Cause::Move(attacker.id, Move::Present)
+                                            cause: Cause::Move(attacker.id(), Move::Present)
                                         }]
                                     }
                                 }

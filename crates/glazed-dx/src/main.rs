@@ -1,4 +1,4 @@
-use glazed_battle::{Battlefield, SlotId, BattleSideId, Party};
+use glazed_battle::{Battlefield, Party};
 use glazed_battle::SelectedTarget;
 use glazed_data::attack::Move;
 use glazed_data::constants::Species;
@@ -16,16 +16,12 @@ fn main() {
     let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 20).holding(Berry::SitrusBerry));
 
     let mut battlefield = Battlefield::single_battle(me, them);
+    println!("{:#?}", battlefield);
 
-    let fx = battlefield.do_attack(SlotId::single(BattleSideId::Back), Move::Rollout, SelectedTarget::Implied);
+    let fx = battlefield.do_attack(0, Move::Rollout, SelectedTarget::Implied);
     println!("{:#?}", fx);
-    let fx = battlefield.do_implicit_attack(SlotId::single(BattleSideId::Back));
-    println!("{:#?}", fx);
-    let fx = battlefield.do_implicit_attack(SlotId::single(BattleSideId::Back));
-    println!("{:#?}", fx);
-    let fx = battlefield.do_implicit_attack(SlotId::single(BattleSideId::Back));
-    println!("{:#?}", fx);
+    let fx = battlefield.do_implicit_attack(0);
     // let fx = battlefield.end_of_round();
-    // println!("{:#?}", fx);
+    println!("{:#?}", fx);
     // }
 }

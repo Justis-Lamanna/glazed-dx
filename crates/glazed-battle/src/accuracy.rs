@@ -2,7 +2,7 @@ use rand::Rng;
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{Accuracy, Move};
 use glazed_data::types::Type;
-use crate::{ActionSideEffects, Slot, Battlefield, Cause, PROTECTION_CAP};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, PROTECTION_CAP, BaseSlot};
 use crate::core::{ActionCheck, MoveContext};
 
 /// Get the probability of the attacker hitting the defender
@@ -42,7 +42,7 @@ pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &Slot, attack: F, def
 {
     let percentage_formula = |p: u8| {
         let evasion_accuracy = match defender.data.borrow().foresight_by {
-            Some(attack_id) if attack_id == attacker.id => get_accuracy_factor_foresight(attacker, defender),
+            Some(attack_id) if attack_id == attacker.slot_id => get_accuracy_factor_foresight(attacker, defender),
             _ => get_accuracy_factor(attacker, defender)
         };
         let move_accuracy = f64::from(p) / 100f64;
@@ -122,7 +122,7 @@ pub fn cannot_use_attack_against<F>(attacker: &Slot, attack: F, defender: &Slot)
     // Ability-based immunities
     match defender.get_effective_ability() {
         Ability::Soundproof if attack.is_sound_based() && !attacker.get_effective_ability().is_ignore_ability_ability() => {
-            return ActionCheck::Err(ActionSideEffects::NoEffect(Cause::Ability(defender.id, Ability::Soundproof)));
+            return ActionCheck::Err(ActionSideEffects::NoEffect(Cause::Ability(defender.id(), Ability::Soundproof)));
         },
         _ => {}
     }
@@ -136,12 +136,12 @@ pub fn cannot_use_attack_against<F>(attacker: &Slot, attack: F, defender: &Slot)
         return ActionCheck::Err(ActionSideEffects::NoEffectSecondary(Cause::Type(Type::Ghost)));
     }
 
-    let using_against_self = attacker.id == defender.id;
+    let using_against_self = attacker.id() == defender.id();
 
     if let Some(m) = defender.data.borrow().protected {
         match m {
             Move::Protect | Move::Detect if !using_against_self && !attack.bypasses_protect() => {
-                return ActionCheck::Err(ActionSideEffects::IsProtected(defender.id, m));
+                return ActionCheck::Err(ActionSideEffects::IsProtected(defender.slot_id, m));
             }
             _ => {}
         }

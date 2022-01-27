@@ -5,7 +5,7 @@ use glazed_data::attack::{Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::item::{Item};
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, Slot, Battlefield, Cause, Field, WeatherCounter};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, Field, WeatherCounter, BaseSlot};
 
 pub type ActionCheck<T> = Result<T, ActionSideEffects>;
 
@@ -125,7 +125,7 @@ pub fn get_type_effectiveness(field: &Battlefield, attacker: &Slot, attack: Move
     let defender_ability = defender.get_effective_ability();
 
     let raw_effectiveness = match defender.data.borrow().foresight_by {
-        Some(attack_id) if attack_id == attacker.id => defender.get_effective_type().defending_against_ignore_immunities(&move_type),
+        Some(attack_id) if attack_id == attacker.slot_id => defender.get_effective_type().defending_against_ignore_immunities(&move_type),
         _ => defender.get_effective_type().defending_against(&move_type)
     };
 
@@ -134,9 +134,9 @@ pub fn get_type_effectiveness(field: &Battlefield, attacker: &Slot, attack: Move
             match raw_effectiveness {
                 Effectiveness::Effect(i) if i > 0 => (Effectiveness::NORMAL, Cause::Natural),
                 _ => {
-                    let cause = Cause::Ability(defender.id, Ability::WonderGuard);
+                    let cause = Cause::Ability(defender.id(), Ability::WonderGuard);
                     return if attacker_ability.is_ignore_ability_ability() {
-                        let cause = cause.overwrite(Cause::Ability(attacker.id, attacker_ability));
+                        let cause = cause.overwrite(Cause::Ability(attacker.id(), attacker_ability));
                         (raw_effectiveness, cause)
                     } else {
                         (Effectiveness::Immune, cause)
