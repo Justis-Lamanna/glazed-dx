@@ -709,6 +709,7 @@ pub enum Power {
     BaseWithFaint(u8),
     BaseWithDrain(u8),
     BaseWithTurnMultiplier(u8),
+    BaseAfterNTurns(u8, u8),
     WeightBased,
     WeightRatioBased,
     MultiHit(MultiHitFlavor),
@@ -4616,7 +4617,7 @@ pub static FutureSight: MoveData = MoveData {
     contest_type: ContestType::Smart,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    power: Power::Base(120),
+    power: Power::BaseAfterNTurns(120, 3),
 	crit_rate: None,
 	effects: &[],
 };
@@ -5876,7 +5877,7 @@ pub static DoomDesire: MoveData = MoveData {
     contest_type: ContestType::Cool,
     damage_type: DamageType::Special,
     target: Target::AllyOrOpponent,
-    power: Power::Base(140),
+    power: Power::BaseAfterNTurns(140, 3),
 	crit_rate: None,
 	effects: &[],
 };

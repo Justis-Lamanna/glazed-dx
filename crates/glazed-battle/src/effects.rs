@@ -226,6 +226,23 @@ impl Battlefield {
             data.forced_action = Some(ForcedAction::FinishAttack(attack, defender));
 
             effects
+        } else if let Power::BaseAfterNTurns(_, turns) = move_data.power {
+            let mut field = self.field.borrow_mut();
+
+            let defender = match defender {
+                SelectedTarget::Implied => {
+                    let options = self.get_opposite_slots(attacker_id);
+                    *options.first().unwrap()
+                },
+                SelectedTarget::One(a) => a
+            };
+
+            if field.will_receive_future_attack(defender) {
+                vec![ActionSideEffects::Failed(Cause::Natural)]
+            } else {
+                field.add_future_attack(attacker.id(), attack, turns, defender);
+                vec![ActionSideEffects::FutureSight(attacker.slot_id)]
+            }
         } else {
             self._do_attack(attacker_id, attack, defender)
         }
@@ -303,6 +320,24 @@ impl Battlefield {
     /// Do all the end-of-turn things
     pub fn end_of_round(&mut self) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
+
+        let future_attacks = self.field.borrow_mut().decrement_future_attack_counters();
+        for (origin, attack, recipient) in future_attacks {
+            let PokemonId { party_id, party_slot_id } = origin;
+            let party = self.get_party_by_party_id(party_id);
+            let mock_attacker = Slot {
+                slot_id: SlotId::MAX,
+                party_id,
+                party_slot_id,
+                party,
+                data: Rc::new(RefCell::default())
+            };
+            let defender = self.get_active_pokemon_by_active_id(recipient);
+            if defender.borrow().has_health() {
+                effects.append(&mut self.do_damage(&mock_attacker, attack, &defender, false));
+            }
+        }
+
         let both_sides = self.get_sides_with_id();
         for (id, side) in both_sides {
             effects.append(&mut turn::do_screen_countdown(id, side));

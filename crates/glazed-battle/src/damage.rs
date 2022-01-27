@@ -7,7 +7,7 @@ use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage, ForcedAction, BaseSlot};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage, ForcedAction, BaseSlot, SlotId};
 use crate::core;
 use crate::core::MoveContext;
 use crate::constants::*;
@@ -163,13 +163,15 @@ impl Battlefield { //region Damage
         let mut vec = Vec::new();
         let mut data = defender.data.borrow_mut();
 
-        if defender.borrow().is_fainted() && data.destiny_bond {
+        if defender.borrow().is_fainted() && data.destiny_bond && !attacker.is_not_active() {
             vec.append(&mut Battlefield::faint(attacker, Cause::MoveSideEffect(Move::DestinyBond)));
             return vec;
         }
 
-        data.damage_this_turn.push((attacker.slot_id, attack, damage));
-        data.last_attacker = Some((attacker.slot_id, attack));
+        if !attacker.is_not_active() {
+            data.damage_this_turn.push((attacker.slot_id, attack, damage));
+            data.last_attacker = Some((attacker.slot_id, attack));
+        }
 
         if let Some(ForcedAction::Bide(acc, counter)) = data.forced_action {
             data.forced_action = Some(ForcedAction::Bide(acc + damage, counter));
@@ -202,7 +204,7 @@ impl Battlefield { //region Damage
         let effectiveness = || core::get_type_effectiveness(&self, attacker, attack, defender);
         match &move_data.power {
             Power::None => Vec::new(),
-            Power::Base(_) => {
+            Power::Base(_) | Power::BaseAfterNTurns(_, _) => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {
                     vec![ActionSideEffects::NoEffect(cause)]
@@ -328,7 +330,7 @@ impl Battlefield { //region Damage
                     effects.append(&mut Battlefield::faint(attacker, Cause::Move(attacker.id(), attack)));
                     effects
                 }
-            }
+            },
             Power::WeightBased => {
                 let (effectiveness, cause) = effectiveness();
                 if let Effectiveness::Immune = effectiveness {

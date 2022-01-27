@@ -1,5 +1,9 @@
+#![feature(hash_drain_filter)]
+
 use std::cell::{Ref, RefCell};
+use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::fs::read;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::option::Option::Some;
 use std::rc::Rc;
@@ -42,7 +46,8 @@ pub struct Field {
     weather: Option<WeatherCounter>,
     gravity: u8,
     magic_room: u8,
-    coins_on_ground: u16
+    coins_on_ground: u16,
+    future_attacks: HashMap<SlotId, (PokemonId, Move, u8)>
 }
 impl Field {
     /// Return if harsh sunlight is present on the field
@@ -96,6 +101,33 @@ impl Field {
     /// Scatter coins on the field.
     pub fn drop_coins(&mut self, coins: u16) {
         self.coins_on_ground = self.coins_on_ground.saturating_add(coins);
+    }
+
+    /// Check if this Slot will receive a future attack eventually
+    pub fn will_receive_future_attack(&self, slot: SlotId) -> bool {
+        return self.future_attacks.contains_key(&slot)
+    }
+
+    /// Add a future attack to be executed eventually
+    pub fn add_future_attack(&mut self, origin: PokemonId, attack: Move, turns: u8, recipient: SlotId) {
+        self.future_attacks.insert(recipient, (origin, attack, turns));
+    }
+
+    /// Decrement future attack counters, and return any ready to go.
+    pub fn decrement_future_attack_counters(&mut self) -> Vec<(PokemonId, Move, SlotId)> {
+        self.future_attacks
+            .drain_filter(|k, (_, _, turns)| {
+                if *turns == 1 {
+                    true
+                } else {
+                    *turns -= 1;
+                    false
+                }
+            })
+            .flat_map(|(k, (origin, attack, _))| {
+                vec![(origin, attack, k)]
+            })
+            .collect()
     }
 }
 
@@ -201,18 +233,19 @@ pub struct PokemonId {
 /// Represents one of the parties in battle
 /// (In most battles, Player is 0, Opponent is 1)
 /// There may be more parties if the opponent is in a tag battle, a 1v2 battle, or a free-for-all.
-type PartyId = usize;
+pub type PartyId = usize;
 /// Represents a Pokemon's ID within a party
 /// 0 to 5
-type PartyMemberId = usize;
+pub type PartyMemberId = usize;
 /// A specific, targettable place in battle
 /// (In a single battle, Player is 0, Opponent is 1.
 /// In a double battle, Player is 0 and 1, Opponents are 2 and 3)
-type SlotId = usize;
+pub type SlotId = usize;
 /// A specific side of the battle (Player is 0, Opponent is 1)
-type BattleSideId = usize;
+pub type BattleSideId = usize;
 
 trait BaseSlot {
+    fn is_not_active(&self) -> bool;
     fn id(&self) -> PokemonId {
         PokemonId {
             party_id: self.party_id(),
@@ -439,6 +472,10 @@ pub struct Slot {
     pub data: Rc<RefCell<BattleData>>,
 }
 impl BaseSlot for Slot {
+    fn is_not_active(&self) -> bool {
+        self.slot_id == SlotId::MAX
+    }
+
     fn party_id(&self) -> PartyId {
         self.party_id
     }
@@ -1565,6 +1602,7 @@ pub enum ActionSideEffects {
     ConsumedItem(SlotId, Item), GainedItem(SlotId, Item),
     PokemonLeft(SlotId, PokemonId), PokemonEntered(SlotId, PokemonId), PokemonLeftBatonPass(SlotId, PokemonId),
     LostPP(SlotId, Move, u8, u8),
+    FutureSight(SlotId),
     NoTarget,
 
     NoEffectSecondary(Cause),

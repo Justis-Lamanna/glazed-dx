@@ -4,14 +4,8 @@ use glazed_data::attack::StatChangeTarget::Target;
 use glazed_data::constants::Species;
 use glazed_data::pokemon::{Gender, PokemonStatusCondition, PokemonTemplate};
 
-const FORWARD: SlotId = SlotId {
-    side: BattleSideId::Forward,
-    individual: DoubleBattleSideId::Left
-};
-const BACK: SlotId = SlotId {
-    side: BattleSideId::Back,
-    individual: DoubleBattleSideId::Left
-};
+const FORWARD: SlotId = 0;
+const BACK: SlotId = 1;
 
 fn create_battlefield() -> Battlefield {
     Battlefield::one_v_one(
@@ -73,7 +67,7 @@ fn test_belly_drum() {
 #[test]
 fn test_belly_drum_failure() {
     let mut b = create_battlefield();
-    b.get_by_id(&FORWARD).borrow_mut().current_hp = 1;
+    b.get_active_pokemon_by_active_id(FORWARD).borrow_mut().current_hp = 1;
     // Fails if <50% health
     let fx = b.do_attack(FORWARD, Move::BellyDrum, SelectedTarget::Implied);
 
@@ -258,7 +252,7 @@ fn test_endure() {
             Some(ActionSideEffects::HungOn(_, Cause::MoveSideEffect(Move::Endure))) => true, _ => false
         }
     }, "{:?}", fx);
-    assert!(b.get_by_id(&FORWARD).borrow().has_health())
+    assert!(b.get_active_pokemon_by_active_id(FORWARD).borrow().has_health())
 }
 
 #[test]
@@ -389,4 +383,16 @@ fn test_encore() {
     b.do_attack(FORWARD, Move::QuickAttack, SelectedTarget::Implied);
     b.do_attack(BACK, Move::Encore, SelectedTarget::Implied);
     assert_eq!(1, b.do_implicit_attack(FORWARD).len());
+}
+
+#[test]
+fn test_future_sight() {
+    let mut b = create_battlefield();
+    b.do_attack(FORWARD, Move::FutureSight, SelectedTarget::Implied);
+    b.end_of_round();
+    b.end_of_round();
+    let fx = b.end_of_round();
+    assert!(match fx.get(0).unwrap() {
+        ActionSideEffects::DirectDamage {..} => true, _ => false
+    })
 }
