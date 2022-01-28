@@ -1,3 +1,4 @@
+use simple_logger::SimpleLogger;
 use glazed_battle::{Battlefield, Party};
 use glazed_battle::SelectedTarget;
 use glazed_data::attack::Move;
@@ -6,6 +7,7 @@ use glazed_data::item::Berry;
 use glazed_data::pokemon::PokemonTemplate;
 
 fn main() {
+    SimpleLogger::new().init().unwrap();
     // for _ in 1..=40 {
     let me = Party::create(vec![
         PokemonTemplate::pokemon(Species::Quilava, 40).shiny(),
@@ -16,12 +18,7 @@ fn main() {
     let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 20).holding(Berry::SitrusBerry));
 
     let mut battlefield = Battlefield::single_battle(me, them);
-    println!("{:#?}", battlefield);
-
-    let fx = battlefield.do_attack(0, Move::Rollout, SelectedTarget::Implied);
-    println!("{:#?}", fx);
-    let fx = battlefield.do_implicit_attack(0);
-    // let fx = battlefield.end_of_round();
-    println!("{:#?}", fx);
+    battlefield.do_attack(0, Move::Rollout, SelectedTarget::Implied);
+    battlefield.do_implicit_attack(0);
     // }
 }

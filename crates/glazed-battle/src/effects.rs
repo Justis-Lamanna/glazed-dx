@@ -1,6 +1,7 @@
 use std::cell::RefMut;
 use std::convert::TryFrom;
 use std::mem::take;
+use log::debug;
 
 use rand::Rng;
 use strum::IntoEnumIterator;
@@ -143,6 +144,7 @@ impl Battlefield {
         let mut effects = Vec::new();
         let side = self.get_side_by_active_id(slot).borrow();
         let mut pkmn = self.get_active_pokemon_by_active_id(slot);
+        debug!("Pokemon enters battle in slot {}: {:?}", slot, pkmn);
         let pkmn_ability = pkmn.get_effective_ability();
 
         let grounded = || self.field.borrow().gravity > 0 || pkmn.borrow().is_holding(Item::IronBall) || pkmn.data.borrow().rooted;
@@ -150,18 +152,27 @@ impl Battlefield {
             ((pkmn.get_effective_type().has_type(&Type::Flying) ||  pkmn_ability == Ability::Levitate) && !grounded());
 
         // Spikes
-        if side.spikes > 0 && !immune_to_spikes {
-            let max_hp = pkmn.borrow().hp.value;
-            let damage = max_hp / get_spikes_damage(side.spikes);
+        if side.spikes > 0 {
+            if immune_to_spikes {
+                debug!("Immune to spikes")
+            } else {
+                let max_hp = pkmn.borrow().hp.value;
+                let damage = max_hp / get_spikes_damage(side.spikes);
 
-            let (start_hp, end_hp) = pkmn.borrow_mut().subtract_hp(damage);
-            effects.push(ActionSideEffects::BasicDamage {
-                damaged: slot,
-                start_hp,
-                end_hp,
-                cause: Cause::PokemonFieldState(FieldCause::Spikes)
-            });
-            if end_hp == 0 { return effects; }
+                let (start_hp, end_hp) = pkmn.borrow_mut().subtract_hp(damage);
+                debug!("Spike damage: {} ({} -> {})", end_hp - start_hp, start_hp, end_hp);
+                effects.push(ActionSideEffects::BasicDamage {
+                    damaged: slot,
+                    start_hp,
+                    end_hp,
+                    cause: Cause::PokemonFieldState(FieldCause::Spikes)
+                });
+
+                if end_hp == 0 {
+                    debug!("Pokemon fainted");
+                    return effects;
+                }
+            }
         }
 
         effects
@@ -170,6 +181,7 @@ impl Battlefield {
     /// Called when swapping to a new Pokemon
     pub fn swap_pokemon(&mut self, slot: SlotId, member: PartyMemberId, baton_pass: bool) -> Vec<ActionSideEffects> {
         let s = self.get_active_pokemon_by_active_id(slot);
+        debug!("Pokemon leaving battle in slot {}: {:?}", slot, s);
         // Call hook for when a Pokemon swaps out
         for e_slot in self.get_everyone() {
             if e_slot.slot_id != slot {
@@ -182,8 +194,10 @@ impl Battlefield {
         // Clear data. Baton pass is just a partial clear
         if baton_pass {
             s.data.replace_with(|t| t.baton_pass());
+            debug!("Baton pass data: {:?}", s.data.borrow());
         } else {
             s.data.replace(BattleData::default());
+            debug!("Clearing data")
         }
 
         // Call hook for start of turn action
@@ -200,6 +214,7 @@ impl Battlefield {
     /// Perform a regular attack
     pub fn do_attack(&mut self, attacker_id: SlotId, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let attacker = self.get_active_pokemon_by_active_id(attacker_id);
+        debug!("{:?} (Slot {}) uses attack {:?} on target {:?}", attacker.borrow().species, attacker_id, attack, defender);
         attacker.data.borrow_mut().start_of_turn();
         attacker.data.borrow_mut().proxy_move = Some(attack);
 
@@ -209,23 +224,26 @@ impl Battlefield {
     /// Do an attack a Pokemon is locked in to (example: charge attack selected the previous turn)
     pub fn do_implicit_attack(&mut self, attacker_id: SlotId) -> Vec<ActionSideEffects> {
         let attacker = self.get_active_pokemon_by_active_id(attacker_id);
+        debug!("{:?} (Slot {}) using implicit attack", attacker.borrow().species, attacker_id);
         attacker.data.borrow_mut().start_of_turn();
 
         let mut data = attacker.data.borrow_mut();
         match data.forced_action {
             Some(ForcedAction::DoNothing) => {
+                debug!("Doing nothing");
                 data.forced_action = None;
                 vec![ActionSideEffects::Recharging(Cause::Natural)]
             },
             Some(ForcedAction::FinishAttack(attack, target)) => {
+                debug!("Finishing attack {:?} on target {:?}", attack, target);
                 data.invulnerable = None;
                 data.forced_action = None;
                 drop(data);
                 let effects = self._do_attack(attacker_id, attack, target);
-                attacker.data.borrow_mut().set_last_used_move(attack);
                 effects
             },
             Some(ForcedAction::AttackWithWeakCounter(attack, counter)) => {
+                debug!("Continuing attack {:?} (turns left: {})", attack, counter);
                 drop(data);
                 let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
                 let damaged = ActionSideEffects::did_damage(&effects);
@@ -236,7 +254,11 @@ impl Battlefield {
 
                 let mut data = attacker.data.borrow_mut();
                 data.set_last_used_move(attack);
-                data.forced_action = if !damaged || counter == 1 {
+                data.forced_action = if !damaged {
+                    debug!("Ending attack (no damage done)");
+                    None
+                } else if counter == 1 {
+                    debug!("Attack completed");
                     None
                 } else {
                     Some(ForcedAction::AttackWithWeakCounter(attack, counter - 1))
@@ -244,12 +266,14 @@ impl Battlefield {
                 effects
             },
             Some(ForcedAction::AttackWithCounter(attack, counter)) => {
+                debug!("Continuing attack {:?} (turns left: {})", attack, counter);
                 drop(data);
                 let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
 
                 let mut data = attacker.data.borrow_mut();
                 data.set_last_used_move(attack);
                 data.forced_action = if counter == 1 {
+                    debug!("Attack completed");
                     None
                 } else {
                     Some(ForcedAction::AttackWithWeakCounter(attack, counter - 1))
@@ -257,12 +281,15 @@ impl Battlefield {
                 effects
             },
             Some(ForcedAction::Bide(damage, counter)) => {
+                debug!("Biding (turns left: {}, total damage: {})", counter, damage);
                 if counter == 1 {
                     let damage = damage.saturating_mul(2);
                     let effects = if let Some((defender, _)) = attacker.data.borrow().last_attacker {
+                        debug!("Biding complete, inflicting damage {} on target {:?}", damage, defender);
                         attacker.data.borrow_mut().set_last_used_move(Move::Bide);
                         self.do_bide_damage(&attacker, damage, &self.get_active_pokemon_by_active_id(defender))
                     } else {
+                        debug!("Biding complete, no target");
                         vec![ActionSideEffects::NoTarget]
                     };
                     attacker.data.borrow_mut().forced_action = None;
@@ -271,12 +298,16 @@ impl Battlefield {
                     vec![ActionSideEffects::BideContinue(attacker_id)]
                 }
             }
-            None => vec![],
+            None => {
+                debug!("No implicit action, nothing happened.");
+                vec![ActionSideEffects::NothingHappened]
+            },
         }
     }
 
     /// Do all the end-of-turn things
     pub fn end_of_round(&mut self) -> Vec<ActionSideEffects> {
+        debug!("Running End-of-round checks for field: {:?}", self.field.borrow());
         let mut effects = Vec::new();
 
         let future_attacks = self.field.borrow_mut().decrement_future_attack_counters();
@@ -292,17 +323,22 @@ impl Battlefield {
             };
             let defender = self.get_active_pokemon_by_active_id(recipient);
             if defender.borrow().has_health() {
+                debug!("Executing future attack {:?} on {:?}", attack, recipient);
                 effects.append(&mut self.do_damage(&mock_attacker, attack, &defender, false));
+            } else {
+                debug!("Future attack failed: target is fainted");
             }
         }
 
         let both_sides = self.get_sides_with_id();
         for (id, side) in both_sides {
+            debug!("Running End-of-round checks for side {}: {:?}", id, side.borrow());
             effects.append(&mut turn::do_screen_countdown(id, side));
         }
 
         let everyone = self.get_everyone();
         for pokemon in everyone {
+            debug!("Running End-of-round checks for pokemon: {:?}", pokemon);
             pokemon.data.borrow_mut().end_of_round();
 
             if pokemon.borrow().is_fainted() { continue; }
@@ -318,6 +354,7 @@ impl Battlefield {
             let mut data = pokemon.data.borrow_mut();
             if data.perish_song_counter > 0 {
                 data.perish_song_counter = data.perish_song_counter.saturating_sub(1);
+                debug!("Decrement perish song counter to {}", data.perish_song_counter);
                 effects.push(ActionSideEffects::PerishCount(pokemon.slot_id, data.perish_song_counter));
                 if data.perish_song_counter == 0 {
                     effects.append(&mut Battlefield::faint(&pokemon, Cause::MoveSideEffect(Move::PerishSong)));
@@ -331,6 +368,7 @@ impl Battlefield {
 
     /// Run weather effects
     pub fn do_weather(&self) -> Vec<ActionSideEffects> {
+        debug!("Running weather checks");
         let mut effects = Vec::new();
         let mut field = self.field.borrow_mut();
         // Weather Effects
@@ -339,10 +377,12 @@ impl Battlefield {
                 WeatherCounter::Sun(ctr) => {
                     let ctr = *ctr - 1;
                     if ctr == 0 {
+                        debug!("Harsh sunlight ends");
                         effects.push(ActionSideEffects::EndWeather(Weather::HarshSun));
                         field.weather = None;
                     }
                     else {
+                        debug!("Harsh sunlight continues ({} turns left)", ctr);
                         effects.push(ActionSideEffects::ContinueWeather(Weather::HarshSun));
                         field.weather = Some(WeatherCounter::Sun(ctr))
                     }
@@ -350,24 +390,29 @@ impl Battlefield {
                 WeatherCounter::Rain(ctr) => {
                     let ctr = *ctr - 1;
                     if ctr == 0 {
+                        debug!("Rain ends");
                         effects.push(ActionSideEffects::EndWeather(Weather::Rain));
                         field.weather = None;
                     }
                     else {
+                        debug!("Rain continues ({} turns left)", ctr);
                         effects.push(ActionSideEffects::ContinueWeather(Weather::Rain));
                         field.weather = Some(WeatherCounter::Rain(ctr))
                     }
                 },
                 WeatherCounter::Fog => {
+                    debug!("Fog continues");
                     effects.push(ActionSideEffects::ContinueWeather(Weather::Fog))
                 },
                 WeatherCounter::Hail(ctr) => {
                     let ctr = *ctr - 1;
                     if ctr == 0 {
+                        debug!("Hail ends");
                         effects.push(ActionSideEffects::EndWeather(Weather::Hail));
                         field.weather = None;
                     }
                     else {
+                        debug!("Hail continues ({} turns left)", ctr);
                         effects.push(ActionSideEffects::ContinueWeather(Weather::Hail));
                         field.weather = Some(WeatherCounter::Hail(ctr));
                         // Hail Damage
@@ -376,12 +421,15 @@ impl Battlefield {
                             if !immune_to_ice {
                                 let damage = pkmn.borrow().hp.value / 16;
                                 let (start_hp, end_hp) = pkmn.borrow_mut().subtract_hp(damage);
+                                debug!("Hail damage to {:?}: {} ({} -> {})", pkmn.slot_id, end_hp - start_hp, start_hp, end_hp);
                                 effects.push(ActionSideEffects::BasicDamage {
                                     damaged: pkmn.slot_id,
                                     start_hp,
                                     end_hp,
                                     cause: Cause::PokemonFieldState(FieldCause::Weather(Weather::Hail))
                                 })
+                            } else {
+                                debug!("{:?} is immune to Hail damage", pkmn.slot_id);
                             }
                         }
                     }
@@ -389,10 +437,12 @@ impl Battlefield {
                 WeatherCounter::Sandstorm(ctr) => {
                     let ctr = *ctr - 1;
                     if ctr == 0 {
+                        debug!("Sandstorm ends");
                         effects.push(ActionSideEffects::EndWeather(Weather::Sandstorm));
                         field.weather = None;
                     }
                     else {
+                        debug!("Sandstorm continues ({} turns left)", ctr);
                         effects.push(ActionSideEffects::ContinueWeather(Weather::Sandstorm));
                         field.weather = Some(WeatherCounter::Sandstorm(ctr));
                         // Sandstorm Damage
@@ -404,12 +454,15 @@ impl Battlefield {
                             if !immune_to_standstorm {
                                 let damage = pkmn.borrow().hp.value / 16;
                                 let (start_hp, end_hp) = pkmn.borrow_mut().subtract_hp(damage);
+                                debug!("Sandstorm damage to {:?}: {} ({} -> {})", pkmn.slot_id, end_hp - start_hp, start_hp, end_hp);
                                 effects.push(ActionSideEffects::BasicDamage {
                                     damaged: pkmn.slot_id,
                                     start_hp,
                                     end_hp,
                                     cause: Cause::PokemonFieldState(FieldCause::Weather(Weather::Sandstorm))
                                 })
+                            } else {
+                                debug!("{:?} is immune to Hail damage", pkmn.slot_id);
                             }
                         }
                     }
