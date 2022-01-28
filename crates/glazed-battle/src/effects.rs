@@ -203,49 +203,7 @@ impl Battlefield {
         attacker.data.borrow_mut().start_of_turn();
         attacker.data.borrow_mut().proxy_move = Some(attack);
 
-        let move_data = attack.data();
-
-        if let Power::BaseWithCharge(_, place) = move_data.power {
-            let mut effects = vec![ActionSideEffects::Charging(attacker_id, attack)];
-
-            // Skull Bash has a unique effect where it raises user defense on its charging turn
-            if attack == Move::SkullBash {
-                let effect = change_self_stat(&attacker, BattleStat::Defense, 1);
-                if let ActionSideEffects::NoEffectSecondary(_) = effect { }
-                else {
-                    effects.push(effect);
-                }
-            }
-
-            let mut data = attacker.data.borrow_mut();
-
-            if let Some(s) = place {
-                data.invulnerable = Some(s);
-            }
-
-            data.forced_action = Some(ForcedAction::FinishAttack(attack, defender));
-
-            effects
-        } else if let Power::BaseAfterNTurns(_, turns) = move_data.power {
-            let mut field = self.field.borrow_mut();
-
-            let defender = match defender {
-                SelectedTarget::Implied => {
-                    let options = self.get_opposite_slots(attacker_id);
-                    *options.first().unwrap()
-                },
-                SelectedTarget::One(a) => a
-            };
-
-            if field.will_receive_future_attack(defender) {
-                vec![ActionSideEffects::Failed(Cause::Natural)]
-            } else {
-                field.add_future_attack(attacker.id(), attack, turns, defender);
-                vec![ActionSideEffects::FutureSight(attacker.slot_id)]
-            }
-        } else {
-            self._do_attack(attacker_id, attack, defender)
-        }
+        self._do_attack(attacker_id, attack, defender)
     }
 
     /// Do an attack a Pokemon is locked in to (example: charge attack selected the previous turn)
@@ -270,7 +228,7 @@ impl Battlefield {
             Some(ForcedAction::AttackWithWeakCounter(attack, counter)) => {
                 drop(data);
                 let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
-                let damaged = effects.iter().any(|e| e.did_damage());
+                let damaged = ActionSideEffects::did_damage(&effects);
 
                 if counter == 1 && attack == Move::Thrash {
                     effects.append(&mut inflict_confusion(&self.get_active_pokemon_by_active_id(attacker_id)));
@@ -510,6 +468,46 @@ impl Battlefield {
                 (*selected, SelectedTarget::Implied)
             }
         } else {
+            let move_data = attack.data();
+            if let Power::BaseWithCharge(_, place) = move_data.power {
+                effects.push(ActionSideEffects::Charging(attacker_id, attack));
+
+                // Skull Bash has a unique effect where it raises user defense on its charging turn
+                if attack == Move::SkullBash {
+                    let effect = change_self_stat(&attacker, BattleStat::Defense, 1);
+                    if let ActionSideEffects::NoEffectSecondary(_) = effect { }
+                    else {
+                        effects.push(effect);
+                    }
+                }
+
+                let mut data = attacker.data.borrow_mut();
+
+                if let Some(s) = place {
+                    data.invulnerable = Some(s);
+                }
+
+                data.forced_action = Some(ForcedAction::FinishAttack(attack, defender));
+
+                return effects;
+            } else if let Power::BaseAfterNTurns(_, turns) = move_data.power {
+                let mut field = self.field.borrow_mut();
+
+                let defender = match defender {
+                    SelectedTarget::Implied => {
+                        let options = self.get_opposite_slots(attacker_id);
+                        *options.first().unwrap()
+                    },
+                    SelectedTarget::One(a) => a
+                };
+
+                if field.will_receive_future_attack(defender) {
+                    effects.push(ActionSideEffects::Failed(Cause::Natural))
+                } else {
+                    field.add_future_attack(attacker.id(), attack, turns, defender);
+                    effects.push(ActionSideEffects::FutureSight(attacker.slot_id))
+                }
+            }
             (attack, defender)
         };
 

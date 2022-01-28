@@ -193,6 +193,17 @@ impl Party {
     pub fn len(&self) -> usize {
         self.size
     }
+
+    pub fn members(&self) -> Vec<&RefCell<Pokemon>> {
+        let mut vec = Vec::with_capacity(self.len());
+        if let Some(a) = &self.one { vec.push(a); }
+        if let Some(a) = &self.two { vec.push(a); }
+        if let Some(a) = &self.three { vec.push(a); }
+        if let Some(a) = &self.four { vec.push(a); }
+        if let Some(a) = &self.five { vec.push(a); }
+        if let Some(a) = &self.six { vec.push(a); }
+        vec
+    }
 }
 impl Index<usize> for Party {
     type Output = Option<RefCell<Pokemon>>;
@@ -1715,14 +1726,22 @@ impl ActionSideEffects {
         }
     }
 
-    pub fn did_damage(&self) -> bool {
-        match self {
-            ActionSideEffects::BasicDamage {..} | ActionSideEffects::DirectDamage {..} => true,
-            _ => false
-        }
+    // pub fn did_damage(&self) -> bool {
+    //     match self {
+    //         ActionSideEffects::BasicDamage {..} | ActionSideEffects::DirectDamage {..} => true,
+    //         _ => false
+    //     }
+    // }
+
+    pub fn did_damage(list: &Vec<ActionSideEffects>) -> bool {
+        list.iter()
+            .any(|e| match e {
+                ActionSideEffects::BasicDamage {..} | ActionSideEffects::DirectDamage {..} => true,
+                _ => false
+            })
     }
 
-    pub fn succeeded(list: Vec<ActionSideEffects>) -> bool {
+    pub fn succeeded(list: &Vec<ActionSideEffects>) -> bool {
         list.iter()
             .any(|e| match e {
                 ActionSideEffects::NoEffect(_) | ActionSideEffects::NoEffectSecondary(_) |

@@ -491,10 +491,6 @@ impl Battlefield { //region Damage
                     let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
                     let damage_action = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
 
-                    if damage_action.iter().any(|e| e.did_damage()) {
-
-                    }
-
                     effects.push(damage_action);
                     counter += 1;
                     if defender.borrow().is_fainted() || attacker.borrow().is_fainted() {
@@ -507,77 +503,85 @@ impl Battlefield { //region Damage
                     hits: counter
                 }]
             },
-        //     Power::MultiHit(MultiHitFlavor::Accumulating(first, second, third)) => {
-        //         let mut effects = Vec::new();
-        //         let mut counter = 0;
-        //         let strike_powers = vec![first, second, third];
-        //         for base in strike_powers {
-        //             let move_context = MoveContext {
-        //                 attack,
-        //                 data: move_data,
-        //                 base_power: u16::from(*base)
-        //             };
-        //
-        //             let turn_effects = self.do_damage_from_base_power(attacker, move_context, defender);
-        //
-        //             let end_turn = turn_effects.iter().any(|e| e.is_multi_hit_end());
-        //             let got_hit = turn_effects.iter().any(|e| match e {
-        //                 ActionSideEffects::DirectDamage { .. } => true,
-        //                 _ => false
-        //             });
-        //             effects.push(turn_effects);
-        //
-        //             if got_hit {
-        //                 counter += 1;
-        //             }
-        //             if end_turn {
-        //                 break;
-        //             }
-        //         }
-        //
-        //         vec![ActionSideEffects::MultiStrike {
-        //             actions: effects,
-        //             hits: counter
-        //         }]
-        //     },
-        //     Power::MultiHit(MultiHitFlavor::BeatUp) => {
-        //         let mut effects = Vec::new();
-        //         let mut counter = 0;
-        //         // let base_powers = attacker.get_party().members
-        //         //     .iter()
-        //         //     .map(|p| p.species.data().stats.1.base_stat)
-        //         //     .collect::<Vec<u8>>();
-        //         let base_powers = vec![1u8,2u8,3u8];
-        //
-        //         for base in base_powers {
-        //             let move_context = MoveContext {
-        //                 attack,
-        //                 data: move_data,
-        //                 base_power: u16::from(base)
-        //             };
-        //
-        //             let turn_effects = self.do_damage_from_base_power(attacker, move_context, defender);
-        //
-        //             let end_turn = turn_effects.iter().any(|e| e.is_multi_hit_end());
-        //             let got_hit = turn_effects.iter().any(|e| match e {
-        //                 ActionSideEffects::DirectDamage { .. } => true,
-        //                 _ => false
-        //             });
-        //             effects.push(turn_effects);
-        //
-        //             if got_hit {
-        //                 counter += 1;
-        //             }
-        //             if end_turn {
-        //                 break;
-        //             }
-        //         }
-        //
-        //         vec![ActionSideEffects::MultiStrike {
-        //             actions: effects,
-        //             hits: counter
-        //         }]
-        //     }
+            Power::MultiHit(MultiHitFlavor::Accumulating(first, second, third)) => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    return vec![ActionSideEffects::NoEffect(cause)]
+                }
+
+                let mut effects = Vec::new();
+                let mut counter = 0;
+                let strike_powers = vec![first, second, third];
+                for base in strike_powers {
+                    let move_context = MoveContext {
+                        attack,
+                        data: move_data,
+                        base_power: u16::from(*base)
+                    };
+
+                    let is_crit = crit();
+                    let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
+                    let turn_effects = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
+
+                    effects.push(turn_effects);
+                    counter += 1;
+                    if defender.borrow().is_fainted() || attacker.borrow().is_fainted() {
+                        break;
+                    }
+                }
+
+                vec![ActionSideEffects::MultiStrike {
+                    actions: effects,
+                    hits: counter
+                }]
+            },
+            Power::MultiHit(MultiHitFlavor::BeatUp) => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    return vec![ActionSideEffects::NoEffect(cause)]
+                }
+
+                let mut effects = Vec::new();
+                let mut counter = 0;
+                let base_powers = attacker.party
+                    .members()
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(slot, pkmn)| {
+                        if slot == attacker.party_slot_id ||
+                            pkmn.borrow().is_fainted() ||
+                            pkmn.borrow().status.has_status_condition() {
+                            None
+                        } else {
+                            let atk = pkmn.borrow().attack.value;
+                            Some((atk / 10) + 5)
+                        }
+                    })
+                    .collect::<Vec<u16>>();
+
+                for base_power in base_powers {
+                    let move_context = MoveContext {
+                        attack,
+                        data: move_data,
+                        base_power
+                    };
+
+                    let is_crit = crit();
+                    let damage = self.calculate_full_damage(attacker, move_context, defender, is_multi_target, is_crit, effectiveness);
+                    let turn_effects = Battlefield::lower_hp(attacker, defender, attack, damage, is_crit, effectiveness);
+
+                    effects.push(turn_effects);
+                    counter += 1;
+                    if defender.borrow().is_fainted() || attacker.borrow().is_fainted() {
+                        break;
+                    }
+                }
+
+                vec![ActionSideEffects::MultiStrike {
+                    actions: effects,
+                    hits: counter
+                }]
+            }
             Power::Variable => {
                 match attack {
                     Move::SeismicToss | Move::NightShade => {
