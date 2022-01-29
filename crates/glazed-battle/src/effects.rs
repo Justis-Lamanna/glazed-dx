@@ -1,7 +1,7 @@
 use std::cell::RefMut;
 use std::convert::TryFrom;
 use std::mem::take;
-use log::debug;
+use log::{debug, Level, log_enabled, logger};
 
 use rand::Rng;
 use strum::IntoEnumIterator;
@@ -17,14 +17,17 @@ use crate::*;
 
 pub fn inflict_confusion(afflicted: &Slot) -> Vec<ActionSideEffects> {
     if afflicted.get_effective_ability() == Ability::OwnTempo {
+        debug!("Failed to inflict confusion, {:?} has Own Tempo", afflicted.id());
         return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(afflicted.id(), Ability::OwnTempo))]
     }
 
     let mut data = afflicted.data.borrow_mut();
     if data.confused > 0 {
+        debug!("Failed to inflict confusion, Pokemon is already confused");
         vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
     } else {
         data.confused = rand::thread_rng().gen_range(CONFUSION_TURN_RANGE);
+        debug!("Inflicted confusion for {} turns", data.confused);
         vec![ActionSideEffects::Confuse(afflicted.slot_id)]
     }
 }
@@ -32,17 +35,21 @@ pub fn inflict_confusion(afflicted: &Slot) -> Vec<ActionSideEffects> {
 pub fn inflict_infatuation(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
     if attacker.get_effective_gender().can_infatuate(target.get_effective_gender()) {
         if target.get_effective_ability() == Ability::Oblivious {
+            debug!("Failed to inflict infatuation, {:?} has Oblivious", target.id());
             return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(target.id(), Ability::Oblivious))]
         }
 
         let mut data = target.data.borrow_mut();
         if data.infatuated {
+            debug!("Failed to inflict infatuation, {:?} is already infatuated", target.id());
             vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
         } else {
+            debug!("Inflicted infatuation on {:?}", target.id());
             data.infatuated = true;
             vec![ActionSideEffects::Infatuated(target.slot_id)]
         }
     } else {
+        debug!("Failed to inflict infatuation, {:?} and {:?} are incompatible", attacker.borrow().species, target.borrow().species);
         vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
     }
 }
@@ -51,10 +58,13 @@ fn _change_stat(affected: &Slot, stat: BattleStat, stages: i8, cause: Cause) -> 
     let current = affected.get_stat_stage(stat);
     let next = current + stages;
     return if next > MAX_STAGE {
+        debug!("Can't raise {:?} {:?} stat, already at {}", affected.id(), stat, MAX_STAGE);
         ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.slot_id, PokemonState::StatsMaxed(StatsCause::TooHigh)))
     } else if next < MIN_STAGE {
+        debug!("Can't lower {:?} {:?} stat, already at {}", affected.id(), stat, MIN_STAGE);
         ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.slot_id, PokemonState::StatsMaxed(StatsCause::TooLow)))
     } else {
+        debug!("Increased {:?} {:?} stat ({} -> {})", affected.id(), stat, current, next);
         let mut data = affected.data.borrow_mut();
         match stat {
             BattleStat::Attack => data.attack_stage = next,
@@ -83,13 +93,15 @@ pub fn change_self_stat(affected: &Slot, stat: BattleStat, stages: i8) -> Action
         _ => (Cause::Natural, stages)
     };
 
-    _change_stat(affected, stat, stages, ability_cause)
+    debug!("Changing {:?} {:?} stat by {} (affected by {:?})", affected.id(), stat, stages, ability_cause);
+    _change_stat(affected, stat, stages, Cause::Natural)
 }
 
 pub fn change_opponent_stat(field: &Battlefield, affecter: &Slot, affected: &Slot, stat: BattleStat, stages: i8) -> ActionSideEffects {
     let affected_side = field.get_side_by_party_id(affected.party_id);
 
     if affected_side.borrow().mist > 0 {
+        debug!("Cannot change stat, Mist in effect");
         return ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Mist))
     }
 
@@ -112,11 +124,13 @@ pub fn change_opponent_stat(field: &Battlefield, affecter: &Slot, affected: &Slo
         _ => (Cause::Natural, stages)
     };
 
+    debug!("Changing {:?} {:?} stat by {} (affected by {:?})", affected.id(), stat, stages, ability_cause);
     _change_stat(affected, stat, stages, ability_cause)
 }
 
 pub fn inflict_non_volatile_status(affected: &Slot, status: NonVolatileBattleAilment) -> Vec<ActionSideEffects> {
     {
+        debug!("Inflicting status {:?} to {:?}", status, affected.id());
         let mut data = affected.data.borrow_mut();
         let mut affected = affected.borrow_mut();
         match status {
@@ -491,24 +505,34 @@ impl Battlefield {
 
         let (attack, defender) = if attack == Move::Metronome {
             let rand_attack = Move::metronome();
+            debug!("{:?} turned into {:?}", attack, rand_attack);
             effects.push(ActionSideEffects::Metronome(attacker_id, rand_attack));
             attacker.data.borrow_mut().proxy_move = Some(Move::Metronome);
             (rand_attack, SelectedTarget::Implied)
         } else if attack == Move::MirrorMove {
             let data = attacker.data.borrow_mut();
             if let Some((_, attack)) = data.get_last_targeted_attack() {
+                debug!("Mirror Move turned into {:?}", attack);
                 (attack, SelectedTarget::Implied)
             } else {
+                debug!("Mirror Move failed: no last targeted attack");
                 effects.push(ActionSideEffects::Failed(Cause::Natural));
                 return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
             }
         } else if attack == Move::SleepTalk {
+            if !attacker.borrow().status.is_asleep() {
+                debug!("Sleep Talk failed: user is not asleep");
+                effects.push(ActionSideEffects::Failed(Cause::Natural));
+                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
+            }
+
             let candidates = attacker.get_effective_known_moves()
                 .iter()
                 .filter(|m| m.can_be_sleep_talked())
                 .map(|m| *m)
                 .collect::<Vec<Move>>();
             if candidates.is_empty() {
+                debug!("Sleep Talk failed: no sleep-talkable moves known");
                 effects.push(ActionSideEffects::Failed(Cause::Natural));
                 return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
             } else {
@@ -517,12 +541,14 @@ impl Battlefield {
                 } else {
                     candidates.get(rand::thread_rng().gen_range(0..candidates.len())).unwrap()
                 };
+                debug!("Sleep Talk turned into {:?}", selected);
                 effects.push(ActionSideEffects::SleepTalk(attacker_id, *selected));
                 (*selected, SelectedTarget::Implied)
             }
         } else {
             let move_data = attack.data();
             if let Power::BaseWithCharge(_, place) = move_data.power {
+                debug!("Attack {:?} charging (semi-unvulnerable: {:?}", attack, place);
                 effects.push(ActionSideEffects::Charging(attacker_id, attack));
 
                 // Skull Bash has a unique effect where it raises user defense on its charging turn
@@ -555,8 +581,10 @@ impl Battlefield {
                 };
 
                 if field.will_receive_future_attack(defender) {
+                    debug!("{:?} failed, {:?} already receiving an attack", attack, defender);
                     effects.push(ActionSideEffects::Failed(Cause::Natural))
                 } else {
+                    debug!("Adding future attack {:?} to {:?} in {} turns", attack, defender, turns);
                     field.add_future_attack(attacker.id(), attack, turns, defender);
                     effects.push(ActionSideEffects::FutureSight(attacker.slot_id))
                 }
@@ -569,18 +597,29 @@ impl Battlefield {
         // 0. Test if the attacker can use the move
         match accuracy::cannot_use_attack(&attacker, attack) {
             Ok(b) => {
-                if !b { effects.push(ActionSideEffects::Failed(Cause::Natural)); return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+                if !b {
+                    debug!("Failed attack check, cannot use attack {:?}", attack);
+                    effects.push(ActionSideEffects::Failed(Cause::Natural));
+                    return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
+                } else {
+                    debug!("Passed attack check");
+                }
             }
             Err(effect) => {
-                effects.push(effect); return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
+                debug!("{:?} failed, cannot use attack: {:?}", attack, effect);
+                effects.push(effect);
+                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
             }
         }
 
         // 1. Get the target(s)
         let targets = self.get_targets(attacker.slot_id, attack, defender);
         if targets.is_empty() {
+            debug!("No valid targets");
             effects.push(ActionSideEffects::NoTarget);
             return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
+        } else if log_enabled!(Level::Debug){
+            debug!("Targets resolved: {:?}", targets.iter().map(|s| s.borrow()).collect::<Vec<_>>());
         }
 
         for t in targets.iter() {
@@ -595,18 +634,22 @@ impl Battlefield {
             match hit {
                 Ok(b) => {
                     if b {
+                        debug!("Accuracy check passed");
                         targets_hit.push(defender);
                     } else {
+                        debug!("Accuracy check failed");
                         effects.push(ActionSideEffects::Missed(defender.slot_id, Cause::Natural));
                     }
                 }
                 Err(a) => {
+                    debug!("Accuracy check failed: {:?}", a);
                     effects.push(a);
                 }
             }
         }
 
         if targets_hit.is_empty() {
+            debug!("Missed all targets");
             return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
         }
         //endregion
@@ -614,6 +657,7 @@ impl Battlefield {
         effects.append(&mut self._do_damage_and_effects(&attacker, &targets_hit, attack, move_data));
 
         if effects.is_empty() {
+            debug!("Nothing happened");
             effects.push(ActionSideEffects::NothingHappened)
         }
 
@@ -626,6 +670,7 @@ impl Battlefield {
             .collect());
         //endregion
 
+        debug!("Success! Final effects: {:?}", effects);
         effects
     }
 
@@ -642,11 +687,15 @@ impl Battlefield {
                 match accuracy::cannot_use_attack_against(attacker, attack, defender) {
                     Ok(b) => {
                         if !b {
+                            debug!("Failed attack check: cannot use {:?} on {:?}", attack, defender.borrow());
                             effects.push(ActionSideEffects::Failed(Cause::Natural));
                             continue;
-                        } else {}
+                        } else {
+                            debug!("Passed attack check: can use {:?} on {:?}", attack, defender.borrow())
+                        }
                     }
                     Err(e) => {
+                        debug!("Failed attack check: cannot use {:?} on {:?}: {:?}", attack, defender.borrow(), e);
                         effects.push(e);
                         continue;
                     }
@@ -654,6 +703,7 @@ impl Battlefield {
 
                 if move_data.is_no_power_move() {
                     if defender.is_behind_substitute() && !attack.bypasses_substitute() {
+                        debug!("Status attack failed: cannot use {:?} on {:?} (behind substitute)", attack, defender.borrow());
                         effects.push(ActionSideEffects::Failed(Cause::Natural));
                         continue;
                     } else {
@@ -676,6 +726,7 @@ impl Battlefield {
         };
 
         if targets_for_secondary_damage.is_empty() {
+            debug!("No targets to apply statuses to");
             return self.run_on_attack_interrupt_hooks(attacker, attack, effects);
         }
         //endregion
@@ -691,8 +742,10 @@ impl Battlefield {
                 };
 
                 if matches {
+                    debug!("Predicate effect passed, running effect {:?}", if_match);
                     *if_match
                 } else {
+                    debug!("Predicate effect failed, running effect {:?}", if_match);
                     *if_not_match
                 }
             } else {
@@ -996,11 +1049,16 @@ impl Battlefield {
         } else {
             probability
         };
-        if probability == 0 || probability > 100 {
+        let activates = if probability == 0 || probability > 100 {
             true
         } else {
             rand::thread_rng().gen_bool(f64::from(probability) / 100f64)
+        };
+
+        if log_enabled!(Level::Debug) && activates {
+            debug!("Secondary effect activates")
         }
+        activates
     }
 
     /// Run an effect on all targets, doing probability check for each

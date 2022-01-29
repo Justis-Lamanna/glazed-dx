@@ -18,7 +18,7 @@ fn main() {
     let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 20).holding(Berry::SitrusBerry));
 
     let mut battlefield = Battlefield::single_battle(me, them);
-    battlefield.do_attack(0, Move::Rollout, SelectedTarget::Implied);
-    battlefield.do_implicit_attack(0);
+    battlefield.do_attack(0, Move::SleepTalk, SelectedTarget::Implied);
+    //battlefield.do_implicit_attack(0);
     // }
 }

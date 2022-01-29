@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use log::debug;
 
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{Move, MoveData, MultiHitFlavor, Power};
@@ -147,5 +148,6 @@ pub fn get_type_effectiveness(field: &Battlefield, attacker: &Slot, attack: Move
             (raw_effectiveness, Cause::Natural)
         };
 
+    debug!("Calculated effectiveness: {:?} (cause: {:?})", effectiveness, cause);
     (effectiveness, cause)
 }

@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+use log::debug;
 
 use rand::{Rng};
 use glazed_core::math;
@@ -43,12 +44,14 @@ pub fn calculate_confusion_damage(pkmn: &Slot) -> u16 {
 
 impl Battlefield { //region Damage
     fn determine_crit(attacker: &Slot, move_data: &MoveData) -> bool {
-        match attacker.get_raw_critical_hit() + move_data.crit_rate.unwrap_or(0) {
+        let crit = match attacker.get_raw_critical_hit() + move_data.crit_rate.unwrap_or(0) {
             0 => rand::thread_rng().gen_bool(0.0625),
             1 => rand::thread_rng().gen_bool(0.125),
             2 => rand::thread_rng().gen_bool(0.5),
             _ => true
-        }
+        };
+        debug!("Crit?: {}", crit);
+        crit
     }
 
     fn lower_hp(attacker: &Slot, defender: &Slot, attack: Move, damage: u16, is_crit: bool, effectiveness: Effectiveness) -> Vec<ActionSideEffects> {
@@ -59,6 +62,7 @@ impl Battlefield { //region Damage
 
             defender_data.substituted = end_hp;
 
+            debug!("Damaging substitute: {} -> {}", start_hp, end_hp);
             vec![ActionSideEffects::DamagedSubstitute {
                 damaged: defender.slot_id,
                 start_hp,
@@ -71,6 +75,7 @@ impl Battlefield { //region Damage
 
             let hang_on = if end_hp == 0 { Battlefield::do_hang_on_check(defender, was_full_hp) } else { None };
             let mut effects = if let Some(action) = hang_on {
+                debug!("Hanging on: {:?}", action);
                 let mut pkmn = defender.borrow_mut();
                 pkmn.current_hp = 1;
                 let mut e = vec![ActionSideEffects::DirectDamage {
@@ -112,6 +117,7 @@ impl Battlefield { //region Damage
 
             defender_data.substituted = end_hp;
 
+            debug!("Damaging substitute: {} -> {}", start_hp, end_hp);
             vec![ActionSideEffects::DamagedSubstitute {
                 damaged: defender.slot_id,
                 start_hp,
@@ -124,6 +130,7 @@ impl Battlefield { //region Damage
 
             let hang_on = if end_hp == 0 { Battlefield::do_hang_on_check(defender, was_full_hp) } else { None };
             let mut effects = if let Some(action) = hang_on {
+                debug!("Hanging on: {:?}", action);
                 let mut pkmn = defender.borrow_mut();
                 pkmn.current_hp = 1;
                 let mut e = vec![ActionSideEffects::BasicDamage {
@@ -164,6 +171,7 @@ impl Battlefield { //region Damage
         let mut data = defender.data.borrow_mut();
 
         if defender.borrow().is_fainted() && data.destiny_bond && !attacker.is_not_active() {
+            debug!("Defender has Destiny Bond");
             vec.append(&mut Battlefield::faint(attacker, Cause::MoveSideEffect(Move::DestinyBond)));
             return vec;
         }
@@ -190,6 +198,7 @@ impl Battlefield { //region Damage
 
         pkmn.current_hp = 0;
 
+        debug!("Pokemon {:?} fainted (cause {:?})", active.id(), cause);
         vec![ActionSideEffects::BasicDamage {
             damaged: active.slot_id,
             start_hp,
