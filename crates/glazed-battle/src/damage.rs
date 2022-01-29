@@ -387,7 +387,15 @@ impl Battlefield { //region Damage
                     Battlefield::lower_hp_basic(attacker, defender, attack, *damage as u16, Cause::Move(attacker.id(), attack))
                 }
             }
-        //     Power::Percentage(_) => self.do_percent_damage(attacker, attack, defender),
+            Power::Percentage(percentage) => {
+                let (effectiveness, cause) = effectiveness();
+                if let Effectiveness::Immune = effectiveness {
+                    vec![ActionSideEffects::NoEffect(cause)]
+                } else {
+                    let damage = math::cap_min(math::fraction(defender.borrow().current_hp, *percentage), 1);
+                    Battlefield::lower_hp_basic(attacker, defender, attack, damage, Cause::Move(attacker.id(), attack))
+                }
+            },
             Power::Revenge(a, damage) => {
                 let data = attacker.data.borrow();
                 let candidates = data.damage_this_turn.iter()
@@ -555,10 +563,8 @@ impl Battlefield { //region Damage
                 let base_powers = attacker.party
                     .members()
                     .iter()
-                    .enumerate()
-                    .filter_map(|(slot, pkmn)| {
-                        if slot == attacker.party_slot_id ||
-                            pkmn.borrow().is_fainted() ||
+                    .filter_map(|pkmn| {
+                        if pkmn.borrow().is_fainted() ||
                             pkmn.borrow().status.has_status_condition() {
                             None
                         } else {

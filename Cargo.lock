@@ -94,6 +94,7 @@ dependencies = [
  "glazed_battle",
  "glazed_core",
  "glazed_data",
+ "log",
  "simple_logger",
 ]
 

@@ -7,6 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+log = "0.4.14"
 simple_logger = "2.1.0"
 glazed_core = { path = "../glazed-core" }
 glazed_data = { path = "../glazed-data" }

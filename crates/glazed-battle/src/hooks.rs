@@ -1,4 +1,4 @@
-use log::debug;
+use log::{debug, info};
 use glazed_data::attack::{Move, Power};
 use crate::{ActionSideEffects, Battlefield, Slot};
 
@@ -6,7 +6,7 @@ impl Battlefield {
     /// Utility to allow for this common logic. Appends on_attack_interrupt effects with all the pre-existing effects
     pub(crate) fn run_on_attack_interrupt_hooks(&self, attacker: &Slot, attack: Move, mut effects: Vec<ActionSideEffects>) -> Vec<ActionSideEffects> {
         effects.append(&mut self.on_attack_interrupt(attacker, attack));
-        debug!("Failed! Final effects: {:?}", effects);
+        info!("Failed! Final effects: {:?}", effects);
         effects
     }
 

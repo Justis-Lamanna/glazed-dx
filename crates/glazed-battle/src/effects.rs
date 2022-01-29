@@ -1,7 +1,7 @@
 use std::cell::RefMut;
 use std::convert::TryFrom;
 use std::mem::take;
-use log::{debug, Level, log_enabled, logger};
+use log::{debug, info, Level, log_enabled, logger};
 use glazed_macro::{end_if_ko, if_healthy, if_ko, run_health_check};
 
 use rand::Rng;
@@ -15,143 +15,7 @@ use glazed_data::types::{Effectiveness, PokemonType, Type};
 use glazed_core::math;
 
 use crate::*;
-
-pub fn inflict_confusion(afflicted: &Slot) -> Vec<ActionSideEffects> {
-    if afflicted.get_effective_ability() == Ability::OwnTempo {
-        debug!("Failed to inflict confusion, {:?} has Own Tempo", afflicted.id());
-        return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(afflicted.id(), Ability::OwnTempo))]
-    }
-
-    let mut data = afflicted.data.borrow_mut();
-    if data.confused > 0 {
-        debug!("Failed to inflict confusion, Pokemon is already confused");
-        vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
-    } else {
-        data.confused = rand::thread_rng().gen_range(CONFUSION_TURN_RANGE);
-        debug!("Inflicted confusion for {} turns", data.confused);
-        vec![ActionSideEffects::Confuse(afflicted.slot_id)]
-    }
-}
-
-pub fn inflict_infatuation(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
-    if attacker.get_effective_gender().can_infatuate(target.get_effective_gender()) {
-        if target.get_effective_ability() == Ability::Oblivious {
-            debug!("Failed to inflict infatuation, {:?} has Oblivious", target.id());
-            return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(target.id(), Ability::Oblivious))]
-        }
-
-        let mut data = target.data.borrow_mut();
-        if data.infatuated {
-            debug!("Failed to inflict infatuation, {:?} is already infatuated", target.id());
-            vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
-        } else {
-            debug!("Inflicted infatuation on {:?}", target.id());
-            data.infatuated = true;
-            vec![ActionSideEffects::Infatuated(target.slot_id)]
-        }
-    } else {
-        debug!("Failed to inflict infatuation, {:?} and {:?} are incompatible", attacker.borrow().species, target.borrow().species);
-        vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
-    }
-}
-
-fn _change_stat(affected: &Slot, stat: BattleStat, stages: i8, cause: Cause) -> ActionSideEffects {
-    let current = affected.get_stat_stage(stat);
-    let next = current + stages;
-    return if next > MAX_STAGE {
-        debug!("Can't raise {:?} {:?} stat, already at {}", affected.id(), stat, MAX_STAGE);
-        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.slot_id, PokemonState::StatsMaxed(StatsCause::TooHigh)))
-    } else if next < MIN_STAGE {
-        debug!("Can't lower {:?} {:?} stat, already at {}", affected.id(), stat, MIN_STAGE);
-        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.slot_id, PokemonState::StatsMaxed(StatsCause::TooLow)))
-    } else {
-        debug!("Increased {:?} {:?} stat ({} -> {})", affected.id(), stat, current, next);
-        let mut data = affected.data.borrow_mut();
-        match stat {
-            BattleStat::Attack => data.attack_stage = next,
-            BattleStat::Defense => data.defense_stage = next,
-            BattleStat::SpecialAttack => data.special_attack_stage = next,
-            BattleStat::SpecialDefense => data.special_defense_stage = next,
-            BattleStat::Speed => data.speed_stage = next,
-            BattleStat::Accuracy => data.accuracy_stage = next,
-            BattleStat::Evasion => data.evasion_stage = next,
-            BattleStat::CriticalHitRatio => data.crit_stage = if next < 0 { 0 } else { u8::try_from(next).unwrap() }
-        };
-        ActionSideEffects::StatChanged {
-            stat,
-            affected: affected.slot_id,
-            cause,
-            start: current,
-            end: next
-        }
-    }
-}
-
-pub fn change_self_stat(affected: &Slot, stat: BattleStat, stages: i8) -> ActionSideEffects {
-    let (ability_cause, stages) = match affected.get_effective_ability() {
-        Ability::Simple => (Cause::Ability(affected.id(), Ability::Simple), stages * 2),
-        Ability::Contrary => (Cause::Ability(affected.id(), Ability::Contrary), -stages),
-        _ => (Cause::Natural, stages)
-    };
-
-    debug!("Changing {:?} {:?} stat by {} (affected by {:?})", affected.id(), stat, stages, ability_cause);
-    _change_stat(affected, stat, stages, Cause::Natural)
-}
-
-pub fn change_opponent_stat(field: &Battlefield, affecter: &Slot, affected: &Slot, stat: BattleStat, stages: i8) -> ActionSideEffects {
-    let affected_side = field.get_side_by_party_id(affected.party_id);
-
-    if affected_side.borrow().mist > 0 {
-        debug!("Cannot change stat, Mist in effect");
-        return ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Mist))
-    }
-
-    let (ability_cause, stages) = match affected.get_effective_ability() {
-        Ability::Simple => (Cause::Ability(affected.id(), Ability::Simple), stages * 2),
-        Ability::Contrary  => {
-            let cause = Cause::Ability(affected.id(), Ability::Contrary);
-            match affected.get_effective_ability() {
-                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id(), oc)), -stages),
-                _ => (cause, stages)
-            }
-        },
-        oc@ (Ability::ClearBody | Ability::WhiteSmoke) => {
-            let cause = Cause::Ability(affected.id(), oc);
-            match affected.get_effective_ability() {
-                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id(), oc)), stages),
-                _ => return ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id(), oc))
-            }
-        }
-        _ => (Cause::Natural, stages)
-    };
-
-    debug!("Changing {:?} {:?} stat by {} (affected by {:?})", affected.id(), stat, stages, ability_cause);
-    _change_stat(affected, stat, stages, ability_cause)
-}
-
-pub fn inflict_non_volatile_status(affected: &Slot, status: NonVolatileBattleAilment) -> Vec<ActionSideEffects> {
-    {
-        debug!("Inflicting status {:?} to {:?}", status, affected.id());
-        let mut data = affected.data.borrow_mut();
-        let mut affected = affected.borrow_mut();
-        match status {
-            NonVolatileBattleAilment::Paralysis => affected.status.paralysis = true,
-            NonVolatileBattleAilment::Sleep => affected.status.sleep = rand::thread_rng().gen_range(SLEEP_TURNS_RANGE),
-            NonVolatileBattleAilment::Freeze => affected.status.freeze = true,
-            NonVolatileBattleAilment::Burn => affected.status.burn = true,
-            NonVolatileBattleAilment::Poison(a) => {
-                affected.status.poison = true;
-                if let PoisonType::BadlyPoisoned = a {
-                    data.poison_counter = 1;
-                }
-            }
-        }
-    }
-    vec![ActionSideEffects::NonVolatileStatusAilment {
-        affected: affected.slot_id,
-        status
-    }]
-}
+use crate::effects::ProxyResult::{ContinueWith, DoNothing, Interrupt};
 
 impl Battlefield {
     /// Called when a Pokemon enters battle (either at start, or when swapped out)
@@ -159,7 +23,7 @@ impl Battlefield {
         let mut effects = Vec::new();
         let side = self.get_side_by_active_id(slot).borrow();
         let mut pkmn = self.get_active_pokemon_by_active_id(slot);
-        debug!("Pokemon enters battle in slot {}: {:?}", slot, pkmn);
+        info!("Pokemon enters battle in slot {}: {:?}", slot, pkmn);
         let pkmn_ability = pkmn.get_effective_ability();
 
         let grounded = || self.field.borrow().gravity > 0 || pkmn.borrow().is_holding(Item::IronBall) || pkmn.data.borrow().rooted;
@@ -196,7 +60,7 @@ impl Battlefield {
     /// Called when swapping to a new Pokemon
     pub fn swap_pokemon(&mut self, slot: SlotId, member: PartyMemberId, baton_pass: bool) -> Vec<ActionSideEffects> {
         let s = self.get_active_pokemon_by_active_id(slot);
-        debug!("Pokemon leaving battle in slot {}: {:?}", slot, s);
+        info!("Pokemon leaving battle in slot {}: {:?}", slot, s);
         // Call hook for when a Pokemon swaps out
         for e_slot in self.get_everyone() {
             if e_slot.slot_id != slot {
@@ -229,17 +93,21 @@ impl Battlefield {
     /// Perform a regular attack
     pub fn do_attack(&mut self, attacker_id: SlotId, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
         let attacker = self.get_active_pokemon_by_active_id(attacker_id);
-        debug!("{:?} (Slot {}) uses attack {:?} on target {:?}", attacker.borrow().species, attacker_id, attack, defender);
+        if let Some(_) = attacker.data.borrow().forced_action {
+            return self.do_implicit_attack(attacker_id);
+        }
+
+        info!("{:?} (Slot {}) uses attack {:?} on target {:?}", attacker.borrow().species, attacker_id, attack, defender);
         attacker.data.borrow_mut().start_of_turn();
         attacker.data.borrow_mut().proxy_move = Some(attack);
 
-        self._do_attack(attacker_id, attack, defender)
+        self._do_attack(attacker_id, attack, defender, false)
     }
 
     /// Do an attack a Pokemon is locked in to (example: charge attack selected the previous turn)
     pub fn do_implicit_attack(&mut self, attacker_id: SlotId) -> Vec<ActionSideEffects> {
         let attacker = self.get_active_pokemon_by_active_id(attacker_id);
-        debug!("{:?} (Slot {}) using implicit attack", attacker.borrow().species, attacker_id);
+        info!("{:?} (Slot {}) using implicit attack", attacker.borrow().species, attacker_id);
         attacker.data.borrow_mut().start_of_turn();
 
         let mut data = attacker.data.borrow_mut();
@@ -254,13 +122,13 @@ impl Battlefield {
                 data.invulnerable = None;
                 data.forced_action = None;
                 drop(data);
-                let effects = self._do_attack(attacker_id, attack, target);
+                let effects = self._do_attack(attacker_id, attack, target, true);
                 effects
             },
             Some(ForcedAction::AttackWithWeakCounter(attack, counter)) => {
                 debug!("Continuing attack {:?} (turns left: {})", attack, counter);
                 drop(data);
-                let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
+                let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied, true);
                 let damaged = ActionSideEffects::did_damage(&effects);
 
                 if counter == 1 && attack == Move::Thrash {
@@ -283,7 +151,7 @@ impl Battlefield {
             Some(ForcedAction::AttackWithCounter(attack, counter)) => {
                 debug!("Continuing attack {:?} (turns left: {})", attack, counter);
                 drop(data);
-                let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied);
+                let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied, true);
 
                 let mut data = attacker.data.borrow_mut();
                 data.set_last_used_move(attack);
@@ -322,7 +190,7 @@ impl Battlefield {
 
     /// Do all the end-of-turn things
     pub fn end_of_round(&mut self) -> Vec<ActionSideEffects> {
-        debug!("Running End-of-round checks for field: {:?}", self.field.borrow());
+        info!("Running End-of-round checks for field: {:?}", self.field.borrow());
         let mut effects = Vec::new();
 
         let future_attacks = self.field.borrow_mut().decrement_future_attack_counters();
@@ -488,66 +356,79 @@ impl Battlefield {
     }
 
     /// Internal method to perform an attack
-    fn _do_attack(&self, attacker_id: SlotId, attack: Move, defender: SelectedTarget) -> Vec<ActionSideEffects> {
+    fn _do_attack(&self, attacker_id: SlotId, attack: Move, defender: SelectedTarget, implicit: bool) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
         let attacker = self.get_active_pokemon_by_active_id(attacker_id);
 
-        // Check for reasons this Pokemon can't perform this move
         //region start-of-turn checks
-        if turn::do_disable_check(&attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        // Check for reasons this Pokemon can't perform this move
+        // Follows same order as Gen IV.
         if turn::do_freeze_check(&attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
         if turn::do_sleep_check(&attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
-        if turn::do_paralysis_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
-        if turn::do_infatuation_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
-        if turn::do_flinch_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        // Truant
+        if turn::do_disable_check(&attacker, attack).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        // Imprison
+        // Heal Block
         if turn::do_confusion_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        if turn::do_flinch_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        // Taunt
+        // Gravity
+        if turn::do_infatuation_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
+        if turn::do_paralysis_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
         end_if_ko!(attacker, self.run_on_attack_interrupt_hooks(&attacker, attack, effects));
         //endregion
 
-        let (attack, defender) = if attack == Move::Metronome {
-            let rand_attack = Move::metronome();
-            debug!("{:?} turned into {:?}", attack, rand_attack);
-            effects.push(ActionSideEffects::Metronome(attacker_id, rand_attack));
-            attacker.data.borrow_mut().proxy_move = Some(Move::Metronome);
-            (rand_attack, SelectedTarget::Implied)
-        } else if attack == Move::MirrorMove {
-            let data = attacker.data.borrow_mut();
-            if let Some((_, attack)) = data.get_last_targeted_attack() {
-                debug!("Mirror Move turned into {:?}", attack);
-                (attack, SelectedTarget::Implied)
-            } else {
-                debug!("Mirror Move failed: no last targeted attack");
-                effects.push(ActionSideEffects::Failed(Cause::Natural));
-                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
-            }
-        } else if attack == Move::SleepTalk {
-            if !attacker.borrow().status.is_asleep() {
-                debug!("Sleep Talk failed: user is not asleep");
-                effects.push(ActionSideEffects::Failed(Cause::Natural));
-                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
-            }
-
-            let candidates = attacker.get_effective_known_moves()
-                .iter()
-                .filter(|m| m.can_be_sleep_talked())
-                .map(|m| *m)
-                .collect::<Vec<Move>>();
-            if candidates.is_empty() {
-                debug!("Sleep Talk failed: no sleep-talkable moves known");
-                effects.push(ActionSideEffects::Failed(Cause::Natural));
-                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
-            } else {
-                let selected = if candidates.len() == 1 {
-                    candidates.get(0).unwrap()
+        // 0. Test if the attacker can use the move
+        match accuracy::cannot_use_attack(&attacker, attack) {
+            Ok(b) => {
+                if !b {
+                    debug!("Failed attack check, cannot use attack {:?}", attack);
+                    effects.push(ActionSideEffects::Failed(Cause::Natural));
+                    return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
                 } else {
-                    candidates.get(rand::thread_rng().gen_range(0..candidates.len())).unwrap()
-                };
-                debug!("Sleep Talk turned into {:?}", selected);
-                effects.push(ActionSideEffects::SleepTalk(attacker_id, *selected));
-                (*selected, SelectedTarget::Implied)
+                    debug!("Passed attack check");
+                }
             }
-        } else {
-            let move_data = attack.data();
+            Err(effect) => {
+                debug!("{:?} failed, cannot use attack: {:?}", attack, effect);
+                effects.push(effect);
+                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
+            }
+        }
+
+        // If this move calls another move, we do the replacement here.
+        let (attack, defender) = match proxy_move(&attacker, attack, &mut effects) {
+            DoNothing => (attack, defender),
+            ContinueWith(a) => {
+                // We need to re-test the new move.
+                match accuracy::cannot_use_attack(&attacker, a) {
+                    Ok(b) => {
+                        if !b {
+                            debug!("Failed attack check, cannot use attack {:?}", attack);
+                            effects.push(ActionSideEffects::Failed(Cause::Natural));
+                            return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
+                        } else {
+                            debug!("Passed attack check");
+                        }
+                    }
+                    Err(effect) => {
+                        debug!("{:?} failed, cannot use attack: {:?}", attack, effect);
+                        effects.push(effect);
+                        return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
+                    }
+                }
+                (a, SelectedTarget::Implied)
+            },
+            Interrupt => {
+                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
+            }
+        };
+
+        let move_data = attack.data();
+
+        // Specific types of moves that act on a later turn.
+        // Naturally these shouldn't run when called on the later turn.
+        if !implicit {
             if let Power::BaseWithCharge(_, place) = move_data.power {
                 debug!("Attack {:?} charging (semi-unvulnerable: {:?}", attack, place);
                 effects.push(ActionSideEffects::Charging(attacker_id, attack));
@@ -555,8 +436,7 @@ impl Battlefield {
                 // Skull Bash has a unique effect where it raises user defense on its charging turn
                 if attack == Move::SkullBash {
                     let effect = change_self_stat(&attacker, BattleStat::Defense, 1);
-                    if let ActionSideEffects::NoEffectSecondary(_) = effect { }
-                    else {
+                    if let ActionSideEffects::NoEffectSecondary(_) = effect {} else {
                         effects.push(effect);
                     }
                 }
@@ -589,27 +469,6 @@ impl Battlefield {
                     field.add_future_attack(attacker.id(), attack, turns, defender);
                     effects.push(ActionSideEffects::FutureSight(attacker.slot_id))
                 }
-            }
-            (attack, defender)
-        };
-
-        let move_data = attack.data();
-
-        // 0. Test if the attacker can use the move
-        match accuracy::cannot_use_attack(&attacker, attack) {
-            Ok(b) => {
-                if !b {
-                    debug!("Failed attack check, cannot use attack {:?}", attack);
-                    effects.push(ActionSideEffects::Failed(Cause::Natural));
-                    return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
-                } else {
-                    debug!("Passed attack check");
-                }
-            }
-            Err(effect) => {
-                debug!("{:?} failed, cannot use attack: {:?}", attack, effect);
-                effects.push(effect);
-                return self.run_on_attack_interrupt_hooks(&attacker, attack, effects);
             }
         }
 
@@ -671,7 +530,7 @@ impl Battlefield {
             .collect());
         //endregion
 
-        debug!("Success! Final effects: {:?}", effects);
+        info!("Success! Final effects: {:?}", effects);
         effects
     }
 
@@ -1104,6 +963,145 @@ fn do_optional_effect_on_last_target<F>(attacker: &Slot, to_effect: &Vec<&Slot>,
         Some(t) => effect(attacker, t),
         None => vec![]
     }
+}
+
+// Move Effects
+
+pub fn inflict_confusion(afflicted: &Slot) -> Vec<ActionSideEffects> {
+    if afflicted.get_effective_ability() == Ability::OwnTempo {
+        debug!("Failed to inflict confusion, {:?} has Own Tempo", afflicted.id());
+        return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(afflicted.id(), Ability::OwnTempo))]
+    }
+
+    let mut data = afflicted.data.borrow_mut();
+    if data.confused > 0 {
+        debug!("Failed to inflict confusion, Pokemon is already confused");
+        vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
+    } else {
+        data.confused = rand::thread_rng().gen_range(CONFUSION_TURN_RANGE);
+        debug!("Inflicted confusion for {} turns", data.confused);
+        vec![ActionSideEffects::Confuse(afflicted.slot_id)]
+    }
+}
+
+pub fn inflict_infatuation(attacker: &Slot, target: &Slot) -> Vec<ActionSideEffects> {
+    if attacker.get_effective_gender().can_infatuate(target.get_effective_gender()) {
+        if target.get_effective_ability() == Ability::Oblivious {
+            debug!("Failed to inflict infatuation, {:?} has Oblivious", target.id());
+            return vec![ActionSideEffects::NoEffectSecondary(Cause::Ability(target.id(), Ability::Oblivious))]
+        }
+
+        let mut data = target.data.borrow_mut();
+        if data.infatuated {
+            debug!("Failed to inflict infatuation, {:?} is already infatuated", target.id());
+            vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
+        } else {
+            debug!("Inflicted infatuation on {:?}", target.id());
+            data.infatuated = true;
+            vec![ActionSideEffects::Infatuated(target.slot_id)]
+        }
+    } else {
+        debug!("Failed to inflict infatuation, {:?} and {:?} are incompatible", attacker.borrow().species, target.borrow().species);
+        vec![ActionSideEffects::NoEffectSecondary(Cause::Natural)]
+    }
+}
+
+fn _change_stat(affected: &Slot, stat: BattleStat, stages: i8, cause: Cause) -> ActionSideEffects {
+    let current = affected.get_stat_stage(stat);
+    let next = current + stages;
+    return if next > MAX_STAGE {
+        debug!("Can't raise {:?} {:?} stat, already at {}", affected.id(), stat, MAX_STAGE);
+        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.slot_id, PokemonState::StatsMaxed(StatsCause::TooHigh)))
+    } else if next < MIN_STAGE {
+        debug!("Can't lower {:?} {:?} stat, already at {}", affected.id(), stat, MIN_STAGE);
+        ActionSideEffects::NoEffectSecondary(Cause::PokemonBattleState(affected.slot_id, PokemonState::StatsMaxed(StatsCause::TooLow)))
+    } else {
+        debug!("Increased {:?} {:?} stat ({} -> {})", affected.id(), stat, current, next);
+        let mut data = affected.data.borrow_mut();
+        match stat {
+            BattleStat::Attack => data.attack_stage = next,
+            BattleStat::Defense => data.defense_stage = next,
+            BattleStat::SpecialAttack => data.special_attack_stage = next,
+            BattleStat::SpecialDefense => data.special_defense_stage = next,
+            BattleStat::Speed => data.speed_stage = next,
+            BattleStat::Accuracy => data.accuracy_stage = next,
+            BattleStat::Evasion => data.evasion_stage = next,
+            BattleStat::CriticalHitRatio => data.crit_stage = if next < 0 { 0 } else { u8::try_from(next).unwrap() }
+        };
+        ActionSideEffects::StatChanged {
+            stat,
+            affected: affected.slot_id,
+            cause,
+            start: current,
+            end: next
+        }
+    }
+}
+
+pub fn change_self_stat(affected: &Slot, stat: BattleStat, stages: i8) -> ActionSideEffects {
+    let (ability_cause, stages) = match affected.get_effective_ability() {
+        Ability::Simple => (Cause::Ability(affected.id(), Ability::Simple), stages * 2),
+        Ability::Contrary => (Cause::Ability(affected.id(), Ability::Contrary), -stages),
+        _ => (Cause::Natural, stages)
+    };
+
+    debug!("Changing {:?} {:?} stat by {} (affected by {:?})", affected.id(), stat, stages, ability_cause);
+    _change_stat(affected, stat, stages, Cause::Natural)
+}
+
+pub fn change_opponent_stat(field: &Battlefield, affecter: &Slot, affected: &Slot, stat: BattleStat, stages: i8) -> ActionSideEffects {
+    let affected_side = field.get_side_by_party_id(affected.party_id);
+
+    if affected_side.borrow().mist > 0 {
+        debug!("Cannot change stat, Mist in effect");
+        return ActionSideEffects::NoEffectSecondary(Cause::PokemonFieldState(FieldCause::Mist))
+    }
+
+    let (ability_cause, stages) = match affected.get_effective_ability() {
+        Ability::Simple => (Cause::Ability(affected.id(), Ability::Simple), stages * 2),
+        Ability::Contrary  => {
+            let cause = Cause::Ability(affected.id(), Ability::Contrary);
+            match affected.get_effective_ability() {
+                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id(), oc)), -stages),
+                _ => (cause, stages)
+            }
+        },
+        oc@ (Ability::ClearBody | Ability::WhiteSmoke) => {
+            let cause = Cause::Ability(affected.id(), oc);
+            match affected.get_effective_ability() {
+                oc if oc.is_ignore_ability_ability() => (cause.overwrite(Cause::Ability(affecter.id(), oc)), stages),
+                _ => return ActionSideEffects::NoEffectSecondary(Cause::Ability(affected.id(), oc))
+            }
+        }
+        _ => (Cause::Natural, stages)
+    };
+
+    debug!("Changing {:?} {:?} stat by {} (affected by {:?})", affected.id(), stat, stages, ability_cause);
+    _change_stat(affected, stat, stages, ability_cause)
+}
+
+pub fn inflict_non_volatile_status(affected: &Slot, status: NonVolatileBattleAilment) -> Vec<ActionSideEffects> {
+    {
+        debug!("Inflicting status {:?} to {:?}", status, affected.id());
+        let mut data = affected.data.borrow_mut();
+        let mut affected = affected.borrow_mut();
+        match status {
+            NonVolatileBattleAilment::Paralysis => affected.status.paralysis = true,
+            NonVolatileBattleAilment::Sleep => affected.status.sleep = rand::thread_rng().gen_range(SLEEP_TURNS_RANGE),
+            NonVolatileBattleAilment::Freeze => affected.status.freeze = true,
+            NonVolatileBattleAilment::Burn => affected.status.burn = true,
+            NonVolatileBattleAilment::Poison(a) => {
+                affected.status.poison = true;
+                if let PoisonType::BadlyPoisoned = a {
+                    data.poison_counter = 1;
+                }
+            }
+        }
+    }
+    vec![ActionSideEffects::NonVolatileStatusAilment {
+        affected: affected.slot_id,
+        status
+    }]
 }
 
 /// Sets the flinch flag on the defender.
@@ -1633,5 +1631,55 @@ fn clear_hazards(attacker: &Slot, side: &RefCell<FieldSide>) -> Vec<ActionSideEf
         vec![ActionSideEffects::ClearedHazards]
     } else {
         vec![]
+    }
+}
+
+pub enum ProxyResult<T> {
+    DoNothing,
+    ContinueWith(T),
+    Interrupt
+}
+
+fn proxy_move(attacker: &Slot, attack: Move, effects: &mut Vec<ActionSideEffects>) -> ProxyResult<Move> {
+    match attack {
+        Move::Metronome => {
+            let rand_attack = Move::metronome();
+            debug!("{:?} turned into {:?}", attack, rand_attack);
+            effects.push(ActionSideEffects::Metronome(attacker.slot_id, rand_attack));
+            ContinueWith(rand_attack)
+        },
+        Move::MirrorMove => {
+            let data = attacker.data.borrow_mut();
+            if let Some((_, attack)) = data.get_last_targeted_attack() {
+                debug!("Mirror Move turned into {:?}", attack);
+                ContinueWith(attack)
+            } else {
+                debug!("Mirror Move failed: no last targeted attack");
+                effects.push(ActionSideEffects::Failed(Cause::Natural));
+                Interrupt
+            }
+        },
+        Move::SleepTalk => {
+            let candidates = attacker.get_effective_known_moves()
+                .iter()
+                .filter(|m| m.can_be_sleep_talked())
+                .map(|m| *m)
+                .collect::<Vec<Move>>();
+            if candidates.is_empty() {
+                debug!("Sleep Talk failed: no sleep-talkable moves known");
+                effects.push(ActionSideEffects::Failed(Cause::Natural));
+                Interrupt
+            } else {
+                let selected = if candidates.len() == 1 {
+                    candidates.get(0).unwrap()
+                } else {
+                    candidates.get(rand::thread_rng().gen_range(0..candidates.len())).unwrap()
+                };
+                debug!("Sleep Talk turned into {:?}", selected);
+                effects.push(ActionSideEffects::SleepTalk(attacker.slot_id, *selected));
+                ContinueWith(*selected)
+            }
+        },
+        _ => DoNothing
     }
 }
