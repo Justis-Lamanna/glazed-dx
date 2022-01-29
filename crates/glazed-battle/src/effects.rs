@@ -2,6 +2,7 @@ use std::cell::RefMut;
 use std::convert::TryFrom;
 use std::mem::take;
 use log::{debug, Level, log_enabled, logger};
+use glazed_macro::{end_if_ko, if_healthy, if_ko, run_health_check};
 
 use rand::Rng;
 use strum::IntoEnumIterator;
@@ -355,15 +356,15 @@ impl Battlefield {
             debug!("Running End-of-round checks for pokemon: {:?}", pokemon);
             pokemon.data.borrow_mut().end_of_round();
 
-            if pokemon.borrow().is_fainted() { continue; }
+            run_health_check!(pokemon);
             effects.append(&mut turn::do_poison_damage(&pokemon));
-            if pokemon.borrow().is_fainted() { continue; }
+            run_health_check!(pokemon);
             effects.append(&mut turn::do_binding_damage(&pokemon));
-            if pokemon.borrow().is_fainted() { continue; }
+            run_health_check!(pokemon);
             effects.append(&mut turn::do_nightmare_damage(&pokemon));
-            if pokemon.borrow().is_fainted() { continue; }
+            run_health_check!(pokemon);
             effects.append(&mut turn::do_curse_damage(&pokemon));
-            if pokemon.borrow().is_fainted() { continue; }
+            run_health_check!(pokemon);
 
             let mut data = pokemon.data.borrow_mut();
             if data.perish_song_counter > 0 {
@@ -500,7 +501,7 @@ impl Battlefield {
         if turn::do_infatuation_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
         if turn::do_flinch_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
         if turn::do_confusion_check(&attacker).add(&mut effects) { return self.run_on_attack_interrupt_hooks(&attacker, attack, effects); }
-
+        end_if_ko!(attacker, self.run_on_attack_interrupt_hooks(&attacker, attack, effects));
         //endregion
 
         let (attack, defender) = if attack == Move::Metronome {

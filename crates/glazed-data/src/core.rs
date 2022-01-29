@@ -23,7 +23,7 @@ impl Player {
 }
 
 /// Represents the season in the game
-#[derive(Debug, Copy, Clone, PartialEq, Id)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Season {
     Spring, Summer, Autumn, Winter
 }

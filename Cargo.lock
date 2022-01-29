@@ -63,6 +63,7 @@ version = "0.1.0"
 dependencies = [
  "glazed_core",
  "glazed_data",
+ "glazed_macro",
  "log",
  "rand",
  "strum",
