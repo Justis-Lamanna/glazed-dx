@@ -96,7 +96,7 @@ impl From<EvolutionHeldItem> for Item {
 }
 
 /// All berries in the game
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum Berry {
     CheriBerry,
     ChestoBerry,
