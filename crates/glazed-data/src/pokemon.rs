@@ -213,12 +213,12 @@ pub struct Pokemon {
 /// Represents the Contest Stats and Winnings of this Pokemon
 #[derive(Debug, Default)]
 pub struct PokemonContestStats {
-    coolness: u8,
-    beauty: u8,
-    cuteness: u8,
-    smartness: u8,
-    toughness: u8,
-    feel: u8,
+    pub coolness: u8,
+    pub beauty: u8,
+    pub cuteness: u8,
+    pub smartness: u8,
+    pub toughness: u8,
+    pub feel: u8,
     cool_ribbon: [bool; 4],
     beauty_ribbon: [bool; 4],
     cute_ribbon: [bool; 4],
