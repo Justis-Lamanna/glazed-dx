@@ -173,6 +173,7 @@ impl ToTokens for TokenWrapper {
 #[proc_macro_derive(EnumData, attributes(source))]
 pub fn enum_data(input: TokenStream) -> TokenStream {
     let i = parse_macro_input!(input as DeriveInput);
+    dbg!("hi");
     let source_ident = get_source_ident(i.attrs).unwrap().unwrap();
     let data_ident = i.ident;
 
