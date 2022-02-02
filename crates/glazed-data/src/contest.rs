@@ -5,6 +5,8 @@ use rand::Rng;
 use crate::item::Berry;
 use crate::pokemon::{Nature, Pokemon};
 
+use glazed_macro::EnumData;
+
 #[derive(Debug, Copy, Clone)]
 pub enum Condition {
     Cool,
@@ -351,7 +353,8 @@ impl Pokemon {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, EnumData)]
+#[source = "Berry"]
 pub struct BerryPokeblockData {
     pub spicy: i8,
     pub dry: i8,
@@ -359,19 +362,6 @@ pub struct BerryPokeblockData {
     pub bitter: i8,
     pub sour: i8,
     pub smoothness: u8
-}
-
-impl From<Berry> for BerryPokeblockData {
-    fn from(_: Berry) -> Self {
-        BerryPokeblockData {
-            spicy: -1,
-            dry: 0,
-            sweet: 1,
-            bitter: 0,
-            sour: -1,
-            smoothness: 30
-        }
-    }
 }
 
 

@@ -10,6 +10,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/glazed-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/glazed-macro/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/glazed-battle/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/glazed-data/resources" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

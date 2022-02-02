@@ -1,0 +1,14 @@
+- id: CheriBerry
+  spicy: 0
+  dry: 0
+  sweet: 0
+  bitter: 0
+  sour: 0
+  smoothness: 60
+- id: _
+  spicy: 0
+  dry: 0
+  sweet: 0
+  bitter: 0
+  sour: 0
+  smoothness: 30
