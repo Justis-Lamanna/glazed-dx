@@ -11,10 +11,11 @@ use std::rc::Rc;
 use rand::Rng;
 
 use glazed_data::abilities::{Ability, PokemonAbility};
-use glazed_data::attack::{BattleStat, Move, NonVolatileBattleAilment, PoisonType, ScreenType, SemiInvulnerableLocation, Target, Weather};
+use glazed_data::attack::{BattleStat, Move, MoveData, NonVolatileBattleAilment, PoisonType, ScreenType, SemiInvulnerableLocation, Target, Weather};
 use glazed_data::attack::BattleStat::Defense;
 use glazed_data::constants::Species;
 use glazed_data::item::{EvolutionHeldItem, Item};
+use glazed_data::lookups::Lookup;
 use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, Pokemon, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
@@ -930,7 +931,7 @@ impl Battlefield {
             .map(|s| s.clone())
             .collect::<Vec<Slot>>();
 
-        let move_data = attack.data();
+        let move_data = MoveData::lookup(&attack);
 
         match move_data.target {
             Target::User | Target::Implicit => vec![user()],
@@ -1075,7 +1076,7 @@ impl Battlefield {
                     Some(dt) => {
                         data.damage_this_turn
                             .iter()
-                            .filter(|(_, attack, _)| attack.data().damage_type == dt)
+                            .filter(|(_, attack, _)| MoveData::lookup(&attack).damage_type == dt)
                             .filter(|(battler, _, _)| {
                                 let potential_target = self.get_active_pokemon_by_active_id(*battler);
                                 let potential_target = potential_target.borrow();

@@ -4,7 +4,7 @@ use simple_logger::SimpleLogger;
 use glazed_battle::{Battlefield, Party};
 use glazed_battle::SelectedTarget;
 
-use glazed_data::attack::Move;
+use glazed_data::attack::{Move, MoveData};
 use glazed_data::constants::Species;
 use glazed_data::contest::BerryPokeblockData;
 use glazed_data::item::Berry;
@@ -16,7 +16,7 @@ fn main() {
         .with_level(LevelFilter::Info)
         .init().unwrap();
 
-    let b = BerryPokeblockData::lookup(&Berry::CheriBerry);
+    let b = MoveData::lookup(&Move::Superpower);
     dbg!(b);
 
     // for _ in 1..=40 {

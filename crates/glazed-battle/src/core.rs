@@ -4,6 +4,7 @@ use log::debug;
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{Move, MoveData, MultiHitFlavor, Power};
 use glazed_data::item::{Item};
+use glazed_data::lookups::Lookup;
 use glazed_data::types::{Effectiveness, Type};
 
 use crate::{ActionSideEffects, Slot, Battlefield, Cause, Field, WeatherCounter, BaseSlot};
@@ -38,12 +39,11 @@ impl<T> CheckResult<T> {
 
 pub struct MoveContext {
     pub attack: Move,
-    pub data: &'static MoveData,
     pub base_power: u16
 }
 impl From<Move> for MoveContext {
     fn from(attack: Move) -> Self {
-        let data = attack.data();
+        let data = MoveData::lookup(&attack);
         let base_power = match data.power {
             Power::Base(base) | Power::BaseWithRecoil(base, _) | Power::BaseWithMercy(base) |
             Power::MultiHit(MultiHitFlavor::Variable(base)) | Power::MultiHit(MultiHitFlavor::Fixed(_, base)) |
@@ -53,7 +53,6 @@ impl From<Move> for MoveContext {
         };
         MoveContext {
             attack,
-            data,
             base_power
         }
     }
@@ -63,7 +62,7 @@ impl From<Move> for MoveContext {
 pub fn get_effective_move_type<F>(attacker: &Slot, field: &RefCell<Field>, attack: F) -> Type
     where F: Into<MoveContext>
 {
-    let MoveContext { attack, data, .. } = attack.into();
+    let MoveContext { attack, .. } = attack.into();
     match attacker.get_effective_ability() {
         Ability::Normalize if attack != Move::HiddenPower ||
             attack != Move::WeatherBall ||
@@ -113,10 +112,10 @@ pub fn get_effective_move_type<F>(attacker: &Slot, field: &RefCell<Field>, attac
             if let Some(Item::Berry(a)) = &attacker.borrow().held_item {
                 a.get_natural_gift_type()
             } else {
-                data._type
+                MoveData::lookup(&attack)._type
             }
         }
-        _ => data._type
+        _ => MoveData::lookup(&attack)._type
     }
 }
 

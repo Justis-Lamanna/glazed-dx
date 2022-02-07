@@ -1,6 +1,7 @@
 use rand::Rng;
 use glazed_data::abilities::Ability;
-use glazed_data::attack::{Accuracy, Move};
+use glazed_data::attack::{Accuracy, Move, MoveData};
+use glazed_data::lookups::Lookup;
 use glazed_data::types::Type;
 use crate::{ActionSideEffects, Slot, Battlefield, Cause, PROTECTION_CAP, BaseSlot};
 use crate::core::{ActionCheck, MoveContext};
@@ -53,7 +54,8 @@ pub fn do_accuracy_check<F>(field: &Battlefield, attacker: &Slot, attack: F, def
             ActionCheck::Ok(rand::thread_rng().gen_bool(evasion_accuracy * move_accuracy))
         }
     };
-    let MoveContext { attack, data: move_data, .. } = attack.into();
+    let MoveContext { attack, .. } = attack.into();
+    let move_data = MoveData::lookup(&attack);
 
     // Bypass Accuracy Check
     if attacker.data.borrow().is_locked_on_to(defender) {

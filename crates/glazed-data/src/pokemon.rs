@@ -3,9 +3,10 @@ use rand::prelude::Distribution;
 use rand::Rng;
 
 use crate::abilities::{Ability, PokemonAbility};
-use crate::attack::Move;
+use crate::attack::{Move, MoveData};
 use crate::constants::Species;
 use crate::item::{Item, Pokeball};
+use crate::lookups::Lookup;
 use crate::types::{PokemonType, Type};
 
 pub const SHININESS_CHANCE: u16 = 16;
@@ -268,7 +269,7 @@ impl From<Move> for MoveSlot {
     fn from(m: Move) -> Self {
         MoveSlot {
             attack: m,
-            pp: m.data().pp,
+            pp: MoveData::lookup(&m).pp,
             pp_bonus: 0
         }
     }
@@ -481,7 +482,7 @@ impl Pokemon {
         for ms in moveset {
             movepool.push(MoveSlot {
                 attack: ms,
-                pp: ms.data().pp,
+                pp: MoveData::lookup(&ms).pp,
                 pp_bonus: 0
             })
         }

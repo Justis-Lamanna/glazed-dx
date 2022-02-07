@@ -12,6 +12,7 @@ use glazed_data::constants::Species;
 use glazed_data::item::Item;
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 use glazed_core::math;
+use glazed_data::lookups::Lookup;
 
 use crate::*;
 use crate::effects::ProxyResult::{ContinueWith, DoNothing, Interrupt};
@@ -424,7 +425,7 @@ impl Battlefield {
             }
         };
 
-        let move_data = attack.data();
+        let move_data = MoveData::lookup(&attack);
 
         // Specific types of moves that act on a later turn.
         // Naturally these shouldn't run when called on the later turn.
@@ -595,7 +596,7 @@ impl Battlefield {
         // Effects to the user happen regardless.
         // Effects to the target happen only to those hit in step 3.
         //region Secondary effects
-        for secondary_effect in move_data.effects {
+        for secondary_effect in move_data.effects.iter() {
             let secondary_effect = if let Effect::Predicated(predicate, if_match, if_not_match) = secondary_effect {
                 let matches = match predicate {
                     EffectPredicate::Sunny => self.field.borrow().is_sunny()
@@ -603,10 +604,10 @@ impl Battlefield {
 
                 if matches {
                     debug!("Predicate effect passed, running effect {:?}", if_match);
-                    *if_match
+                    if_match.as_ref()
                 } else {
                     debug!("Predicate effect failed, running effect {:?}", if_match);
-                    *if_not_match
+                    if_not_match.as_ref()
                 }
             } else {
                 secondary_effect
@@ -1230,7 +1231,7 @@ fn do_conversion_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
             break slot;
         }
     };
-    let new_type = slot.attack.data()._type;
+    let new_type = MoveData::lookup(&slot.attack)._type;
     attacker.data.borrow_mut().temp_type = Some(PokemonType::Single(new_type));
     vec![ActionSideEffects::ChangeType(attacker.slot_id, new_type)]
 }
@@ -1240,7 +1241,7 @@ fn do_conversion_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
 fn do_conversion_2_effect(attacker: &Slot) -> Vec<ActionSideEffects> {
     let mut data = attacker.data.borrow_mut();
     if let Some((_, attack)) = data.last_attacker {
-        let attack_type = attack.data()._type;
+        let attack_type = MoveData::lookup(&attack)._type;
         let candidates: Vec<Type> = Type::iter()
             .filter(|t: &Type| {
                 match attack_type.attacking(t) {

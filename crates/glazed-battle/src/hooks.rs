@@ -1,5 +1,6 @@
 use log::{debug, info};
-use glazed_data::attack::{Move, Power};
+use glazed_data::attack::{Move, MoveData, Power};
+use glazed_data::lookups::Lookup;
 use crate::{ActionSideEffects, Battlefield, Slot};
 
 impl Battlefield {
@@ -13,7 +14,7 @@ impl Battlefield {
     /// When an attempted attack is interrupted (either because of missing, immunity, sleeping, no target, etc), this code is run.
     fn on_attack_interrupt(&self, attacker: &Slot, attack: Move) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
-        let move_data = attack.data();
+        let move_data = MoveData::lookup(&attack);
         if let Power::BaseWithCrash(_) = move_data.power {
             effects.push(attacker.take_crash_damage());
         } else if let Power::MultiTurn(_, _) = move_data.power {
@@ -44,7 +45,7 @@ impl Battlefield {
         }
 
         // Rage ends if the user is enraged, and they don't use a rage move
-        if data.enraged && !attack.data().is_rage() {
+        if data.enraged && !MoveData::lookup(&attack).is_rage() {
             data.enraged = false;
             debug!("Rage ended");
             effects.push(ActionSideEffects::RageEnd(attacker.slot_id))

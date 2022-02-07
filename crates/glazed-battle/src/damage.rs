@@ -6,6 +6,7 @@ use glazed_core::math;
 
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor, Power};
+use glazed_data::lookups::Lookup;
 use glazed_data::types::{Effectiveness, Type};
 
 use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage, ForcedAction, BaseSlot, SlotId};
@@ -208,7 +209,7 @@ impl Battlefield { //region Damage
     }
 
     pub fn do_damage(&self, attacker: &Slot, attack: Move, defender: &Slot, is_multi_target: bool) -> Vec<ActionSideEffects> {
-        let move_data = attack.data();
+        let move_data = MoveData::lookup(&attack);
         let crit = || Battlefield::determine_crit(attacker, move_data);
         let effectiveness = || core::get_type_effectiveness(&self, attacker, attack, defender);
         match &move_data.power {
@@ -330,7 +331,6 @@ impl Battlefield { //region Damage
                     let power_of_two = attacker.data.borrow().last_move_used_counter.clamp(0, FURY_CUTTER_CAP);
                     let context = MoveContext {
                         attack,
-                        data: attack.data(),
                         base_power: u16::from(*b) * (1 << power_of_two)
                     };
                     let is_crit = crit();
@@ -347,7 +347,6 @@ impl Battlefield { //region Damage
                 } else {
                     let move_context = MoveContext {
                         attack,
-                        data: move_data,
                         base_power: weight_to_power_map(defender.get_effective_weight())
                     };
                     let is_crit = crit();
@@ -413,7 +412,7 @@ impl Battlefield { //region Damage
                             .last(),
                     Some(t) => candidates
                             .filter_map(|(pkmn, attack, damage)| {
-                                if attack.data().damage_type == *t {
+                                if MoveData::lookup(&attack).damage_type == *t {
                                     Some((pkmn, damage))
                                 } else {
                                     None
@@ -439,7 +438,6 @@ impl Battlefield { //region Damage
                     let context = if let Some(ForcedAction::AttackWithWeakCounter(_, turn_ctr)) = attacker.data.borrow().forced_action {
                         MoveContext {
                             attack,
-                            data: attack.data(),
                             base_power: u16::from(*base).saturating_mul(1 << (*turns_to_do - turn_ctr)).saturating_mul(curl_multiplier)
                         }
                     } else {
@@ -500,7 +498,6 @@ impl Battlefield { //region Damage
                 for _ in 0..*n {
                     let move_context = MoveContext {
                         attack,
-                        data: move_data,
                         base_power: u16::from(*base)
                     };
 
@@ -532,7 +529,6 @@ impl Battlefield { //region Damage
                 for base in strike_powers {
                     let move_context = MoveContext {
                         attack,
-                        data: move_data,
                         base_power: u16::from(*base)
                     };
 
@@ -577,7 +573,6 @@ impl Battlefield { //region Damage
                 for base_power in base_powers {
                     let move_context = MoveContext {
                         attack,
-                        data: move_data,
                         base_power
                     };
 
@@ -626,7 +621,6 @@ impl Battlefield { //region Damage
                         } else {
                             let move_context = MoveContext {
                                 attack,
-                                data: move_data,
                                 base_power: hp_to_power_map(defender.borrow().current_hp, defender.borrow().hp.value)
                             };
                             let is_crit = crit();
@@ -642,7 +636,6 @@ impl Battlefield { //region Damage
                             // Base Power of Return == Friendship / 2.5 == Friendship * 2 / 5
                             let move_context = MoveContext {
                                 attack,
-                                data: move_data,
                                 base_power: math::cap_min(math::ratio(u16::from(attacker.borrow().friendship), 2u16, 5u16), 1)
                             };
                             let is_crit = crit();
@@ -658,7 +651,6 @@ impl Battlefield { //region Damage
                             // Base Power of Frustration == (255 - Friendship) / 2.5 == (255 - Friendship) * 2 / 5
                             let move_context = MoveContext {
                                 attack,
-                                data: move_data,
                                 base_power: math::cap_min(math::ratio(u16::from(u8::MAX - attacker.borrow().friendship), 2u16, 5u16), 1)
                             };
                             let is_crit = crit();
@@ -676,7 +668,6 @@ impl Battlefield { //region Damage
                                 Present::Damage(base) => {
                                     let move_context = MoveContext {
                                         attack,
-                                        data: move_data,
                                         base_power: base
                                     };
                                     let is_crit = crit();
@@ -709,7 +700,6 @@ impl Battlefield { //region Damage
                             let (magnitude, power) = rand::thread_rng().sample(MagnitudeDistribution);
                             let context = MoveContext {
                                 attack,
-                                data: move_data,
                                 base_power: power
                             };
                             let mut effects = vec![ActionSideEffects::Magnitude(magnitude)];
@@ -727,7 +717,6 @@ impl Battlefield { //region Damage
                             let is_crit = crit();
                             let context = MoveContext {
                                 attack,
-                                data: move_data,
                                 base_power: attacker.borrow().get_hidden_power_power()
                             };
                             let damage = self.calculate_full_damage(attacker, context, defender, is_multi_target, is_crit, effectiveness);
@@ -744,9 +733,9 @@ impl Battlefield { //region Damage
     pub fn calculate_full_damage<F>(&self, attacker: &Slot, attack: F, defender: &Slot, is_multi_target: bool, is_crit: bool, effectiveness: Effectiveness) -> u16
         where F: Into<MoveContext>
     {
-        let MoveContext{ attack, data, base_power} = attack.into();
+        let MoveContext{ attack, base_power} = attack.into();
         let attack_type = core::get_effective_move_type(attacker, &self.field, attack);
-
+        let data = MoveData::lookup(&attack);
         let mut calc = damage::calculate_raw_damage(attacker, base_power, data.damage_type, defender) as u32;
 
         // *targets
