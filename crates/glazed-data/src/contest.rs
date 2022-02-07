@@ -1,11 +1,12 @@
 use std::collections::HashSet;
 use std::convert::TryFrom;
-use std::ops::Add;
+use std::ops::{Add, Deref};
 use rand::Rng;
-use crate::item::Berry;
-use crate::pokemon::{Nature, Pokemon};
+use serde::{Serialize, Deserialize};
 
-use glazed_macro::EnumData;
+use crate::item::Berry;
+use crate::lookups::Lookup;
+use crate::pokemon::{Nature, Pokemon};
 
 #[derive(Debug, Copy, Clone)]
 pub enum Condition {
@@ -149,8 +150,8 @@ impl Pokeblock {
 
         let data = berries
             .iter()
-            .map(|item| BerryPokeblockData::from(*item))
-            .collect::<Vec<BerryPokeblockData>>();
+            .map(|item| BerryPokeblockData::lookup(item))
+            .collect::<Vec<&BerryPokeblockData>>();
 
         let feel = data.iter()
             .map(|d| usize::from(d.smoothness))
@@ -353,9 +354,9 @@ impl Pokemon {
     }
 }
 
-#[derive(Debug, Clone, EnumData)]
-#[source = "Berry"]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BerryPokeblockData {
+    pub id: Berry,
     pub spicy: i8,
     pub dry: i8,
     pub sweet: i8,

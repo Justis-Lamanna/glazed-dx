@@ -1,4 +1,5 @@
 #![allow(non_upper_case_globals)]
+use serde::{Serialize, Deserialize};
 
 use crate::attack::Move;
 use crate::types::Type;
@@ -96,7 +97,7 @@ impl From<EvolutionHeldItem> for Item {
 }
 
 /// All berries in the game
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Deserialize, Serialize)]
 pub enum Berry {
     CheriBerry,
     ChestoBerry,

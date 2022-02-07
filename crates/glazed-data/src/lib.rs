@@ -7,6 +7,7 @@ pub mod constants;
 pub mod item;
 pub mod evolutions;
 pub mod contest;
+pub mod lookups;
 
 #[cfg(test)]
 mod tests {

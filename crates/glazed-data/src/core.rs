@@ -1,8 +1,5 @@
 use rand::RngCore;
 
-use glazed_core::Id;
-use glazed_macro::*;
-
 /// Represents the player of the game
 #[derive(Debug)]
 pub struct Player {

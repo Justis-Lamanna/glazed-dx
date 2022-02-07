@@ -1,6 +1,3 @@
-use glazed_core::Id;
-use glazed_macro::*;
-
 /// Represents an Ability a Pokemon has
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Ability {
