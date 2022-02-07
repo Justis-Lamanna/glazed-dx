@@ -1,5 +1,7 @@
 use rand::RngCore;
 
+use serde::{Serialize, Deserialize};
+
 /// Represents the player of the game
 #[derive(Debug)]
 pub struct Player {
@@ -20,7 +22,7 @@ impl Player {
 }
 
 /// Represents the season in the game
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum Season {
     Spring, Summer, Autumn, Winter
 }

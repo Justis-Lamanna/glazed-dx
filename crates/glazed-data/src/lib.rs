@@ -3,7 +3,7 @@ pub mod attack;
 pub mod pokemon;
 pub mod types;
 pub mod core;
-pub mod constants;
+pub mod species;
 pub mod item;
 pub mod evolutions;
 pub mod contest;

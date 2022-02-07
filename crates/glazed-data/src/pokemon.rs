@@ -1,10 +1,13 @@
+use std::collections::BTreeMap;
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
 
+use serde::{Serialize, Deserialize, Serializer, Deserializer};
+
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::{Move, MoveData};
-use crate::constants::Species;
+use crate::species::Species;
 use crate::item::{Item, Pokeball};
 use crate::lookups::Lookup;
 use crate::types::{PokemonType, Type};
@@ -12,7 +15,7 @@ use crate::types::{PokemonType, Type};
 pub const SHININESS_CHANCE: u16 = 16;
 
 /// Represents the probability of a Pokemon being male or female (or neither)
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum GenderRatio {
     None,
     Proportion(u8, u8)
@@ -44,7 +47,7 @@ impl Gender {
 }
 
 /// Represents an Egg Group, i.e. the Compatibility of two Pokemon
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum EggGroup {
     Monster,
     Water1,
@@ -63,15 +66,41 @@ pub enum EggGroup {
 }
 
 /// Represents the Egg Groups a Pokemon has
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum PokemonEggGroup {
     None,
     One(EggGroup),
     Two(EggGroup, EggGroup)
 }
+impl Serialize for PokemonEggGroup {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        let t = match self {
+            PokemonEggGroup::None => None,
+            PokemonEggGroup::One(a) => Some(vec![*a]),
+            PokemonEggGroup::Two(a, b) => Some(vec![*a, *b])
+        };
+        t.serialize(serializer)
+    }
+}
+impl<'de> Deserialize<'de> for PokemonEggGroup {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+        let opt = Option::<Vec<EggGroup>>::deserialize(deserializer)?;
+        match opt {
+            None => Ok(Self::None),
+            Some(mut v) => {
+                if v.len() == 0 { Ok(Self::None) }
+                else if v.len() == 1 { Ok(Self::One(v.pop().unwrap())) }
+                else if v.len() == 2 {Ok(Self::Two(v.pop().unwrap(), v.pop().unwrap())) }
+                else {
+                    use serde::de::Error;
+                    Err(D::Error::invalid_length(v.len(), &"Pokemon should have 0, 1, or 2 Egg Groups")) }
+            }
+        }
+    }
+}
 
 /// Represents how much EXP is required to advance levels
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum LevelRate {
     Erratic, Fast, MediumFast, MediumSlow, Slow, Fluctuating
 }
@@ -136,11 +165,11 @@ pub enum Color {
 }
 
 /// Represents the six members of stat data for a Pokemon species as a whole
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Stats(pub Stat,pub Stat,pub Stat,pub Stat,pub Stat,pub Stat);
 
 /// Represents data tied to a Stat for a Pokemon species as a whole
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Stat {
     pub base_stat: u8,
     ev: u8
@@ -155,8 +184,9 @@ impl Stat {
 }
 
 /// Represents data on a Pokemon species as a whole
-#[derive(Debug)]
-pub struct PokemonData {
+#[derive(Debug, Deserialize)]
+pub struct SpeciesData {
+    #[serde(rename = "type")]
     pub _type: PokemonType,
     pub ability: PokemonAbility,
     pub hidden_ability: Option<Ability>,
@@ -170,8 +200,8 @@ pub struct PokemonData {
     pub level_rate: LevelRate,
     pub stats: Stats,
     pub base_friendship: u8,
-    pub level_up_moves: &'static[(u8, Move)],
-    pub egg_moves: Option<&'static[Move]>
+    pub level_up_moves: BTreeMap<u8, Vec<Move>>,
+    pub egg_moves: Option<Vec<Move>>
 }
 
 /// Represents an individual member of a Pokemon species
@@ -463,16 +493,19 @@ impl Distribution<Nature> for Standard {
 }
 
 impl Pokemon {
-    fn determine_moves_by_level(species_data: &PokemonData, level: u8) -> Vec<MoveSlot> {
+    fn determine_moves_by_level(species_data: &SpeciesData, level: u8) -> Vec<MoveSlot> {
         let mut moveset = vec![];
-        for (lvl, m) in species_data.level_up_moves {
+        for (lvl, moves_at_level) in &species_data.level_up_moves {
             if *lvl > level {
                 break
-            }
-            if !moveset.contains(m) {
-                moveset.push(m.clone());
-                if moveset.len() > 4 {
-                    moveset.remove(0);
+            } else {
+                for m in moves_at_level {
+                    if !moveset.contains(m) {
+                        moveset.push(*m);
+                        if moveset.len() > 4 {
+                            moveset.remove(0);
+                        }
+                    }
                 }
             }
         }
@@ -491,7 +524,7 @@ impl Pokemon {
 
     /// Recalculate the level + stats of this Pokemon
     pub fn recalculate_stats(&mut self) {
-        let species_data = self.species.data();
+        let species_data = SpeciesData::lookup(&self.species);
         let level = species_data.level_rate.level_for_experience(self.experience);
         match self.species {
             Species::Shedinja => self.hp.value = 1,
@@ -525,7 +558,7 @@ impl Pokemon {
     ///     If pokemon has a hidden ability, return it
     ///     If pokemon has no hidden ability, return the first standard ability
     pub fn get_ability(&self) -> Ability {
-        let data = self.species.data();
+        let data = SpeciesData::lookup(&self.species);
         match self.ability {
             AbilitySlot::SlotOne => {
                 match &data.ability {
@@ -901,7 +934,7 @@ impl PokemonTemplate {
 }
 impl From<PokemonTemplate> for Pokemon {
     fn from(template: PokemonTemplate) -> Self {
-        let data = template.species.data();
+        let data = SpeciesData::lookup(&template.species);
         let (hp, atk, def, spa, spd, spe)
             = PokemonTemplate::create_stats(template.ivs, template.evs);
         let (trainer_id, secret_id, name) = match template.original_trainer {

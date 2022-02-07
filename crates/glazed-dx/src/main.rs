@@ -5,18 +5,18 @@ use glazed_battle::{Battlefield, Party};
 use glazed_battle::SelectedTarget;
 
 use glazed_data::attack::{Move, MoveData};
-use glazed_data::constants::Species;
+use glazed_data::species::{GenesectForm, Species, UnownForm};
 use glazed_data::contest::BerryPokeblockData;
 use glazed_data::item::Berry;
 use glazed_data::lookups::Lookup;
-use glazed_data::pokemon::PokemonTemplate;
+use glazed_data::pokemon::{PokemonTemplate, SpeciesData};
 
 fn main() {
     SimpleLogger::new()
         .with_level(LevelFilter::Info)
         .init().unwrap();
 
-    let b = MoveData::lookup(&Move::Superpower);
+    let b = SpeciesData::lookup(&Species::Genesect(GenesectForm::Chill));
     dbg!(b);
 
     // for _ in 1..=40 {

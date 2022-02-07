@@ -8,7 +8,7 @@ use strum::IntoEnumIterator;
 
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, Effect, EffectPredicate, EntryHazardType, Move, MoveData, NonVolatileBattleAilment, Power, ScreenType, StatChangeTarget, Weather};
-use glazed_data::constants::Species;
+use glazed_data::species::Species;
 use glazed_data::item::Item;
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 use glazed_core::math;

@@ -1,7 +1,7 @@
 use glazed_battle::*;
 use glazed_data::attack::{BattleStat, Move, Weather};
 use glazed_data::attack::StatChangeTarget::Target;
-use glazed_data::constants::Species;
+use glazed_data::species::Species;
 use glazed_data::pokemon::{Gender, PokemonStatusCondition, PokemonTemplate};
 
 const FORWARD: SlotId = 0;

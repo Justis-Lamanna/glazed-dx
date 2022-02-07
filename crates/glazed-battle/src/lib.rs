@@ -13,10 +13,10 @@ use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{BattleStat, Move, MoveData, NonVolatileBattleAilment, PoisonType, ScreenType, SemiInvulnerableLocation, Target, Weather};
 use glazed_data::attack::BattleStat::Defense;
-use glazed_data::constants::Species;
+use glazed_data::species::Species;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::lookups::Lookup;
-use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, Pokemon, StatSlot};
+use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, Pokemon, SpeciesData, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
 
 use crate::constants::{*};
@@ -324,8 +324,8 @@ trait BaseSlot {
     fn get_effective_type(&self) -> PokemonType {
         self.data().temp_type.unwrap_or_else(|| {
             match &self.data().transformed {
-                Some(t) => t.species.data()._type,
-                None => self.active_pokemon().borrow().species.data()._type,
+                Some(t) => SpeciesData::lookup(&t.species)._type,
+                None => SpeciesData::lookup(&self.active_pokemon().borrow().species)._type,
             }
         })
     }
@@ -435,7 +435,7 @@ trait BaseSlot {
 
     /// Get the effective weight of this Pokemon. Takes Ability, held item, and Autotomize into account
     fn get_effective_weight(&self) -> u16 {
-        let mut weight = self.data().temp_weight.unwrap_or_else(|| self.get_effective_species().data().weight);
+        let mut weight = self.data().temp_weight.unwrap_or_else(|| SpeciesData::lookup(&self.get_effective_species()).weight);
         let ability = self.get_effective_ability();
 
         if ability == Ability::HeavyMetal {
@@ -1466,7 +1466,7 @@ impl TransformData {
     }
 
     fn get_ability(&self) -> &Ability {
-        let data = self.species.data();
+        let data = SpeciesData::lookup(&self.species);
         match self.ability {
             AbilitySlot::SlotOne => {
                 match &data.ability {

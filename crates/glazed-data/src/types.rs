@@ -1,10 +1,11 @@
 use std::ops::Mul;
 
 use strum_macros::EnumIter;
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, Serializer, Deserializer};
+use serde::de::{Error, IntoDeserializer};
 
 /// Represents the Type of a Pokemon
-#[derive(Debug, Copy, Clone, PartialEq, EnumIter, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, EnumIter, Serialize, Deserialize, Eq, Hash)]
 pub enum Type {
     Normal,
     Fighting,
@@ -260,6 +261,30 @@ impl Mul for Effectiveness {
 pub enum PokemonType {
     Single(Type),
     Double(Type, Type)
+}
+impl Serialize for PokemonType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        match self {
+            PokemonType::Single(a) => {
+                vec![*a].serialize(serializer)
+            }
+            PokemonType::Double(a, b) => {
+                vec![*a, *b].serialize(serializer)
+            }
+        }
+    }
+}
+impl<'de> Deserialize<'de> for PokemonType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+        let mut s = Vec::<Type>::deserialize(deserializer)?;
+        if s.len() == 1 {
+            Ok(Self::Single(s.pop().unwrap()))
+        } else if s.len() == 2 {
+            Ok(Self::Double(s.pop().unwrap(), s.pop().unwrap()))
+        } else {
+            Err(D::Error::invalid_length(s.len(), &"One or two types only"))
+        }
+    }
 }
 
 impl PokemonType {
