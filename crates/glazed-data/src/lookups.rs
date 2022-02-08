@@ -1,6 +1,7 @@
 use lazy_static::lazy_static;
 use resource::resource_str;
 use serde::Deserialize;
+use serde::Serialize;
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -15,6 +16,9 @@ pub trait Lookup<Input> {
     fn lookup(i: &Input) -> &Self;
 }
 
+/// Represents a more YAML-friendly structure for complex data
+/// This allows for re-use of the data attribute between members by leveraging
+/// YAML's ability to have anchors/aliases.
 #[derive(Deserialize)]
 struct YamlFriendlySpeciesData {
     id: Species,

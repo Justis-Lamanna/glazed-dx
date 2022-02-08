@@ -3,7 +3,7 @@ use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
 
-use serde::{Serialize, Deserialize, Serializer, Deserializer};
+use serde::{Deserialize, Deserializer};
 
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::{Move, MoveData};
@@ -15,7 +15,7 @@ use crate::types::{PokemonType, Type};
 pub const SHININESS_CHANCE: u16 = 16;
 
 /// Represents the probability of a Pokemon being male or female (or neither)
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Deserialize)]
 pub enum GenderRatio {
     None,
     Proportion(u8, u8)
@@ -47,7 +47,7 @@ impl Gender {
 }
 
 /// Represents an Egg Group, i.e. the Compatibility of two Pokemon
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Deserialize)]
 pub enum EggGroup {
     Monster,
     Water1,
@@ -72,16 +72,6 @@ pub enum PokemonEggGroup {
     One(EggGroup),
     Two(EggGroup, EggGroup)
 }
-impl Serialize for PokemonEggGroup {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        let t = match self {
-            PokemonEggGroup::None => None,
-            PokemonEggGroup::One(a) => Some(vec![*a]),
-            PokemonEggGroup::Two(a, b) => Some(vec![*a, *b])
-        };
-        t.serialize(serializer)
-    }
-}
 impl<'de> Deserialize<'de> for PokemonEggGroup {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
         let opt = Option::<Vec<EggGroup>>::deserialize(deserializer)?;
@@ -100,7 +90,7 @@ impl<'de> Deserialize<'de> for PokemonEggGroup {
 }
 
 /// Represents how much EXP is required to advance levels
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Deserialize)]
 pub enum LevelRate {
     Erratic, Fast, MediumFast, MediumSlow, Slow, Fluctuating
 }
@@ -165,13 +155,14 @@ pub enum Color {
 }
 
 /// Represents the six members of stat data for a Pokemon species as a whole
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Stats(pub Stat,pub Stat,pub Stat,pub Stat,pub Stat,pub Stat);
 
 /// Represents data tied to a Stat for a Pokemon species as a whole
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Stat {
     pub base_stat: u8,
+    #[serde(default)]
     ev: u8
 }
 impl Stat {

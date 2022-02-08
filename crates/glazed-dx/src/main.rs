@@ -16,9 +16,6 @@ fn main() {
         .with_level(LevelFilter::Info)
         .init().unwrap();
 
-    let b = SpeciesData::lookup(&Species::Genesect(GenesectForm::Chill));
-    dbg!(b);
-
     // for _ in 1..=40 {
     let me = Party::create(vec![
         PokemonTemplate::pokemon(Species::Quilava, 100).shiny(),
