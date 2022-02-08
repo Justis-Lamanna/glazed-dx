@@ -886,6 +886,7 @@ pub enum EntryHazardType {
 pub struct MoveData {
     pub id: Move,
     pub pp: u8,
+    #[serde(default)]
     pub priority: i8,
     pub power: Power,
     pub accuracy: Accuracy,
@@ -893,7 +894,9 @@ pub struct MoveData {
     pub _type: Type,
     pub damage_type: DamageType,
     pub target: Target,
-    pub crit_rate: Option<u8>,
+    #[serde(default)]
+    pub crit_rate: u8,
+    #[serde(default)]
     pub effects: Vec<Effect>
 }
 impl MoveData {

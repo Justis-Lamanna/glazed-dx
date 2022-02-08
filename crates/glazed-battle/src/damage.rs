@@ -45,7 +45,7 @@ pub fn calculate_confusion_damage(pkmn: &Slot) -> u16 {
 
 impl Battlefield { //region Damage
     fn determine_crit(attacker: &Slot, move_data: &MoveData) -> bool {
-        let crit = match attacker.get_raw_critical_hit() + move_data.crit_rate.unwrap_or(0) {
+        let crit = match attacker.get_raw_critical_hit() + move_data.crit_rate {
             0 => rand::thread_rng().gen_bool(0.0625),
             1 => rand::thread_rng().gen_bool(0.125),
             2 => rand::thread_rng().gen_bool(0.5),
