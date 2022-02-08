@@ -16,6 +16,8 @@ fn main() {
         .with_level(LevelFilter::Info)
         .init().unwrap();
 
+    glazed_data::lookups::test();
+
     // for _ in 1..=40 {
     let me = Party::create(vec![
         PokemonTemplate::pokemon(Species::Quilava, 100).shiny(),

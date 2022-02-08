@@ -40,7 +40,7 @@ impl From<Pokeball> for Item {
 }
 
 /// All Evolution Stones in the game
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum EvolutionStone {
     FireStone,
     WaterStone,
@@ -75,7 +75,7 @@ impl From<Incense> for Item {
 }
 
 /// All Evolution-inducing held items in the game
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum EvolutionHeldItem {
     DeepSeaTooth,
     DeepSeaScale,

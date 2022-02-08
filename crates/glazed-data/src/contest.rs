@@ -6,9 +6,9 @@ use serde::{Serialize, Deserialize};
 
 use crate::item::Berry;
 use crate::lookups::Lookup;
-use crate::pokemon::{Nature, Pokemon};
+use crate::pokemon::{Nature, Pokemon, PokemonContestStats};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Deserialize)]
 pub enum Condition {
     Cool,
     Beautiful,
@@ -24,6 +24,17 @@ impl From<BerryFlavor> for Condition {
             BerryFlavor::Sweet => Condition::Cute,
             BerryFlavor::Bitter => Condition::Clever,
             BerryFlavor::Sour => Condition::Tough
+        }
+    }
+}
+impl PokemonContestStats {
+    pub fn get_condition(&self, condition: &Condition) -> u8 {
+        match condition {
+            Condition::Cool => self.coolness,
+            Condition::Beautiful => self.beauty,
+            Condition::Cute => self.cuteness,
+            Condition::Clever => self.smartness,
+            Condition::Tough => self.toughness
         }
     }
 }

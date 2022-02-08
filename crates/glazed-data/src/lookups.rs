@@ -8,6 +8,7 @@ use std::collections::{BTreeMap, HashMap};
 use crate::item::Berry;
 use crate::attack::{Move, MoveData};
 use crate::contest::BerryPokeblockData;
+use crate::evolutions::EvolutionTrigger;
 use crate::pokemon::SpeciesData;
 use crate::species::Species;
 
@@ -20,15 +21,19 @@ pub trait Lookup<Input> {
 /// This allows for re-use of the data attribute between members by leveraging
 /// YAML's ability to have anchors/aliases.
 #[derive(Deserialize)]
-struct YamlFriendlySpeciesData {
+struct YamlFriendlySpeciesData<DATA> {
     id: Species,
-    data: SpeciesData
+    data: DATA
+}
+
+pub fn test() {
+
 }
 
 lazy_static! {
     pub static ref SPECIES_DATA: HashMap<Species, SpeciesData> = {
-        resource_str!("resources/pokemonbattledata.yml", |yml: &str| {
-            let data: Vec<YamlFriendlySpeciesData> = serde_yaml::from_str(yml).unwrap();
+        resource_str!("resources/pokemon/speciesdata.yml", |yml: &str| {
+            let data: Vec<YamlFriendlySpeciesData<SpeciesData>> = serde_yaml::from_str(yml).unwrap();
             data.into_iter()
                 .map(|d| (d.id, d.data))
                 .collect::<HashMap<_, _>>()

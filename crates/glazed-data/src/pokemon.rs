@@ -3,7 +3,7 @@ use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
 
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::{Move, MoveData};
@@ -30,7 +30,7 @@ impl GenderRatio {
     pub const SEVEN_TO_ONE: GenderRatio = GenderRatio::Proportion(7, 1);
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Gender {
     Male,
     Female,
@@ -646,13 +646,8 @@ impl Pokemon {
     }
 
     pub fn knows_move(&self, check_attack: Move) -> bool {
-        match (&self.move_1, &self.move_2, &self.move_3, &self.move_4) {
-            (Some(MoveSlot{attack, ..}), _, _, _) if *attack == check_attack => true,
-            (_, Some(MoveSlot{attack, ..}), _, _) if *attack == check_attack => true,
-            (_, _, Some(MoveSlot{attack, ..}), _) if *attack == check_attack => true,
-            (_, _, _, Some(MoveSlot{attack, ..})) if *attack == check_attack => true,
-            _ => false
-        }
+        self.get_moves().iter()
+            .any(|m| *m == check_attack)
     }
 
     pub fn get_move_slot(&self, check_attack: Move) -> Option<&MoveSlot> {

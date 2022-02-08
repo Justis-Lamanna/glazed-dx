@@ -262,18 +262,6 @@ pub enum PokemonType {
     Single(Type),
     Double(Type, Type)
 }
-impl Serialize for PokemonType {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        match self {
-            PokemonType::Single(a) => {
-                vec![*a].serialize(serializer)
-            }
-            PokemonType::Double(a, b) => {
-                vec![*a, *b].serialize(serializer)
-            }
-        }
-    }
-}
 impl<'de> Deserialize<'de> for PokemonType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
         let mut s = Vec::<Type>::deserialize(deserializer)?;
