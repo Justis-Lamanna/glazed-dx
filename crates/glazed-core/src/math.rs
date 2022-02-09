@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use std::convert::TryFrom;
 
 /// Calculates a percentage of a value.

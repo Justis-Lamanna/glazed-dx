@@ -1,15 +1,15 @@
 use std::collections::BTreeMap;
+
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
-
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::{Move, MoveData};
-use crate::species::Species;
 use crate::item::{Item, Pokeball};
 use crate::lookups::Lookup;
+use crate::species::Species;
 use crate::types::{PokemonType, Type};
 
 pub const SHININESS_CHANCE: u16 = 16;
@@ -241,16 +241,52 @@ pub struct PokemonContestStats {
     pub smartness: u8,
     pub toughness: u8,
     pub feel: u8,
-    cool_ribbon: [bool; 4],
-    beauty_ribbon: [bool; 4],
-    cute_ribbon: [bool; 4],
-    smart_ribbon: [bool; 4],
-    tough_ribbon: [bool; 4],
-    champion_ribbon: bool,
-    winning_ribbon: bool,
-    victory_ribbon: bool,
-    artist_ribbon: bool,
-    effort_ribbon: bool
+    pub ribbons: Ribbons
+}
+
+bitflags::bitflags! {
+    pub struct Ribbons: u32 {
+        const LEAGUE_RIBBON         = 0b00000000000000000000000000000001; // Winning the league
+        const COOL_RIBBON           = 0b00000000000000000000000000000010; // Contest ribbons
+        const COOL_SUPER_RIBBON     = 0b00000000000000000000000000000100;
+        const COOL_HYPER_RIBBON     = 0b00000000000000000000000000001000;
+        const COOL_MASTER_RIBBON    = 0b00000000000000000000000000010000;
+        const BEAUTY_RIBBON         = 0b00000000000000000000000000100000;
+        const BEAUTY_SUPER_RIBBON   = 0b00000000000000000000000001000000;
+        const BEAUTY_HYPER_RIBBON   = 0b00000000000000000000000010000000;
+
+        const BEAUTY_MASTER_RIBBON  = 0b00000000000000000000000100000000;
+        const CUTE_RIBBON           = 0b00000000000000000000001000000000;
+        const CUTE_SUPER_RIBBON     = 0b00000000000000000000010000000000;
+        const CUTE_HYPER_RIBBON     = 0b00000000000000000000100000000000;
+        const CUTE_MASTER_RIBBON    = 0b00000000000000000001000000000000;
+        const SMART_RIBBON          = 0b00000000000000000010000000000000;
+        const SMART_SUPER_RIBBON    = 0b00000000000000000100000000000000;
+        const SMART_HYPER_RIBBON    = 0b00000000000000001000000000000000;
+
+        const SMART_MASTER_RIBBON   = 0b00000000000000010000000000000000;
+        const TOUGH_RIBBON          = 0b00000000000000100000000000000000;
+        const TOUGH_SUPER_RIBBON    = 0b00000000000001000000000000000000;
+        const TOUGH_HYPER_RIBBON    = 0b00000000000010000000000000000000;
+        const TOUGH_MASTER_RIBBON   = 0b00000000000100000000000000000000;
+        const WINNING_RIBBON        = 0b00000000001000000000000000000000; // Battle Tower, lv 50
+        const VICTORY_RIBBON        = 0b00000000010000000000000000000000; // Battle Tower, lv 100
+        const ARTIST_RIBBON         = 0b00000000100000000000000000000000; // Put Pokemon portrait in a museum
+
+        const EFFORT_RIBBON         = 0b00000001000000000000000000000000; // 510 EVs
+        const GORGEOUS_RIBBON       = 0b00000010000000000000000000000000; // $10,000
+        const ROYAL_RIBBON          = 0b00000100000000000000000000000000; // $100,000
+        const GORGEOUS_ROYAL_RIBBON = 0b00001000000000000000000000000000; // $999,999
+        const FOOTPRINT_RIBBON      = 0b00010000000000000000000000000000; // Max Happiness
+        const UNKNOWN_A_RIBBON      = 0b00100000000000000000000000000000; //
+        const UNKNOWN_B_RIBBON      = 0b01000000000000000000000000000000; //
+        const UNKNOWN_C_RIBBON      = 0b10000000000000000000000000000000; //
+    }
+}
+impl Default for Ribbons {
+    fn default() -> Self {
+        Ribbons::empty()
+    }
 }
 
 /// Represents the status conditions of this Pokemon

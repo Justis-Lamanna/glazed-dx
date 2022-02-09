@@ -1,6 +1,7 @@
 #![allow(non_upper_case_globals)]
-use serde::{Serialize, Deserialize};
-use strum_macros::EnumIter;
+
+use serde::{Deserialize, Serialize};
+use strum_macros::{EnumDiscriminants, EnumIter};
 
 use crate::attack::Move;
 use crate::types::Type;
@@ -359,23 +360,41 @@ impl From<HM> for Item {
 
 /// All Mail in the game
 /// Messages are attached via the included String
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, EnumDiscriminants)]
 pub enum Mail {
-    AirMail(String),
-    BloomMail(String),
-    BrickMail(String),
-    BubbleMail(String),
-    FlameMail(String),
-    GrassMail(String),
-    HeartMail(String),
-    MosaicMail(String),
-    SnowMail(String),
-    SpaceMail(String),
-    SteelMail(String),
-    TunnelMail(String)
+    AirMail(Option<String>),
+    BloomMail(Option<String>),
+    BrickMail(Option<String>),
+    BubbleMail(Option<String>),
+    FlameMail(Option<String>),
+    GrassMail(Option<String>),
+    HeartMail(Option<String>),
+    MosaicMail(Option<String>),
+    SnowMail(Option<String>),
+    SpaceMail(Option<String>),
+    SteelMail(Option<String>),
+    TunnelMail(Option<String>)
 }
 impl From<Mail> for Item {
     fn from(p: Mail) -> Self { Item::Mail(p) }
+}
+impl From<MailDiscriminants> for Mail {
+    fn from(p: MailDiscriminants) -> Self {
+        match p {
+            MailDiscriminants::AirMail => Mail::AirMail(None),
+            MailDiscriminants::BloomMail => Mail::BloomMail(None),
+            MailDiscriminants::BrickMail => Mail::BrickMail(None),
+            MailDiscriminants::BubbleMail => Mail::BubbleMail(None),
+            MailDiscriminants::FlameMail => Mail::FlameMail(None),
+            MailDiscriminants::GrassMail => Mail::GrassMail(None),
+            MailDiscriminants::HeartMail => Mail::HeartMail(None),
+            MailDiscriminants::MosaicMail => Mail::MosaicMail(None),
+            MailDiscriminants::SnowMail => Mail::SnowMail(None),
+            MailDiscriminants::SpaceMail => Mail::SpaceMail(None),
+            MailDiscriminants::SteelMail => Mail::SteelMail(None),
+            MailDiscriminants::TunnelMail => Mail::TunnelMail(None)
+        }
+    }
 }
 
 /// All Key items in the game

@@ -1,8 +1,9 @@
 use std::ops::Range;
-use chrono::{Datelike, Local, Timelike, Weekday};
-use rand::{Rng, RngCore};
 
-use serde::{Serialize, Deserialize};
+use chrono::{Datelike, Local, Timelike, Weekday};
+use rand::Rng;
+use serde::{Deserialize, Serialize};
+
 use crate::pokemon::Pokemon;
 
 /// Represents the player of the game

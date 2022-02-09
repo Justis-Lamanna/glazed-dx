@@ -1,14 +1,12 @@
+use std::collections::HashMap;
+
 use lazy_static::lazy_static;
 use resource::resource_str;
 use serde::Deserialize;
-use serde::Serialize;
 
-use std::collections::{BTreeMap, HashMap};
-
-use crate::item::Berry;
 use crate::attack::{Move, MoveData};
 use crate::contest::BerryPokeblockData;
-use crate::evolutions::EvolutionTrigger;
+use crate::item::Berry;
 use crate::pokemon::SpeciesData;
 use crate::species::Species;
 

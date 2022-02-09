@@ -50,6 +50,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "flags"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ed44d41d5559282eb1b929c0a735d644d24c47c0f4212438f9f7052de74c340"
+
+[[package]]
 name = "getrandom"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -82,6 +88,7 @@ name = "glazed_data"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "flags",
  "glazed_core",
  "lazy_static",
  "rand",

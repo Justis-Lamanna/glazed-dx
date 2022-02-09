@@ -1,11 +1,10 @@
 use std::cell::RefCell;
-use log::debug;
 use rand::Rng;
 use glazed_core::math;
 use glazed_data::abilities::Ability;
 use glazed_data::attack::{BattleStat, Move, ScreenType};
 
-use crate::{ActionSideEffects, Slot, Cause, FieldSide, BaseSlot, BattleSideId, SelectedTarget};
+use crate::{ActionSideEffects, Slot, Cause, FieldSide, BaseSlot, BattleSideId};
 use crate::damage::calculate_confusion_damage;
 use crate::constants::{*};
 use crate::core::CheckResult;

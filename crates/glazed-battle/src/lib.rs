@@ -3,16 +3,13 @@
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::fs::read;
-use std::ops::{Deref, DerefMut, Index, IndexMut};
-use std::option::Option::Some;
+use std::ops::{Deref, Index, IndexMut};
 use std::rc::Rc;
 
 use rand::Rng;
 
 use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{BattleStat, Move, MoveData, NonVolatileBattleAilment, PoisonType, ScreenType, SemiInvulnerableLocation, Target, Weather};
-use glazed_data::attack::BattleStat::Defense;
 use glazed_data::species::Species;
 use glazed_data::item::{EvolutionHeldItem, Item};
 use glazed_data::lookups::Lookup;
@@ -46,7 +43,7 @@ pub enum SelectedTarget {
 pub struct Field {
     weather: Option<WeatherCounter>,
     gravity: u8,
-    magic_room: u8,
+    // magic_room: u8,
     coins_on_ground: u16,
     future_attacks: HashMap<SlotId, (PokemonId, Move, u8)>
 }
@@ -117,7 +114,7 @@ impl Field {
     /// Decrement future attack counters, and return any ready to go.
     pub fn decrement_future_attack_counters(&mut self) -> Vec<(PokemonId, Move, SlotId)> {
         self.future_attacks
-            .drain_filter(|k, (_, _, turns)| {
+            .drain_filter(|_, (_, _, turns)| {
                 if *turns == 1 {
                     true
                 } else {
@@ -138,8 +135,8 @@ pub struct FieldSide {
     spikes: u8,
     toxic_spikes: u8,
     pointed_stones: bool,
-    tailwind: u8,
-    aurora_veil: u8,
+    // tailwind: u8,
+    // aurora_veil: u8,
     light_screen: u8,
     reflect: u8,
     mist: u8,
@@ -712,7 +709,7 @@ impl Battlefield {
     pub fn get_active_pokemon_by_side_id(&self, id: BattleSideId) -> Vec<Slot> {
         self.parties.iter()
             .enumerate()
-            .filter_map(|(party_idx, (side_idx, party))| {
+            .filter_map(|(party_idx, (side_idx, _))| {
                 if *side_idx == id {
                     Some(party_idx)
                 } else {

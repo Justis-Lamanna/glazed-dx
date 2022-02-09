@@ -1,8 +1,8 @@
 use std::ops::Mul;
 
+use serde::{Deserialize, Deserializer, Serialize};
+use serde::de::Error;
 use strum_macros::EnumIter;
-use serde::{Serialize, Deserialize, Serializer, Deserializer};
-use serde::de::{Error, IntoDeserializer};
 
 /// Represents the Type of a Pokemon
 #[derive(Debug, Copy, Clone, PartialEq, EnumIter, Serialize, Deserialize, Eq, Hash)]

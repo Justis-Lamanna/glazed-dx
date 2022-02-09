@@ -3,13 +3,10 @@ use simple_logger::SimpleLogger;
 
 use glazed_battle::{Battlefield, Party};
 use glazed_battle::SelectedTarget;
-
 use glazed_data::attack::{Move, MoveData};
-use glazed_data::species::{GenesectForm, Species, UnownForm};
-use glazed_data::contest::BerryPokeblockData;
-use glazed_data::item::Berry;
 use glazed_data::lookups::Lookup;
-use glazed_data::pokemon::{PokemonTemplate, SpeciesData};
+use glazed_data::pokemon::PokemonTemplate;
+use glazed_data::species::Species;
 
 fn main() {
     SimpleLogger::new()
@@ -25,7 +22,7 @@ fn main() {
         PokemonTemplate::pokemon(Species::Buizel, 20),
         PokemonTemplate::pokemon(Species::Furret, 20)]
     );
-    let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 20).holding(Berry::SitrusBerry));
+    let them = Party::create_one(PokemonTemplate::pokemon(Species::Ivysaur, 20));
 
     let mut battlefield = Battlefield::single_battle(me, them);
     battlefield.do_attack(0, Move::SuperFang, SelectedTarget::Implied);

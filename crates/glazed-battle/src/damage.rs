@@ -9,7 +9,7 @@ use glazed_data::attack::{BattleStat, DamageType, Move, MoveData, MultiHitFlavor
 use glazed_data::lookups::Lookup;
 use glazed_data::types::{Effectiveness, Type};
 
-use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage, ForcedAction, BaseSlot, SlotId};
+use crate::{ActionSideEffects, Slot, Battlefield, Cause, damage, ForcedAction, BaseSlot};
 use crate::core;
 use crate::core::MoveContext;
 use crate::constants::*;
@@ -72,7 +72,7 @@ impl Battlefield { //region Damage
         } else {
             let was_full_hp = defender.borrow().is_full_health();
             let start_hp = defender.borrow().current_hp;
-            let mut end_hp = start_hp.saturating_sub(damage);
+            let end_hp = start_hp.saturating_sub(damage);
 
             let hang_on = if end_hp == 0 { Battlefield::do_hang_on_check(defender, was_full_hp) } else { None };
             let mut effects = if let Some(action) = hang_on {
@@ -127,7 +127,7 @@ impl Battlefield { //region Damage
         } else {
             let was_full_hp = defender.borrow().is_full_health();
             let start_hp = defender.borrow().current_hp;
-            let mut end_hp = start_hp.saturating_sub(damage);
+            let end_hp = start_hp.saturating_sub(damage);
 
             let hang_on = if end_hp == 0 { Battlefield::do_hang_on_check(defender, was_full_hp) } else { None };
             let mut effects = if let Some(action) = hang_on {

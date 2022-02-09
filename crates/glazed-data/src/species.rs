@@ -3,15 +3,10 @@
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
-use serde::{Serialize, Deserialize};
-
-use crate::abilities::{Ability, PokemonAbility};
-use crate::attack::Move;
 use crate::core::Season;
-use crate::lookups::Lookup;
-use crate::pokemon::{EggGroup, GenderRatio, LevelRate, SpeciesData, PokemonEggGroup, Stat, Stats};
-use crate::types::{PokemonType, Type};
+use crate::types::Type;
 
 //region Pokemon Species Enums
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]

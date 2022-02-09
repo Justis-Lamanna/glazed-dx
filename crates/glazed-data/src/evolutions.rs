@@ -1,13 +1,14 @@
 #![allow(non_upper_case_globals)]
-use serde::{Serialize, Deserialize};
+
+use serde::Deserialize;
 
 use crate::attack::{Move, MoveData};
 use crate::contest::Condition;
 use crate::core::{GlazedTime, Player, TimeOfDay};
-use crate::species::Species;
 use crate::item::{EvolutionHeldItem, EvolutionStone, Incense, Item};
 use crate::lookups::Lookup;
 use crate::pokemon::{Gender, Pokemon};
+use crate::species::Species;
 use crate::types::Type;
 
 /// Represents evolution + breeding data for a species

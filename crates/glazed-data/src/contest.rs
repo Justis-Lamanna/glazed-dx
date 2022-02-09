@@ -1,8 +1,7 @@
 use std::collections::HashSet;
-use std::convert::TryFrom;
-use std::ops::{Add, Deref};
+
 use rand::Rng;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::item::Berry;
 use crate::lookups::Lookup;

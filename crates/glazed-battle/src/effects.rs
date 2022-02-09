@@ -1,7 +1,7 @@
 use std::cell::RefMut;
 use std::convert::TryFrom;
 use std::mem::take;
-use log::{debug, info, Level, log_enabled, logger};
+use log::{debug, info, Level, log_enabled};
 
 use rand::Rng;
 use strum::IntoEnumIterator;
@@ -22,7 +22,7 @@ impl Battlefield {
     pub fn enter_battle(&mut self, slot: SlotId) -> Vec<ActionSideEffects> {
         let mut effects = Vec::new();
         let side = self.get_side_by_active_id(slot).borrow();
-        let mut pkmn = self.get_active_pokemon_by_active_id(slot);
+        let pkmn = self.get_active_pokemon_by_active_id(slot);
         info!("Pokemon enters battle in slot {}: {:?}", slot, pkmn);
         let pkmn_ability = pkmn.get_effective_ability();
 
@@ -151,7 +151,7 @@ impl Battlefield {
             Some(ForcedAction::AttackWithCounter(attack, counter)) => {
                 debug!("Continuing attack {:?} (turns left: {})", attack, counter);
                 drop(data);
-                let mut effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied, true);
+                let effects = self._do_attack(attacker_id, attack, SelectedTarget::Implied, true);
 
                 let mut data = attacker.data.borrow_mut();
                 data.set_last_used_move(attack);

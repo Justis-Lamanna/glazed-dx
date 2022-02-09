@@ -98,14 +98,14 @@ pub fn weight_to_power_map(weight: u16) -> u16 {
 }
 
 /// Table used to convert weight ratio to base power for weight-ratio-based moves (Heavy Slam, Heat Crash)
-pub fn weight_ratio_to_power_map(attacker_weight: u16, defender_weight: u16) -> u16 {
-    let ratio = (attacker_weight as f64) / (defender_weight as f64);
-    if ratio > 0.5 { 40 }
-    else if ratio > 0.3335 { 60 }
-    else if ratio > 0.2501 { 80 }
-    else if ratio > 0.2001 { 100 }
-    else { 120 }
-}
+// pub fn weight_ratio_to_power_map(attacker_weight: u16, defender_weight: u16) -> u16 {
+//     let ratio = (attacker_weight as f64) / (defender_weight as f64);
+//     if ratio > 0.5 { 40 }
+//     else if ratio > 0.3335 { 60 }
+//     else if ratio > 0.2501 { 80 }
+//     else if ratio > 0.2001 { 100 }
+//     else { 120 }
+// }
 
 /// Table to convert HP Ratio to base power for Flail
 pub fn hp_to_power_map(current_hp: u16, max_hp: u16) -> u16 {
