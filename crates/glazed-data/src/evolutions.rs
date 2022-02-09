@@ -4,7 +4,8 @@ use serde::Deserialize;
 
 use crate::attack::{Move, MoveData};
 use crate::contest::Condition;
-use crate::core::{GlazedTime, Player, TimeOfDay};
+use crate::core::Player;
+use crate::time::{GlazedTime, TimeOfDay};
 use crate::item::{EvolutionHeldItem, EvolutionStone, Incense, Item};
 use crate::lookups::Lookup;
 use crate::pokemon::{Gender, Pokemon};

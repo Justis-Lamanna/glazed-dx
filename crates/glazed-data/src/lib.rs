@@ -8,6 +8,7 @@ pub mod item;
 pub mod evolutions;
 pub mod contest;
 pub mod lookups;
+pub mod time;
 
 #[cfg(test)]
 mod tests {

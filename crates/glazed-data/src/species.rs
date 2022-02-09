@@ -5,7 +5,7 @@ use rand::prelude::Distribution;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::core::Season;
+use crate::time::Season;
 use crate::types::Type;
 
 //region Pokemon Species Enums

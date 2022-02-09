@@ -7,6 +7,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::{Move, MoveData};
+use crate::core::Player;
 use crate::item::{Item, Pokeball};
 use crate::lookups::Lookup;
 use crate::species::Species;
@@ -196,7 +197,7 @@ pub struct SpeciesData {
 }
 
 /// Represents an individual member of a Pokemon species
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Pokemon {
     pub species: Species,
     pub gender: Gender,
@@ -233,7 +234,7 @@ pub struct Pokemon {
 }
 
 /// Represents the Contest Stats and Winnings of this Pokemon
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct PokemonContestStats {
     pub coolness: u8,
     pub beauty: u8,
@@ -245,6 +246,7 @@ pub struct PokemonContestStats {
 }
 
 bitflags::bitflags! {
+    #[derive(Serialize, Deserialize)]
     pub struct Ribbons: u32 {
         const LEAGUE_RIBBON         = 0b00000000000000000000000000000001; // Winning the league
         const COOL_RIBBON           = 0b00000000000000000000000000000010; // Contest ribbons
@@ -290,7 +292,7 @@ impl Default for Ribbons {
 }
 
 /// Represents the status conditions of this Pokemon
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct PokemonStatusCondition {
     pub sleep: u8,
     pub poison: bool,
@@ -316,7 +318,7 @@ impl PokemonStatusCondition {
 }
 
 /// Represents the values tied to a given moveslot
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct MoveSlot {
     pub attack: Move,
     pub pp: u8,
@@ -346,7 +348,7 @@ impl MoveSlot {
 }
 
 /// Represents the values tied to a given stat (HP, Atk, etc.)
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct StatSlot {
     pub value: u16,
     iv: u8,
@@ -398,7 +400,7 @@ impl StatSlot {
 }
 
 /// Represents which Ability the Pokemon has
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum AbilitySlot {
     SlotOne,
     SlotTwo,
@@ -415,7 +417,7 @@ impl Distribution<AbilitySlot> for Standard {
 }
 
 /// Represents the stage of Pokerus the Pokemon is at
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum PokemonPokerusStatus {
     None,
     Infected(u8),
@@ -423,7 +425,7 @@ pub enum PokemonPokerusStatus {
 }
 
 /// Represents one of the 25 Natures of a Pokemon
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Nature {
     Hardy, Docile, Serious, Bashful, Quirky, //Neutrals
     Lonely, Brave, Adamant, Naughty, //Attack Up
@@ -832,6 +834,16 @@ impl PokemonTemplate {
             nature: Some(Nature::Hardy),
             ..Default::default()
         }
+    }
+
+    /// Set the trainer to be a specific player
+    pub fn trainer(mut self, trainer: &Player) -> PokemonTemplate {
+        self.original_trainer = Some(TemplateTrainer {
+            trainer_id: trainer.trainer_id,
+            secret_id: trainer.secret_id,
+            name: trainer.name.clone()
+        });
+        self
     }
 
     /// Force this Pokemon to be shiny
