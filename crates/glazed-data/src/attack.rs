@@ -722,6 +722,11 @@ pub enum Power {
     Variable,
     Revenge(FractionPlaceholder, Option<DamageType>)
 }
+impl Default for Power {
+    fn default() -> Self {
+        Power::None
+    }
+}
 
 /// The potential types of Multi Hit
 #[derive(Debug, Copy, Clone, Deserialize)]
@@ -888,6 +893,7 @@ pub struct MoveData {
     pub pp: u8,
     #[serde(default)]
     pub priority: i8,
+    #[serde(default)]
     pub power: Power,
     pub accuracy: Accuracy,
     #[serde(rename="type")]

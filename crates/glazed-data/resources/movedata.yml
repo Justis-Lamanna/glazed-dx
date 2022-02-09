@@ -138,7 +138,6 @@
   crit_rate: 1
 - id: SwordsDance
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -179,7 +178,6 @@
 - id: Whirlwind
   pp: 20
   priority: -6
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -280,7 +278,6 @@
     - Flinch: 30
 - id: SandAttack
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Ground
@@ -401,7 +398,6 @@
   target: AllyOrOpponent
 - id: TailWhip
   pp: 30
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -456,7 +452,6 @@
   target: AllyOrOpponent
 - id: Leer
   pp: 30
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -481,7 +476,6 @@
     - Flinch: 30
 - id: Growl
   pp: 40
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -496,7 +490,6 @@
 - id: Roar
   pp: 20
   priority: -6
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -505,7 +498,6 @@
     - ForceSwitch: Target
 - id: Sing
   pp: 15
-  power: None
   accuracy:
     Percentage: 55
   type: Normal
@@ -518,7 +510,6 @@
         - Target
 - id: Supersonic
   pp: 20
-  power: None
   accuracy:
     Percentage: 55
   type: Normal
@@ -539,7 +530,6 @@
   target: AllyOrOpponent
 - id: Disable
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -592,7 +582,6 @@
         - Target
 - id: Mist
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Ice
   damage_type: Status
@@ -796,7 +785,6 @@
   target: AllyOrOpponent
 - id: LeechSeed
   pp: 10
-  power: None
   accuracy:
     Percentage: 90
   type: Grass
@@ -806,7 +794,6 @@
     - Leech
 - id: Growth
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -845,7 +832,6 @@
   target: AllyOrOpponent
 - id: PoisonPowder
   pp: 35
-  power: None
   accuracy:
     Percentage: 75
   type: Poison
@@ -858,7 +844,6 @@
         - Target
 - id: StunSpore
   pp: 30
-  power: None
   accuracy:
     Percentage: 75
   type: Grass
@@ -871,7 +856,6 @@
         - Target
 - id: SleepPowder
   pp: 15
-  power: None
   accuracy:
     Percentage: 75
   type: Grass
@@ -895,7 +879,6 @@
     - Thrash
 - id: StringShot
   pp: 40
-  power: None
   accuracy:
     Percentage: 95
   type: Bug
@@ -957,7 +940,6 @@
         - Target
 - id: ThunderWave
   pp: 20
-  power: None
   accuracy:
     Percentage: 90
   type: Electric
@@ -1021,7 +1003,6 @@
   target: AllyOrOpponent
 - id: Toxic
   pp: 10
-  power: None
   accuracy:
     Percentage: 90
   type: Poison
@@ -1062,7 +1043,6 @@
         - Target
 - id: Hypnosis
   pp: 20
-  power: None
   accuracy:
     Percentage: 60
   type: Psychic
@@ -1075,7 +1055,6 @@
         - Target
 - id: Meditate
   pp: 40
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -1088,7 +1067,6 @@
         - User
 - id: Agility
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -1122,7 +1100,6 @@
     - Rage
 - id: Teleport
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -1139,7 +1116,6 @@
   target: AllyOrOpponent
 - id: Mimic
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1148,7 +1124,6 @@
     - Mimic
 - id: Screech
   pp: 40
-  power: None
   accuracy:
     Percentage: 85
   type: Normal
@@ -1162,7 +1137,6 @@
         - Target
 - id: DoubleTeam
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1175,7 +1149,6 @@
         - User
 - id: Recover
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1184,7 +1157,6 @@
     - Heal: 50
 - id: Harden
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1197,7 +1169,6 @@
         - User
 - id: Minimize
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1211,7 +1182,6 @@
         - User
 - id: Smokescreen
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -1225,7 +1195,6 @@
         - Target
 - id: ConfuseRay
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Ghost
@@ -1237,7 +1206,6 @@
         - Target
 - id: Withdraw
   pp: 40
-  power: None
   accuracy: AlwaysHits
   type: Water
   damage_type: Status
@@ -1250,7 +1218,6 @@
         - User
 - id: DefenseCurl
   pp: 40
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1264,7 +1231,6 @@
     - Curl
 - id: Barrier
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -1277,7 +1243,6 @@
         - User
 - id: LightScreen
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -1286,7 +1251,6 @@
     - Screen: LightScreen
 - id: Haze
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Ice
   damage_type: Status
@@ -1295,7 +1259,6 @@
     - StatReset
 - id: Reflect
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -1304,7 +1267,6 @@
     - Screen: Reflect
 - id: FocusEnergy
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1318,7 +1280,6 @@
 - id: Bide
   pp: 10
   priority: 1
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Physical
@@ -1327,14 +1288,12 @@
     - Bide
 - id: Metronome
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: MirrorMove
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Flying
   damage_type: Status
@@ -1492,7 +1451,6 @@
         - Target
 - id: Amnesia
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -1505,7 +1463,6 @@
         - User
 - id: Kinesis
   pp: 15
-  power: None
   accuracy:
     Percentage: 80
   type: Psychic
@@ -1519,7 +1476,6 @@
         - Target
 - id: SoftBoiled
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1537,7 +1493,6 @@
   target: AllyOrOpponent
 - id: Glare
   pp: 30
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -1559,7 +1514,6 @@
   target: AllyOrOpponent
 - id: PoisonGas
   pp: 40
-  power: None
   accuracy:
     Percentage: 90
   type: Poison
@@ -1591,7 +1545,6 @@
   target: AllyOrOpponent
 - id: LovelyKiss
   pp: 10
-  power: None
   accuracy:
     Percentage: 75
   type: Normal
@@ -1618,7 +1571,6 @@
     - Flinch: 30
 - id: Transform
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1655,7 +1607,6 @@
         - Target
 - id: Spore
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Grass
@@ -1668,7 +1619,6 @@
         - Target
 - id: Flash
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -1690,14 +1640,12 @@
   target: AllyOrOpponent
 - id: Splash
   pp: 40
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: AcidArmor
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Poison
   damage_type: Status
@@ -1751,7 +1699,6 @@
   target: AllyOrOpponent
 - id: Rest
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -1782,7 +1729,6 @@
     - Flinch: 10
 - id: Sharpen
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1795,7 +1741,6 @@
         - User
 - id: Conversion
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1836,7 +1781,6 @@
   crit_rate: 1
 - id: Substitute
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1845,7 +1789,6 @@
     - Substitute
 - id: Sketch
   pp: 1
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1878,7 +1821,6 @@
     - StealItem
 - id: SpiderWeb
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Bug
   damage_type: Status
@@ -1887,7 +1829,6 @@
     - Trap
 - id: MindReader
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1896,7 +1837,6 @@
     - LockOn
 - id: Nightmare
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Ghost
@@ -1931,7 +1871,6 @@
     - Flinch: 30
 - id: Curse
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Ghost
   damage_type: Status
@@ -1948,7 +1887,6 @@
   target: AllyOrOpponent
 - id: Conversion2
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -1967,7 +1905,6 @@
   crit_rate: 1
 - id: CottonSpore
   pp: 40
-  power: None
   accuracy:
     Percentage: 100
   type: Grass
@@ -1981,7 +1918,6 @@
         - Target
 - id: Reversal
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Fighting
@@ -1989,7 +1925,6 @@
   target: AllyOrOpponent
 - id: Spite
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Ghost
@@ -2014,7 +1949,6 @@
 - id: Protect
   pp: 10
   priority: 4
-  power: None
   accuracy: Variable
   type: Normal
   damage_type: Status
@@ -2033,7 +1967,6 @@
   target: AllyOrOpponent
 - id: ScaryFace
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -2055,7 +1988,6 @@
   target: AllyOrOpponent
 - id: SweetKiss
   pp: 10
-  power: None
   accuracy:
     Percentage: 75
   type: Fairy
@@ -2067,7 +1999,6 @@
         - Target
 - id: BellyDrum
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2120,7 +2051,6 @@
         - Target
 - id: Spikes
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Ground
   damage_type: Status
@@ -2143,7 +2073,6 @@
         - Target
 - id: Foresight
   pp: 40
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2152,7 +2081,6 @@
     - Foresight
 - id: DestinyBond
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Ghost
   damage_type: Status
@@ -2161,7 +2089,6 @@
     - DestinyBond
 - id: PerishSong
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2186,7 +2113,6 @@
 - id: Detect
   pp: 5
   priority: 4
-  power: None
   accuracy: AlwaysHits
   type: Fighting
   damage_type: Status
@@ -2205,7 +2131,6 @@
   target: AllyOrOpponent
 - id: LockOn
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2225,7 +2150,6 @@
     - Thrash
 - id: Sandstorm
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Rock
   damage_type: Status
@@ -2244,7 +2168,6 @@
 - id: Endure
   pp: 10
   priority: 4
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2253,7 +2176,6 @@
     - Protect
 - id: Charm
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Fairy
@@ -2287,7 +2209,6 @@
   target: AllyOrOpponent
 - id: Swagger
   pp: 15
-  power: None
   accuracy:
     Percentage: 85
   type: Normal
@@ -2304,7 +2225,6 @@
         - Target
 - id: MilkDrink
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2351,7 +2271,6 @@
         - User
 - id: MeanLook
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2360,7 +2279,6 @@
     - Trap
 - id: Attract
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -2370,14 +2288,12 @@
     - Infatuate: 0
 - id: SleepTalk
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: HealBell
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2408,7 +2324,6 @@
   target: AllyOrOpponent
 - id: Safeguard
   pp: 25
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2417,7 +2332,6 @@
     - Safeguard
 - id: PainSplit
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2484,7 +2398,6 @@
         - Target
 - id: BatonPass
   pp: 40
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2493,7 +2406,6 @@
     - BatonPass
 - id: Encore
   pp: 5
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -2523,7 +2435,6 @@
     - ClearHazards
 - id: SweetScent
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -2576,7 +2487,6 @@
   target: AllyOrOpponent
 - id: MorningSun
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2594,7 +2504,6 @@
           - 4
 - id: Synthesis
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Grass
   damage_type: Status
@@ -2612,7 +2521,6 @@
           - 4
 - id: Moonlight
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Fairy
   damage_type: Status
@@ -2659,7 +2567,6 @@
     - Flinch: 20
 - id: RainDance
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Water
   damage_type: Status
@@ -2668,7 +2575,6 @@
     - ChangeWeather: Rain
 - id: SunnyDay
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Fire
   damage_type: Status
@@ -2705,7 +2611,6 @@
   target: Implicit
 - id: PsychUp
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2839,14 +2744,12 @@
   target: RandomOpponent
 - id: Stockpile
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: SpitUp
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -2854,7 +2757,6 @@
   target: AllyOrOpponent
 - id: Swallow
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -2877,7 +2779,6 @@
         - Target
 - id: Hail
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Ice
   damage_type: Status
@@ -2886,7 +2787,6 @@
     - ChangeWeather: Hail
 - id: Torment
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -2896,7 +2796,6 @@
     - Custom
 - id: Flatter
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -2913,7 +2812,6 @@
         - Target
 - id: WillOWisp
   pp: 15
-  power: None
   accuracy:
     Percentage: 85
   type: Fire
@@ -2926,7 +2824,6 @@
         - Target
 - id: Memento
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -2963,21 +2860,18 @@
 - id: FollowMe
   pp: 20
   priority: 2
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: NaturePower
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: AllyOrOpponent
 - id: Charge
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Electric
   damage_type: Status
@@ -2990,7 +2884,6 @@
         - User
 - id: Taunt
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -2999,14 +2892,12 @@
 - id: HelpingHand
   pp: 20
   priority: 5
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: Ally
 - id: Trick
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Psychic
@@ -3014,28 +2905,24 @@
   target: AllyOrOpponent
 - id: RolePlay
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: AllyOrOpponent
 - id: Wish
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: Assist
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: Ingrain
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Grass
   damage_type: Status
@@ -3065,14 +2952,12 @@
 - id: MagicCoat
   pp: 15
   priority: 4
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: User
 - id: Recycle
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -3098,7 +2983,6 @@
   target: AllyOrOpponent
 - id: Yawn
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -3133,28 +3017,24 @@
   target: Opponents
 - id: SkillSwap
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: AllyOrOpponent
 - id: Imprison
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: User
 - id: Refresh
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: Grudge
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Ghost
   damage_type: Status
@@ -3162,7 +3042,6 @@
 - id: Snatch
   pp: 10
   priority: 4
-  power: None
   accuracy: AlwaysHits
   type: Dark
   damage_type: Status
@@ -3199,14 +3078,12 @@
   target: AllyOrOpponent
 - id: Camouflage
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: TailGlow
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Bug
   damage_type: Status
@@ -3249,7 +3126,6 @@
         - Target
 - id: FeatherDance
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Flying
@@ -3263,7 +3139,6 @@
         - Target
 - id: TeeterDance
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -3290,7 +3165,6 @@
         - Target
 - id: MudSport
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Ground
   damage_type: Status
@@ -3317,7 +3191,6 @@
     - Flinch: 30
 - id: SlackOff
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -3417,14 +3290,12 @@
   target: AllyOrOpponent
 - id: Aromatherapy
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Grass
   damage_type: Status
   target: UserAndAlly
 - id: FakeTears
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -3463,7 +3334,6 @@
         - User
 - id: OdorSleuth
   pp: 40
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -3522,7 +3392,6 @@
         - User
 - id: MetalSound
   pp: 40
-  power: None
   accuracy:
     Percentage: 85
   type: Steel
@@ -3536,7 +3405,6 @@
         - Target
 - id: GrassWhistle
   pp: 15
-  power: None
   accuracy:
     Percentage: 55
   type: Grass
@@ -3549,7 +3417,6 @@
         - Target
 - id: Tickle
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -3568,7 +3435,6 @@
         - Target
 - id: CosmicPower
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -3698,7 +3564,6 @@
   target: AllyOrOpponent
 - id: IronDefense
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Steel
   damage_type: Status
@@ -3711,14 +3576,12 @@
         - User
 - id: Block
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: AllyOrOpponent
 - id: Howl
   pp: 40
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -3749,7 +3612,6 @@
   target: AllyOrOpponent
 - id: BulkUp
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Fighting
   damage_type: Status
@@ -3842,14 +3704,12 @@
   target: AllyOrOpponent
 - id: WaterSport
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Water
   damage_type: Status
   target: Opponents
 - id: CalmMind
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -3877,7 +3737,6 @@
   crit_rate: 1
 - id: DragonDance
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Dragon
   damage_type: Status
@@ -3952,7 +3811,6 @@
         - User
 - id: Roost
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Flying
   damage_type: Status
@@ -3961,14 +3819,12 @@
     - Heal: 50
 - id: Gravity
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: Opponents
 - id: MiracleEye
   pp: 40
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -4001,7 +3857,6 @@
         - User
 - id: GyroBall
   pp: 5
-  power: None
   accuracy:
     Percentage: 100
   type: Steel
@@ -4009,7 +3864,6 @@
   target: AllyOrOpponent
 - id: HealingWish
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -4025,7 +3879,6 @@
   target: AllyOrOpponent
 - id: NaturalGift
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -4052,14 +3905,12 @@
   target: AllyOrOpponent
 - id: Tailwind
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Flying
   damage_type: Status
   target: UserAndAlly
 - id: Acupressure
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -4127,7 +3978,6 @@
   target: AllyOrOpponent
 - id: Embargo
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -4137,7 +3987,6 @@
     - Custom
 - id: Fling
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -4145,7 +3994,6 @@
   target: AllyOrOpponent
 - id: PsychoShift
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Psychic
@@ -4153,14 +4001,12 @@
   target: AllyOrOpponent
 - id: TrumpCard
   pp: 5
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Special
   target: AllyOrOpponent
 - id: HealBlock
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Psychic
@@ -4170,7 +4016,6 @@
     - Custom
 - id: WringOut
   pp: 5
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -4178,14 +4023,12 @@
   target: AllyOrOpponent
 - id: PowerTrick
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: User
 - id: GastroAcid
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Poison
@@ -4193,42 +4036,36 @@
   target: AllyOrOpponent
 - id: LuckyChant
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: UserAndAlly
 - id: MeFirst
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: Opponent
 - id: Copycat
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: PowerSwap
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: AllyOrOpponent
 - id: GuardSwap
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: AllyOrOpponent
 - id: Punishment
   pp: 5
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -4245,7 +4082,6 @@
   target: AllyOrOpponent
 - id: WorrySeed
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Grass
@@ -4263,28 +4099,24 @@
   target: AllyOrOpponent
 - id: ToxicSpikes
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Poison
   damage_type: Status
   target: Opponents
 - id: HeartSwap
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: AllyOrOpponent
 - id: AquaRing
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Water
   damage_type: Status
   target: User
 - id: MagnetRise
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Electric
   damage_type: Status
@@ -4330,7 +4162,6 @@
   target: AllyOrOpponent
 - id: RockPolish
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Rock
   damage_type: Status
@@ -4536,7 +4367,6 @@
         - Target
 - id: Switcheroo
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -4553,7 +4383,6 @@
   target: AllyOrOpponent
 - id: NastyPlot
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Dark
   damage_type: Status
@@ -4740,7 +4569,6 @@
         - Target
 - id: Defog
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Flying
   damage_type: Status
@@ -4750,7 +4578,6 @@
 - id: TrickRoom
   pp: 5
   priority: -7
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -4891,7 +4718,6 @@
   crit_rate: 1
 - id: Captivate
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -4905,7 +4731,6 @@
         - Target
 - id: StealthRock
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Rock
   damage_type: Status
@@ -4998,7 +4823,6 @@
   crit_rate: 1
 - id: DefendOrder
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Bug
   damage_type: Status
@@ -5016,7 +4840,6 @@
         - User
 - id: HealOrder
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Bug
   damage_type: Status
@@ -5068,14 +4891,12 @@
   crit_rate: 1
 - id: LunarDance
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: User
 - id: CrushGrip
   pp: 5
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -5094,7 +4915,6 @@
     - Bind
 - id: DarkVoid
   pp: 10
-  power: None
   accuracy:
     Percentage: 50
   type: Dark
@@ -5168,7 +4988,6 @@
   target: AllyOrOpponent
 - id: HoneClaws
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Dark
   damage_type: Status
@@ -5187,28 +5006,24 @@
 - id: WideGuard
   pp: 10
   priority: 3
-  power: None
   accuracy: AlwaysHits
   type: Rock
   damage_type: Status
   target: UserAndAlly
 - id: GuardSplit
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: AllyOrOpponent
 - id: PowerSplit
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
   target: AllyOrOpponent
 - id: WonderRoom
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -5233,7 +5048,6 @@
   target: AllyOrOpponent
 - id: Autotomize
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Steel
   damage_type: Status
@@ -5247,14 +5061,12 @@
 - id: RagePowder
   pp: 20
   priority: 2
-  power: None
   accuracy: AlwaysHits
   type: Bug
   damage_type: Status
   target: User
 - id: Telekinesis
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -5263,7 +5075,6 @@
     - Custom
 - id: MagicRoom
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -5314,7 +5125,6 @@
         - Target
 - id: QuiverDance
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Bug
   damage_type: Status
@@ -5354,7 +5164,6 @@
   target: AllExceptUser
 - id: ElectroBall
   pp: 10
-  power: None
   accuracy:
     Percentage: 100
   type: Electric
@@ -5362,7 +5171,6 @@
   target: AllyOrOpponent
 - id: Soak
   pp: 20
-  power: None
   accuracy:
     Percentage: 100
   type: Water
@@ -5385,7 +5193,6 @@
         - User
 - id: Coil
   pp: 20
-  power: None
   accuracy: AlwaysHits
   type: Poison
   damage_type: Status
@@ -5447,7 +5254,6 @@
   target: AllyOrOpponent
 - id: SimpleBeam
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -5455,7 +5261,6 @@
   target: AllyOrOpponent
 - id: Entrainment
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Normal
@@ -5463,7 +5268,6 @@
   target: AllyOrOpponent
 - id: AfterYou
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -5515,7 +5319,6 @@
 - id: QuickGuard
   pp: 15
   priority: 3
-  power: None
   accuracy: AlwaysHits
   type: Fighting
   damage_type: Status
@@ -5523,7 +5326,6 @@
 - id: AllySwitch
   pp: 15
   priority: 2
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -5544,14 +5346,12 @@
         - Target
 - id: ShellSmash
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
   target: User
 - id: HealPulse
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Psychic
   damage_type: Status
@@ -5578,7 +5378,6 @@
   target: AllyOrOpponent
 - id: ShiftGear
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Steel
   damage_type: Status
@@ -5617,7 +5416,6 @@
   target: Opponents
 - id: Quash
   pp: 15
-  power: None
   accuracy:
     Percentage: 100
   type: Dark
@@ -5634,7 +5432,6 @@
   target: AllyOrOpponent
 - id: ReflectType
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -5658,7 +5455,6 @@
   target: AllyOrOpponent
 - id: Bestow
   pp: 15
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -5769,7 +5565,6 @@
     - ForceSwitch: Target
 - id: WorkUp
   pp: 30
-  power: None
   accuracy: AlwaysHits
   type: Normal
   damage_type: Status
@@ -5914,7 +5709,6 @@
     - Flinch: 30
 - id: CottonGuard
   pp: 10
-  power: None
   accuracy: AlwaysHits
   type: Grass
   damage_type: Status
