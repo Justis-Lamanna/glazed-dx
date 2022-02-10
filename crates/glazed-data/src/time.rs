@@ -55,7 +55,8 @@ impl GlazedTime {
             0 => Season::Spring,
             1 => Season::Summer,
             2 => Season::Autumn,
-            _ => Season::Winter
+            3 => Season::Winter,
+            _ => unreachable!()
         }
     }
 }

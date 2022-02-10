@@ -5,7 +5,7 @@ use rand::prelude::Distribution;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::time::Season;
+use crate::time::{GlazedTime, TimeOfDay, Season};
 use crate::types::Type;
 
 //region Pokemon Species Enums
@@ -713,20 +713,32 @@ impl Distribution<UnownForm> for Standard {
 pub enum CastformForm {
     Normal, Sunny, Rainy, Snowy
 }
+impl Default for CastformForm {
+    fn default() -> Self { CastformForm::Normal }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum DeoxysForm {
     Normal, Attack, Defense, Speed
+}
+impl Default for DeoxysForm {
+    fn default() -> Self { DeoxysForm::Normal }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum BurmyWormadamForm {
     Plant, Sandy, Trash
 }
+impl Default for BurmyWormadamForm {
+    fn default() -> Self { BurmyWormadamForm::Plant }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum CherrimForm {
     Overcast, Sunshine
+}
+impl Default for CherrimForm {
+    fn default() -> Self { CherrimForm::Overcast }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
@@ -738,49 +750,109 @@ pub enum ShellosGastrodonForm {
 pub enum RotomForm {
     Normal, Heat, Wash, Frost, Fan, Mow
 }
+impl Default for RotomForm {
+    fn default() -> Self { RotomForm::Normal }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum GiratinaForm {
     Altered, Origin
+}
+impl Default for GiratinaForm {
+    fn default() -> Self { GiratinaForm::Altered }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum ShayminForm {
     Land, Sky
 }
+impl Default for ShayminForm {
+    fn default() -> Self { ShayminForm::Sky }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum BasculinForm {
     RedStriped, BlueStriped
+}
+impl Distribution<BasculinForm> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> BasculinForm {
+        if rng.gen_bool(0.5) {
+            BasculinForm::RedStriped
+        } else {
+            BasculinForm::BlueStriped
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum DarmanitanForm {
     Standard, Zen
 }
+impl Default for DarmanitanForm {
+    fn default() -> Self { DarmanitanForm::Standard }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum ForcesOfNatureForm {
     Incarnate, Therian
+}
+impl Default for ForcesOfNatureForm {
+    fn default() -> Self { ForcesOfNatureForm::Incarnate }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum KyuremForm {
     Normal, White, Black
 }
+impl Default for KyuremForm {
+    fn default() -> Self { KyuremForm::Normal }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum KeldeoForm {
     Ordinary, Resolute
+}
+impl Default for KeldeoForm {
+    fn default() -> Self { KeldeoForm::Ordinary }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum MeloettaForm {
     Aria, Pirouette
 }
+impl Default for MeloettaForm {
+    fn default() -> Self { MeloettaForm::Aria }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum GenesectForm {
     Normal, Shock, Burn, Chill, Douse
 }
-//endregion
+impl Default for GenesectForm {
+    fn default() -> Self { GenesectForm::Normal }
+}
+
+/// Specific flavors of Species Generation based on some form of internal context
+pub enum SpeciesGenerator {
+    /// Generates an Unown of a random flavor, evenly distributed
+    RandomUnown,
+    /// Generates a Deerling corresponding to the current season
+    SeasonalDeerling,
+    /// Generates a Sawsbuck corresponding to the current season
+    SeasonalSawsbuck,
+    /// Generates a random species, evenly distributed
+    Random(Vec<Species>)
+}
+impl Into<Species> for SpeciesGenerator {
+    fn into(self) -> Species {
+        match self {
+            SpeciesGenerator::RandomUnown => Species::Unown(rand::thread_rng().gen()),
+            SpeciesGenerator::Random(choices) => {
+                let idx = rand::thread_rng().gen_range(0..choices.len());
+                choices[idx]
+            }
+            SpeciesGenerator::SeasonalDeerling => Species::Deerling(GlazedTime::get_season()),
+            SpeciesGenerator::SeasonalSawsbuck => Species::Sawsbuck(GlazedTime::get_season()),
+        }
+    }
+}

@@ -819,19 +819,17 @@ impl Default for EVTemplate {
 /// suitable defaults, or are randomly generated.
 /// At minimum, only a species is required (an egg will be generated).
 impl PokemonTemplate {
-    pub fn egg(species: Species) -> PokemonTemplate {
+    pub fn egg<S: Into<Species>>(species: S) -> PokemonTemplate {
         PokemonTemplate {
-            species,
+            species: species.into(),
             ..Default::default()
         }
     }
 
-    pub fn pokemon(species: Species, level: u8) -> PokemonTemplate {
+    pub fn pokemon<S: Into<Species>>(species: S, level: u8) -> PokemonTemplate {
         PokemonTemplate {
-            species,
+            species: species.into(),
             level,
-            ivs: IVTemplate::All(31),
-            nature: Some(Nature::Hardy),
             ..Default::default()
         }
     }
