@@ -5,7 +5,7 @@ use rand::prelude::Distribution;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::time::{GlazedTime, TimeOfDay, Season};
+use crate::time::{GlazedTime, Season};
 use crate::types::Type;
 
 //region Pokemon Species Enums
@@ -833,6 +833,7 @@ impl Default for GenesectForm {
 }
 
 /// Specific flavors of Species Generation based on some form of internal context
+#[derive(Debug, Serialize, Deserialize)]
 pub enum SpeciesGenerator {
     /// Generates an Unown of a random flavor, evenly distributed
     RandomUnown,

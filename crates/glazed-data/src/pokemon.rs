@@ -9,6 +9,7 @@ use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::{Move, MoveData};
 use crate::core::Player;
 use crate::item::{Item, Pokeball};
+use crate::locations::{Location, GlazedLocation};
 use crate::lookups::Lookup;
 use crate::species::Species;
 use crate::types::{PokemonType, Type};
@@ -230,7 +231,9 @@ pub struct Pokemon {
     pub special_defense: StatSlot,
     pub speed: StatSlot,
     pub contest: PokemonContestStats,
-    pub fateful_encounter: bool
+    pub fateful_encounter: bool,
+    pub date_caught: i64,
+    pub location_caught: Location
 }
 
 /// Represents the Contest Stats and Winnings of this Pokemon
@@ -775,7 +778,9 @@ pub struct PokemonTemplate {
     pub ivs: IVTemplate,
     pub evs: EVTemplate,
     pub contest: Option<PokemonContestStats>,
-    pub fateful_encounter: bool
+    pub fateful_encounter: bool,
+    pub date_caught: Option<i64>,
+    pub location_caught: Option<Location>
 }
 
 #[derive(Debug)]
@@ -1013,9 +1018,9 @@ impl From<PokemonTemplate> for Pokemon {
             nickname: template.nickname,
             level: template.level,
             markings: template.markings,
-            status: template.status.unwrap_or_else(|| PokemonStatusCondition::default()),
+            status: template.status.unwrap_or_default(),
             pokerus: template.pokerus.unwrap_or_else(|| PokemonPokerusStatus::None),
-            contest: template.contest.unwrap_or_else(|| PokemonContestStats::default()),
+            contest: template.contest.unwrap_or_default(),
             fateful_encounter: template.fateful_encounter,
             current_hp: 0,
             hp,
@@ -1023,7 +1028,9 @@ impl From<PokemonTemplate> for Pokemon {
             defense: def,
             special_attack: spa,
             special_defense: spd,
-            speed: spe
+            speed: spe,
+            date_caught: template.date_caught.unwrap_or_else(|| chrono::Local::now().timestamp()),
+            location_caught: template.location_caught.unwrap_or_else(GlazedLocation::current_location)
         };
         p.recalculate_stats();
         p.heal();
