@@ -20,19 +20,25 @@ const MIN_FRIENDSHIP_TO_EVOLVE: u8 = 220;
 /// Breeding rules:
 /// 1. if `baby`, and parent is holding `baby.incense`, offspring is `baby.species`
 /// 2. else, offspring is `base`
+#[derive(Debug, Deserialize)]
 pub struct Evolution {
+    pub id: Species,
     pub base: Species,
+    #[serde(default)]
     pub baby: Option<IncenseBaby>,
+    #[serde(default)]
     pub paths: Option<Vec<EvolutionPath>>
 }
 
 /// Represents a baby Pokemon that can be obtained by breeding while holding an incense
+#[derive(Debug, Deserialize)]
 pub struct IncenseBaby {
     pub species: Species,
     pub incense: Incense
 }
 
 /// Represents one possible evolution for this species
+#[derive(Debug, Deserialize)]
 pub struct EvolutionPath {
     pub to: Species,
     pub trigger: EvolutionTrigger
@@ -43,6 +49,7 @@ pub struct EvolutionPath {
 pub enum EvolutionTrigger {
     /// Evolves when a zero or more conditions are met at level up
     OnLevelUp(Vec<EvolutionCondition>),
+    NincadaSpawn,
 
     /// Evolves when an evolutionary stone is used on it
     EvolutionStone {

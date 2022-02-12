@@ -6,6 +6,7 @@ use serde::Deserialize;
 
 use crate::attack::{Move, MoveData};
 use crate::contest::BerryPokeblockData;
+use crate::evolutions::Evolution;
 use crate::item::Berry;
 use crate::pokemon::SpeciesData;
 use crate::species::Species;
@@ -35,6 +36,27 @@ lazy_static! {
             data.into_iter()
                 .map(|d| (d.id, d.data))
                 .collect::<HashMap<_, _>>()
+        })
+    };
+
+    pub static ref EVOLUTION_DATA: HashMap<Species, Evolution> = {
+        resource_str!("resources/pokemon/evolutiondata.yml", |yml: &str| {
+            let data: Vec<Evolution> = serde_yaml::from_str(yml).unwrap();
+            let mut map = data.into_iter()
+                .map(|d| (d.id, d))
+                .collect::<HashMap<_, _>>();
+
+            // For all Pokemon not in the evolution map, we default to this.
+            for s in SPECIES_DATA.keys() {
+                map.entry(*s).or_insert_with(|| Evolution {
+                    id: *s,
+                    base: *s,
+                    baby: None,
+                    paths: None
+                });
+            }
+
+            map
         })
     };
 
@@ -72,5 +94,11 @@ impl Lookup<Move> for MoveData {
 impl Lookup<Species> for SpeciesData {
     fn lookup(i: &Species) -> &Self {
         SPECIES_DATA.get(i).unwrap()
+    }
+}
+
+impl Lookup<Species> for Evolution {
+    fn lookup(i: &Species) -> &Self {
+        EVOLUTION_DATA.get(i).unwrap()
     }
 }
