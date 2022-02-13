@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
@@ -49,7 +49,7 @@ impl Gender {
 }
 
 /// Represents an Egg Group, i.e. the Compatibility of two Pokemon
-#[derive(Debug, Copy, Clone, Deserialize)]
+#[derive(Debug, Copy, Clone, Deserialize, PartialEq, Eq, Hash)]
 pub enum EggGroup {
     Monster,
     Water1,
@@ -87,6 +87,15 @@ impl<'de> Deserialize<'de> for PokemonEggGroup {
                     use serde::de::Error;
                     Err(D::Error::invalid_length(v.len(), &"Pokemon should have 0, 1, or 2 Egg Groups")) }
             }
+        }
+    }
+}
+impl PokemonEggGroup {
+    pub fn as_set(&self) -> HashSet<EggGroup> {
+        match self {
+            PokemonEggGroup::None => HashSet::new(),
+            PokemonEggGroup::One(a) => HashSet::from([*a]),
+            PokemonEggGroup::Two(a, b) => HashSet::from([*a, *b]),
         }
     }
 }
@@ -195,6 +204,15 @@ pub struct SpeciesData {
     pub base_friendship: u8,
     pub level_up_moves: BTreeMap<u8, Vec<Move>>,
     pub egg_moves: Option<Vec<Move>>
+}
+impl SpeciesData {
+    pub fn get_all_knowable_moves(&self) -> HashSet<Move> {
+        let mut set = HashSet::new();
+        for (_, pool) in &self.level_up_moves {
+            set.extend(pool);
+        }
+        set
+    }
 }
 
 /// Represents an individual member of a Pokemon species
@@ -354,7 +372,7 @@ impl MoveSlot {
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct StatSlot {
     pub value: u16,
-    iv: u8,
+    pub iv: u8,
     ev: u8
 }
 impl StatSlot {
@@ -428,7 +446,7 @@ pub enum PokemonPokerusStatus {
 }
 
 /// Represents one of the 25 Natures of a Pokemon
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum Nature {
     Hardy, Docile, Serious, Bashful, Quirky, //Neutrals
     Lonely, Brave, Adamant, Naughty, //Attack Up
@@ -887,6 +905,75 @@ impl PokemonTemplate {
 
         self.personality = Some((personality_hb << 16) | personality_lb);
 
+        self
+    }
+
+    /// Increase the odds of a Shiny being created by "rerolling" the Personality Value
+    /// Rerolls Personality `rolls` times, stopping only when running out of rolls, or a shiny
+    /// is generated.
+    /// Masuda Method rerolls 5 times. Shiny Charm rerolls 2 times. If both are present, 7 rerolls
+    /// are done.
+    /// If an original trainer has not already been created, one will be created.
+    /// Changing the original trainer after running this method will lose the potential shiniess.
+    pub fn maybe_shiny(mut self, rolls: u8) -> Self {
+        if rolls == 0 { return self; }
+
+        let (trainer_id, secret_id) = match self.original_trainer {
+            Some(TemplateTrainer { trainer_id, secret_id, ..}) => (trainer_id, secret_id),
+            None => {
+                let trainer_id = rand::thread_rng().gen();
+                let secret_id = rand::thread_rng().gen();
+                let trainer = TemplateTrainer {
+                    trainer_id,
+                    secret_id,
+                    name: "Trainer".to_string()
+                };
+                self.original_trainer = Some(trainer);
+                (trainer_id, secret_id)
+            }
+        };
+
+        let is_shiny = |t: &Self| {
+            match &t.personality {
+                None => false,
+                Some(a) => {
+                    let hb = (*a >> 16) as u16;
+                    let lb = *a as u16;
+                    trainer_id ^ secret_id ^ hb ^ lb < SHININESS_CHANCE
+                }
+            }
+        };
+        if is_shiny (&self) {
+            return self;
+        }
+
+        for _ in 0..rolls {
+            self.personality = rand::thread_rng().gen();
+            if is_shiny (&self) {
+                return self;
+            }
+        }
+        self
+    }
+
+    pub fn moves(mut self, moves: Vec<Move>) -> Self {
+        let mut iter = moves.into_iter();
+        self.move_1 = match iter.next() {
+            Some(m) => MoveTemplate::HardCoded(m),
+            None => MoveTemplate::None,
+        };
+        self.move_2 = match iter.next() {
+            Some(m) => MoveTemplate::HardCoded(m),
+            None => MoveTemplate::None,
+        };
+        self.move_3 = match iter.next() {
+            Some(m) => MoveTemplate::HardCoded(m),
+            None => MoveTemplate::None,
+        };
+        self.move_4 = match iter.next() {
+            Some(m) => MoveTemplate::HardCoded(m),
+            None => MoveTemplate::None,
+        };
         self
     }
 
