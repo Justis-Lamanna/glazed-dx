@@ -7,7 +7,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::abilities::{Ability, PokemonAbility};
 use crate::attack::{Move, MoveData};
-use crate::core::Player;
+use crate::core::{Player};
 use crate::item::{Item, Pokeball};
 use crate::locations::{Location, GlazedLocation};
 use crate::lookups::Lookup;
@@ -869,7 +869,7 @@ impl PokemonTemplate {
 
     /// Force this Pokemon to be shiny
     /// This is done by setting the Personality value to a specific value based on the original
-    /// trainer values. If there are no original trainer values, they will be generated at random.
+    /// trainer values. If there are no original trainer values, the player's will be used
     /// This algorithm is relatively naive, but works as follows:
     /// 1. Generate a random 16 bit value. This will be the high bytes of the personality value
     /// 2. Calculate trainer_id xor secret_id xor value from step 1. This will be the low bytes of the personality value
@@ -881,17 +881,7 @@ impl PokemonTemplate {
         // trainer ID xor secret ID xor personality hb xor personality lb < 16
         let (trainer_id, secret_id) = match self.original_trainer {
             Some(TemplateTrainer { trainer_id, secret_id, ..}) => (trainer_id, secret_id),
-            None => {
-                let trainer_id = rand::thread_rng().gen();
-                let secret_id = rand::thread_rng().gen();
-                let trainer = TemplateTrainer {
-                    trainer_id,
-                    secret_id,
-                    name: "Trainer".to_string()
-                };
-                self.original_trainer = Some(trainer);
-                (trainer_id, secret_id)
-            }
+            None => panic!()
         };
 
         // The simplest way to generate a Pokemon is to create a personality value which, when
@@ -913,24 +903,14 @@ impl PokemonTemplate {
     /// is generated.
     /// Masuda Method rerolls 5 times. Shiny Charm rerolls 2 times. If both are present, 7 rerolls
     /// are done.
-    /// If an original trainer has not already been created, one will be created.
+    /// If an original trainer has not already been created, the player is used.
     /// Changing the original trainer after running this method will lose the potential shiniess.
     pub fn maybe_shiny(mut self, rolls: u8) -> Self {
         if rolls == 0 { return self; }
 
         let (trainer_id, secret_id) = match self.original_trainer {
             Some(TemplateTrainer { trainer_id, secret_id, ..}) => (trainer_id, secret_id),
-            None => {
-                let trainer_id = rand::thread_rng().gen();
-                let secret_id = rand::thread_rng().gen();
-                let trainer = TemplateTrainer {
-                    trainer_id,
-                    secret_id,
-                    name: "Trainer".to_string()
-                };
-                self.original_trainer = Some(trainer);
-                (trainer_id, secret_id)
-            }
+            None => panic!()
         };
 
         let is_shiny = |t: &Self| {

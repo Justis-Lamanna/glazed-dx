@@ -105,7 +105,7 @@ pub enum EvolutionCondition {
 }
 impl EvolutionCondition {
     /// Check if a Pokemon meets the Evolution Condition
-    pub fn meets_condition(&self, pkmn: &Pokemon, player: &Player) -> bool {
+    pub fn meets_condition(&self, pkmn: &Pokemon) -> bool {
         match self {
             EvolutionCondition::Level(l) => 
                 pkmn.level >= *l,
@@ -125,8 +125,7 @@ impl EvolutionCondition {
                 pkmn.get_moves().iter()
                     .map(|m| MoveData::lookup(m))
                     .any(|md| md._type == *t),
-            EvolutionCondition::WithPartyPokemon(p) => 
-                player.party.iter().any(|pm| pm.species == *p),
+            EvolutionCondition::WithPartyPokemon(p) => false, // To be done later
             EvolutionCondition::AtPlace(p) => match p {
                 EvolutionTriggerLocation::MossRock => GlazedLocation::is_moss_rock_nearby(),
                 EvolutionTriggerLocation::IceRock => GlazedLocation::is_ice_rock_nearby(),
@@ -154,15 +153,75 @@ pub enum EvolutionTriggerLocation {
     MagneticField
 }
 
-pub mod breeding {
-    use std::collections::BinaryHeap;
+pub mod evolution {
+    use crate::{species::Species, pokemon::Pokemon, lookups::Lookup, core::Player};
 
+    use super::{Evolution, EvolutionTrigger};
+
+    pub fn level_up(p: &Pokemon) -> Vec<Species> {
+        let evolutions = Evolution::lookup(&p.species);
+        match &evolutions.paths {
+            None => vec![],
+            Some(paths) => {
+                let mut species = Vec::new();
+                for path in paths {
+                    if let EvolutionTrigger::OnLevelUp(conditions) = &path.trigger {
+                        if conditions.iter().all(|c| c.meets_condition(p)) {
+                            species.push(path.to);
+                        }
+                    } else if let EvolutionTrigger::NincadaSpawn = &path.trigger {
+                        if p.level == 20 {
+                            species.push(path.to);
+                        }
+                    }
+                }
+                species
+            }
+        }
+    }
+}
+
+pub mod breeding {
     use rand::Rng;
 
     use crate::{pokemon::{Pokemon, SpeciesData, EggGroup, Gender, PokemonTemplate, Nature, AbilitySlot, IVTemplate}, species::Species, lookups::Lookup, attack::Move, item::{Item, Pokeball}};
-
     use super::{Evolution, HIDDEN_ABILITY_PASS_PROBABILITY, REGULAR_ABILITY_PASS_PROBABILITY};
 
+    /// Two Pokemon's compatibility, or in other words, their likelihood of breeding
+    pub enum Compatibility {
+        /// Represents a high likelihood of producing an egg
+        Great,
+        /// Represents an average likelihood of producing an egg
+        Ok,
+        /// Represents a low likelihood of producing an egg
+        Poor,
+        /// Represents no chance of producing an egg
+        None
+    }
+
+    /// Get how compatible two Pokemon are
+    pub fn get_compatibility(p1: &Pokemon, p2: &Pokemon) -> Compatibility {
+        if !are_egg_group_compatible(p1.species, p2.species) {
+            return Compatibility::None;
+        }
+        if determine_offspring_species(p1, p2).is_none() {
+            return Compatibility::None;
+        }
+
+        use crate::species::SpeciesDiscriminants;
+        let same_species = SpeciesDiscriminants::from(p1.species) == SpeciesDiscriminants::from(p2.species);
+        let same_trainer = p1.original_trainer_id == p2.original_trainer_id
+            && p1.original_trainer_name == p2.original_trainer_name
+            && p1.original_trainer_secret_id == p2.original_trainer_secret_id;
+
+        if (same_species && same_trainer) || (!same_species && !same_trainer) { Compatibility::Ok }
+        else if same_species && !same_trainer { Compatibility::Great }
+        else { Compatibility::Poor }
+    }
+
+    /// Create the offspring of two Pokemon, following the regular breeding rules.
+    /// Returns None if the Pokemon are incompatible for some reason,
+    /// or Some with the new Pokemon Egg.
     pub fn create_offspring(p1: &Pokemon, p2: &Pokemon) -> Option<Pokemon> {
         if are_egg_group_compatible(p1.species, p2.species) {
             let baby_species = determine_offspring_species(p1, p2)?;
@@ -241,27 +300,16 @@ pub mod breeding {
         Some(baby_species)
     }
 
-    #[derive(PartialEq, Eq)]
-    struct WeightedMove(u8, Move);
-    impl PartialOrd for WeightedMove {
-        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-            self.0.partial_cmp(&other.0)
-        }
-    }
-    impl Ord for WeightedMove {
-        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-            self.0.cmp(&other.0)
-        }
-    }
+    // struct WeightedMove(u8, Move);
 
     fn determine_offspring_moves(p1: &Pokemon, p2: &Pokemon, baby: Species) -> Vec<Move> {
-        let mut heap = BinaryHeap::new();
+        let mut heap = Vec::new();
         let baby_data = SpeciesData::lookup(&baby);
         // 1. All Moves Baby learns at Level 1
         match baby_data.level_up_moves.get(&1) {
             Some(moves) => {
                 for m in moves {
-                    heap.push(WeightedMove(0, *m));
+                    heap.push(*m);
                 }
             },
             None => {},
@@ -270,7 +318,7 @@ pub mod breeding {
         let baby_moves = baby_data.get_all_knowable_moves();
         for baby_move in baby_moves {
             if p1.knows_move(baby_move) && p2.knows_move(baby_move) {
-                heap.push(WeightedMove(1, baby_move))
+                heap.push(baby_move)
             }
         }
         // 3. Any TM moves the father (or in the case of Genderless + Ditto, the non-ditto parent) knows.
@@ -288,13 +336,13 @@ pub mod breeding {
         for tm in crate::item::TM::iter() {
             let m = tm.get_move();
             if father.knows_move(*m) /*&& baby_data.can_learn_tm(tm)*/{
-                heap.push(WeightedMove(2, *m))
+                heap.push(*m)
             }
         }
         for hm in crate::item::HM::iter() {
             let m = hm.get_move();
             if father.knows_move(*m) /*&& baby_data.can_learn_hm(hm)*/{
-                heap.push(WeightedMove(2, *m))
+                heap.push(*m)
             }
         }
         // 4. If either the father or the mother knows an egg move the baby has
@@ -303,7 +351,7 @@ pub mod breeding {
             Some(egg_moves) => {
                 for egg in egg_moves {
                     if p1.knows_move(*egg) || p2.knows_move(*egg) {
-                        heap.push(WeightedMove(3, *egg))
+                        heap.push(*egg)
                     }
                 }
             }
@@ -311,12 +359,12 @@ pub mod breeding {
         // 5. If Baby is Pichu, and either parent has a Light Ball, the Pichu gets Volt Tackle
         if baby == Species::Pichu && 
             (p1.is_holding(Item::LightBall) || p2.is_holding(Item::LightBall)) {
-                heap.push(WeightedMove(4, Move::VoltTackle))
+                heap.push(Move::VoltTackle)
         }
 
         // Retrieve the top 4 moves from the pool. 
         let mut final_pool = Vec::new();
-        while let Some(WeightedMove(_, m)) = heap.pop() {
+        while let Some(m) = heap.pop() {
             if !final_pool.contains(&m) {
                 final_pool.push(m)
             }
