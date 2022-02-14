@@ -11,7 +11,7 @@ use rand::Rng;
 use glazed_data::abilities::{Ability, PokemonAbility};
 use glazed_data::attack::{BattleStat, Move, MoveData, NonVolatileBattleAilment, PoisonType, ScreenType, SemiInvulnerableLocation, Target, Weather};
 use glazed_data::species::Species;
-use glazed_data::item::{EvolutionHeldItem, Item};
+use glazed_data::item::Item;
 use glazed_data::lookups::Lookup;
 use glazed_data::pokemon::{AbilitySlot, Gender, MoveSlot, Pokemon, SpeciesData, StatSlot};
 use glazed_data::types::{Effectiveness, PokemonType, Type};
@@ -417,7 +417,7 @@ trait BaseSlot {
     fn get_raw_critical_hit(&self) -> u8 {
         let mut value = self.data().crit_stage;
         value += match self.active_pokemon().borrow().held_item {
-            Some(Item::EvolutionHeldItem(EvolutionHeldItem::RazorClaw)) => 1,
+            Some(Item::RazorClaw) => 1,
             Some(Item::ScopeLens) => 1,
             Some(Item::Leek) if self.get_effective_species() == Species::Farfetchd => 2,
             Some(Item::LuckyPunch) if self.get_effective_species() == Species::Chansey => 2,

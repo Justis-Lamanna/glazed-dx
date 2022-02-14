@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
 
-use crate::item::{EvolutionHeldItem, EvolutionStone, Item};
+use crate::item::{EvolutionStone, Item};
 use crate::lookups::Lookup;
 use crate::types::Type;
 
@@ -970,20 +970,20 @@ pub enum SemiInvulnerableLocation {
 impl Item {
     pub fn fling_power(&self) -> u8 {
         match self {
-            Item::Berry(_) | Item::Incense(_) | Item::RedScarf | Item::YellowScarf | Item::PinkScarf | Item::GreenScarf | Item::BlueScarf |
+            Item::Berry(_) | Item::RedScarf | Item::YellowScarf | Item::PinkScarf | Item::GreenScarf | Item::BlueScarf |
             Item::ChoiceBand | Item::ChoiceScarf | Item::ChoiceSpecs | Item::LaggingTail | Item::Leftovers | Item::MentalHerb |
-            Item::MetalPowder | Item::QuickPowder | Item::EvolutionHeldItem(EvolutionHeldItem::ReaperCloth) | Item::RingTarget |
+            Item::MetalPowder | Item::QuickPowder | Item::ReaperCloth | Item::RingTarget |
             Item::SilkScarf | Item::SilverPowder | Item::SoftSand | Item::SootheBell | Item::WideLens | Item::BrightPowder | Item::ZoomLens => 10,
             Item::Eviolite | Item::LuckyPunch => 40,
-            Item::EvolutionHeldItem(EvolutionHeldItem::DubiousDisk) | Item::SharpBeak => 50,
+            Item::DubiousDisk | Item::SharpBeak => 50,
             Item::AdamantOrb | Item::GriseousOrb | Item::Leek | Item::LustrousOrb | Item::MachoBrace | Item::RockyHelmet => 60,
             Item::ShockDrive | Item::BurnDrive | Item::ChillDrive | Item::DouseDrive |
             Item::PowerAnklet | Item::PowerBand | Item::PowerBelt | Item::PowerBracer | Item::PowerLens | Item::PowerWeight |
             Item::DragonFang | Item::PoisonBarb => 70,
-            Item::AssaultVest | Item::Stone(EvolutionStone::DawnStone) | Item::Stone(EvolutionStone::DuskStone) | Item::EvolutionHeldItem(EvolutionHeldItem::Electirizer) |
-            Item::EvolutionHeldItem(EvolutionHeldItem::Magmarizer) | Item::EvolutionHeldItem(EvolutionHeldItem::OvalStone) | Item::EvolutionHeldItem(EvolutionHeldItem::Protector) |
-            Item::EvolutionHeldItem(EvolutionHeldItem::RazorClaw) | Item::Stone(EvolutionStone::ShinyStone) | Item::StickyBarb | Item::WeaknessPolicy => 80,
-            Item::EvolutionHeldItem(EvolutionHeldItem::DeepSeaTooth) | Item::GripClaw | Item::ThickClub |
+            Item::AssaultVest | Item::Stone(EvolutionStone::DawnStone) | Item::Stone(EvolutionStone::DuskStone) | Item::Electirizer |
+            Item::Magmarizer | Item::OvalStone | Item::Protector |
+            Item::RazorClaw | Item::Stone(EvolutionStone::ShinyStone) | Item::StickyBarb | Item::WeaknessPolicy => 80,
+            Item::DeepSeaTooth | Item::GripClaw | Item::ThickClub |
             Item::DracoPlate | Item::DreadPlate | Item::EarthPlate | Item::FistPlate |
             Item::FlamePlate | Item::IciclePlate | Item::InsectPlate | Item::IronPlate |
             Item::MeadowPlate | Item::MindPlate | Item::PixiePlate | Item::SkyPlate |

@@ -7,7 +7,7 @@ use crate::contest::Condition;
 use crate::core::Player;
 use crate::locations::GlazedLocation;
 use crate::time::{GlazedTime, TimeOfDay};
-use crate::item::{EvolutionHeldItem, EvolutionStone, Incense, Item};
+use crate::item::{EvolutionStone, Item};
 use crate::lookups::Lookup;
 use crate::pokemon::{Gender, Pokemon};
 use crate::species::Species;
@@ -36,7 +36,7 @@ pub struct Evolution {
 #[derive(Debug, Deserialize)]
 pub struct IncenseBaby {
     pub species: Species,
-    pub incense: Incense
+    pub incense: Item
 }
 
 /// Represents one possible evolution for this species
@@ -83,7 +83,7 @@ pub enum EvolutionCondition {
     /// Does the Pokemon have a high condition? (>= 170)
     HighCondition(Condition),
     /// Is the Pokemon holding this held item?
-    HoldingItem(EvolutionHeldItem),
+    HoldingItem(Item),
     /// Does the Pokemon know this move?
     KnowsMove(Move),
     /// Does the Pokemon know a move of this type?
@@ -118,7 +118,7 @@ impl EvolutionCondition {
             EvolutionCondition::HighCondition(c) => 
                 pkmn.contest.get_condition(c) >= MIN_CONDITION_TO_EVOLVE,
             EvolutionCondition::HoldingItem(h) => 
-                pkmn.is_holding(Item::from(*h)),
+                pkmn.is_holding(&h),
             EvolutionCondition::KnowsMove(m) => 
                 pkmn.knows_move(*m),
             EvolutionCondition::KnowsMoveOfType(t) => 
@@ -289,7 +289,7 @@ pub mod breeding {
                 }
             },
             Some(b) => {
-                if p1.is_holding(b.incense.into()) || p2.is_holding(b.incense.into()) {
+                if p1.is_holding(&&b.incense) || p2.is_holding(&&b.incense) {
                     b.species
                 } else {
                     breed_data.base
@@ -358,7 +358,7 @@ pub mod breeding {
         };
         // 5. If Baby is Pichu, and either parent has a Light Ball, the Pichu gets Volt Tackle
         if baby == Species::Pichu && 
-            (p1.is_holding(Item::LightBall) || p2.is_holding(Item::LightBall)) {
+            (p1.is_holding(&&Item::LightBall) || p2.is_holding(&&Item::LightBall)) {
                 heap.push(Move::VoltTackle)
         }
 
@@ -373,8 +373,8 @@ pub mod breeding {
     }
 
     fn determine_offspring_nature(p1: &Pokemon, p2: &Pokemon) -> Nature {
-        let p1_everstone = p1.is_holding(Item::Everstone);
-        let p2_everstone = p2.is_holding(Item::Everstone);
+        let p1_everstone = p1.is_holding(&Item::Everstone);
+        let p2_everstone = p2.is_holding(&Item::Everstone);
 
         if p1_everstone && p2_everstone {
             if rand::thread_rng().gen_bool(0.5) {
@@ -430,7 +430,7 @@ pub mod breeding {
         let random_parent = || if rand::thread_rng().gen_bool(0.5) { p1 } else { p2 };
         let random_iv = || rand::thread_rng().gen_range(0u8..=31u8);
 
-        let mut inherit_from_parents_ctr = if p1.is_holding(Item::DestinyKnot) || p2.is_holding(Item::DestinyKnot) {
+        let mut inherit_from_parents_ctr = if p1.is_holding(&Item::DestinyKnot) || p2.is_holding(&Item::DestinyKnot) {
             5
         } else {
             3

@@ -60,46 +60,6 @@ impl From<EvolutionStone> for Item {
     fn from(p: EvolutionStone) -> Self { Item::Stone(p) }
 }
 
-/// All incenses in the game
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
-pub enum Incense {
-    FullIncense,
-    LaxIncense,
-    LuckIncense,
-    OddIncense,
-    PureIncense,
-    RockIncense,
-    RoseIncense,
-    SeaIncense,
-    WaveIncense
-}
-impl From<Incense> for Item {
-    fn from(p: Incense) -> Self { Item::Incense(p) }
-}
-
-/// All Evolution-inducing held items in the game
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
-pub enum EvolutionHeldItem {
-    DeepSeaTooth,
-    DeepSeaScale,
-    DragonScale,
-    DubiousDisk,
-    Electirizer,
-    KingsRock,
-    Magmarizer,
-    MetalCoat,
-    OvalStone,
-    PrismScale,
-    Protector,
-    RazorClaw,
-    RazorFang,
-    ReaperCloth,
-    UpGrade
-}
-impl From<EvolutionHeldItem> for Item {
-    fn from(p: EvolutionHeldItem) -> Self { Item::EvolutionHeldItem(p) }
-}
-
 /// All berries in the game
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Deserialize, Serialize)]
 pub enum Berry {
@@ -415,8 +375,6 @@ pub enum Item {
     Pokeball(Pokeball),
     Stone(EvolutionStone),
     Everstone,
-    Incense(Incense),
-    EvolutionHeldItem(EvolutionHeldItem),
     Berry(Berry),
     TM(TM),
     HM(HM),
@@ -451,7 +409,13 @@ pub enum Item {
     Snowball, WeaknessPolicy, WideLens, ZoomLens, ScopeLens, BrightPowder, ExpertBelt, Metronome, FocusSash,
     FloatStone, BindingBand,
     HeatRock, DampRock, SmoothRock, IcyRock,
-    DestinyKnot
+    DestinyKnot,
+    // Evolution-inducing
+    DeepSeaTooth, DeepSeaScale, DragonScale, DubiousDisk, Electirizer, KingsRock,
+    Magmarizer, OvalStone, PrismScale, Protector, RazorClaw, RazorFang, ReaperCloth, UpGrade,
+    // Incenses
+    FullIncense, LaxIncense, LuckIncense, OddIncense,
+    PureIncense, RockIncense, RoseIncense, SeaIncense, WaveIncense
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

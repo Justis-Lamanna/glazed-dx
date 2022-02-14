@@ -26,7 +26,7 @@ impl Battlefield {
         info!("Pokemon enters battle in slot {}: {:?}", slot, pkmn);
         let pkmn_ability = pkmn.get_effective_ability();
 
-        let grounded = || self.field.borrow().gravity > 0 || pkmn.borrow().is_holding(Item::IronBall) || pkmn.data.borrow().rooted;
+        let grounded = || self.field.borrow().gravity > 0 || pkmn.borrow().is_holding(&Item::IronBall) || pkmn.data.borrow().rooted;
         let immune_to_spikes = pkmn_ability == Ability::MagicGuard ||
             ((pkmn.get_effective_type().has_type(&Type::Flying) ||  pkmn_ability == Ability::Levitate) && !grounded());
 
@@ -783,25 +783,25 @@ impl Battlefield {
                     let w = match weather {
                         Weather::HarshSun => {
                             let turns =
-                                if attacker.borrow().is_holding(Item::HeatRock) { WEATHER_WITH_ROCK_TURN_COUNT }
+                                if attacker.borrow().is_holding(&Item::HeatRock) { WEATHER_WITH_ROCK_TURN_COUNT }
                                 else { WEATHER_TURN_COUNT };
                             WeatherCounter::Sun(turns)
                         },
                         Weather::Rain => {
                             let turns =
-                                if attacker.borrow().is_holding(Item::DampRock) { WEATHER_WITH_ROCK_TURN_COUNT }
+                                if attacker.borrow().is_holding(&Item::DampRock) { WEATHER_WITH_ROCK_TURN_COUNT }
                                 else { WEATHER_TURN_COUNT };
                             WeatherCounter::Rain(turns)
                         },
                         Weather::Sandstorm => {
                             let turns =
-                                if attacker.borrow().is_holding(Item::SmoothRock) { WEATHER_WITH_ROCK_TURN_COUNT }
+                                if attacker.borrow().is_holding(&Item::SmoothRock) { WEATHER_WITH_ROCK_TURN_COUNT }
                                 else { WEATHER_TURN_COUNT };
                             WeatherCounter::Sandstorm(turns)
                         }
                         Weather::Hail => {
                             let turns =
-                                if attacker.borrow().is_holding(Item::IcyRock) { WEATHER_WITH_ROCK_TURN_COUNT }
+                                if attacker.borrow().is_holding(&Item::IcyRock) { WEATHER_WITH_ROCK_TURN_COUNT }
                                 else { WEATHER_TURN_COUNT };
                             WeatherCounter::Hail(turns)
                         }
@@ -827,7 +827,7 @@ impl Battlefield {
                 },
                 Effect::Screen(screen) => {
                     let mut side = self.get_side_by_party_id(attacker.party_id).borrow_mut();
-                    let turn_count = if attacker.borrow().is_holding(Item::LightClay) {
+                    let turn_count = if attacker.borrow().is_holding(&Item::LightClay) {
                         SCREEN_TURN_COUNT_LIGHT_CLAY
                     } else {
                         SCREEN_TURN_COUNT
