@@ -39,7 +39,7 @@ pub enum Pokeball {
     DreamBall
 }
 impl From<Pokeball> for Item {
-    fn from(p: Pokeball) -> Self { Item::Pokeball(p) }
+    fn from(p: Pokeball) -> Self { Item::Ball(p) }
 }
 
 /// All Evolution Stones in the game
@@ -322,6 +322,8 @@ impl From<HM> for Item {
 
 /// All Mail in the game
 /// Messages are attached via the included String
+/// For convenience, MailDiscriminants is provided, which is all the same Mail
+/// types without attached messages.
 #[derive(Debug, Clone, Eq, PartialEq, EnumDiscriminants, Serialize, Deserialize)]
 pub enum Mail {
     AirMail(Option<String>),
@@ -372,7 +374,7 @@ impl From<KeyItem> for Item {
 /// Items from the above lists are wrapped, so they can still be considered items
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Item {
-    Pokeball(Pokeball),
+    Ball(Pokeball),
     Stone(EvolutionStone),
     Everstone,
     Berry(Berry),

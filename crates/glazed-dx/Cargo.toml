@@ -1,14 +1,27 @@
 [package]
 name = "glazed_dx"
 version = "0.1.0"
-authors = ["Justis <lamanna.justis@gmail.com>"]
-edition = "2018"
+authors = ["Milo Marten <lamanna.justis@gmail.com>"]
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[dependencies.bevy]
+version = "0.6"
+default-features = false
+features = [
+    "render",
+    "bevy_winit",
+    "bevy_gilrs",
+    "png",
+    "hdr",
+    "filesystem_watcher",
+    "x11"
+]
+
 [dependencies]
-log = "0.4.14"
-simple_logger = "2.1.0"
+bevy_kira_audio = "0.8.0"
+bevy_tweening = "0.3.1"
 glazed_core = { path = "../glazed-core" }
 glazed_data = { path = "../glazed-data" }
 glazed_battle = { path = "../glazed-battle" }
