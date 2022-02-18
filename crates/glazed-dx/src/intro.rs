@@ -1,5 +1,6 @@
 use std::time::Duration;
 use bevy::prelude::*;
+use bevy::text::Text2dSize;
 use crate::anim::{SSAnimation, SSAnimationBuilder};
 use crate::GameState;
 
@@ -33,4 +34,32 @@ fn setup(
             ..Default::default()
         })
         .insert(animation);
+
+    commands
+        .spawn_bundle(Text2dBundle {
+            text: Text {
+                sections: vec![
+                    TextSection {
+                        value: "Milo Marten Rules".to_string(),
+                        style: TextStyle {
+                            font: asset_server.load("fonts/RobotoMono-Regular.ttf"),
+                            font_size: 60.0,
+                            color: Color::WHITE
+                        }
+                    }
+                ],
+                alignment: TextAlignment {
+                    vertical: VerticalAlign::Center,
+                    horizontal: HorizontalAlign::Center
+                },
+                ..Default::default()
+            },
+            text_2d_size: Text2dSize {
+                size: Size {
+                    width: 512.0,
+                    height: 384.0
+                }
+            },
+            ..Default::default()
+        });
 }

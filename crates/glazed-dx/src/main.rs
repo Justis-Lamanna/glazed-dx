@@ -21,6 +21,7 @@ fn main() {
             width: 256.0 * 2.0,
             height: 192.0 * 2.0,
             vsync: true,
+            resizable: false,
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
