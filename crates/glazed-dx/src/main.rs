@@ -1,16 +1,8 @@
 mod intro;
 mod anim;
 
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    math::Quat,
-    prelude::*,
-    render::camera::Camera,
-};
-use bevy::ecs::archetype::Archetypes;
-use bevy::ecs::component::Components;
+use bevy::prelude::*;
 use bevy::input::system::exit_on_esc_system;
-use bevy::render::camera::ScalingMode;
 use crate::anim::GlazedAnimator;
 use crate::intro::Intro;
 
@@ -24,6 +16,7 @@ fn main() {
             resizable: false,
             ..Default::default()
         })
+        .insert_resource(ClearColor(Color::BLACK))
         .add_plugins(DefaultPlugins)
         .add_plugin(GlazedAnimator)
         .add_state(GameState::Intro)

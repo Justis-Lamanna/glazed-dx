@@ -1,5 +1,5 @@
+use std::array::IntoIter;
 use std::collections::{HashMap, VecDeque};
-use std::ops::RangeBounds;
 use std::time::Duration;
 use bevy::prelude::*;
 
@@ -188,6 +188,61 @@ pub struct GlazedAnimator;
 impl Plugin for GlazedAnimator {
     fn build(&self, app: &mut App) {
         app.add_system(animate);
+    }
+}
+
+#[derive(Component)]
+pub struct Timeline {
+    timeline: Vec<Duration>,
+    index: usize,
+    time_left: Duration,
+    complete: bool
+}
+impl Timeline {
+    pub fn new(timeline: Vec<Duration>) -> Timeline {
+        let empty = timeline.is_empty();
+        let first_duration = *timeline.get(0).unwrap_or(&Duration::MAX);
+        Timeline {
+            timeline,
+            index: 0,
+            time_left: first_duration,
+            complete: empty
+        }
+    }
+
+    pub fn from_iter<F: IntoIterator<Item=G>, G: Into<u64>>(timeline: F) -> Timeline {
+        let t = timeline.into_iter()
+            .map(|i| Duration::from_millis(i.into()))
+            .collect::<Vec<Duration>>();
+        Self::new(t)
+    }
+
+    pub fn update(&mut self, tick: Duration) -> bool {
+        if self.time_left == Duration::MAX {
+            return false;
+        }
+
+        if self.time_left > Duration::ZERO {
+            self.time_left = self.time_left.saturating_sub(tick);
+        }
+
+        self.time_left <= Duration::ZERO
+    }
+
+    pub fn advance(&mut self) -> usize {
+        self.index = self.index + 1;
+        self.time_left = match self.timeline.get(self.index) {
+            Some(d) => *d,
+            None => {
+                self.complete = true;
+                Duration::MAX
+            }
+        };
+        self.index
+    }
+
+    pub fn is_complete(&self) -> bool {
+        self.complete
     }
 }
 
