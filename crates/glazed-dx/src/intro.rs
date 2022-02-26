@@ -1,7 +1,9 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use bevy::text::Text2dSize;
-use crate::anim::{SSAnimationBuilder, Timeline};
+use bevy_tweening::lens::TransformPositionLens;
+use bevy_tweening::{Tween, EaseFunction, Animator};
+use crate::anim::{SSAnimationBuilder, Timeline, Wait};
 use crate::GameState;
 
 const PRESENTS: &str = "Milo Marten Presents...";
@@ -17,6 +19,7 @@ fn create_frames_for_str(string: &str) -> Vec<u64> {
         };
         frames.push(time);
     }
+    frames.push(2000);
     frames
 }
 
@@ -25,11 +28,13 @@ impl Plugin for Intro {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_enter(GameState::Intro)
+                .with_system(init)
                 .with_system(setup)
         )
         .add_system_set(
             SystemSet::on_update(GameState::Intro)
                 .with_system(run_milo_marten_presents_timeline)
+                .with_system(init_camera_pan)
         );
     }
 }
@@ -48,6 +53,13 @@ fn setup(
             .build();
 
     commands
+        .spawn_bundle(SpriteBundle {
+            texture: asset_server.load("TitlePan.png"),
+            transform: Transform::from_scale(Vec3::splat(2.0)),
+            ..Default::default()
+        });
+
+    commands
         .spawn_bundle(SpriteSheetBundle {
             texture_atlas: textures.add(TextureAtlas::from_grid(asset_server.load("MewLoop.png"), Vec2::new(48.0, 48.0), 10, 1)),
             transform: Transform::from_scale(Vec3::splat(2.0)),
@@ -57,7 +69,15 @@ fn setup(
             ..Default::default()
         })
         .insert(animation);
+}
 
+fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut camera: Query<(Entity, &mut Transform), With<Camera>>) {
+    let presents_timeline = Timeline::from_iter(create_frames_for_str(PRESENTS));
+    
+    let (entity, mut transform) = camera.single_mut();
+    transform.translation.y = -464f32;
+    commands.entity(entity).insert(Wait(presents_timeline.total_time()));   
+    
     commands
         .spawn_bundle(Text2dBundle {
             text: Text {
@@ -83,9 +103,10 @@ fn setup(
                     height: 384.0
                 }
             },
+            transform: Transform::from_xyz(0.0, -464.0, 100.0),
             ..Default::default()
         })
-        .insert(Timeline::from_iter(create_frames_for_str(PRESENTS)));
+        .insert(presents_timeline);
 }
 
 fn run_milo_marten_presents_timeline(time: Res<'_, Time>, mut commands: Commands, 
@@ -102,5 +123,25 @@ fn run_milo_marten_presents_timeline(time: Res<'_, Time>, mut commands: Commands
                     .remove::<Timeline>();
             }
         }
+    }
+}
+
+#[derive(Component)]
+struct Done;
+
+fn init_camera_pan(mut commands: Commands, camera: Query<(Entity, &Transform), (With<Camera>, Without<Wait>, Without<Done>)>) {
+    for (entity, transform) in camera.iter(){
+        let tween = Tween::new(
+            EaseFunction::QuadraticInOut,
+            bevy_tweening::TweeningType::Once,
+            Duration::from_secs(4),
+            TransformPositionLens {
+                start: transform.translation,
+                end: Vec3::new(0.0, 0.0, transform.translation.z),
+            }
+        );
+        commands.entity(entity)
+            .insert(Done)
+            .insert(Animator::new(tween));
     }
 }

@@ -1,7 +1,30 @@
-use std::array::IntoIter;
 use std::collections::{HashMap, VecDeque};
 use std::time::Duration;
 use bevy::prelude::*;
+
+/// Removes itself after a duration has passed
+/// By leveraging `Without<Wait>` on system queries, your systems can wait for a specific time
+/// to pass before activating.
+#[derive(Component)]
+pub struct Wait(pub Duration);
+impl Wait {
+    fn update(&mut self, tick: Duration) -> bool {
+        if self.0 > Duration::ZERO {
+            self.0 = self.0.saturating_sub(tick);
+            self.0 <= Duration::ZERO
+        } else {
+            false
+        }
+    }
+}
+
+fn run_wait_systems(time: Res<'_, Time>, mut commands: Commands, mut query: Query<(Entity, &mut Wait)>) {
+    for (entity, mut wait) in query.iter_mut() {
+        if wait.update(time.delta()) {
+            commands.entity(entity).remove::<Wait>();
+        }
+    }
+}
 
 type PointId = usize;
 
@@ -188,9 +211,11 @@ pub struct GlazedAnimator;
 impl Plugin for GlazedAnimator {
     fn build(&self, app: &mut App) {
         app.add_system(animate);
+        app.add_system(run_wait_systems);
     }
 }
 
+/// A more basic timeline which simply iterates down a list of durations
 #[derive(Component)]
 pub struct Timeline {
     timeline: Vec<Duration>,
@@ -215,6 +240,11 @@ impl Timeline {
             .map(|i| Duration::from_millis(i.into()))
             .collect::<Vec<Duration>>();
         Self::new(t)
+    }
+
+    pub fn total_time(&self) -> Duration {
+        self.timeline.iter()
+            .sum()
     }
 
     pub fn update(&mut self, tick: Duration) -> bool {

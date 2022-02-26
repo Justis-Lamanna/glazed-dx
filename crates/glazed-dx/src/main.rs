@@ -3,6 +3,7 @@ mod anim;
 
 use bevy::prelude::*;
 use bevy::input::system::exit_on_esc_system;
+use bevy_tweening::TweeningPlugin;
 use crate::anim::GlazedAnimator;
 use crate::intro::Intro;
 
@@ -19,6 +20,7 @@ fn main() {
         .insert_resource(ClearColor(Color::BLACK))
         .add_plugins(DefaultPlugins)
         .add_plugin(GlazedAnimator)
+        .add_plugin(TweeningPlugin)
         .add_state(GameState::Intro)
         .add_plugin(Intro)
         .add_startup_system(setup)
