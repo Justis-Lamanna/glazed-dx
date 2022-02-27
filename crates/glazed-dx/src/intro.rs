@@ -1,9 +1,9 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use bevy::text::Text2dSize;
-use bevy_tweening::lens::{TransformPositionLens, TransformScaleLens};
+use bevy_tweening::lens::{TransformPositionLens, TransformScaleLens, SpriteColorLens};
 use bevy_tweening::{Tween, EaseFunction, Animator, Delay, Tracks, Sequence};
-use crate::anim::{Timeline, Wait, SSAnimationBuilder};
+use crate::anim::{Timeline, Wait, SSAnimationBuilder, SpriteColorLensOpacityFix};
 use crate::GameState;
 
 const PRESENTS: &str = "Milo Marten\nPresents...";
@@ -45,7 +45,7 @@ fn setup(
     asset_server: Res<AssetServer>) {
     commands
         .spawn_bundle(SpriteBundle {
-            texture: asset_server.load("TitlePan.png"),
+            texture: asset_server.load("intro/TitlePan.png"),
             transform: Transform::from_scale(Vec3::splat(2.0)),
             ..Default::default()
         });
@@ -98,7 +98,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
     commands
         .spawn_bundle(SpriteSheetBundle {
             texture_atlas: textures.add(TextureAtlas::from_grid(
-                asset_server.load("MewLoop.png"), 
+                asset_server.load("intro/Mew.png"), 
                 Vec2::new(48.0, 48.0), 
                 10, 1)),
             transform: Transform::from_scale(Vec3::splat(2.0))
@@ -112,18 +112,20 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
         .insert(Mew)
         .insert(Wait(presents_timeline_duration + Duration::from_millis(3000)));
 
+    // Cliff at bottom of screen
     commands
         .spawn_bundle(SpriteBundle {
-            texture: asset_server.load("IntroCliff.png"),
+            texture: asset_server.load("intro/Cliff.png"),
             transform: Transform::from_scale(Vec3::splat(2.0))
                 .with_translation(Vec3::new(-224.0, -476.0, 10.0)),
             ..Default::default()
         });
 
+    // Quilava standing on cliff (ping pong animation)
     commands
         .spawn_bundle(SpriteSheetBundle {
             texture_atlas: textures.add(TextureAtlas::from_grid(
-                asset_server.load("QuilavaLoop.png"), 
+                asset_server.load("intro/Quilava.png"), 
                 Vec2::new(32.0, 32.0), 
                 3, 1)),
             transform: Transform::from_scale(Vec3::splat(2.0))
@@ -132,6 +134,31 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
         })
         .insert(SSAnimationBuilder::from_iter(vec![0, 1, 2, 1], Duration::from_millis(100))
             .loop_forever().build());
+
+    // Pokemon Logo
+    let pokemon_logo_fade = Delay::new(presents_timeline_duration + Duration::from_secs(5))
+        .then(Tween::new(
+            EaseFunction::QuadraticInOut, 
+            bevy_tweening::TweeningType::Once, 
+            Duration::from_secs(2), 
+            SpriteColorLensOpacityFix { 
+                start: Color::rgba(1.0, 1.0, 1.0, 0.0), 
+                end: Color::rgba(1.0, 1.0, 1.0, 1.0) 
+            }));
+
+    commands
+        .spawn_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgba(1.0, 1.0, 1.0, 0.0),
+                ..Default::default()
+            },
+            texture: asset_server.load("intro/Pokemon.png"),
+            transform: Transform::from_scale(Vec3::splat(2.0))
+                .with_translation(Vec3::new(0.0, 104.0, 200.0)),
+            ..Default::default()
+        })
+        .insert(Animator::new(pokemon_logo_fade))
+        ;
 }
 
 fn run_milo_marten_presents_timeline(time: Res<'_, Time>, mut commands: Commands, 

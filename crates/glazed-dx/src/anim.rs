@@ -1,6 +1,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::time::Duration;
 use bevy::prelude::*;
+use bevy_tweening::Lens;
 
 pub struct GlazedAnimator;
 impl Plugin for GlazedAnimator {
@@ -274,6 +275,25 @@ impl Timeline {
 
     pub fn is_complete(&self) -> bool {
         self.complete
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct SpriteColorLensOpacityFix {
+    pub start: Color,
+    pub end: Color
+}
+impl Lens<Sprite> for SpriteColorLensOpacityFix {
+    fn lerp(&mut self, target: &mut Sprite, ratio: f32) {
+        let [s_red, s_green, s_blue, s_alpha] = self.start.as_rgba_f32();
+        let [e_red, e_green, e_blue, e_alpha] = self.end.as_rgba_f32();
+
+        let red = s_red + (e_red - s_red) * ratio;
+        let green = s_green + (e_green - s_green) * ratio;
+        let blue = s_blue + (e_blue - s_blue) * ratio;
+        let alpha = s_alpha + (e_alpha - s_alpha) * ratio;
+
+        target.color = Color::rgba(red, green, blue, alpha);
     }
 }
 
