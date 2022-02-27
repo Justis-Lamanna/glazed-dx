@@ -1,18 +1,18 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use bevy::text::Text2dSize;
-use bevy_tweening::lens::TransformPositionLens;
-use bevy_tweening::{Tween, EaseFunction, Animator};
-use crate::anim::{SSAnimationBuilder, Timeline, Wait};
+use bevy_tweening::lens::{TransformPositionLens, TransformScaleLens};
+use bevy_tweening::{Tween, EaseFunction, Animator, Delay, Tracks, Sequence};
+use crate::anim::{Timeline, Wait, SSAnimationBuilder};
 use crate::GameState;
 
-const PRESENTS: &str = "Milo Marten Presents...";
+const PRESENTS: &str = "Milo Marten\nPresents...";
 
 fn create_frames_for_str(string: &str) -> Vec<u64> {
     let mut frames = Vec::new();
     for (idx, c) in string.chars().enumerate() {
         let time = match c {
-            ' ' => 300,
+            ' ' | '\n' => 300,
             '.' => 400,
             _ if idx == 0 => 1000,
             _ => 100
@@ -35,49 +35,30 @@ impl Plugin for Intro {
             SystemSet::on_update(GameState::Intro)
                 .with_system(run_milo_marten_presents_timeline)
                 .with_system(init_camera_pan)
+                .with_system(init_mew_zoom)
         );
     }
 }
 
 fn setup(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut textures: ResMut<Assets<TextureAtlas>>) {
-
-
-    let animation =
-        SSAnimationBuilder::from_iter(vec![0, 1, 2, 1], Duration::from_millis(200))
-            .loop_n_times(5)
-            .then_from_iter(vec![0, 3, 4, 5, 6, 7, 8, 9], Duration::from_millis(100))
-            .loop_forever()
-            .build();
-
+    asset_server: Res<AssetServer>) {
     commands
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("TitlePan.png"),
             transform: Transform::from_scale(Vec3::splat(2.0)),
             ..Default::default()
         });
-
-    commands
-        .spawn_bundle(SpriteSheetBundle {
-            texture_atlas: textures.add(TextureAtlas::from_grid(asset_server.load("MewLoop.png"), Vec2::new(48.0, 48.0), 10, 1)),
-            transform: Transform::from_scale(Vec3::splat(2.0)),
-            visibility: Visibility {
-                is_visible: false,
-            },
-            ..Default::default()
-        })
-        .insert(animation);
 }
 
-fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut camera: Query<(Entity, &mut Transform), With<Camera>>) {
+fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: ResMut<Assets<TextureAtlas>>, mut camera: Query<(Entity, &mut Transform), With<Camera>>) {
     let presents_timeline = Timeline::from_iter(create_frames_for_str(PRESENTS));
-    
+    let presents_timeline_duration = presents_timeline.total_time();
+
     let (entity, mut transform) = camera.single_mut();
-    transform.translation.y = -464f32;
-    commands.entity(entity).insert(Wait(presents_timeline.total_time()));   
+    transform.translation.y = -336f32; 
     
+    // Milo Marten Presents...
     commands
         .spawn_bundle(Text2dBundle {
             text: Text {
@@ -103,10 +84,54 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut camera: Quer
                     height: 384.0
                 }
             },
-            transform: Transform::from_xyz(0.0, -464.0, 100.0),
+            transform: Transform::from_xyz(0.0, -336.0, 100.0),
             ..Default::default()
         })
         .insert(presents_timeline);
+
+    // Camera pans after Presents text finishes
+    commands
+        .entity(entity)
+        .insert(Wait(presents_timeline_duration));  
+
+    // Mew zooms across the screen during the pan
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            texture_atlas: textures.add(TextureAtlas::from_grid(
+                asset_server.load("MewLoop.png"), 
+                Vec2::new(48.0, 48.0), 
+                10, 1)),
+            transform: Transform::from_scale(Vec3::splat(2.0))
+                .with_translation(Vec3::new(296.0, -180.0, 20.0)),
+            sprite: TextureAtlasSprite {
+                color: Color::rgb(0.0, 0.0, 0.0),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(Mew)
+        .insert(Wait(presents_timeline_duration + Duration::from_millis(3000)));
+
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: asset_server.load("IntroCliff.png"),
+            transform: Transform::from_scale(Vec3::splat(2.0))
+                .with_translation(Vec3::new(-224.0, -476.0, 10.0)),
+            ..Default::default()
+        });
+
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            texture_atlas: textures.add(TextureAtlas::from_grid(
+                asset_server.load("QuilavaLoop.png"), 
+                Vec2::new(32.0, 32.0), 
+                3, 1)),
+            transform: Transform::from_scale(Vec3::splat(2.0))
+                .with_translation(Vec3::new(-224.0, -476.0, 12.0)),
+            ..Default::default()
+        })
+        .insert(SSAnimationBuilder::from_iter(vec![0, 1, 2, 1], Duration::from_millis(100))
+            .loop_forever().build());
 }
 
 fn run_milo_marten_presents_timeline(time: Res<'_, Time>, mut commands: Commands, 
@@ -145,3 +170,33 @@ fn init_camera_pan(mut commands: Commands, camera: Query<(Entity, &Transform), (
             .insert(Animator::new(tween));
     }
 }
+
+fn init_mew_zoom(mut commands: Commands, camera: Query<(Entity, &Transform), (With<Mew>, Without<Wait>, Without<Done>)>) {
+    for (entity, transform) in camera.iter(){
+        let left_zoom_tween = Sequence::new(vec![Tween::new(
+            EaseFunction::QuadraticInOut,
+            bevy_tweening::TweeningType::Once,
+            Duration::from_millis(1000),
+            TransformPositionLens {
+                start: transform.translation,
+                end: Vec3::new(0.0, 80.0, transform.translation.z),
+            }
+        )]);
+        let scale_tween = Delay::new(Duration::from_millis(250))
+            .then(Tween::new(
+                EaseFunction::QuadraticOut,
+                bevy_tweening::TweeningType::Once,
+                Duration::from_millis(650),
+                TransformScaleLens {
+                    start: Vec3::splat(2.0),
+                    end: Vec3::splat(0.0),
+                }
+            ));
+        commands.entity(entity)
+            .insert(Done)
+            .insert(Animator::new(Tracks::new(vec![left_zoom_tween, scale_tween])));
+    }
+}
+
+#[derive(Component)]
+pub struct Mew;

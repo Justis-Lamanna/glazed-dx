@@ -2,6 +2,15 @@ use std::collections::{HashMap, VecDeque};
 use std::time::Duration;
 use bevy::prelude::*;
 
+pub struct GlazedAnimator;
+impl Plugin for GlazedAnimator {
+    fn build(&self, app: &mut App) {
+        app
+            .add_system(animate)
+            .add_system(run_wait_systems);
+    }
+}
+
 /// Removes itself after a duration has passed
 /// By leveraging `Without<Wait>` on system queries, your systems can wait for a specific time
 /// to pass before activating.
@@ -204,14 +213,6 @@ fn animate (time: Res<'_, Time>, mut animations: Query<(&mut TextureAtlasSprite,
             animation.advance();
             sprite.index = animation.current_frame;
         }
-    }
-}
-
-pub struct GlazedAnimator;
-impl Plugin for GlazedAnimator {
-    fn build(&self, app: &mut App) {
-        app.add_system(animate);
-        app.add_system(run_wait_systems);
     }
 }
 
