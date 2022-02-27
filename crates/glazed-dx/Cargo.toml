@@ -21,7 +21,7 @@ features = [
 
 [dependencies]
 bevy_kira_audio = "0.8.0"
-bevy_tweening = "0.3.1"
+bevy_tweening = "0.3.2"
 glazed_core = { path = "../glazed-core" }
 glazed_data = { path = "../glazed-data" }
 glazed_battle = { path = "../glazed-battle" }

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::text::Text2dSize;
 use bevy_tweening::lens::{TransformPositionLens, TransformScaleLens, SpriteColorLens};
 use bevy_tweening::{Tween, EaseFunction, Animator, Delay, Tracks, Sequence};
-use crate::anim::{Timeline, Wait, SSAnimationBuilder, SpriteColorLensOpacityFix};
+use crate::anim::{Timeline, Wait, SSAnimationBuilder};
 use crate::GameState;
 
 const PRESENTS: &str = "Milo Marten\nPresents...";
@@ -141,7 +141,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
             EaseFunction::QuadraticInOut, 
             bevy_tweening::TweeningType::Once, 
             Duration::from_secs(2), 
-            SpriteColorLensOpacityFix { 
+            SpriteColorLens { 
                 start: Color::rgba(1.0, 1.0, 1.0, 0.0), 
                 end: Color::rgba(1.0, 1.0, 1.0, 1.0) 
             }));
