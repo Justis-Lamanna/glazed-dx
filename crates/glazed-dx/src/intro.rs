@@ -34,8 +34,8 @@ impl Plugin for Intro {
         .add_system_set(
             SystemSet::on_update(GameState::Intro)
                 .with_system(run_milo_marten_presents_timeline)
-                .with_system(init_camera_pan)
-                .with_system(init_mew_zoom)
+                //.with_system(init_camera_pan)
+                // .with_system(init_mew_zoom)
         );
     }
 }
@@ -90,11 +90,42 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
         .insert(presents_timeline);
 
     // Camera pans after Presents text finishes
+    let camera_pan_tween = Delay::new(presents_timeline_duration)
+        .then(Tween::new(
+            EaseFunction::QuadraticInOut,
+            bevy_tweening::TweeningType::Once,
+            Duration::from_secs(4),
+            TransformPositionLens {
+                start: transform.translation,
+                end: Vec3::new(0.0, 0.0, transform.translation.z),
+            }
+        ));
+
     commands
         .entity(entity)
-        .insert(Wait(presents_timeline_duration));  
+        .insert(Animator::new(camera_pan_tween));  
 
     // Mew zooms across the screen during the pan
+    let left_zoom_tween = Sequence::new(vec![Tween::new(
+        EaseFunction::QuadraticInOut,
+        bevy_tweening::TweeningType::Once,
+        Duration::from_millis(1000),
+        TransformPositionLens {
+            start: Vec3::new(296.0, -180.0, 20.0),
+            end: Vec3::new(0.0, 80.0, transform.translation.z),
+        }
+    )]);
+    let scale_tween = Delay::new(Duration::from_millis(250))
+        .then(Tween::new(
+            EaseFunction::QuadraticOut,
+            bevy_tweening::TweeningType::Once,
+            Duration::from_millis(650),
+            TransformScaleLens {
+                start: Vec3::splat(2.0),
+                end: Vec3::splat(0.0),
+            }
+        ));
+
     commands
         .spawn_bundle(SpriteSheetBundle {
             texture_atlas: textures.add(TextureAtlas::from_grid(
@@ -109,8 +140,8 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
             },
             ..Default::default()
         })
-        .insert(Mew)
-        .insert(Wait(presents_timeline_duration + Duration::from_millis(3000)));
+        .insert(Animator::new(Delay::new(presents_timeline_duration + Duration::from_millis(3000))
+            .then(Tracks::new(vec![left_zoom_tween, scale_tween]))));
 
     // Cliff at bottom of screen
     commands
@@ -121,7 +152,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
             ..Default::default()
         });
 
-    // Quilava standing on cliff (ping pong animation)
+    // Quilava standing on cliff
     commands
         .spawn_bundle(SpriteSheetBundle {
             texture_atlas: textures.add(TextureAtlas::from_grid(
@@ -157,8 +188,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
                 .with_translation(Vec3::new(0.0, 104.0, 200.0)),
             ..Default::default()
         })
-        .insert(Animator::new(pokemon_logo_fade))
-        ;
+        .insert(Animator::new(pokemon_logo_fade));
 }
 
 fn run_milo_marten_presents_timeline(time: Res<'_, Time>, mut commands: Commands, 
@@ -177,53 +207,3 @@ fn run_milo_marten_presents_timeline(time: Res<'_, Time>, mut commands: Commands
         }
     }
 }
-
-#[derive(Component)]
-struct Done;
-
-fn init_camera_pan(mut commands: Commands, camera: Query<(Entity, &Transform), (With<Camera>, Without<Wait>, Without<Done>)>) {
-    for (entity, transform) in camera.iter(){
-        let tween = Tween::new(
-            EaseFunction::QuadraticInOut,
-            bevy_tweening::TweeningType::Once,
-            Duration::from_secs(4),
-            TransformPositionLens {
-                start: transform.translation,
-                end: Vec3::new(0.0, 0.0, transform.translation.z),
-            }
-        );
-        commands.entity(entity)
-            .insert(Done)
-            .insert(Animator::new(tween));
-    }
-}
-
-fn init_mew_zoom(mut commands: Commands, camera: Query<(Entity, &Transform), (With<Mew>, Without<Wait>, Without<Done>)>) {
-    for (entity, transform) in camera.iter(){
-        let left_zoom_tween = Sequence::new(vec![Tween::new(
-            EaseFunction::QuadraticInOut,
-            bevy_tweening::TweeningType::Once,
-            Duration::from_millis(1000),
-            TransformPositionLens {
-                start: transform.translation,
-                end: Vec3::new(0.0, 80.0, transform.translation.z),
-            }
-        )]);
-        let scale_tween = Delay::new(Duration::from_millis(250))
-            .then(Tween::new(
-                EaseFunction::QuadraticOut,
-                bevy_tweening::TweeningType::Once,
-                Duration::from_millis(650),
-                TransformScaleLens {
-                    start: Vec3::splat(2.0),
-                    end: Vec3::splat(0.0),
-                }
-            ));
-        commands.entity(entity)
-            .insert(Done)
-            .insert(Animator::new(Tracks::new(vec![left_zoom_tween, scale_tween])));
-    }
-}
-
-#[derive(Component)]
-pub struct Mew;
