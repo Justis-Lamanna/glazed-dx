@@ -1,38 +1,15 @@
 use std::collections::{HashMap, VecDeque};
 use std::time::Duration;
 use bevy::prelude::*;
-use bevy_tweening::Lens;
+use bevy_tweening::{component_animator_system, Lens};
 
 pub struct GlazedAnimator;
 impl Plugin for GlazedAnimator {
     fn build(&self, app: &mut App) {
         app
-            .add_system(animate)
-            .add_system(run_wait_systems);
-    }
-}
-
-/// Removes itself after a duration has passed
-/// By leveraging `Without<Wait>` on system queries, your systems can wait for a specific time
-/// to pass before activating.
-#[derive(Component)]
-pub struct Wait(pub Duration);
-impl Wait {
-    fn update(&mut self, tick: Duration) -> bool {
-        if self.0 > Duration::ZERO {
-            self.0 = self.0.saturating_sub(tick);
-            self.0 <= Duration::ZERO
-        } else {
-            false
-        }
-    }
-}
-
-fn run_wait_systems(time: Res<'_, Time>, mut commands: Commands, mut query: Query<(Entity, &mut Wait)>) {
-    for (entity, mut wait) in query.iter_mut() {
-        if wait.update(time.delta()) {
-            commands.entity(entity).remove::<Wait>();
-        }
+            .add_system(run_ssanimation_systems)
+            .add_system(component_animator_system::<TextureAtlasSprite>)
+        ;
     }
 }
 
@@ -54,8 +31,15 @@ pub enum AnimationStep {
     /// Decrements the counter by one. If counter > 0, jumps to PointId, otherwise continues.
     JumpWhileCounter(PointId),
     /// The animation is complete.
-    Complete
+    Complete,
+    /// The sprite should be shown/hidden
+    Visible(bool),
+    /// The sprite should be flipped in some dimension
+    Flip(FlipDimension, bool)
 }
+
+#[derive(Debug, Copy, Clone)]
+pub enum FlipDimension { X, Y }
 
 /// Encapsulates an animation and its current state
 #[derive(Debug, Component)]
@@ -64,9 +48,16 @@ pub struct SSAnimation {
     frames: Vec<AnimationStep>,
     counter: usize,
     current_step: usize,
-    current_frame: usize,
+    state: State,
     time_left: Duration,
     complete: bool
+}
+#[derive(Debug)]
+pub struct State {
+    current_frame: usize,
+    visibility: bool,
+    flip_x: bool,
+    flip_y: bool,
 }
 impl SSAnimation {
     /// Create an animation from a sequence of steps
@@ -77,7 +68,12 @@ impl SSAnimation {
             frames: v,
             counter: 0,
             current_step: 0,
-            current_frame: 0,
+            state: State {
+                current_frame: 0,
+                visibility: true,
+                flip_x: false,
+                flip_y: false
+            },
             time_left: Duration::ZERO,
             complete: false
         }
@@ -105,7 +101,7 @@ impl SSAnimation {
                     self.current_step += 1;
                 }
                 AnimationStep::AdvanceTo(frame) => {
-                    self.current_frame = *frame;
+                    self.state.current_frame = *frame;
                     self.current_step += 1;
                 }
                 AnimationStep::JumpToPoint(point) => {
@@ -127,6 +123,17 @@ impl SSAnimation {
                     self.complete = true;
                     return;
                 }
+                AnimationStep::Visible(visibility) => {
+                    self.state.visibility = *visibility;
+                    self.current_step += 1;
+                }
+                AnimationStep::Flip(dimension, flip) => {
+                    match dimension {
+                        FlipDimension::X => self.state.flip_x = *flip,
+                        FlipDimension::Y => self.state.flip_y = *flip
+                    };
+                    self.current_step += 1;
+                }
             }
         }
     }
@@ -147,6 +154,14 @@ pub struct SSAnimationBuilder {
     frames: VecDeque<AnimationStep>
 }
 impl SSAnimationBuilder {
+    /// Create a builder starting with the first step
+    pub fn starting_with(step: AnimationStep) -> Self {
+        SSAnimationBuilder {
+            next_point: 0,
+            frames: VecDeque::from(vec![step])
+        }
+    }
+
     /// Create a builder from a sequence of Animation Steps
     pub fn from_vec(v: Vec<AnimationStep>) -> Self {
         SSAnimationBuilder {
@@ -207,12 +222,26 @@ impl SSAnimationBuilder {
         self
     }
 }
+impl Into<SSAnimation> for SSAnimationBuilder {
+    fn into(self) -> SSAnimation {
+        self.build()
+    }
+}
 
-fn animate (time: Res<'_, Time>, mut animations: Query<(&mut TextureAtlasSprite, &mut SSAnimation)>) {
-    for (mut sprite, mut animation) in animations.iter_mut() {
+fn run_ssanimation_systems(time: Res<'_, Time>, mut animations: Query<(&mut SSAnimation, Option<&mut TextureAtlasSprite>, Option<&mut Visibility>)>) {
+    for (mut animation, mut sprite, mut visibility) in animations.iter_mut() {
         if animation.update(time.delta()) {
             animation.advance();
-            sprite.index = animation.current_frame;
+
+            if let Some(mut sprite) = sprite {
+                sprite.index = animation.state.current_frame;
+                sprite.flip_x = animation.state.flip_x;
+                sprite.flip_y = animation.state.flip_y;
+            }
+
+            if let Some(mut visibility) = visibility {
+                visibility.is_visible = animation.state.visibility;
+            }
         }
     }
 }

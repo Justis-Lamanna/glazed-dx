@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::text::Text2dSize;
 use bevy_tweening::lens::{TransformPositionLens, TransformScaleLens, SpriteColorLens};
 use bevy_tweening::{Tween, EaseFunction, Animator, Delay, Tracks, Sequence};
-use crate::anim::{Timeline, Wait, SSAnimationBuilder};
+use crate::anim::{Timeline, SSAnimationBuilder, AnimationStep};
 use crate::GameState;
 
 const PRESENTS: &str = "Milo Marten\nPresents...";
@@ -34,8 +34,6 @@ impl Plugin for Intro {
         .add_system_set(
             SystemSet::on_update(GameState::Intro)
                 .with_system(run_milo_marten_presents_timeline)
-                //.with_system(init_camera_pan)
-                // .with_system(init_mew_zoom)
         );
     }
 }
@@ -106,7 +104,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
         .insert(Animator::new(camera_pan_tween));  
 
     // Mew zooms across the screen during the pan
-    let left_zoom_tween = Sequence::new(vec![Tween::new(
+    let left_zoom_tween = Sequence::from_single(Tween::new(
         EaseFunction::QuadraticInOut,
         bevy_tweening::TweeningType::Once,
         Duration::from_millis(1000),
@@ -114,7 +112,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
             start: Vec3::new(296.0, -180.0, 20.0),
             end: Vec3::new(0.0, 80.0, transform.translation.z),
         }
-    )]);
+    ));
     let scale_tween = Delay::new(Duration::from_millis(250))
         .then(Tween::new(
             EaseFunction::QuadraticOut,
@@ -189,6 +187,31 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
             ..Default::default()
         })
         .insert(Animator::new(pokemon_logo_fade));
+
+    // Press Enter
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            visibility: Visibility {
+                is_visible: false
+            },
+            texture_atlas: textures.add(TextureAtlas::from_grid(
+                asset_server.load("intro/PressEnter.png"),
+                Vec2::new(108.0, 16.0),
+                1, 2)),
+            transform: Transform::from_scale(Vec3::splat(2.0))
+                .with_translation(Vec3::new(0.0, -128.0, 12.0)),
+            ..Default::default()
+        })
+        .insert(SSAnimationBuilder::from_vec(vec![
+            AnimationStep::Wait(presents_timeline_duration + Duration::from_secs(8)),
+            AnimationStep::Visible(true),
+            AnimationStep::Point(0),
+            AnimationStep::Wait(Duration::from_millis(500)),
+            AnimationStep::AdvanceTo(1),
+            AnimationStep::Wait(Duration::from_millis(500)),
+            AnimationStep::AdvanceTo(0),
+            AnimationStep::JumpToPoint(0)
+        ]).build());
 }
 
 fn run_milo_marten_presents_timeline(time: Res<'_, Time>, mut commands: Commands, 
