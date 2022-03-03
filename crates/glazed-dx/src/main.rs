@@ -11,8 +11,8 @@ fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "Pokemon Glazed DX".to_string(),
-            width: 256.0 * 2.0,
-            height: 192.0 * 2.0,
+            width: 256.0,
+            height: 192.0,
             vsync: true,
             resizable: false,
             ..Default::default()

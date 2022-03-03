@@ -44,7 +44,6 @@ fn setup(
     commands
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("intro/TitlePan.png"),
-            transform: Transform::from_scale(Vec3::splat(2.0)),
             ..Default::default()
         });
 }
@@ -54,7 +53,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
     let presents_timeline_duration = presents_timeline.total_time();
 
     let (entity, mut transform) = camera.single_mut();
-    transform.translation.y = -336f32; 
+    transform.translation.y = -168f32; 
     
     // Milo Marten Presents...
     commands
@@ -65,7 +64,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
                         value: "".to_string(),
                         style: TextStyle {
                             font: asset_server.load("fonts/RobotoMono-Regular.ttf"),
-                            font_size: 30.0,
+                            font_size: 15.0,
                             color: Color::WHITE
                         }
                     }
@@ -78,11 +77,11 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
             },
             text_2d_size: Text2dSize {
                 size: Size {
-                    width: 512.0,
-                    height: 384.0
+                    width: 256.0,
+                    height: 192.0
                 }
             },
-            transform: Transform::from_xyz(0.0, -336.0, 100.0),
+            transform: Transform::from_xyz(0.0, -168.0, 100.0),
             ..Default::default()
         })
         .insert(presents_timeline);
@@ -109,8 +108,8 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
         bevy_tweening::TweeningType::Once,
         Duration::from_millis(1000),
         TransformPositionLens {
-            start: Vec3::new(296.0, -180.0, 20.0),
-            end: Vec3::new(0.0, 80.0, transform.translation.z),
+            start: Vec3::new(148.0, -90.0, 20.0),
+            end: Vec3::new(0.0, 40.0, transform.translation.z),
         }
     ));
     let scale_tween = Delay::new(Duration::from_millis(250))
@@ -130,8 +129,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
                 asset_server.load("intro/Mew.png"), 
                 Vec2::new(48.0, 48.0), 
                 10, 1)),
-            transform: Transform::from_scale(Vec3::splat(2.0))
-                .with_translation(Vec3::new(296.0, -180.0, 20.0)),
+            transform: Transform::from_xyz(148.0, -90.0, 20.0),
             sprite: TextureAtlasSprite {
                 color: Color::rgb(0.0, 0.0, 0.0),
                 ..Default::default()
@@ -145,8 +143,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
     commands
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("intro/Cliff.png"),
-            transform: Transform::from_scale(Vec3::splat(2.0))
-                .with_translation(Vec3::new(-224.0, -476.0, 10.0)),
+            transform: Transform::from_xyz(-112.0, -238.0, 10.0),
             ..Default::default()
         });
 
@@ -157,8 +154,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
                 asset_server.load("intro/Quilava.png"), 
                 Vec2::new(32.0, 32.0), 
                 3, 1)),
-            transform: Transform::from_scale(Vec3::splat(2.0))
-                .with_translation(Vec3::new(-224.0, -476.0, 12.0)),
+            transform: Transform::from_xyz(-112.0, -238.0, 12.0),
             ..Default::default()
         })
         .insert(SSAnimationBuilder::from_iter(vec![0, 1, 2, 1], Duration::from_millis(100))
@@ -182,8 +178,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
                 ..Default::default()
             },
             texture: asset_server.load("intro/Pokemon.png"),
-            transform: Transform::from_scale(Vec3::splat(2.0))
-                .with_translation(Vec3::new(0.0, 104.0, 200.0)),
+            transform: Transform::from_xyz(0.0, 52.0, 200.0),
             ..Default::default()
         })
         .insert(Animator::new(pokemon_logo_fade));
@@ -198,8 +193,7 @@ fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: Re
                 asset_server.load("intro/PressEnter.png"),
                 Vec2::new(108.0, 16.0),
                 1, 2)),
-            transform: Transform::from_scale(Vec3::splat(2.0))
-                .with_translation(Vec3::new(0.0, -128.0, 12.0)),
+            transform: Transform::from_xyz(0.0, -64.0, 12.0),
             ..Default::default()
         })
         .insert(SSAnimationBuilder::from_vec(vec![
