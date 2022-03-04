@@ -32,13 +32,7 @@ fn main() {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub(crate) enum GameState {
     /// Intro + Title Screen
-    Intro,
-    /// New Game / Continue / Options
-    MainMenu,
-    /// In the actual world
-    Overworld,
-    /// In a battle
-    Battle
+    Intro
 }
 
 fn setup(mut commands: Commands) {

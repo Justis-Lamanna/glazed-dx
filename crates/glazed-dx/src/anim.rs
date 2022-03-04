@@ -34,6 +34,11 @@ pub enum AnimationStep {
     Visible(bool)
 }
 
+enum TransformativeAction {
+    SetFrame(usize),
+    SetVisibility(bool)
+}
+
 /// Encapsulates an animation and its current state
 #[derive(Debug, Component)]
 pub struct SSAnimation {
@@ -41,15 +46,10 @@ pub struct SSAnimation {
     frames: Vec<AnimationStep>,
     counter: usize,
     current_step: usize,
-    state: State,
     time_left: Duration,
     complete: bool
 }
-#[derive(Debug, Default)]
-pub struct State {
-    current_frame: Option<usize>,
-    visibility: Option<bool>,
-}
+
 impl SSAnimation {
     /// Create an animation from a sequence of steps
     /// Consider using SSAnimationBuilder to help create steps effortlessly.
@@ -59,7 +59,6 @@ impl SSAnimation {
             frames: v,
             counter: 0,
             current_step: 0,
-            state: State::default(),
             time_left: Duration::ZERO,
             complete: false
         }
@@ -67,27 +66,28 @@ impl SSAnimation {
 
     /// Advances the script to the next state
     /// Execution will advance until we hit a blocking step (Waiting or Complete).
-    pub fn advance(&mut self) {
+    fn advance(&mut self) -> Vec<TransformativeAction> {
+        let mut actions = Vec::new();
         // Advance continues until we hit Complete or Wait.
         loop {
             if self.current_step >= self.frames.len() {
                 // If we've stepped outside of the list , we consider that an implicit complete.
                 self.complete = true;
-                return;
+                return actions;
             }
             let step = &self.frames[self.current_step];
             match step {
                 AnimationStep::Wait(duration) => {
                     self.time_left = *duration;
                     self.current_step += 1;
-                    return;
+                    return actions;
                 }
                 AnimationStep::Point(id) => {
                     self.points.insert(*id, self.current_step);
                     self.current_step += 1;
                 }
                 AnimationStep::AdvanceTo(frame) => {
-                    self.state.current_frame = Some(*frame);
+                    actions.push(TransformativeAction::SetFrame(*frame));
                     self.current_step += 1;
                 }
                 AnimationStep::JumpToPoint(point) => {
@@ -107,10 +107,10 @@ impl SSAnimation {
                 }
                 AnimationStep::Complete => {
                     self.complete = true;
-                    return;
+                    return actions;
                 }
                 AnimationStep::Visible(visibility) => {
-                    self.state.visibility = Some(*visibility);
+                    actions.push(TransformativeAction::SetVisibility(*visibility));
                     self.current_step += 1;
                 }
             }
@@ -178,17 +178,27 @@ impl Into<SSAnimation> for SSAnimationBuilder {
     }
 }
 
-fn run_ssanimation_systems(time: Res<'_, Time>, mut animations: Query<(&mut SSAnimation, Option<&mut TextureAtlasSprite>, Option<&mut Visibility>)>) {
-    for (mut animation, sprite, visibility) in animations.iter_mut() {
+type SpriteBundle<'a> = (Option<&'a mut TextureAtlasSprite>, Option<&'a mut Visibility>);
+
+fn run_ssanimation_systems(time: Res<'_, Time>, mut animations: Query<(&mut SSAnimation, SpriteBundle)>) {
+    for (mut animation, (mut sprite, mut visibility)) in animations.iter_mut() {
         if animation.update(time.delta()) {
-            animation.advance();
+            let transformations = animation.advance();
 
-            if let Some(mut sprite) = sprite {
-                if let Some(index) = animation.state.current_frame { sprite.index = index; }
-            }
-
-            if let Some(mut visibility) = visibility {
-                if let Some(v) = animation.state.visibility { visibility.is_visible = v; }
+            for transformation in transformations {
+                match transformation {
+                    TransformativeAction::SetFrame(frame) => {
+                        if let Some(s) = sprite.as_mut() {
+                            s.index = frame;
+                        }
+                    }
+                    TransformativeAction::SetVisibility(visible) => {
+                        if let Some(v) = visibility.as_mut() {
+                            v.is_visible = visible;
+                        }
+                    },
+                    _ => {}
+                }
             }
         }
     }
@@ -252,40 +262,5 @@ impl Timeline {
 
     pub fn is_complete(&self) -> bool {
         self.complete
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    pub fn test_advance() {
-        let animation = vec![AnimationStep::AdvanceTo(1)];
-        let mut animation = SSAnimation::from_vec(animation);
-        animation.advance();
-
-        assert_eq!(1, animation.state.current_frame.unwrap());
-    }
-
-    #[test]
-    pub fn test_advance_two() {
-        let animation = vec![AnimationStep::AdvanceTo(1), AnimationStep::Wait(Duration::ZERO), AnimationStep::AdvanceTo(2)];
-        let mut animation = SSAnimation::from_vec(animation);
-
-        animation.advance();
-        assert_eq!(1, animation.state.current_frame.unwrap());
-
-        animation.advance();
-        assert_eq!(2, animation.state.current_frame.unwrap());
-    }
-
-    #[test]
-    pub fn test_advance_implicit_complete() {
-        let animation = vec![AnimationStep::AdvanceTo(1)];
-        let mut animation = SSAnimation::from_vec(animation);
-        animation.advance();
-
-        assert!(animation.complete);
     }
 }
