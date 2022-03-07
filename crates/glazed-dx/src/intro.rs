@@ -29,7 +29,6 @@ impl Plugin for Intro {
         app.add_system_set(
             SystemSet::on_enter(GameState::Intro)
                 .with_system(init)
-                .with_system(setup)
         )
         .add_system_set(
             SystemSet::on_update(GameState::Intro)
@@ -38,22 +37,19 @@ impl Plugin for Intro {
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>) {
-    commands
-        .spawn_bundle(SpriteBundle {
-            texture: asset_server.load("intro/TitlePan.png"),
-            ..Default::default()
-        });
-}
-
 fn init(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: ResMut<Assets<TextureAtlas>>, mut camera: Query<(Entity, &mut Transform), With<Camera>>) {
     let presents_timeline = Timeline::from_iter(create_frames_for_str(PRESENTS));
     let presents_timeline_duration = presents_timeline.total_time();
 
     let (entity, mut transform) = camera.single_mut();
     transform.translation.y = -168f32; 
+
+    // Background
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: asset_server.load("intro/TitlePan.png"),
+            ..Default::default()
+        });
     
     // Milo Marten Presents...
     commands
