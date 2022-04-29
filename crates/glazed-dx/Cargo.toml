@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.bevy]
-version = "0.6"
+version = "0.7"
 default-features = false
 features = [
     "render",
@@ -20,8 +20,9 @@ features = [
 ]
 
 [dependencies]
-bevy_kira_audio = "0.8.0"
-bevy_tweening = "0.3.2"
+iyes_loopless = "0.5.1"
+bevy_kira_audio = "0.9.0"
+bevy_tweening = "0.4.0"
 glazed_core = { path = "../glazed-core" }
 glazed_data = { path = "../glazed-data" }
 glazed_battle = { path = "../glazed-battle" }
