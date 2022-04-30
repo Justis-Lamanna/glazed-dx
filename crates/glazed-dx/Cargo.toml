@@ -19,6 +19,11 @@ features = [
     "x11"
 ]
 
+[dependencies.iyes_progress]
+version = "0.3.0"
+default-feature = false
+features = ["iyes_loopless", "assets"]
+
 [dependencies]
 iyes_loopless = "0.5.1"
 bevy_kira_audio = "0.9.0"

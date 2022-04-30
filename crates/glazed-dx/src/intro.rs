@@ -1,26 +1,29 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
+use iyes_progress::ProgressPlugin;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
 use crate::GameState;
+use crate::CursorIcon::Progress;
 use crate::state::{SaveGameState, Save};
 
-const PRESENTS: &str = "Milo Marten\nPresents...";
-
-fn create_frames_for_str(string: &str) -> Vec<u64> {
-    let mut frames = Vec::new();
-    for (idx, c) in string.chars().enumerate() {
-        let time = match c {
-            ' ' | '\n' => 300,
-            '.' => 400,
-            _ if idx == 0 => 1000,
-            _ => 100
-        };
-        frames.push(time);
-    }
-    frames.push(2000);
-    frames
-}
+//region
+// const PRESENTS: &str = "Milo Marten\nPresents...";
+//
+// fn create_frames_for_str(string: &str) -> Vec<u64> {
+//     let mut frames = Vec::new();
+//     for (idx, c) in string.chars().enumerate() {
+//         let time = match c {
+//             ' ' | '\n' => 300,
+//             '.' => 400,
+//             _ if idx == 0 => 1000,
+//             _ => 100
+//         };
+//         frames.push(time);
+//     }
+//     frames.push(2000);
+//     frames
+// }
 
 // pub struct Intro;
 // impl Plugin for Intro {
@@ -31,14 +34,6 @@ fn create_frames_for_str(string: &str) -> Vec<u64> {
 //         app.add_system(change_state_after_time.run_in_state(GameState::Intro));
 //     }
 // }
-
-pub struct Title;
-impl Plugin for Title {
-    fn build(&self, app: &mut App) {
-        app.add_enter_system(GameState::Title, init_titlescreen);
-        app.add_system(proceed_on_enter.run_in_state(GameState::Title));
-    }
-}
 
 // #[derive(Component)]
 // struct IntroTimer(Timer);
@@ -197,6 +192,19 @@ impl Plugin for Title {
 //         .insert(IntroTimer(Timer::new(presents_timeline_duration + Duration::from_secs(8), false)))
 //         .insert(DespawnOnStateChange);
 // }
+//endregion
+
+pub struct Title;
+impl Plugin for Title {
+    fn build(&self, app: &mut App) {
+        app
+            .add_enter_system(GameState::Title, init_titlescreen)
+            .add_system(proceed_on_enter
+                .run_in_state(GameState::Title)
+            )
+        ;
+    }
+}
 
 fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: ResMut<Assets<TextureAtlas>>) {
     // Background
@@ -245,7 +253,7 @@ fn proceed_on_enter(mut commands: Commands, keys: Res<Input<KeyCode>>) {
             },
             Ok(true) => {
                 info!("Going to load game screen");
-                commands.insert_resource(NextState(GameState::LoadGame));
+                panic!();
             },
             Err(()) => {
                 info!("Access error. Ask if the player wants to continue");

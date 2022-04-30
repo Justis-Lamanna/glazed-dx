@@ -1,13 +1,17 @@
 mod intro;
 mod anim;
 mod state;
+mod util;
 
+use std::time::Duration;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
+use iyes_progress::prelude::*;
 use bevy::input::system::exit_on_esc_system;
-use bevy_tweening::TweeningPlugin;
+use bevy_tweening::{Animator, TweeningPlugin};
 use crate::anim::GlazedAnimator;
-use crate::intro::{Title};
+use crate::intro::Title;
+use crate::util::Fade;
 
 fn main() {
     App::new()
@@ -22,27 +26,35 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(GlazedAnimator)
         .add_plugin(TweeningPlugin)
-        .add_loopless_state(GameState::Loading)
         .add_startup_system(setup)
         .add_system(exit_on_esc_system)
-        
-        .add_enter_system(GameState::Loading, init_load)
-        .add_system(tick_and_complete_load.run_in_state(GameState::Loading))
+
+        // Fading Systems
+        .add_plugin(Fade)
+
+        // Splash Screen
+        .add_loopless_state(GameState::Splash)
+        .add_plugin(ProgressPlugin::new(GameState::Splash).continue_to(GameState::Title))
+        .add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Splash)
+                .with_system(init_load.track_progress())
+                .into()
+        )
+
+        // Other states go here
         .add_plugin(Title)
-        .run()
+        .run();
 }
 
 /// Describes which portion of the game we are in!
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub(crate) enum GameState {
     /// Initial
-    Loading,
+    Splash,
     /// Title Screen
     Title,
-    /// Subscreen where the player is asked if they want to start a new game,
-    /// or continue an old game
-    LoadGame,
-    /// The famous Professor Lecture at the beginning of a new game
+    /// Welcome to the world of Pokemon
     ProfessorLecture
 }
 
@@ -58,15 +70,6 @@ fn setup(mut commands: Commands) {
 #[derive(Component)]
 struct LoadTimer(Timer);
 
-fn init_load(mut commands: Commands) {
-    commands.spawn()
-        .insert(LoadTimer(Timer::from_seconds(2.0, false)));
-}
-
-fn tick_and_complete_load(mut commands: Commands, time: Res<'_, Time>, mut query: Query<&mut LoadTimer>) {
-    let timer = &mut query.single_mut().0;
-    timer.tick(time.delta());
-    if timer.just_finished() {
-        commands.insert_resource(NextState(GameState::Title));
-    }
+fn init_load() -> Progress {
+    true.into()
 }

@@ -264,10 +264,3 @@ impl Timeline {
         self.complete
     }
 }
-
-#[derive(Component)]
-pub struct DespawnOnStateChange;
-
-pub fn despawn<T: Component>(mut commands: Commands, marked: Query<Entity, With<T>>) {
-    marked.for_each(|e| commands.entity(e).despawn_recursive())
-}
