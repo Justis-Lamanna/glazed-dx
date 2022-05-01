@@ -11,7 +11,7 @@ use bevy::input::system::exit_on_esc_system;
 use bevy_tweening::{Animator, TweeningPlugin};
 use crate::anim::GlazedAnimator;
 use crate::intro::Title;
-use crate::util::Fade;
+use crate::util::TransitionPlugin;
 
 fn main() {
     App::new()
@@ -30,7 +30,7 @@ fn main() {
         .add_system(exit_on_esc_system)
 
         // Fading Systems
-        .add_plugin(Fade)
+        .add_plugin(TransitionPlugin)
 
         // Splash Screen
         .add_loopless_state(GameState::Splash)

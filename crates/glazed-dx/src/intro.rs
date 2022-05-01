@@ -1,11 +1,13 @@
 use std::time::Duration;
 use bevy::prelude::*;
+use iyes_loopless::condition::IntoConditionalExclusiveSystem;
 use iyes_loopless::prelude::*;
 use iyes_progress::ProgressPlugin;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
 use crate::GameState;
 use crate::CursorIcon::Progress;
 use crate::state::{SaveGameState, Save};
+use crate::util::{advance_through_continue, FadeType, in_transition, Transition, TransitionState, TriggerFade};
 
 //region
 // const PRESENTS: &str = "Milo Marten\nPresents...";
@@ -199,8 +201,19 @@ impl Plugin for Title {
     fn build(&self, app: &mut App) {
         app
             .add_enter_system(GameState::Title, init_titlescreen)
-            .add_system(proceed_on_enter
-                .run_in_state(GameState::Title)
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(GameState::Title)
+                    .run_in_state(TransitionState::Between)
+                    .with_system(advance_through_continue)
+                    .into()
+            )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(GameState::Title)
+                    .run_if_not(in_transition)
+                    .with_system(proceed_on_enter)
+                    .into()
             )
         ;
     }
@@ -243,13 +256,14 @@ fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut 
         ]).build());
 }
 
-fn proceed_on_enter(mut commands: Commands, keys: Res<Input<KeyCode>>) {
+fn proceed_on_enter(mut commands: Commands, keys: Res<Input<KeyCode>>, mut writer: EventWriter<Transition>) {
     if keys.just_pressed(KeyCode::Return) {
         match Save::check_for_saves() {
             Ok(false) => {
                 info!("Starting new game");
                 commands.insert_resource(SaveGameState::NewGame);
-                commands.insert_resource(NextState(GameState::ProfessorLecture));
+                //commands.insert_resource(NextState(GameState::ProfessorLecture));
+                writer.send(Transition::gentle(Color::RED, Duration::from_secs(2)));
             },
             Ok(true) => {
                 info!("Going to load game screen");
