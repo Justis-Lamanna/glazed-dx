@@ -4,13 +4,14 @@ use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use strum_macros::EnumDiscriminants;
+use strum_macros::{EnumDiscriminants, IntoStaticStr};
 
 use crate::time::{GlazedTime, Season};
 use crate::types::Type;
 
 //region Pokemon Species Enums
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash, EnumDiscriminants)]
+#[strum_discriminants(derive(IntoStaticStr))]
 pub enum Species {
     Bulbasaur,
     Ivysaur,

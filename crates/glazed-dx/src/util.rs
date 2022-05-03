@@ -68,6 +68,10 @@ impl Transition {
         let exit = FadeType::Gentle(TriggerFade::fade_out(color, duration));
         Transition { enter, exit }
     }
+
+    pub fn fade_to_black() -> Transition {
+        Transition::gentle(Color::BLACK, Duration::from_millis(600))
+    }
 }
 
 pub struct TransitionPlugin;

@@ -1,13 +1,17 @@
 use std::time::Duration;
 use bevy::prelude::*;
+use bevy_kira_audio::{Audio, AudioChannel};
 use iyes_loopless::condition::IntoConditionalExclusiveSystem;
 use iyes_loopless::prelude::*;
+use iyes_progress::prelude::AssetsLoading;
 use iyes_progress::ProgressPlugin;
+use glazed_data::species::Species;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
+use crate::audio::{Cry, CryHandle, PlayCry};
 use crate::GameState;
 use crate::CursorIcon::Progress;
 use crate::state::{SaveGameState, Save};
-use crate::util::{advance_through_continue, FadeType, in_transition, Transition, TransitionState, TriggerFade};
+use crate::util::{advance_through_continue, despawn, FadeType, in_transition, Transition, TransitionState, TriggerFade};
 
 //region
 // const PRESENTS: &str = "Milo Marten\nPresents...";
@@ -201,11 +205,12 @@ impl Plugin for Title {
     fn build(&self, app: &mut App) {
         app
             .add_enter_system(GameState::Title, init_titlescreen)
+            .add_exit_system(GameState::Title, despawn::<TitleAsset>)
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(GameState::Title)
                     .run_in_state(TransitionState::Between)
-                    .with_system(advance_through_continue)
+                    .with_system(advance_state)
                     .into()
             )
             .add_system_set(
@@ -219,13 +224,17 @@ impl Plugin for Title {
     }
 }
 
+#[derive(Component)]
+pub struct TitleAsset;
+
 fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: ResMut<Assets<TextureAtlas>>) {
     // Background
     commands
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("intro/TitlePan.png"),
             ..Default::default()
-        });
+        })
+        .insert(TitleAsset);
 
     // Titlescreen
     commands
@@ -233,7 +242,8 @@ fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut 
             texture: asset_server.load("intro/Pokemon.png"),
             transform: Transform::from_xyz(0.0, 52.0, 200.0),
             ..Default::default()
-        });
+        })
+        .insert(TitleAsset);
 
     // Press Enter
     commands
@@ -245,6 +255,7 @@ fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut 
             transform: Transform::from_xyz(0.0, -64.0, 12.0),
             ..Default::default()
         })
+        .insert(TitleAsset)
         .insert(SSAnimationBuilder::from_vec(vec![
             AnimationStep::Visible(true),
             AnimationStep::Point(0),
@@ -256,13 +267,14 @@ fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut 
         ]).build());
 }
 
-fn proceed_on_enter(mut commands: Commands, keys: Res<Input<KeyCode>>, mut writer: EventWriter<Transition>) {
+fn proceed_on_enter(mut commands: Commands, keys: Res<Input<KeyCode>>,
+                    mut writer: EventWriter<Transition>, mut cry: EventWriter<PlayCry>) {
     if keys.just_pressed(KeyCode::Return) {
         match Save::check_for_saves() {
             Ok(false) => {
                 info!("Starting new game");
                 commands.insert_resource(SaveGameState::NewGame);
-                //commands.insert_resource(NextState(GameState::ProfessorLecture));
+                cry.send(PlayCry(Species::Mew));
                 writer.send(Transition::gentle(Color::RED, Duration::from_secs(2)));
             },
             Ok(true) => {
@@ -277,6 +289,10 @@ fn proceed_on_enter(mut commands: Commands, keys: Res<Input<KeyCode>>, mut write
     }
 }
 
+fn advance_state(mut commands: Commands) {
+    commands.insert_resource(NextState(GameState::ProfessorLecture));
+    commands.insert_resource(NextState(TransitionState::Out));
+}
 
 // fn run_milo_marten_presents_timeline(time: Res<'_, Time>, mut commands: Commands, 
 //         mut animations: Query<(Entity, &mut Timeline, &mut Text)>) {

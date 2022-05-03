@@ -2,15 +2,19 @@ mod intro;
 mod anim;
 mod state;
 mod util;
+mod audio;
 
 use std::time::Duration;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 use iyes_progress::prelude::*;
 use bevy::input::system::exit_on_esc_system;
+use bevy_kira_audio::AudioPlugin;
 use bevy_tweening::{Animator, TweeningPlugin};
 use crate::anim::GlazedAnimator;
+use crate::audio::Cry;
 use crate::intro::Title;
+use crate::state::GlobalOptions;
 use crate::util::TransitionPlugin;
 
 fn main() {
@@ -26,11 +30,14 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(GlazedAnimator)
         .add_plugin(TweeningPlugin)
+        .add_plugin(AudioPlugin)
         .add_startup_system(setup)
+        .add_startup_system(GlobalOptions::load)
         .add_system(exit_on_esc_system)
 
-        // Fading Systems
+        // Random Plugins
         .add_plugin(TransitionPlugin)
+        .add_plugin(Cry)
 
         // Splash Screen
         .add_loopless_state(GameState::Splash)
@@ -60,15 +67,10 @@ pub(crate) enum GameState {
 
 fn setup(mut commands: Commands) {
     // Spawns the camera
-    let mut camera = OrthographicCameraBundle::new_2d();
     commands
-        .spawn()
-        .insert_bundle(camera)
+        .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(Transform::from_xyz(0f32, 0f32, 1000f32));
 }
-
-#[derive(Component)]
-struct LoadTimer(Timer);
 
 fn init_load() -> Progress {
     true.into()

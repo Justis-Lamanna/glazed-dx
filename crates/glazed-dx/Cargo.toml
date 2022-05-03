@@ -25,6 +25,10 @@ default-feature = false
 features = ["iyes_loopless", "assets"]
 
 [dependencies]
+serde = "1.0.137"
+serde_yaml = "0.8.23"
+bevy_asset_ron = "0.4.0"
+
 iyes_loopless = "0.5.1"
 bevy_kira_audio = "0.9.0"
 bevy_tweening = "0.4.0"
