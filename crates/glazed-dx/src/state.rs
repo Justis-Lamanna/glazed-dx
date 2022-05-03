@@ -49,9 +49,9 @@ impl Volume {
     pub fn set_raw_music_volume(&mut self, val: f32) { self.music = val }
     pub fn set_raw_sfx_volume(&mut self, val: f32) { self.sfx = val }
 
-    pub fn get_master_volume(&self) -> f32 { self.master }
-    pub fn get_music_volume(&self) -> f32 { self.master * self.music }
-    pub fn get_sfx_volume(&self) -> f32 { self.master * self.sfx }
+    pub fn get_master_volume(&self) -> f32 { self.master.clamp(0.0, 1.0) }
+    pub fn get_music_volume(&self) -> f32 { (self.master * self.music).clamp(0.0, 1.0) }
+    pub fn get_sfx_volume(&self) -> f32 { (self.master * self.sfx).clamp(0.0, 1.0) }
 }
 impl Default for Volume {
     fn default() -> Self {
