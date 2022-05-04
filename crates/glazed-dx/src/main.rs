@@ -4,13 +4,12 @@ mod state;
 mod util;
 mod audio;
 
-use std::time::Duration;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 use iyes_progress::prelude::*;
 use bevy::input::system::exit_on_esc_system;
 use bevy_kira_audio::AudioPlugin;
-use bevy_tweening::{Animator, TweeningPlugin};
+use bevy_tweening::TweeningPlugin;
 use crate::anim::GlazedAnimator;
 use crate::audio::Cry;
 use crate::intro::Title;

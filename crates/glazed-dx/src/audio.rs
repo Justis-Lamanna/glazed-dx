@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioChannel, InstanceHandle, PlaybackState};
+use bevy_kira_audio::{Audio, AudioChannel, InstanceHandle};
 
 use glazed_data::species::{ForcesOfNatureForm, KyuremForm, ShayminForm, Species, SpeciesDiscriminants};
 use crate::state::GlobalOptions;

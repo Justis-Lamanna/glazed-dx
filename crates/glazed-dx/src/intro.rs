@@ -1,17 +1,12 @@
 use std::time::Duration;
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioChannel};
-use iyes_loopless::condition::IntoConditionalExclusiveSystem;
 use iyes_loopless::prelude::*;
-use iyes_progress::prelude::AssetsLoading;
-use iyes_progress::ProgressPlugin;
 use glazed_data::species::Species;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
-use crate::audio::{Cry, CryHandle, PlayCry};
+use crate::audio::PlayCry;
 use crate::GameState;
-use crate::CursorIcon::Progress;
 use crate::state::{SaveGameState, Save};
-use crate::util::{advance_through_continue, despawn, FadeType, in_transition, Transition, TransitionState, TriggerFade};
+use crate::util::{despawn, in_transition, Transition, TransitionState};
 
 //region
 // const PRESENTS: &str = "Milo Marten\nPresents...";

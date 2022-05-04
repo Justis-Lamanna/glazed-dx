@@ -1,6 +1,6 @@
 use std::fs::File;
 use bevy::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::Deserialize;
 use bevy::reflect::TypeUuid;
 
 #[derive(Deserialize, Default, TypeUuid, Debug)]

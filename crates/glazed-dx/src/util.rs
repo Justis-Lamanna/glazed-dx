@@ -1,11 +1,8 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use bevy_tweening::Animator;
-use iyes_loopless::condition::IntoConditionalExclusiveSystem;
-use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet, NextState};
+use iyes_loopless::prelude::*;
 use iyes_loopless::state::CurrentState;
-use iyes_progress::Progress;
-use crate::GameState;
 
 pub fn despawn<T: Component>(mut commands: Commands, marked: Query<Entity, With<T>>) {
     marked.for_each(|e| commands.entity(e).despawn_recursive())
@@ -175,7 +172,7 @@ fn monitor_fade_in(mut cmds: Commands, query: Query<&Animator<Sprite>, With<Fade
 }
 
 fn init_fade_out(mut cmds: Commands, res: Option<Res<Transition>>, mut existing: Query<(Entity, &mut Sprite), With<FadeMarker>>) {
-    let (mut entity, mut sprite) = existing.single_mut();
+    let (entity, mut sprite) = existing.single_mut();
     match res.unwrap().exit {
         // Immediately transition to the next scene
         FadeType::None => cmds.insert_resource(NextState(TransitionState::None)),
