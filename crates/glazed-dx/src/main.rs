@@ -3,6 +3,7 @@ mod anim;
 mod state;
 mod util;
 mod audio;
+mod text;
 
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
@@ -13,6 +14,7 @@ use bevy_tweening::TweeningPlugin;
 use crate::anim::GlazedAnimator;
 use crate::audio::Cry;
 use crate::intro::Title;
+use crate::text::TextPlugin;
 use crate::state::GlobalOptions;
 use crate::util::TransitionPlugin;
 
@@ -37,6 +39,7 @@ fn main() {
         // Random Plugins
         .add_plugin(TransitionPlugin)
         .add_plugin(Cry)
+        .add_plugin(TextPlugin)
 
         // Splash Screen
         .add_loopless_state(GameState::Splash)
@@ -64,7 +67,10 @@ pub(crate) enum GameState {
     ProfessorLecture
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+#[derive(Component)]
+pub struct UI;
+
+fn setup(mut commands: Commands) {
     // Spawns the camera
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d())
@@ -73,50 +79,40 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn_bundle(UiCameraBundle::default());
 
-    commands
-        .spawn_bundle(NodeBundle {
-            style: Style {
-                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                ..default()
-            },
-            color: Color::NONE.into(),
+    commands.spawn_bundle(NodeBundle {
+        style: Style {
+            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
             ..default()
-        })
-        .with_children(|p| {
-            p.spawn_bundle(NodeBundle {
-                style: Style {
-                    size: Size::new(Val::Px(256.0), Val::Px(48.0)),
-                    ..Default::default()
-                },
-                color: Color::rgba(0.25, 0.25, 0.25, 0.75).into(),
-                ..Default::default()
-            }).with_children(|p| {
-                   p.spawn_bundle(TextBundle {
-                       style: Style {
-                           margin: Rect {
-                               left: Val::Px(8.0),
-                               right: Val::Px(16.0),
-                               top: Val::Px(8.0),
-                               bottom: Val::Px(8.0)
-                           },
-                           max_size: Size::new(Val::Px(232.0), Val::Px(32.0)),
-                           ..Default::default()
-                       },
-                       text: Text::with_section(
-                           "Hello, World. This is a really really long message for you to render. Sorry.",
-                           TextStyle {
-                               font: asset_server.load("fonts/RobotoMono-Regular.ttf"),
-                               font_size: 16.0,
-                               color: Color::WHITE
-                           },
-                           Default::default()
-                       ),
-                       ..Default::default()
-                   });
-                });
-            });
+        },
+        color: Color::NONE.into(),
+        ..default()
+    })
+    .insert(UI);
 }
 
 fn init_load() -> Progress {
     true.into()
 }
+
+// If this works I can die happy.
+// use glyph_brush_layout::{ab_glyph::*, *};
+
+// fn main() {
+//     let font = FontRef::try_from_slice(include_bytes!("../assets/fonts/RobotoMono-Regular.ttf")).unwrap();
+//     let fonts = &[font];
+
+//     let glyphs = Layout::default().calculate_glyphs(fonts,
+//          &SectionGeometry {
+//             screen_position: (0.0, 0.0),
+//             bounds: (f32::INFINITY, 256.0),
+//         }, 
+//         &[
+//             SectionText {
+//                 text: "Hey! This is a really really long string, and we have to find the line breaks in it.",
+//                 scale: PxScale::from(16.0),
+//                 font_id: FontId(0),
+//             }
+//         ]);
+
+//     println!("{:?}", glyphs);
+// }
