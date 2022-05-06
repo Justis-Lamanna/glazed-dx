@@ -93,26 +93,3 @@ fn setup(mut commands: Commands) {
 fn init_load() -> Progress {
     true.into()
 }
-
-// If this works I can die happy.
-// use glyph_brush_layout::{ab_glyph::*, *};
-
-// fn main() {
-//     let font = FontRef::try_from_slice(include_bytes!("../assets/fonts/RobotoMono-Regular.ttf")).unwrap();
-//     let fonts = &[font];
-
-//     let glyphs = Layout::default().calculate_glyphs(fonts,
-//          &SectionGeometry {
-//             screen_position: (0.0, 0.0),
-//             bounds: (f32::INFINITY, 256.0),
-//         }, 
-//         &[
-//             SectionText {
-//                 text: "Hey! This is a really really long string, and we have to find the line breaks in it.",
-//                 scale: PxScale::from(16.0),
-//                 font_id: FontId(0),
-//             }
-//         ]);
-
-//     println!("{:?}", glyphs);
-// }

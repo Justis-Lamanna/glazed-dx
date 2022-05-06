@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use bevy::prelude::*;
-use glyph_brush_layout::{GlyphPositioner, Layout, SectionGeometry, ab_glyph::FontRef, FontId};
+use glyph_brush_layout::{ab_glyph::{FontRef, FontArc}, FontId};
 use iyes_loopless::prelude::*;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -25,39 +25,53 @@ pub struct ShowText {
     pub lines: usize,
     pub font: Handle<Font>
 }
-impl ShowText {
-    pub fn create_frame_node(&self) -> NodeBundle {
-        NodeBundle {
-            style: Style {
-                size: Size::new(Val::Px(self.width), Val::Px(((self.lines + 1) as f32) * 16.0)),
-                ..default()
-            },
-            color: Color::rgba(0.0, 0.0, 0.0, 0.75).into(),
-            ..default()
-        }
-    }
-}
 
 #[derive(Component)]
 pub struct TextBoxContent {
     lines: Vec<Vec<TextSection>>,
     current_line: usize,
-    lines_per_page: usize
+    /// 0 indicates all lines should be visible.
+    lines_per_page: usize,
+    width: f32
 }
 impl TextBoxContent {
     pub fn from(st: &ShowText) -> TextBoxContent {
         let rt = Formatter::parse_to_graphemes(st.string.clone());
         let lines = rt.to_box(RichTextOptions {
-            box_width: st.width - 32.0, // Determined empirically to play well with the margins
+            box_width: st.width - 24.0,
             font: st.font.clone(),
             font_size: 16.0,
             default_color: Color::WHITE,
         });
 
+        let lines_per_page = if st.lines == 0 {
+            lines.len()
+        } else {
+            st.lines
+        };
+
         TextBoxContent {
             lines,
             current_line: 0,
-            lines_per_page: st.lines
+            lines_per_page,
+            width: st.width
+        }
+    }
+
+    pub fn get_current_page_size(&self) -> Size<Val> {
+        let total_lines_left = self.lines.len() - self.current_line;
+        let lines = total_lines_left.min(self.lines_per_page);
+        Size::new(Val::Px(self.width), Val::Px(((lines + 1) as f32) * 16.0))
+    }
+
+    pub fn create_frame_node(&self) -> NodeBundle {
+        NodeBundle {
+            style: Style {
+                size: self.get_current_page_size(),
+                ..default()
+            },
+            color: Color::rgba(0.0, 0.0, 0.0, 0.75).into(),
+            ..default()
         }
     }
 
@@ -89,6 +103,12 @@ impl Plugin for TextPlugin {
                     .with_system(TextPlugin::load_in_page)
                     .into()
             )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(TextState::WaitingForContinue)
+                    .with_system(TextPlugin::load_next_on_button_press)
+                    .into()
+            )
             ;
     }
 }
@@ -96,6 +116,7 @@ impl Plugin for TextPlugin {
 impl TextPlugin {
     fn create_text_frame(mut commands: Commands, mut events: EventReader<ShowText>, query: Query<Entity, With<UI>>) {
         if let Some(e) = events.iter().last() {
+            let e = TextBoxContent::from(e);
             commands.insert_resource(NextState(TextState::Scrolling));
 
             commands
@@ -111,25 +132,31 @@ impl TextPlugin {
                                     top: Val::Px(8.0),
                                     bottom: Val::Px(8.0)
                                 },
-                                min_size: Size::new(Val::Px(232.0), Val::Px(32.0)),
-                                max_size: Size::new(Val::Px(232.0), Val::Px(32.0)),
+                                max_size: Size::new(Val::Px(232.0), Val::Auto),
                                 ..default()
                             },
                             text: Text { sections: vec![], alignment: default() },
                             ..default()
                         })
-                        .insert(TextBoxContent::from(e));
+                        .insert(e);
                     });
                 });
         }
     }
 
-    fn load_in_page(mut commands: Commands, mut query: Query<(&mut Text, &mut TextBoxContent)>) {
-        for (mut text, mut content) in query.iter_mut() {
+    fn load_in_page(mut commands: Commands, 
+        mut query: Query<(&Parent, &mut Text, &mut TextBoxContent)>,
+        mut p_query: Query<&mut Style, With<TextBox>>
+    ) {
+        for (parent, mut text, mut content) in query.iter_mut() {
             let sections = content.get_current_page_range()
-                .flat_map(|idx| content.lines[idx].iter())
+                .filter_map(|idx| content.lines.get(idx))
+                .flat_map(|section| section.iter())
                 .map(|v| v.clone())
                 .collect::<Vec<_>>();
+
+            let mut style = p_query.get_mut(parent.0).unwrap();
+            style.size = content.get_current_page_size();
 
             text.sections = sections;
             content.current_line += content.lines_per_page;
@@ -144,13 +171,17 @@ impl TextPlugin {
         }
     }
 
-    //fn load_next_on_button_press(mut commands: Commands, )
+    fn load_next_on_button_press(mut commands: Commands, controls: Res<Input<KeyCode>>) {
+        if controls.just_released(KeyCode::Space) {
+            commands.insert_resource(NextState(TextState::Scrolling));
+        }
+    }
 }
 
-fn test(mut controls: Res<Input<KeyCode>>, mut speak: EventWriter<ShowText>, assets: Res<AssetServer>) {
-    if controls.just_pressed(KeyCode::Space) {
+fn test(controls: Res<Input<KeyCode>>, mut speak: EventWriter<ShowText>, assets: Res<AssetServer>) {
+    if controls.just_released(KeyCode::Space) {
         speak.send(ShowText {
-            string: "Honestly, I'm pretty anxious about this text box. Things seem to be going smoothly, but...".to_string(),
+            string: "Alternatively...I have no idea if this works with the hard break?".to_string(),
             width: 256.0,
             lines: 2,
             font: assets.load("fonts/RobotoMono-Regular.ttf")
@@ -174,7 +205,9 @@ impl Formatter {
                  match g {
                     lit @ ("<" | ">") => chars.push(lit, color),
                     "c" => match iter.next() {
-                        Some("1") => color = Some(Color::BLACK),
+                        Some("0") => color = Some(Color::NONE),
+                        Some("1") => color = Some(Color::WHITE),
+                        Some("2") => color = Some(Color::BLACK),
                         _ => {}
                     },
                     _ => {}
@@ -221,11 +254,16 @@ impl RichText {
         let grapheme = grapheme.to_string();
         self.unformatted.push_str(grapheme.as_str());
         
-        let cd = CharData {
-            grapheme,
-            color,
-        };
-        self.graphemes.push(cd);
+        // Hard break is a tricky case.
+        // We leave it in the unformatted for calculations, but we don't
+        // keep it in the CharData list. 
+        if grapheme != "\n" {
+            let cd = CharData {
+                grapheme,
+                color,
+            };
+            self.graphemes.push(cd);
+        }   
     }
 
     pub fn to_box(&self, options: RichTextOptions) -> Vec<Vec<TextSection>> {
@@ -238,42 +276,42 @@ impl RichText {
         let g_font = FontRef::try_from_slice(include_bytes!("../assets/fonts/RobotoMono-Regular.ttf"))
             .unwrap();
 
-        let calc_graphemes = Layout::default().calculate_glyphs(
-            &[g_font], 
-            &SectionGeometry {
-                bounds: (width, f32::INFINITY),
-                ..default()
-            }, 
-            &[
+        let mut brush = bevy::text::GlyphBrush::default();
+        brush.add_font(font.clone(), FontArc::from(g_font));
+
+        let calc_graphemes = brush.compute_glyphs(&[
                 glyph_brush_layout::SectionText {
                     text: self.unformatted.as_str(),
                     scale: font_size.into(),
                     font_id: FontId(0),
                 }
-            ]);
+            ], 
+            Size::new(width, f32::INFINITY), 
+            TextAlignment::default())
+            .unwrap();
 
         let mut prev_line_no = usize::MAX;
-        let mut lines = Vec::new();
+        let mut lines: Vec<Vec<TextSection>> = Vec::new();
         let mut last_data: Option<&CharData> = None;
         for (data, glyph) in self.graphemes.iter().zip(calc_graphemes.iter()) {
             let line_no = glyph.glyph.position.y.trunc() as usize;
             if prev_line_no != line_no {
+                if prev_line_no != usize::MAX {
+                    // For ease, every new line gets marked with a \n. 
+                    let ts = lines.last_mut().unwrap().last_mut().unwrap();
+                    ts.value.push_str("\n");
+                }
                 lines.push(Vec::new());
                 last_data = None;
             }
 
-            if let Some(l) = last_data {
-                if l.is_section_boundary(data) {
-                    lines.last_mut().unwrap().push(TextSection {
-                        style: TextStyle {
-                            font: font.clone(),
-                            font_size,
-                            color: data.color.unwrap_or(default_color)
-                        },
-                        ..default()
-                    });
-                }
+            let is_boundary = if let Some(l) = last_data {
+                l.is_section_boundary(data)
             } else {
+                true // The first section is always a "boundary"
+            };
+
+            if is_boundary {
                 lines.last_mut().unwrap().push(TextSection {
                     style: TextStyle {
                         font: font.clone(),
@@ -294,24 +332,3 @@ impl RichText {
         lines
     }
 }
-
-// mod tests {
-//     use bevy::prelude::Color;
-
-//     use crate::text::Formatter;
-
-//     use super::RichTextOptions;
-
-//     #[test]
-//     fn parsing_a_string() {
-//         let s = "I'd like to know... can you tell me what <c13²> is?";
-        
-//         let g = Formatter::parse_to_graphemes(s);
-//         g.to_box(RichTextOptions {
-//             box_width: 256.0,
-//             font: Default::default(),
-//             font_size: 16.0,
-//             default_color: Color::WHITE,
-//         });
-//     }
-// }
