@@ -13,6 +13,9 @@ const RIGHT_MARGIN: f32 = 16.0;
 const TOP_MARGIN: f32 = 8.0;
 const BOTTOM_MARGIN: f32 = 8.0;
 
+pub const FONT: &'static str = "fonts/GBBoot.ttf";
+const FONT_BYTES: &'static[u8] = include_bytes!("../assets/fonts/GBBoot.ttf");
+
 #[derive(Component)]
 pub struct TextBox;
 
@@ -28,8 +31,7 @@ pub enum TextState {
 pub struct ShowText {
     pub string: String,
     pub width: f32,
-    pub lines: usize,
-    pub font: Handle<Font>
+    pub lines: usize
 }
 
 #[derive(Component)]
@@ -41,11 +43,11 @@ pub struct TextBoxContent {
     width: f32
 }
 impl TextBoxContent {
-    pub fn from(st: &ShowText) -> TextBoxContent {
+    pub fn from(st: &ShowText, font: Handle<Font>) -> TextBoxContent {
         let rt = Formatter::parse_to_graphemes(st.string.clone());
         let lines = rt.to_box(RichTextOptions {
             box_width: st.width - LEFT_MARGIN - RIGHT_MARGIN,
-            font: st.font.clone(),
+            font,
             font_size: 16.0,
             default_color: Color::WHITE,
         });
@@ -125,9 +127,9 @@ impl Plugin for TextPlugin {
 }
 
 impl TextPlugin {
-    fn create_text_frame(mut commands: Commands, mut events: EventReader<ShowText>, query: Query<Entity, With<UI>>) {
+    fn create_text_frame(mut commands: Commands, assets: Res<AssetServer>, mut events: EventReader<ShowText>, query: Query<Entity, With<UI>>) {
         if let Some(e) = events.iter().last() {
-            let e = TextBoxContent::from(e);
+            let e = TextBoxContent::from(e, assets.load(FONT));
             commands.insert_resource(NextState(TextState::Scrolling));
 
             commands
@@ -285,7 +287,7 @@ impl RichText {
             default_color, 
             font } = options;
 
-        let g_font = FontRef::try_from_slice(include_bytes!("../assets/fonts/RobotoMono-Regular.ttf"))
+        let g_font = FontRef::try_from_slice(FONT_BYTES)
             .unwrap();
 
         let mut brush = bevy::text::GlyphBrush::default();

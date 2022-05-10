@@ -1,10 +1,10 @@
-mod intro;
 mod anim;
 mod state;
 mod util;
 mod audio;
 mod text;
 mod controls;
+mod scenes;
 
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
@@ -15,8 +15,8 @@ use bevy_kira_audio::AudioPlugin;
 use bevy_tweening::TweeningPlugin;
 use crate::anim::GlazedAnimator;
 use crate::audio::Cry;
-use crate::controls::{Actions};
-use crate::intro::Title;
+use crate::controls::Actions;
+use crate::scenes::intro::Title;
 use crate::text::TextPlugin;
 use crate::state::GlobalOptions;
 use crate::util::TransitionPlugin;
