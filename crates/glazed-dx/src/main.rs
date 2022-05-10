@@ -21,12 +21,15 @@ use crate::text::TextPlugin;
 use crate::state::GlobalOptions;
 use crate::util::TransitionPlugin;
 
+pub const SCREEN_WIDTH: f32 = 400.0;
+pub const SCREEN_HEIGHT: f32 = 225.0;
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "Pokemon Glazed DX".to_string(),
-            width: 256.0,
-            height: 192.0,
+            width: SCREEN_WIDTH,
+            height: SCREEN_HEIGHT,
             resizable: false,
             ..Default::default()
         })
@@ -36,8 +39,8 @@ fn main() {
         .add_plugin(TweeningPlugin)
         .add_plugin(AudioPlugin)
         .add_plugin(InputManagerPlugin::<Actions>::default())
-        .add_startup_system(setup.label("setup"))
-        .add_startup_system(GlobalOptions::load.label("options").after("setup"))
+        .add_startup_system(setup)
+        .add_startup_system(GlobalOptions::load)
         .add_system(exit_on_esc_system)
 
         // Random Plugins

@@ -5,7 +5,7 @@ use leafwing_input_manager::prelude::ActionState;
 use glazed_data::species::Species;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
 use crate::audio::PlayCry;
-use crate::controls::Actions;
+use crate::controls::{Actions, PlayerControls};
 use crate::{GameState, PlayerData};
 use crate::state::{SaveGameState, Save};
 use crate::util::{despawn, in_transition, Transition, TransitionState};
@@ -264,7 +264,7 @@ fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut 
         ]).build());
 }
 
-fn proceed_on_enter(mut commands: Commands, keys: Query<&ActionState<Actions>, With<PlayerData>>,
+fn proceed_on_enter(mut commands: Commands, keys: PlayerControls,
                     mut writer: EventWriter<Transition>, mut cry: EventWriter<PlayCry>) {
     let keys = keys.iter().next();
     if let Some(keys) = keys {

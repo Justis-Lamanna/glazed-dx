@@ -1,15 +1,13 @@
 use std::time::Duration;
 use bevy::prelude::*;
-use bevy_tweening::Animator;
+use bevy_tweening::{Animator, component_animator_system, Lens};
 use iyes_loopless::prelude::*;
 use iyes_loopless::state::CurrentState;
+use crate::{SCREEN_HEIGHT, SCREEN_WIDTH, UI};
 
 pub fn despawn<T: Component>(mut commands: Commands, marked: Query<Entity, With<T>>) {
     marked.for_each(|e| commands.entity(e).despawn_recursive())
 }
-
-#[derive(Component)]
-pub struct FadeMarker;
 
 #[derive(Copy, Clone, Debug)]
 pub struct TriggerFade {
@@ -77,6 +75,7 @@ impl Plugin for TransitionPlugin {
         app
             .add_loopless_state(TransitionState::None)
             .add_event::<Transition>()
+            .add_system(component_animator_system::<UiColor>)
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(TransitionState::None)
@@ -105,12 +104,14 @@ impl Plugin for TransitionPlugin {
 
 fn monitor_transition_request(mut cmds: Commands, mut reader: EventReader<Transition>) {
     if let Some(t) = reader.iter().last() {
+        info!("Got transition request {:?}", t);
         cmds.insert_resource(t.clone());
         cmds.insert_resource(NextState(TransitionState::In))
     }
 }
 
-fn init_fade_in(mut cmds: Commands, res: Option<Res<Transition>>) {
+fn init_fade_in(mut cmds: Commands, res: Option<Res<Transition>>, mut ui: Query<(Entity, &mut UiColor), With<UI>>) {
+    let (entity, mut ui) = ui.single_mut();
     match res.unwrap().enter {
         // Immediately transition to the next scene
         FadeType::None => cmds.insert_resource(NextState(TransitionState::Between)),
@@ -118,36 +119,22 @@ fn init_fade_in(mut cmds: Commands, res: Option<Res<Transition>>) {
         FadeType::Custom => {},
         // Immediate plop the screen to another color
         FadeType::Immediate(color) => {
-            cmds.spawn_bundle(SpriteBundle {
-                sprite: Sprite {
-                    color,
-                    custom_size: Some(Vec2::new(256.0, 192.0)),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(0.0, 0.0, 999.0),
-                ..Default::default()
-            }).insert(FadeMarker);
+            info!("Fade in to solid color: {:?}", color);
+            *ui = UiColor(color);
             cmds.insert_resource(NextState(TransitionState::Between))
         },
         // Gently fade to a certain color
         FadeType::Gentle(TriggerFade{start, end, duration}) => {
+            info!("Gentle fade in: {:?} => {:?} ({:?})", start, end, duration.as_millis());
             use bevy_tweening::*;
             use bevy_tweening::lens::SpriteColorLens;
             let fade = Tween::new(
                 EaseFunction::QuadraticInOut,
                 bevy_tweening::TweeningType::Once,
                 duration,
-                SpriteColorLens { start, end });
+                UiColorLens { start, end });
 
-            cmds.spawn_bundle(SpriteBundle {
-                sprite: Sprite {
-                    color: start,
-                    custom_size: Some(Vec2::new(256.0, 192.0)),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(0.0, 0.0, 999.0),
-                ..Default::default()
-            }).insert(FadeMarker).insert(Animator::new(fade));
+            cmds.entity(entity).insert(Animator::new(fade));
         }
     }
 }
@@ -163,7 +150,7 @@ fn should_monitor_fade_in(res: Option<Res<Transition>>) -> bool {
     }
 }
 
-fn monitor_fade_in(mut cmds: Commands, query: Query<&Animator<Sprite>, With<FadeMarker>>) {
+fn monitor_fade_in(mut cmds: Commands, query: Query<&Animator<UiColor>, With<UI>>) {
     if let Some(a) = query.iter().last() {
         if a.progress() >= 1.0 {
             cmds.insert_resource(NextState(TransitionState::Between))
@@ -171,8 +158,8 @@ fn monitor_fade_in(mut cmds: Commands, query: Query<&Animator<Sprite>, With<Fade
     }
 }
 
-fn init_fade_out(mut cmds: Commands, res: Option<Res<Transition>>, mut existing: Query<(Entity, &mut Sprite), With<FadeMarker>>) {
-    let (entity, mut sprite) = existing.single_mut();
+fn init_fade_out(mut cmds: Commands, res: Option<Res<Transition>>, mut existing: Query<(Entity, &mut UiColor), With<UI>>) {
+    let (entity, mut ui) = existing.single_mut();
     match res.unwrap().exit {
         // Immediately transition to the next scene
         FadeType::None => cmds.insert_resource(NextState(TransitionState::None)),
@@ -180,23 +167,22 @@ fn init_fade_out(mut cmds: Commands, res: Option<Res<Transition>>, mut existing:
         FadeType::Custom => {},
         // Immediate plop the screen to another color
         FadeType::Immediate(color) => {
-            sprite.color = color;
+            info!("Fade out to solid color: {:?}", color);
+            *ui = UiColor(color);
             cmds.insert_resource(NextState(TransitionState::None));
-            if color.a() == 0.0 {
-                cmds.entity(entity).despawn_recursive();
-            }
         },
         // Gently fade to a certain color
         FadeType::Gentle(TriggerFade{start, end, duration}) => {
+            info!("Gentle fade out: {:?} => {:?} ({:?})", start, end, duration.as_millis());
             use bevy_tweening::*;
             use bevy_tweening::lens::SpriteColorLens;
             let fade = Tween::new(
                 EaseFunction::QuadraticInOut,
                 bevy_tweening::TweeningType::Once,
                 duration,
-                SpriteColorLens { start, end });
+                UiColorLens { start, end });
 
-            sprite.color = start;
+            *ui = UiColor(start);
             cmds.entity(entity).insert(Animator::new(fade));
         }
     }
@@ -213,7 +199,7 @@ fn should_monitor_fade_out(res: Option<Res<Transition>>) -> bool {
     }
 }
 
-fn monitor_fade_out(mut cmds: Commands, query: Query<(Entity, &Animator<Sprite>), With<FadeMarker>>) {
+fn monitor_fade_out(mut cmds: Commands, query: Query<(Entity, &Animator<UiColor>), With<UI>>) {
     if let Some((entity, a)) = query.iter().last() {
         if a.progress() >= 1.0 {
             cmds.insert_resource(NextState(TransitionState::None));
@@ -231,5 +217,22 @@ pub fn in_transition(res: Res<CurrentState<TransitionState>>) -> bool {
         false
     } else {
         true
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct UiColorLens {
+    /// Start color.
+    pub start: Color,
+    /// End color.
+    pub end: Color,
+}
+impl Lens<UiColor> for UiColorLens {
+    fn lerp(&mut self, target: &mut UiColor, ratio: f32) {
+        debug!("Lerp: {}", ratio);
+        let start: Vec4 = self.start.into();
+        let end: Vec4 = self.end.into();
+        let value = start.lerp(end, ratio);
+        *target = UiColor(value.into());
     }
 }
