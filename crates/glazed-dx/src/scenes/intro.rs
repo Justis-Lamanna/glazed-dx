@@ -274,7 +274,7 @@ fn proceed_on_enter(mut commands: Commands, keys: PlayerControls,
                     info!("Starting new game");
                     commands.insert_resource(SaveGameState::NewGame);
                     cry.send(PlayCry(Species::Mew));
-                    writer.send(Transition::gentle(Color::RED, Duration::from_secs(2)));
+                    writer.send(Transition::asymmetrical_fade_to_black(Duration::from_secs(2), Duration::from_secs(5)));
                 },
                 Ok(true) => {
                     info!("Going to load game screen");

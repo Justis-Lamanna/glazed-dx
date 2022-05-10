@@ -9,7 +9,7 @@ pub struct CryHandle(InstanceHandle);
 pub struct PlayCry(pub Species);
 
 impl Cry {
-    const BASE: &'static str = "audio/pkmn-cries";
+    const BASE: &'static str = "pkmn/cries";
     const SUFFIX: &'static str = "ogg";
 
     pub fn channel() -> AudioChannel {

@@ -58,14 +58,10 @@ pub struct Transition {
     pub exit: FadeType
 }
 impl Transition {
-    pub fn gentle(color: Color, duration: Duration) -> Transition {
-        let enter = FadeType::Gentle(TriggerFade::fade_in(color, duration));
-        let exit = FadeType::Gentle(TriggerFade::fade_out(color, duration));
+    pub fn asymmetrical_fade_to_black(ind: Duration, outd: Duration) -> Transition {
+        let enter = FadeType::Gentle(TriggerFade::fade_in(Color::BLACK, ind));
+        let exit = FadeType::Gentle(TriggerFade::fade_out(Color::BLACK, outd));
         Transition { enter, exit }
-    }
-
-    pub fn fade_to_black() -> Transition {
-        Transition::gentle(Color::BLACK, Duration::from_millis(600))
     }
 }
 

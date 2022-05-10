@@ -16,7 +16,9 @@ use bevy_tweening::TweeningPlugin;
 use crate::anim::GlazedAnimator;
 use crate::audio::Cry;
 use crate::controls::Actions;
+use crate::GameState::ProfessorLecture;
 use crate::scenes::intro::Title;
+use crate::scenes::lecture::Lecture;
 use crate::text::TextPlugin;
 use crate::state::GlobalOptions;
 use crate::util::TransitionPlugin;
@@ -60,6 +62,7 @@ fn main() {
 
         // Other states go here
         .add_plugin(Title)
+        .add_plugin(Lecture)
         .run();
 }
 
