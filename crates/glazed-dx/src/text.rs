@@ -5,7 +5,13 @@ use glyph_brush_layout::{ab_glyph::{FontRef, FontArc}, FontId};
 use iyes_loopless::prelude::*;
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::UI;
+use crate::controls::PlayerControls;
+use crate::{Actions, UI};
+
+const LEFT_MARGIN: f32 = 8.0;
+const RIGHT_MARGIN: f32 = 16.0;
+const TOP_MARGIN: f32 = 8.0;
+const BOTTOM_MARGIN: f32 = 8.0;
 
 #[derive(Component)]
 pub struct TextBox;
@@ -38,7 +44,7 @@ impl TextBoxContent {
     pub fn from(st: &ShowText) -> TextBoxContent {
         let rt = Formatter::parse_to_graphemes(st.string.clone());
         let lines = rt.to_box(RichTextOptions {
-            box_width: st.width - 24.0,
+            box_width: st.width - LEFT_MARGIN - RIGHT_MARGIN,
             font: st.font.clone(),
             font_size: 16.0,
             default_color: Color::WHITE,
@@ -93,7 +99,6 @@ impl Plugin for TextPlugin {
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(TextState::None)
-                    .with_system(test)
                     .with_system(TextPlugin::create_text_frame)
                     .into()
             )
@@ -107,6 +112,12 @@ impl Plugin for TextPlugin {
                 ConditionSet::new()
                     .run_in_state(TextState::WaitingForContinue)
                     .with_system(TextPlugin::load_next_on_button_press)
+                    .into()
+            )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(TextState::WaitingForComplete)
+                    .with_system(TextPlugin::clear_text_on_button_press)
                     .into()
             )
             ;
@@ -127,12 +138,12 @@ impl TextPlugin {
                         p.spawn_bundle(TextBundle {
                             style: Style {
                                 margin: Rect {
-                                    left: Val::Px(8.0),
-                                    right: Val::Px(16.0),
-                                    top: Val::Px(8.0),
-                                    bottom: Val::Px(8.0)
+                                    left: Val::Px(LEFT_MARGIN),
+                                    right: Val::Px(RIGHT_MARGIN),
+                                    top: Val::Px(TOP_MARGIN),
+                                    bottom: Val::Px(BOTTOM_MARGIN)
                                 },
-                                max_size: Size::new(Val::Px(232.0), Val::Auto),
+                                max_size: Size::new(Val::Px(e.width), Val::Auto),
                                 ..default()
                             },
                             text: Text { sections: vec![], alignment: default() },
@@ -171,22 +182,23 @@ impl TextPlugin {
         }
     }
 
-    fn load_next_on_button_press(mut commands: Commands, controls: Res<Input<KeyCode>>) {
-        if controls.just_released(KeyCode::Space) {
+    fn load_next_on_button_press(mut commands: Commands, controls: PlayerControls) {
+        if controls.single().just_released(Actions::Accept) {
             commands.insert_resource(NextState(TextState::Scrolling));
+        }
+    }
+
+    fn clear_text_on_button_press(mut commands: Commands, controls: PlayerControls, query: Query<Entity, With<TextBox>>) {
+        if controls.single().just_released(Actions::Accept) {
+            let id = query.single();
+            commands.entity(id).despawn_recursive();
+            commands.insert_resource(NextState(TextState::None));
         }
     }
 }
 
-fn test(controls: Res<Input<KeyCode>>, mut speak: EventWriter<ShowText>, assets: Res<AssetServer>) {
-    if controls.just_released(KeyCode::Space) {
-        speak.send(ShowText {
-            string: "Alternatively...I have no idea if this works with the hard break?".to_string(),
-            width: 256.0,
-            lines: 2,
-            font: assets.load("fonts/RobotoMono-Regular.ttf")
-        });
-    }
+pub fn text_box_up(state: CurrentState<TextState>) -> bool {
+    matches!(state, CurrentState(TextState::None)) == false
 }
 
 // Below this is all the fancy logic for supporting "rich" text. 

@@ -34,6 +34,8 @@ glyph_brush_layout = "0.2.3"
 iyes_loopless = "0.5.1"
 bevy_kira_audio = "0.9.0"
 bevy_tweening = "0.4.0"
+leafwing-input-manager = "0.3.0"
+
 glazed_core = { path = "../glazed-core" }
 glazed_data = { path = "../glazed-data" }
 glazed_battle = { path = "../glazed-battle" }

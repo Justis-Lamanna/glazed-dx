@@ -1,10 +1,12 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
+use leafwing_input_manager::prelude::ActionState;
 use glazed_data::species::Species;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
 use crate::audio::PlayCry;
-use crate::GameState;
+use crate::controls::Actions;
+use crate::{GameState, PlayerData};
 use crate::state::{SaveGameState, Save};
 use crate::util::{despawn, in_transition, Transition, TransitionState};
 
@@ -262,23 +264,26 @@ fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut 
         ]).build());
 }
 
-fn proceed_on_enter(mut commands: Commands, keys: Res<Input<KeyCode>>,
+fn proceed_on_enter(mut commands: Commands, keys: Query<&ActionState<Actions>, With<PlayerData>>,
                     mut writer: EventWriter<Transition>, mut cry: EventWriter<PlayCry>) {
-    if keys.just_pressed(KeyCode::Return) {
-        match Save::check_for_saves() {
-            Ok(false) => {
-                info!("Starting new game");
-                commands.insert_resource(SaveGameState::NewGame);
-                cry.send(PlayCry(Species::Mew));
-                writer.send(Transition::gentle(Color::RED, Duration::from_secs(2)));
-            },
-            Ok(true) => {
-                info!("Going to load game screen");
-                panic!();
-            },
-            Err(()) => {
-                info!("Access error. Ask if the player wants to continue");
-                panic!();
+    let keys = keys.iter().next();
+    if let Some(keys) = keys {
+        if keys.just_pressed(Actions::Accept) {
+            match Save::check_for_saves() {
+                Ok(false) => {
+                    info!("Starting new game");
+                    commands.insert_resource(SaveGameState::NewGame);
+                    cry.send(PlayCry(Species::Mew));
+                    writer.send(Transition::gentle(Color::RED, Duration::from_secs(2)));
+                },
+                Ok(true) => {
+                    info!("Going to load game screen");
+                    panic!();
+                },
+                Err(()) => {
+                    info!("Access error. Ask if the player wants to continue");
+                    panic!();
+                }
             }
         }
     }
