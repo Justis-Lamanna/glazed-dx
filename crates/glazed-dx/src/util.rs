@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_tweening::{Animator, component_animator_system, Lens};
 use iyes_loopless::prelude::*;
 use iyes_loopless::state::CurrentState;
-use crate::{SCREEN_HEIGHT, SCREEN_WIDTH, UI};
+use crate::UI;
 
 pub fn despawn<T: Component>(mut commands: Commands, marked: Query<Entity, With<T>>) {
     marked.for_each(|e| commands.entity(e).despawn_recursive())

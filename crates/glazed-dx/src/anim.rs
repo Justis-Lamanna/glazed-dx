@@ -1,6 +1,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::time::Duration;
 use bevy::prelude::*;
+use bevy_tweening::Lens;
 
 pub struct GlazedAnimator;
 impl Plugin for GlazedAnimator {
@@ -262,5 +263,137 @@ impl Timeline {
 
     pub fn is_complete(&self) -> bool {
         self.complete
+    }
+}
+
+/// Describes some form of curve that can be interpolated
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum BezierCurve {
+    /// A linear "curve" which smoothly travels between two points
+    Linear(Vec2, Vec2),
+    /// A quadratic curve which travels from p0 to p2.
+    /// Being a Bezier curve, the curve does not necessarily hit p1. Instead, this point
+    /// determines the direction and sharpness of the curve. 
+    /// Formally, for any parameter T, the output point is equal to:
+    /// lerp(lerp(p0, p1, T), lerp(p1, p2, T), T)
+    /// Where lerp uses the same formula as the Linear curve
+    Quadratic(Vec2, Vec2, Vec2),
+    /// A cubic curve which travels from p0 to p3.
+    /// Being a Bezier curve, the curve does not necessarily hit p1 or p2. Instead, these
+    /// points determine the direction and sharpness of the curve.
+    /// Formally, for any parameter T, the output point is equal to:
+    /// lerp3(lerp3(p0, p1, p2, T), lerp3(p1, p2, p3, T), lerp3(p2, p3, p4, T), T)
+    /// Where lerp3 uses the same formula as the Quadratic curve
+    Cubic(Vec2, Vec2, Vec2, Vec2)
+}
+impl BezierCurve {
+    pub fn lerp(&self, ratio: f32) -> Vec2 {
+        match self {
+            BezierCurve::Linear(start, end) => {
+                Self::bound(ratio, *start, *end, || start.lerp(*end, ratio))
+            },
+            BezierCurve::Quadratic(start, middle, end) => {
+                Self::bound(ratio, *start, *end, 
+                    || Self::lerp_three(*start, *middle, *end, ratio))
+            },
+            BezierCurve::Cubic(one, two, three, four) => {
+                Self::bound(ratio, *one, *four, 
+                || Self::lerp_three(
+                    one.lerp(*two, ratio),
+                    two.lerp(*three, ratio),
+                    three.lerp(*four, ratio),
+                    ratio
+                ))
+            }
+        }
+    }
+
+    pub fn start(&self) -> Vec2 {
+        match self {
+            BezierCurve::Linear(start, _) | 
+            BezierCurve::Quadratic(start, _, _) | 
+            BezierCurve::Cubic(start, _, _, _) => *start
+        }
+    }
+
+    pub fn end(&self) -> Vec2 {
+        match self {
+            BezierCurve::Linear(_, end) | 
+            BezierCurve::Quadratic(_, _, end) | 
+            BezierCurve::Cubic(_, _, _, end) => *end
+        }
+    }
+
+    pub fn path(self) -> Path {
+        Path {
+            path: vec![self]
+        }
+    }
+
+    fn bound<T, F: Fn() -> T>(ratio: f32, lb: T, ub: T, mid: F) -> T {
+        if ratio <= 0.0 { lb }
+        else if ratio >= 1.0 { ub }
+        else { mid() }
+    }
+
+    fn lerp_three(one: Vec2, two: Vec2, three: Vec2, ratio: f32) -> Vec2 {
+        let one = one.lerp(two, ratio);
+        let two = two.lerp(three, ratio);
+        one.lerp(two, ratio)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Path {
+    path: Vec<BezierCurve>
+}
+impl Path {
+    pub fn then_linear(mut self, to: Vec2) -> Path {
+        let p = self.path.last().unwrap().end();
+        self.path.push(BezierCurve::Linear(p, to));
+        self
+    }
+
+    pub fn then_quadratic(mut self, mid: Vec2, to: Vec2) -> Path {
+        let p = self.path.last().unwrap().end();
+        self.path.push(BezierCurve::Quadratic(p, mid, to));
+        self
+    }
+
+    pub fn then_cubic(mut self, mid1: Vec2, mid2: Vec2, to: Vec2) -> Path {
+        let p = self.path.last().unwrap().end();
+        self.path.push(BezierCurve::Cubic(p, mid1, mid2, to));
+        self
+    }
+
+    // To do: then_* functions don't enforce smoothness. We should be able to smartly
+    // determine the mid or mid1 parameters to create a smooth path, but
+    // my brain is too tired right now.
+
+    pub fn lerp(&self, ratio: f32) -> Vec2 {
+        if ratio <= 0.0 { self.path.first().unwrap().start() }
+        else if ratio >= 1.0 { self.path.last().unwrap().end() }
+        else {
+            let multiply = ratio * (self.path.len() as f32);
+            let index = multiply.trunc();
+            let inner_ratio = multiply - index;
+
+            // Math makes it so index must be [0,path length)
+            // inner_ratio must be [0, 1)
+            self.path[index as usize].lerp(inner_ratio)
+        }
+    }
+}
+impl From<BezierCurve> for Path {
+    fn from(b: BezierCurve) -> Self {
+        b.path()
+    }
+}
+
+impl Lens<Transform> for Path {
+    fn lerp(&mut self, target: &mut Transform, ratio: f32) {
+        let point = Path::lerp(&self, ratio);
+        target.translation.x = point.x;
+        target.translation.y = point.y;
     }
 }

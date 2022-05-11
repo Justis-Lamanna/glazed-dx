@@ -1,12 +1,11 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
-use leafwing_input_manager::prelude::ActionState;
 use glazed_data::species::Species;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
 use crate::audio::PlayCry;
 use crate::controls::{Actions, PlayerControls};
-use crate::{GameState, PlayerData};
+use crate::GameState;
 use crate::state::{SaveGameState, Save};
 use crate::util::{despawn, in_transition, Transition, TransitionState};
 
