@@ -1,8 +1,11 @@
+use std::ops::{DerefMut, Deref};
 use std::time::Duration;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, component_animator_system, Lens};
 use iyes_loopless::prelude::*;
 use iyes_loopless::state::CurrentState;
+use rand::SeedableRng;
+use rand_xoshiro::Xoshiro256StarStar;
 use crate::UI;
 
 pub fn despawn<T: Component>(mut commands: Commands, marked: Query<Entity, With<T>>) {
@@ -230,5 +233,43 @@ impl Lens<UiColor> for UiColorLens {
         let end: Vec4 = self.end.into();
         let value = start.lerp(end, ratio);
         *target = UiColor(value.into());
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RootRng {
+    rng: Xoshiro256StarStar
+}
+#[derive(Debug, Clone)]
+pub struct Rng {
+    inner: Xoshiro256StarStar
+}
+impl Deref for Rng {
+    type Target = Xoshiro256StarStar;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+impl DerefMut for Rng {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+impl FromWorld for Rng {
+    fn from_world(world: &mut World) -> Self {
+        match world.get_resource_mut::<RootRng>() {
+            Some(mut rng) => {
+                Rng { inner: rng.rng.clone() } 
+            }
+            None => Rng { inner: Xoshiro256StarStar::from_entropy() }
+        }
+    }
+}
+
+pub struct RngPlugin;
+impl Plugin for RngPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(RootRng { rng: Xoshiro256StarStar::from_entropy() });
     }
 }
