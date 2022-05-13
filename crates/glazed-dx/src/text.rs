@@ -5,7 +5,7 @@ use glyph_brush_layout::{ab_glyph::{FontRef, FontArc}, FontId};
 use iyes_loopless::prelude::*;
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::controls::PlayerControls;
+use crate::{controls::PlayerControls, SCREEN_WIDTH};
 use crate::{Actions, UI};
 
 const LEFT_MARGIN: f32 = 8.0;
@@ -44,10 +44,26 @@ pub struct ShowText {
     pub lines: usize,
     pub endOfTextAction: EndOfTextAction
 }
+impl ShowText {
+    pub fn new(string: String) -> Self {
+        Self {
+            string,
+            width: SCREEN_WIDTH,
+            lines: 0,
+            endOfTextAction: EndOfTextAction::default(),
+        }
+    }
+
+    pub fn with_max_lines(mut self, count: usize) -> Self {
+        self.lines = count;
+        self
+    }
+}
 
 #[derive(Component)]
 pub struct TextBoxContent {
-    lines: Vec<Vec<TextSection>>,
+    lines: Vec<Page>,
+    current_page: usize,
     current_line: usize,
     /// 0 indicates all lines should be visible.
     lines_per_page: usize,
@@ -56,7 +72,6 @@ pub struct TextBoxContent {
 impl TextBoxContent {
     pub fn from(st: &ShowText, font: Handle<Font>) -> TextBoxContent {
         let rt = Formatter::parse_to_graphemes(st.string.clone());
-        info!("Text: {:?}", rt);
         let lines = rt.to_box(RichTextOptions {
             box_width: st.width - LEFT_MARGIN - RIGHT_MARGIN,
             font,
@@ -73,14 +88,24 @@ impl TextBoxContent {
         TextBoxContent {
             lines,
             current_line: 0,
+            current_page: 0,
             lines_per_page,
             width: st.width
         }
     }
 
+    pub fn get_current_page(&self) -> &Page {
+        &self.lines[self.current_page]
+    }
+
     pub fn get_current_page_size(&self) -> Size<Val> {
-        let total_lines_left = self.lines.len() - self.current_line;
-        let lines = total_lines_left.min(self.lines_per_page);
+        let current_page = &self.lines[self.current_page];
+        let lines = if self.lines_per_page == 0 {
+            current_page.lines.len()
+        } else {
+            let total_lines_left = current_page.number_of_lines() - self.current_line;
+            total_lines_left.min(self.lines_per_page)
+        };
         Size::new(Val::Px(self.width), Val::Px(((lines + 1) as f32) * 16.0))
     }
 
@@ -96,11 +121,54 @@ impl TextBoxContent {
     }
 
     pub fn get_current_page_range(&self) -> Range<usize> {
-        self.current_line..(self.current_line + self.lines_per_page)
+        if self.lines_per_page == 0 {
+            0..self.get_current_page().lines.len()
+        } else {
+            self.current_line..(self.current_line + self.lines_per_page)
+        }
     }
 
-    pub fn is_at_end(&self) -> bool {
-        self.current_line >= self.lines.len()
+    pub fn advance(&mut self) -> bool {
+        self.current_line += self.lines_per_page;
+        if self.current_line >= self.get_current_page().lines.len() || self.lines_per_page == 0 {
+            self.current_line = 0;
+            self.current_page += 1;
+            if self.current_page >= self.lines.len() {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn reverse(&mut self) -> bool {
+        if self.current_line > self.lines_per_page {
+            let l = self.current_line - self.lines_per_page;
+            if l != 0 {
+                self.current_line = l;
+                true
+            } else {
+                false
+            }
+        } else if self.current_page > 1 {
+            // We've already advanced to the next page, even though we're on the current
+            // page, so we actually need to go two pages back to get to the previous page.
+            self.current_page -= 2;
+            // Calculating the last line...
+            let total_page_lines = self.get_current_page().lines.len();
+            if self.lines_per_page == 0 {
+                self.current_line = 0;
+            } else {
+                let lines_on_last_page = total_page_lines % self.lines_per_page;
+                if lines_on_last_page == 0 {
+                    self.current_line = total_page_lines - self.lines_per_page;
+                } else {
+                    self.current_line = total_page_lines - lines_on_last_page;
+                }
+            }   
+            true
+        } else {
+            false
+        }
     }
 }
 
@@ -176,8 +244,8 @@ impl TextPlugin {
     ) {
         for (parent, mut text, mut content) in query.iter_mut() {
             let sections = content.get_current_page_range()
-                .filter_map(|idx| content.lines.get(idx))
-                .flat_map(|section| section.iter())
+                .filter_map(|idx| content.get_current_page().lines.get(idx))
+                .flat_map(|section| section.content.iter())
                 .map(|v| v.clone())
                 .collect::<Vec<_>>();
 
@@ -185,9 +253,8 @@ impl TextPlugin {
             style.size = content.get_current_page_size();
 
             text.sections = sections;
-            content.current_line += content.lines_per_page;
 
-            let next_state = if content.is_at_end() {
+            let next_state = if content.advance() {
                 TextState::WaitingForComplete
             } else {
                 TextState::WaitingForContinue
@@ -197,17 +264,30 @@ impl TextPlugin {
         }
     }
 
-    fn load_next_on_button_press(mut commands: Commands, controls: PlayerControls) {
-        if controls.single().just_released(Actions::Accept) {
+    fn load_next_on_button_press(mut commands: Commands, controls: PlayerControls, mut query: Query<&mut TextBoxContent>) {
+        let controls = controls.single();
+        if controls.just_released(Actions::Accept) {
             commands.insert_resource(NextState(TextState::Scrolling));
+        } else if controls.just_released(Actions::Cancel) {
+            let mut tc = query.single_mut();
+            if tc.reverse() {
+                commands.insert_resource(NextState(TextState::Scrolling));  
+            }
         }
     }
 
-    fn clear_text_on_button_press(mut commands: Commands, controls: PlayerControls, query: Query<Entity, With<TextBox>>) {
-        if controls.single().just_released(Actions::Accept) {
+    fn clear_text_on_button_press(mut commands: Commands, controls: PlayerControls, 
+        query: Query<Entity, With<TextBox>>, mut scroll: Query<&mut TextBoxContent>) {
+        let controls = controls.single();
+        if controls.just_released(Actions::Accept) {
             let id = query.single();
             commands.entity(id).despawn_recursive();
             commands.insert_resource(NextState(TextState::None));
+        } else if controls.just_released(Actions::Cancel) {
+            let mut tc = scroll.single_mut();
+            if tc.reverse() {
+                commands.insert_resource(NextState(TextState::Scrolling));
+            }
         }
     }
 }
@@ -237,6 +317,7 @@ impl Formatter {
                         Some("2") => color = Some(Color::BLACK),
                         _ => {}
                     },
+                    "r" => color = None,
                     _ => {}
                  }
                  escaped = false;
@@ -298,6 +379,10 @@ impl Page {
     fn new_line(&mut self) {
         self.lines.push(Line::default())
     }
+
+    fn number_of_lines(&self) -> usize {
+        self.lines.len()
+    }
 }
 
 #[derive(Default, Debug)]
@@ -325,7 +410,7 @@ impl RichText {
         }
     }
 
-    pub fn to_box(&self, options: RichTextOptions) -> Vec<Vec<TextSection>> {
+    pub fn to_box(&self, options: RichTextOptions) -> Vec<Page> {
         let RichTextOptions { 
             box_width: width, 
             font_size, 
@@ -350,18 +435,12 @@ impl RichText {
             .unwrap();
 
         let mut prev_line_no = usize::MAX;
-        let mut lines: Vec<Vec<TextSection>> = Vec::new();
         let mut pages: Vec<Page> = vec![Page::default()];
         let mut last_data: Option<&CharData> = None;
         for (idx, (data, glyph)) in self.graphemes.iter().zip(calc_graphemes.iter()).enumerate() {
             let line_no = glyph.glyph.position.y.trunc() as usize;
             if prev_line_no != line_no {
                 if prev_line_no != usize::MAX {
-                    info!("Break at idx {}", idx);
-                    // For ease, every new line gets marked with a \n. 
-                    let ts = lines.last_mut().unwrap().last_mut().unwrap();
-                    ts.value.push_str("\n");
-                
                     if self.hard_breaks.contains(&idx) {
                         // A hard break indicates we want a new page
                         pages.push(Page::default());
@@ -370,7 +449,6 @@ impl RichText {
                         pages.last_mut().unwrap().last_line().append("\n");
                     }
                 }
-                lines.push(Vec::new());
                 pages.last_mut().unwrap().new_line();
                 last_data = None;
             }
@@ -382,15 +460,6 @@ impl RichText {
             };
 
             if is_boundary {
-                lines.last_mut().unwrap().push(TextSection {
-                    style: TextStyle {
-                        font: font.clone(),
-                        font_size,
-                        color: data.color.unwrap_or(default_color)
-                    },
-                    ..default()
-                });
-
                 pages.last_mut().unwrap().last_line().next_section(TextSection {
                     style: TextStyle {
                         font: font.clone(),
@@ -401,16 +470,12 @@ impl RichText {
                 });
             }
             
-            let ts = lines.last_mut().unwrap().last_mut().unwrap();
-            ts.value.push_str(data.grapheme.as_str());
-
             pages.last_mut().unwrap().last_line().append(data.grapheme.as_str());
 
             prev_line_no = line_no;
             last_data = Some(data);
         }
 
-        info!("Pages: {:?}", pages);
-        lines
+        pages
     }
 }

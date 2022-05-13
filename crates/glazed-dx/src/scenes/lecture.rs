@@ -130,11 +130,8 @@ fn despawn_complete_pokeballs(mut commands: Commands, query: Query<(Entity, &Ani
 fn display_welcome_text(mut triggered: Local<bool>, mut text: EventWriter<ShowText>) {
     if !*triggered {
         *triggered = true;
-        text.send(ShowText {
-            string: "Hello, and welcome to the world of Pokemon!\nMy name is Oak, and people call me the Pokemon Professor.".into(),
-            width: SCREEN_WIDTH,
-            lines: 2,
-            endOfTextAction: crate::text::EndOfTextAction::CloseOnButton,
-        })
+        text.send(ShowText::new(
+            "Hello, and welcome to the world of <c2Pokemon<r!\nMy name is Oak, and people call me the Pokemon Professor.".into()
+        ).with_max_lines(2));
     }
 }
