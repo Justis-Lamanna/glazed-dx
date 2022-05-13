@@ -1,11 +1,11 @@
-use std::ops::Range;
+use std::{ops::Range, time::Duration};
 
 use bevy::{prelude::*, utils::HashSet};
 use glyph_brush_layout::{ab_glyph::{FontRef, FontArc}, FontId};
 use iyes_loopless::prelude::*;
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::{controls::PlayerControls, SCREEN_WIDTH};
+use crate::{controls::PlayerControls, SCREEN_WIDTH, util::despawn};
 use crate::{Actions, UI};
 
 const LEFT_MARGIN: f32 = 8.0;
@@ -16,8 +16,17 @@ const BOTTOM_MARGIN: f32 = 8.0;
 pub const FONT: &'static str = "fonts/GBBoot.ttf";
 const FONT_BYTES: &'static[u8] = include_bytes!("../assets/fonts/GBBoot.ttf");
 
+const WAITING_1: &'static str = "icons/waiting0.png";
+const WAITING_2: &'static str = "icons/waiting1.png";
+const WAITING_3: &'static str = "icons/waiting2.png";
+const CLOSE_1: &'static str = "icons/close0.png";
+const CLOSE_2: &'static str = "icons/close1.png";
+
 #[derive(Component)]
 pub struct TextBox(EndOfTextAction);
+
+#[derive(Component)]
+pub struct InputMarker(usize, Timer);
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum TextState {
@@ -57,6 +66,43 @@ impl ShowText {
     pub fn with_max_lines(mut self, count: usize) -> Self {
         self.lines = count;
         self
+    }
+}
+
+pub struct TextPlugin;
+impl Plugin for TextPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_event::<ShowText>()
+            .add_loopless_state(TextState::None)
+            .add_exit_system(TextState::WaitingForContinue, despawn::<InputMarker>)
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(TextState::None)
+                    .with_system(TextPlugin::create_text_frame)
+                    .into()
+            )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(TextState::Scrolling)
+                    .with_system(TextPlugin::load_in_page)
+                    .into()
+            )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(TextState::WaitingForContinue)
+                    .with_system(TextPlugin::load_next_on_button_press)
+                    .with_system(TextPlugin::animate_waiting)
+                    .into()
+            )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(TextState::WaitingForComplete)
+                    .with_system(TextPlugin::clear_text_on_button_press)
+                    .with_system(TextPlugin::animate_wait_closing)
+                    .into()
+            )
+            ;
     }
 }
 
@@ -172,40 +218,6 @@ impl TextBoxContent {
     }
 }
 
-pub struct TextPlugin;
-impl Plugin for TextPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .add_event::<ShowText>()
-            .add_loopless_state(TextState::None)
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(TextState::None)
-                    .with_system(TextPlugin::create_text_frame)
-                    .into()
-            )
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(TextState::Scrolling)
-                    .with_system(TextPlugin::load_in_page)
-                    .into()
-            )
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(TextState::WaitingForContinue)
-                    .with_system(TextPlugin::load_next_on_button_press)
-                    .into()
-            )
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(TextState::WaitingForComplete)
-                    .with_system(TextPlugin::clear_text_on_button_press)
-                    .into()
-            )
-            ;
-    }
-}
-
 impl TextPlugin {
     fn create_text_frame(mut commands: Commands, assets: Res<AssetServer>, mut events: EventReader<ShowText>, query: Query<Entity, With<UI>>) {
         if let Some(e) = events.iter().last() {
@@ -238,7 +250,7 @@ impl TextPlugin {
         }
     }
 
-    fn load_in_page(mut commands: Commands, 
+    fn load_in_page(mut commands: Commands, assets: Res<AssetServer>,
         mut query: Query<(&Parent, &mut Text, &mut TextBoxContent)>,
         mut p_query: Query<&mut Style, With<TextBox>>
     ) {
@@ -255,8 +267,32 @@ impl TextPlugin {
             text.sections = sections;
 
             let next_state = if content.advance() {
+                commands.entity(parent.0)
+                    .with_children(|p| {
+                        p.spawn_bundle(NodeBundle {
+                            style: Style {
+                                size: Size::new(Val::Px(16.0), Val::Px(16.0)),
+                                ..default()
+                            },
+                            image: UiImage(assets.load(CLOSE_1)),
+                            ..default()
+                        })
+                        .insert(InputMarker(1, Timer::from_seconds(1.0, true)));
+                    });
                 TextState::WaitingForComplete
             } else {
+                commands.entity(parent.0)
+                    .with_children(|p| {
+                        p.spawn_bundle(NodeBundle {
+                            style: Style {
+                                size: Size::new(Val::Px(24.0), Val::Px(16.0)),
+                                ..default()
+                            },
+                            image: UiImage(assets.load(WAITING_1)),
+                            ..default()
+                        })
+                        .insert(InputMarker(1, Timer::from_seconds(1.0, true)));
+                    });
                 TextState::WaitingForContinue
             };
 
@@ -287,6 +323,37 @@ impl TextPlugin {
             let mut tc = scroll.single_mut();
             if tc.reverse() {
                 commands.insert_resource(NextState(TextState::Scrolling));
+            }
+        }
+    }
+
+    fn animate_waiting(time: Res<Time>, assets: Res<AssetServer>,
+        mut query: Query<(&mut InputMarker, &mut UiImage)>) {
+        for (mut marker, mut image) in query.iter_mut() {
+            marker.1.tick(time.delta());
+            if marker.1.just_finished() {
+                let (file, next) = match marker.0 {
+                    0 => (WAITING_1, 1),
+                    1 => (WAITING_2, 2),
+                    _ => (WAITING_3, 0),
+                };
+                marker.0 = next;
+                *image = UiImage(assets.load(file));
+            }
+        }
+    }
+
+    fn animate_wait_closing(time: Res<Time>, assets: Res<AssetServer>,
+        mut query: Query<(&mut InputMarker, &mut UiImage)>) {
+        for (mut marker, mut image) in query.iter_mut() {
+            marker.1.tick(time.delta());
+            if marker.1.just_finished() {
+                let (file, next) = match marker.0 {
+                    0 => (CLOSE_1, 1),
+                    _ => (CLOSE_2, 0),
+                };
+                marker.0 = next;
+                *image = UiImage(assets.load(file));
             }
         }
     }
