@@ -5,6 +5,7 @@ use serde::{Deserialize, Deserializer};
 use bevy::reflect::TypeUuid;
 use crate::controls::Actions;
 use crate::PlayerData;
+use crate::util::RootRng;
 
 #[derive(Deserialize, Default, TypeUuid, Debug)]
 #[uuid = "b2f760f1-ea7a-41c7-a293-f37304558f88"]
@@ -14,7 +15,9 @@ pub struct GlobalOptions {
     #[serde(default)]
     pub keyboard_controls: Controls<KeyCode>,
     #[serde(default)]
-    pub gamepad_controls: Controls<GamepadButtonType>
+    pub gamepad_controls: Controls<GamepadButtonType>,
+    #[serde(default)]
+    pub seed: Option<String>
 }
 impl GlobalOptions {
     pub fn load(mut commands: Commands) {
@@ -52,6 +55,10 @@ impl GlobalOptions {
                 action_state: ActionState::default(),
                 input_map: m
             });
+
+        // Want a new seed? True randomness is dumb anyway.
+        commands.insert_resource(go.seed.as_ref().map(|s| RootRng::seed(s))
+            .unwrap_or_default());
 
         commands.insert_resource(go);
     }

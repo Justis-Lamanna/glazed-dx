@@ -5,7 +5,7 @@ use bevy_tweening::{Tween, EaseFunction, lens::{TransformPositionLens, SpriteCol
 use iyes_loopless::prelude::*;
 use rand::Rng as o;
 
-use crate::{App, GameState, Plugin, util::{despawn, Rng}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE};
+use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::ShowText, SCREEN_WIDTH};
 
 #[derive(Component)]
 pub struct LectureAsset;
@@ -14,8 +14,13 @@ pub struct LectureAsset;
 pub enum LectureState {
     Opening
 }
-#[derive(Component)]
-pub struct Wait(Timer);
+#[derive(Component, Deref, DerefMut)]
+pub struct PokeballTimer(Timer);
+impl Default for PokeballTimer {
+    fn default() -> Self {
+        Self(Timer::new(Duration::from_millis(500), true))
+    }
+}
 
 pub struct Lecture;
 impl Plugin for Lecture {
@@ -31,6 +36,13 @@ impl Plugin for Lecture {
                     .with_system(despawn_complete_pokeballs)
                     .into()
             )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(GameState::ProfessorLecture)
+                    .run_if_not(in_transition)
+                    .with_system(display_welcome_text)
+                    .into()
+            )
         ;
     }
 }
@@ -41,19 +53,15 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
         ..default()
     }).insert(LectureAsset);
 
-    commands.spawn().insert(Wait(Timer::new(Duration::from_millis(500), true)));
+    // commands.spawn().insert(Wait();
 }
 
 // Cute background effect with Pokeballs. Makes the scene feel a bit dynamic
 fn spawn_pokeballs(mut commands: Commands, assets: Res<AssetServer>, 
-    time: Res<Time>, mut query: Query<&mut Wait>, mut rng: Local<Rng>) {
+    time: Res<Time>, mut timer: Local<PokeballTimer>, mut rng: Local<Rng>) {
     
-    let mut timer = match query.iter_mut().next() {
-        Some(t) => t,
-        None => return
-    };
-    timer.0.tick(time.delta());
-    if timer.0.just_finished() {
+    timer.tick(time.delta());
+    if timer.just_finished() {
         for _ in 0..2 {
             // Every 500 ms, generate two random Pokeballs.
             // Each Pokeball starts just above the top of the screen, and slides down
@@ -116,5 +124,17 @@ fn despawn_complete_pokeballs(mut commands: Commands, query: Query<(Entity, &Ani
         if a.progress() == 1.0 {
             commands.entity(entity).despawn();
         }
+    }
+}
+
+fn display_welcome_text(mut triggered: Local<bool>, mut text: EventWriter<ShowText>) {
+    if !*triggered {
+        *triggered = true;
+        text.send(ShowText {
+            string: "Hello, and welcome to the world of Pokemon!\nMy name is Oak, and people call me the Pokemon Professor.".into(),
+            width: SCREEN_WIDTH,
+            lines: 2,
+            endOfTextAction: crate::text::EndOfTextAction::CloseOnButton,
+        })
     }
 }

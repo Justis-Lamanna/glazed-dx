@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashSet};
 use glyph_brush_layout::{ab_glyph::{FontRef, FontArc}, FontId};
 use iyes_loopless::prelude::*;
 use unicode_segmentation::UnicodeSegmentation;
@@ -17,7 +17,7 @@ pub const FONT: &'static str = "fonts/GBBoot.ttf";
 const FONT_BYTES: &'static[u8] = include_bytes!("../assets/fonts/GBBoot.ttf");
 
 #[derive(Component)]
-pub struct TextBox;
+pub struct TextBox(EndOfTextAction);
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum TextState {
@@ -27,11 +27,22 @@ pub enum TextState {
     WaitingForComplete
 }
 
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+pub enum EndOfTextAction {
+    CloseOnButton
+}
+impl Default for EndOfTextAction {
+    fn default() -> Self {
+        EndOfTextAction::CloseOnButton
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct ShowText {
     pub string: String,
     pub width: f32,
-    pub lines: usize
+    pub lines: usize,
+    pub endOfTextAction: EndOfTextAction
 }
 
 #[derive(Component)]
@@ -45,6 +56,7 @@ pub struct TextBoxContent {
 impl TextBoxContent {
     pub fn from(st: &ShowText, font: Handle<Font>) -> TextBoxContent {
         let rt = Formatter::parse_to_graphemes(st.string.clone());
+        info!("Text: {:?}", rt);
         let lines = rt.to_box(RichTextOptions {
             box_width: st.width - LEFT_MARGIN - RIGHT_MARGIN,
             font,
@@ -129,13 +141,14 @@ impl Plugin for TextPlugin {
 impl TextPlugin {
     fn create_text_frame(mut commands: Commands, assets: Res<AssetServer>, mut events: EventReader<ShowText>, query: Query<Entity, With<UI>>) {
         if let Some(e) = events.iter().last() {
-            let e = TextBoxContent::from(e, assets.load(FONT));
+            let content = TextBoxContent::from(e, assets.load(FONT));
             commands.insert_resource(NextState(TextState::Scrolling));
 
             commands
                 .entity(query.single())
                 .with_children(|p| {
-                    p.spawn_bundle(e.create_frame_node()).insert(TextBox)
+                    p.spawn_bundle(content.create_frame_node())
+                        .insert(TextBox(e.endOfTextAction))
                     .with_children(|p| {
                         p.spawn_bundle(TextBundle {
                             style: Style {
@@ -151,7 +164,7 @@ impl TextPlugin {
                             text: Text { sections: vec![], alignment: default() },
                             ..default()
                         })
-                        .insert(e);
+                        .insert(content);
                     });
                 });
         }
@@ -259,9 +272,39 @@ pub struct RichTextOptions {
 }
 
 #[derive(Default, Debug)]
+pub struct Line {
+    content: Vec<TextSection>
+}
+impl Line {
+    fn append(&mut self, word: &str) {
+        let ts = self.content.last_mut().unwrap();
+        ts.value.push_str(word);
+    }
+
+    fn next_section(&mut self, section: TextSection) {
+        self.content.push(section);
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct Page {
+    lines: Vec<Line>
+}
+impl Page {
+    fn last_line(&mut self) -> &mut Line {
+        self.lines.last_mut().unwrap()
+    }
+
+    fn new_line(&mut self) {
+        self.lines.push(Line::default())
+    }
+}
+
+#[derive(Default, Debug)]
 struct RichText {
     unformatted: String,
-    graphemes: Vec<CharData>
+    graphemes: Vec<CharData>,
+    hard_breaks: HashSet<usize>
 }
 impl RichText {
     pub fn push<S: ToString>(&mut self, grapheme: S, color: Option<Color>) {
@@ -277,7 +320,9 @@ impl RichText {
                 color,
             };
             self.graphemes.push(cd);
-        }   
+        } else {
+            self.hard_breaks.insert(self.graphemes.len());
+        }
     }
 
     pub fn to_box(&self, options: RichTextOptions) -> Vec<Vec<TextSection>> {
@@ -306,16 +351,27 @@ impl RichText {
 
         let mut prev_line_no = usize::MAX;
         let mut lines: Vec<Vec<TextSection>> = Vec::new();
+        let mut pages: Vec<Page> = vec![Page::default()];
         let mut last_data: Option<&CharData> = None;
-        for (data, glyph) in self.graphemes.iter().zip(calc_graphemes.iter()) {
+        for (idx, (data, glyph)) in self.graphemes.iter().zip(calc_graphemes.iter()).enumerate() {
             let line_no = glyph.glyph.position.y.trunc() as usize;
             if prev_line_no != line_no {
                 if prev_line_no != usize::MAX {
+                    info!("Break at idx {}", idx);
                     // For ease, every new line gets marked with a \n. 
                     let ts = lines.last_mut().unwrap().last_mut().unwrap();
                     ts.value.push_str("\n");
+                
+                    if self.hard_breaks.contains(&idx) {
+                        // A hard break indicates we want a new page
+                        pages.push(Page::default());
+                    } else {
+                        // A soft break stays on the same page
+                        pages.last_mut().unwrap().last_line().append("\n");
+                    }
                 }
                 lines.push(Vec::new());
+                pages.last_mut().unwrap().new_line();
                 last_data = None;
             }
 
@@ -334,15 +390,27 @@ impl RichText {
                     },
                     ..default()
                 });
+
+                pages.last_mut().unwrap().last_line().next_section(TextSection {
+                    style: TextStyle {
+                        font: font.clone(),
+                        font_size,
+                        color: data.color.unwrap_or(default_color)
+                    },
+                    ..default()
+                });
             }
             
             let ts = lines.last_mut().unwrap().last_mut().unwrap();
             ts.value.push_str(data.grapheme.as_str());
 
+            pages.last_mut().unwrap().last_line().append(data.grapheme.as_str());
+
             prev_line_no = line_no;
             last_data = Some(data);
         }
 
+        info!("Pages: {:?}", pages);
         lines
     }
 }

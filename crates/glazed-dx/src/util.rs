@@ -1,11 +1,12 @@
-use std::ops::{DerefMut, Deref};
-use std::time::Duration;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, component_animator_system, Lens};
 use iyes_loopless::prelude::*;
 use iyes_loopless::state::CurrentState;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256StarStar;
+use std::collections::hash_map::DefaultHasher;
+use std::time::Duration;
+use std::hash::{Hash, Hasher};
 use crate::UI;
 
 pub fn despawn<T: Component>(mut commands: Commands, marked: Query<Entity, With<T>>) {
@@ -202,7 +203,6 @@ fn monitor_fade_out(mut cmds: Commands, query: Query<(Entity, &Animator<UiColor>
     if let Some((entity, a)) = query.iter().last() {
         if a.progress() >= 1.0 {
             cmds.insert_resource(NextState(TransitionState::None));
-            cmds.entity(entity).despawn_recursive();
         }
     }
 }
@@ -236,40 +236,35 @@ impl Lens<UiColor> for UiColorLens {
     }
 }
 
-#[derive(Debug, Clone)]
+//Randomness. Inspired by bevy_random, which is no longer maintained.
+#[derive(Debug, Clone, Default)]
 pub struct RootRng {
-    rng: Xoshiro256StarStar
+    seed: Option<u64>
 }
-#[derive(Debug, Clone)]
-pub struct Rng {
-    inner: Xoshiro256StarStar
-}
-impl Deref for Rng {
-    type Target = Xoshiro256StarStar;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-impl DerefMut for Rng {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
-    }
-}
-impl FromWorld for Rng {
-    fn from_world(world: &mut World) -> Self {
-        match world.get_resource_mut::<RootRng>() {
-            Some(mut rng) => {
-                Rng { inner: rng.rng.clone() } 
-            }
-            None => Rng { inner: Xoshiro256StarStar::from_entropy() }
+impl RootRng {
+    /// Seed the RNG with anything that can be hashed.
+    pub fn seed<T: Hash>(seed: T) -> RootRng {
+        let mut hasher = DefaultHasher::new();
+        seed.hash(&mut hasher);
+        RootRng {
+            seed: Some(hasher.finish())
         }
     }
 }
 
-pub struct RngPlugin;
-impl Plugin for RngPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(RootRng { rng: Xoshiro256StarStar::from_entropy() });
+/// A resource that generates random numbers.
+/// If there is no global seed, the rng is seeded randomly. 
+/// If there is a global seed, all instances of Rng are seeded with it.
+/// This makes the game exceedingly predictable, but some people want it that way.
+#[derive(Debug, Clone, Deref, DerefMut)]
+pub struct Rng(Xoshiro256StarStar);
+impl FromWorld for Rng {
+    fn from_world(world: &mut World) -> Self {
+        let inner = world.get_resource::<RootRng>()
+            .and_then(|rng| rng.seed)
+            .map_or_else(
+                || Xoshiro256StarStar::from_entropy(), 
+                |s| Xoshiro256StarStar::seed_from_u64(s));
+        Rng(inner)
     }
 }

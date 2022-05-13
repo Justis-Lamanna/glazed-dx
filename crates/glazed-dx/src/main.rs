@@ -13,7 +13,6 @@ use leafwing_input_manager::prelude::*;
 use bevy::input::system::exit_on_esc_system;
 use bevy_kira_audio::AudioPlugin;
 use bevy_tweening::TweeningPlugin;
-use util::RngPlugin;
 use crate::anim::GlazedAnimator;
 use crate::audio::Cry;
 use crate::controls::Actions;
@@ -45,7 +44,6 @@ fn main() {
         .add_plugin(TweeningPlugin)
         .add_plugin(AudioPlugin)
         .add_plugin(InputManagerPlugin::<Actions>::default())
-        .add_plugin(RngPlugin)
         .add_startup_system(setup)
         .add_startup_system(GlobalOptions::load)
         .add_system(exit_on_esc_system)
