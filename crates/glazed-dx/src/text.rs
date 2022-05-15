@@ -13,8 +13,8 @@ const RIGHT_MARGIN: f32 = 16.0;
 const TOP_MARGIN: f32 = 8.0;
 const BOTTOM_MARGIN: f32 = 8.0;
 
-pub const FONT: &'static str = "fonts/GBBoot.ttf";
-const FONT_BYTES: &'static[u8] = include_bytes!("../assets/fonts/GBBoot.ttf");
+pub const FONT: &'static str = "fonts/Font.ttf";
+const FONT_BYTES: &'static[u8] = include_bytes!("../assets/fonts/Font.ttf");
 
 const WAITING_1: &'static str = "icons/waiting0.png";
 const WAITING_2: &'static str = "icons/waiting1.png";

@@ -23,7 +23,7 @@ use crate::state::GlobalOptions;
 use crate::util::TransitionPlugin;
 
 pub const SCREEN_WIDTH: f32 = 400.0;
-pub const SCREEN_HEIGHT: f32 = 225.0;
+pub const SCREEN_HEIGHT: f32 = 224.0;
 pub const LEFT_EDGE: f32 = -(SCREEN_WIDTH / 2.0);
 pub const RIGHT_EDGE: f32 = SCREEN_WIDTH / 2.0;
 pub const TOP_EDGE: f32 = SCREEN_HEIGHT / 2.0;

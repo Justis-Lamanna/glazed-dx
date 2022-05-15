@@ -7,6 +7,8 @@ use rand::Rng as o;
 
 use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::ShowText, SCREEN_WIDTH};
 
+const GREETINGS: &'static str = "Greetings, and welcome to the world of Pokémon!\nMy name is Professor Willow. Some people happen to call me the Pokémon Professor. I study Pokémon for a living! With my research, we can learn all about these mysterious creatures.";
+
 #[derive(Component)]
 pub struct LectureAsset;
 
@@ -47,13 +49,20 @@ impl Plugin for Lecture {
     }
 }
 
-fn setup(mut commands: Commands, assets: Res<AssetServer>) {
+fn setup(mut commands: Commands, assets: Res<AssetServer>, mut textures: ResMut<Assets<TextureAtlas>>) {
     commands.spawn_bundle(SpriteBundle {
         texture: assets.load("lecture/background.png"),
         ..default()
     }).insert(LectureAsset);
 
-    // commands.spawn().insert(Wait();
+    commands.spawn_bundle(SpriteSheetBundle {
+        texture_atlas: textures.add(TextureAtlas::from_grid(
+            assets.load("lecture/professor.png"),
+            Vec2::new(128.0, 160.0), 2, 1
+        )),
+            transform: Transform::from_xyz(-8.0, 16.0, 20.0),
+        ..default()
+    }).insert(LectureAsset);
 }
 
 // Cute background effect with Pokeballs. Makes the scene feel a bit dynamic
@@ -130,8 +139,7 @@ fn despawn_complete_pokeballs(mut commands: Commands, query: Query<(Entity, &Ani
 fn display_welcome_text(mut triggered: Local<bool>, mut text: EventWriter<ShowText>) {
     if !*triggered {
         *triggered = true;
-        text.send(ShowText::new(
-            "Hello, and welcome to the world of <c2Pokemon<r!\nMy name is Oak, and people call me the Pokemon Professor.".into()
+        text.send(ShowText::new(GREETINGS.into()
         ).with_max_lines(2));
     }
 }
