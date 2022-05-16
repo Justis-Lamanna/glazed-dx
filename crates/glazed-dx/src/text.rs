@@ -1,9 +1,9 @@
-use std::{ops::Range, time::Duration};
-
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{prelude::*, utils::HashSet, ecs::system::SystemParam};
 use glyph_brush_layout::{ab_glyph::{FontRef, FontArc}, FontId};
 use iyes_loopless::prelude::*;
+
 use unicode_segmentation::UnicodeSegmentation;
+use std::{ops::Range, time::Duration};
 
 use crate::{controls::PlayerControls, SCREEN_WIDTH, util::despawn};
 use crate::{Actions, UI};
@@ -47,19 +47,19 @@ impl Default for EndOfTextAction {
 }
 
 #[derive(Default, Debug)]
-pub struct ShowText {
+pub struct TextBoxOptions {
     pub string: String,
     pub width: f32,
     pub lines: usize,
-    pub endOfTextAction: EndOfTextAction
+    pub end_of_text_action: EndOfTextAction
 }
-impl ShowText {
+impl TextBoxOptions {
     pub fn new(string: String) -> Self {
         Self {
             string,
             width: SCREEN_WIDTH,
             lines: 0,
-            endOfTextAction: EndOfTextAction::default(),
+            end_of_text_action: EndOfTextAction::default(),
         }
     }
 
@@ -69,19 +69,17 @@ impl ShowText {
     }
 }
 
+#[derive(Debug)]
+pub struct EndOfText;
+
 pub struct TextPlugin;
 impl Plugin for TextPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_event::<ShowText>()
+            .add_event::<EndOfText>()
             .add_loopless_state(TextState::None)
             .add_exit_system(TextState::WaitingForContinue, despawn::<InputMarker>)
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(TextState::None)
-                    .with_system(TextPlugin::create_text_frame)
-                    .into()
-            )
+            .add_exit_system(TextState::WaitingForComplete, despawn::<InputMarker>)
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(TextState::Scrolling)
@@ -107,7 +105,7 @@ impl Plugin for TextPlugin {
 }
 
 #[derive(Component)]
-pub struct TextBoxContent {
+pub struct TextBoxState {
     lines: Vec<Page>,
     current_page: usize,
     current_line: usize,
@@ -115,8 +113,8 @@ pub struct TextBoxContent {
     lines_per_page: usize,
     width: f32
 }
-impl TextBoxContent {
-    pub fn from(st: &ShowText, font: Handle<Font>) -> TextBoxContent {
+impl TextBoxState {
+    pub fn from(st: &TextBoxOptions, font: Handle<Font>) -> TextBoxState {
         let rt = Formatter::parse_to_graphemes(st.string.clone());
         let lines = rt.to_box(RichTextOptions {
             box_width: st.width - LEFT_MARGIN - RIGHT_MARGIN,
@@ -131,7 +129,7 @@ impl TextBoxContent {
             st.lines
         };
 
-        TextBoxContent {
+        TextBoxState {
             lines,
             current_line: 0,
             current_page: 0,
@@ -174,61 +172,74 @@ impl TextBoxContent {
         }
     }
 
-    pub fn advance(&mut self) -> bool {
-        self.current_line += self.lines_per_page;
-        if self.current_line >= self.get_current_page().lines.len() || self.lines_per_page == 0 {
-            self.current_line = 0;
-            self.current_page += 1;
-            if self.current_page >= self.lines.len() {
-                return true;
-            }
-        }
-        false
-    }
-
-    pub fn reverse(&mut self) -> bool {
-        if self.current_line > self.lines_per_page {
-            let l = self.current_line - self.lines_per_page;
-            if l != 0 {
-                self.current_line = l;
-                true
+    pub fn is_at_end(&self) -> bool {
+        if self.lines_per_page == 0 {
+            let next_page = self.current_page + 1;
+            next_page >= self.lines.len()
+        } else {
+            let next_line = self.current_line + self.lines_per_page;
+            if next_line >= self.get_current_page().lines.len() {
+                let next_page = self.current_page + 1;
+                next_page >= self.lines.len()
             } else {
                 false
             }
-        } else if self.current_page > 1 {
-            // We've already advanced to the next page, even though we're on the current
-            // page, so we actually need to go two pages back to get to the previous page.
-            self.current_page -= 2;
-            // Calculating the last line...
-            let total_page_lines = self.get_current_page().lines.len();
-            if self.lines_per_page == 0 {
-                self.current_line = 0;
-            } else {
-                let lines_on_last_page = total_page_lines % self.lines_per_page;
-                if lines_on_last_page == 0 {
-                    self.current_line = total_page_lines - self.lines_per_page;
-                } else {
-                    self.current_line = total_page_lines - lines_on_last_page;
-                }
-            }   
-            true
+        }
+    }
+
+    pub fn is_at_beginning(&self) -> bool {
+        self.current_line == 0 && self.current_page == 0
+    }
+
+    pub fn advance(&mut self) {
+        if self.lines_per_page == 0 {
+            self.current_page += 1;
         } else {
-            false
+            self.current_line += self.lines_per_page;
+            if self.current_line >= self.get_current_page().lines.len() {
+                self.current_line = 0;
+                self.current_page += 1;
+            }
+        }
+    }
+
+    pub fn reverse(&mut self) {
+        if self.lines_per_page == 0 {
+            self.current_page = self.current_page.saturating_sub(1);
+        } else {
+            if self.current_line < self.lines_per_page {
+                self.current_page = self.current_page.saturating_sub(1);
+                let total_lines_for_page = self.get_current_page().lines.len();
+                let last_chunk_line_size = total_lines_for_page % self.lines_per_page;
+                if last_chunk_line_size == 0 {
+                    self.current_line = total_lines_for_page - self.lines_per_page;
+                } else {
+                    self.current_line = total_lines_for_page - last_chunk_line_size;
+                }
+            } else {
+                self.current_line -= self.lines_per_page;
+            }
         }
     }
 }
 
-impl TextPlugin {
-    fn create_text_frame(mut commands: Commands, assets: Res<AssetServer>, mut events: EventReader<ShowText>, query: Query<Entity, With<UI>>) {
-        if let Some(e) = events.iter().last() {
-            let content = TextBoxContent::from(e, assets.load(FONT));
-            commands.insert_resource(NextState(TextState::Scrolling));
+#[derive(SystemParam)]
+pub struct TextBoxSystem<'w, 's> {
+    commands: Commands<'w, 's>,
+    assets: Res<'w, AssetServer>,
+    query: Query<'w, 's, Entity, With<UI>>
+}
+impl<'w, 's> TextBoxSystem<'w, 's> {
+    pub fn show<T: Into<TextBoxOptions>>(&mut self, text: T) {
+        let text = text.into();
+        let content = TextBoxState::from(&text, self.assets.load(FONT));
+        self.commands.insert_resource(NextState(TextState::Scrolling));
 
-            commands
-                .entity(query.single())
-                .with_children(|p| {
-                    p.spawn_bundle(content.create_frame_node())
-                        .insert(TextBox(e.endOfTextAction))
+        self.commands
+            .entity(self.query.single())
+            .with_children(|p| {
+                p.spawn_bundle(content.create_frame_node())
+                    .insert(TextBox(text.end_of_text_action))
                     .with_children(|p| {
                         p.spawn_bundle(TextBundle {
                             style: Style {
@@ -238,21 +249,22 @@ impl TextPlugin {
                                     top: Val::Px(TOP_MARGIN),
                                     bottom: Val::Px(BOTTOM_MARGIN)
                                 },
-                                max_size: Size::new(Val::Px(e.width), Val::Auto),
+                                max_size: Size::new(Val::Px(text.width), Val::Auto),
                                 ..default()
                             },
                             text: Text { sections: vec![], alignment: default() },
                             ..default()
                         })
-                        .insert(content);
+                            .insert(content);
                     });
-                });
-        }
+            });
     }
+}
 
+impl TextPlugin {
     fn load_in_page(mut commands: Commands, assets: Res<AssetServer>,
-        mut query: Query<(&Parent, &mut Text, &mut TextBoxContent)>,
-        mut p_query: Query<&mut Style, With<TextBox>>
+                    mut query: Query<(&Parent, &mut Text, &mut TextBoxState)>,
+                    mut p_query: Query<&mut Style, With<TextBox>>
     ) {
         for (parent, mut text, mut content) in query.iter_mut() {
             let sections = content.get_current_page_range()
@@ -266,7 +278,7 @@ impl TextPlugin {
 
             text.sections = sections;
 
-            let next_state = if content.advance() {
+            let next_state = if content.is_at_end() {
                 commands.entity(parent.0)
                     .with_children(|p| {
                         p.spawn_bundle(NodeBundle {
@@ -300,28 +312,32 @@ impl TextPlugin {
         }
     }
 
-    fn load_next_on_button_press(mut commands: Commands, controls: PlayerControls, mut query: Query<&mut TextBoxContent>) {
+    fn load_next_on_button_press(mut commands: Commands, controls: PlayerControls, mut query: Query<&mut TextBoxState>) {
         let controls = controls.single();
+        let mut tc = query.single_mut();
         if controls.just_released(Actions::Accept) {
+            tc.advance();
             commands.insert_resource(NextState(TextState::Scrolling));
         } else if controls.just_released(Actions::Cancel) {
-            let mut tc = query.single_mut();
-            if tc.reverse() {
+            if !tc.is_at_beginning() {
+                tc.reverse();
                 commands.insert_resource(NextState(TextState::Scrolling));  
             }
         }
     }
 
-    fn clear_text_on_button_press(mut commands: Commands, controls: PlayerControls, 
-        query: Query<Entity, With<TextBox>>, mut scroll: Query<&mut TextBoxContent>) {
+    fn clear_text_on_button_press(mut commands: Commands, controls: PlayerControls,
+                                  query: Query<Entity, With<TextBox>>, mut scroll: Query<&mut TextBoxState>, mut finished: EventWriter<EndOfText>) {
         let controls = controls.single();
         if controls.just_released(Actions::Accept) {
             let id = query.single();
             commands.entity(id).despawn_recursive();
             commands.insert_resource(NextState(TextState::None));
+            finished.send(EndOfText);
         } else if controls.just_released(Actions::Cancel) {
             let mut tc = scroll.single_mut();
-            if tc.reverse() {
+            if !tc.is_at_beginning() {
+                tc.reverse();
                 commands.insert_resource(NextState(TextState::Scrolling));
             }
         }

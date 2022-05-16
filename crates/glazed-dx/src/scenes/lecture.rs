@@ -7,8 +7,9 @@ use rand::Rng as o;
 
 use glazed_data::species::Species;
 
-use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::ShowText, SCREEN_WIDTH};
+use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::TextBoxOptions, SCREEN_WIDTH};
 use crate::pkmn::{PokemonSprite, SpriteRequest};
+use crate::text::TextBoxSystem;
 
 const GREETINGS: &'static str = "Greetings, and welcome to the world of Pokémon!\nMy name is Professor Willow. Some people happen to call me the Pokémon Professor. I study Pokémon for a living! With my research, we can learn all about these mysterious creatures.";
 
@@ -145,9 +146,9 @@ fn despawn_complete_pokeballs(mut commands: Commands, query: Query<(Entity, &Ani
     }
 }
 
-fn display_welcome_text(mut triggered: Local<bool>, mut text: EventWriter<ShowText>) {
+fn display_welcome_text(mut triggered: Local<bool>, mut text: TextBoxSystem) {
     if !*triggered {
         *triggered = true;
-        text.send(ShowText::new(GREETINGS.into()).with_max_lines(2));
+        text.show(TextBoxOptions::new(GREETINGS.into()).with_max_lines(2));
     }
 }
