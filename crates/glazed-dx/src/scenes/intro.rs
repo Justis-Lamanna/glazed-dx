@@ -3,9 +3,8 @@ use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 use glazed_data::species::Species;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
-use crate::pkmn::PlayCry;
 use crate::controls::{Actions, PlayerControls};
-use crate::GameState;
+use crate::{Cry, GameState};
 use crate::state::{SaveGameState, Save};
 use crate::util::{despawn, in_transition, Transition, TransitionState};
 
@@ -264,7 +263,7 @@ fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut 
 }
 
 fn proceed_on_enter(mut commands: Commands, keys: PlayerControls,
-                    mut writer: EventWriter<Transition>, mut cry: EventWriter<PlayCry>) {
+                    mut writer: EventWriter<Transition>, mut cry: Cry) {
     let keys = keys.iter().next();
     if let Some(keys) = keys {
         if keys.just_pressed(Actions::Accept) {
@@ -272,7 +271,7 @@ fn proceed_on_enter(mut commands: Commands, keys: PlayerControls,
                 Ok(false) => {
                     info!("Starting new game");
                     commands.insert_resource(SaveGameState::NewGame);
-                    cry.send(PlayCry(Species::Mew));
+                    cry.play_cry(Species::Mew);
                     writer.send(Transition::asymmetrical_fade_to_black(Duration::from_secs(2), Duration::from_secs(5)));
                 },
                 Ok(true) => {

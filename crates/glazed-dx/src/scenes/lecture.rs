@@ -5,7 +5,10 @@ use bevy_tweening::{Tween, EaseFunction, lens::{TransformPositionLens, SpriteCol
 use iyes_loopless::prelude::*;
 use rand::Rng as o;
 
+use glazed_data::species::Species;
+
 use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::ShowText, SCREEN_WIDTH};
+use crate::pkmn::{PokemonSprite, SpriteRequest};
 
 const GREETINGS: &'static str = "Greetings, and welcome to the world of Pokémon!\nMy name is Professor Willow. Some people happen to call me the Pokémon Professor. I study Pokémon for a living! With my research, we can learn all about these mysterious creatures.";
 
@@ -49,7 +52,7 @@ impl Plugin for Lecture {
     }
 }
 
-fn setup(mut commands: Commands, assets: Res<AssetServer>, mut textures: ResMut<Assets<TextureAtlas>>) {
+fn setup(mut commands: Commands, assets: Res<AssetServer>, mut textures: ResMut<Assets<TextureAtlas>>, ps: PokemonSprite) {
     commands.spawn_bundle(SpriteBundle {
         texture: assets.load("lecture/background.png"),
         ..default()
@@ -60,9 +63,15 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>, mut textures: ResMut<
             assets.load("lecture/professor.png"),
             Vec2::new(128.0, 160.0), 2, 1
         )),
-            transform: Transform::from_xyz(-8.0, 16.0, 20.0),
+        transform: Transform::from_xyz(-8.0, 16.0, 20.0),
         ..default()
     }).insert(LectureAsset);
+
+    commands.spawn_bundle(SpriteBundle {
+        texture: ps.get_front_sprite(Species::Bulbasaur),
+        transform: Transform::from_xyz(0.0, 0.0, 50.0),
+        ..default()
+    });
 }
 
 // Cute background effect with Pokeballs. Makes the scene feel a bit dynamic

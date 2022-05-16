@@ -50,7 +50,6 @@ fn main() {
 
         // Random Plugins
         .add_plugin(TransitionPlugin)
-        .add_plugin(Cry)
         .add_plugin(TextPlugin)
 
         // Splash Screen
