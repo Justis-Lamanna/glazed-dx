@@ -46,7 +46,7 @@ impl Default for EndOfTextAction {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct TextBoxOptions {
     pub string: String,
     pub width: f32,
@@ -66,6 +66,32 @@ impl TextBoxOptions {
     pub fn with_max_lines(mut self, count: usize) -> Self {
         self.lines = count;
         self
+    }
+}
+impl Default for TextBoxOptions {
+    fn default() -> Self {
+        TextBoxOptions {
+            string: "".into(),
+            width: SCREEN_WIDTH,
+            lines: 0,
+            end_of_text_action: default()
+        }
+    }
+}
+impl From<String> for TextBoxOptions {
+    fn from(s: String) -> Self {
+        TextBoxOptions {
+            string: s,
+            ..default()
+        }
+    }
+}
+impl From<&str> for TextBoxOptions {
+    fn from(s: &str) -> Self {
+        TextBoxOptions {
+            string: s.to_string(),
+            ..default()
+        }
     }
 }
 
@@ -123,17 +149,11 @@ impl TextBoxState {
             default_color: Color::WHITE,
         });
 
-        let lines_per_page = if st.lines == 0 {
-            lines.len()
-        } else {
-            st.lines
-        };
-
         TextBoxState {
             lines,
             current_line: 0,
             current_page: 0,
-            lines_per_page,
+            lines_per_page: st.lines,
             width: st.width
         }
     }

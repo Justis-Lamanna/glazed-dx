@@ -9,16 +9,24 @@ use glazed_data::species::Species;
 
 use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::TextBoxOptions, SCREEN_WIDTH};
 use crate::pkmn::{PokemonSprite, SpriteRequest};
-use crate::text::TextBoxSystem;
+use crate::text::{EndOfText, TextBoxSystem};
 
 const GREETINGS: &'static str = "Greetings, and welcome to the world of Pokémon!\nMy name is Professor Willow. Some people happen to call me the Pokémon Professor. I study Pokémon for a living! With my research, we can learn all about these mysterious creatures.";
 
 #[derive(Component)]
 pub struct LectureAsset;
 
+#[derive(Component)]
+pub struct Professor;
+
+#[derive(Component)]
+pub struct DemoPokemon;
+
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum LectureState {
-    Opening
+    Opening,
+    Introduction,
+    ShowPokemon
 }
 #[derive(Component, Deref, DerefMut)]
 pub struct PokeballTimer(Timer);
@@ -45,10 +53,19 @@ impl Plugin for Lecture {
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(GameState::ProfessorLecture)
+                    .run_in_state(LectureState::Opening)
                     .run_if_not(in_transition)
                     .with_system(display_welcome_text)
                     .into()
             )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(GameState::ProfessorLecture)
+                    .run_in_state(LectureState::Introduction)
+                    .with_system(watch_welcome_text)
+                    .into()
+            )
+            .add_enter_system(LectureState::ShowPokemon, make_pokemon_appear)
         ;
     }
 }
@@ -66,13 +83,20 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>, mut textures: ResMut<
         )),
         transform: Transform::from_xyz(-8.0, 16.0, 20.0),
         ..default()
-    }).insert(LectureAsset);
+    })
+        .insert(LectureAsset)
+        .insert(Professor);
 
     commands.spawn_bundle(SpriteBundle {
         texture: ps.get_front_sprite(Species::Bulbasaur),
         transform: Transform::from_xyz(0.0, 0.0, 50.0),
+        visibility: Visibility {
+            is_visible: false
+        },
         ..default()
-    });
+    })
+        .insert(LectureAsset)
+        .insert(DemoPokemon);
 }
 
 // Cute background effect with Pokeballs. Makes the scene feel a bit dynamic
@@ -146,9 +170,7 @@ fn despawn_complete_pokeballs(mut commands: Commands, query: Query<(Entity, &Ani
     }
 }
 
-fn display_welcome_text(mut triggered: Local<bool>, mut text: TextBoxSystem) {
-    if !*triggered {
-        *triggered = true;
-        text.show(TextBoxOptions::new(GREETINGS.into()).with_max_lines(2));
-    }
+fn display_welcome_text(mut commands: Commands, mut text: TextBoxSystem) {
+    commands.insert_resource(NextState(LectureState::Introduction));
+    text.show(TextBoxOptions::new(GREETINGS.into()).with_max_lines(2));
 }
