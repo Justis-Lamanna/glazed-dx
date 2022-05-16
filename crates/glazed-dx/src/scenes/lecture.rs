@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
+use bevy_sequential_actions::*;
 use bevy_tweening::{Tween, EaseFunction, lens::{TransformPositionLens, SpriteColorLens, TransformRotateZLens}, Animator, Sequence, Delay, EaseMethod, Tracks};
 use iyes_loopless::prelude::*;
 use rand::Rng as o;
@@ -8,8 +9,11 @@ use rand::Rng as o;
 use glazed_data::species::Species;
 
 use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::TextBoxOptions, SCREEN_WIDTH};
+use crate::actions::delay::WaitAction;
+use crate::actions::graphics::ChangeFrame;
 use crate::pkmn::{PokemonSprite, SpriteRequest};
 use crate::text::{EndOfText, TextBoxSystem};
+use crate::actions::text::ShowTextAction;
 
 const GREETINGS: &'static str = "Greetings, and welcome to the world of Pokémon!\nMy name is Professor Willow. Some people happen to call me the Pokémon Professor. I study Pokémon for a living! With my research, we can learn all about these mysterious creatures.";
 
@@ -58,14 +62,6 @@ impl Plugin for Lecture {
                     .with_system(display_welcome_text)
                     .into()
             )
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(GameState::ProfessorLecture)
-                    .run_in_state(LectureState::Introduction)
-                    .with_system(watch_welcome_text)
-                    .into()
-            )
-            .add_enter_system(LectureState::ShowPokemon, make_pokemon_appear)
         ;
     }
 }
@@ -170,7 +166,14 @@ fn despawn_complete_pokeballs(mut commands: Commands, query: Query<(Entity, &Ani
     }
 }
 
-fn display_welcome_text(mut commands: Commands, mut text: TextBoxSystem) {
+fn display_welcome_text(mut commands: Commands) {
     commands.insert_resource(NextState(LectureState::Introduction));
-    text.show(TextBoxOptions::new(GREETINGS.into()).with_max_lines(2));
+    // text.show(TextBoxOptions::new(GREETINGS.into()).with_max_lines(2));
+    let timeline = commands.spawn_bundle(ActionsBundle::default()).id();
+    commands.action(timeline)
+        .add(WaitAction(Duration::from_secs(2)))
+        .add(ShowTextAction(GREETINGS.into()))
+        .add(WaitAction(Duration::from_millis(200)))
+        .add(ChangeFrame::<Professor>::new(1))
+    ;
 }

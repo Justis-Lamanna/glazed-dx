@@ -46,7 +46,7 @@ impl Default for EndOfTextAction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TextBoxOptions {
     pub string: String,
     pub width: f32,
@@ -253,11 +253,13 @@ impl<'w, 's> TextBoxSystem<'w, 's> {
     pub fn show<T: Into<TextBoxOptions>>(&mut self, text: T) {
         let text = text.into();
         let content = TextBoxState::from(&text, self.assets.load(FONT));
+        info!("{}", text.string);
         self.commands.insert_resource(NextState(TextState::Scrolling));
 
         self.commands
             .entity(self.query.single())
             .with_children(|p| {
+                info!("Creating child");
                 p.spawn_bundle(content.create_frame_node())
                     .insert(TextBox(text.end_of_text_action))
                     .with_children(|p| {
@@ -286,6 +288,7 @@ impl TextPlugin {
                     mut query: Query<(&Parent, &mut Text, &mut TextBoxState)>,
                     mut p_query: Query<&mut Style, With<TextBox>>
     ) {
+        info!("Here");
         for (parent, mut text, mut content) in query.iter_mut() {
             let sections = content.get_current_page_range()
                 .filter_map(|idx| content.get_current_page().lines.get(idx))

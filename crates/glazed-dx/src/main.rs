@@ -5,6 +5,7 @@ mod pkmn;
 mod text;
 mod controls;
 mod scenes;
+mod actions;
 
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
@@ -51,6 +52,7 @@ fn main() {
         // Random Plugins
         .add_plugin(TransitionPlugin)
         .add_plugin(TextPlugin)
+        .add_plugin(actions::ActionsPlugin)
 
         // Splash Screen
         .add_loopless_state(GameState::Splash)
