@@ -139,7 +139,6 @@ fn despawn_complete_pokeballs(mut commands: Commands, query: Query<(Entity, &Ani
 fn display_welcome_text(mut triggered: Local<bool>, mut text: EventWriter<ShowText>) {
     if !*triggered {
         *triggered = true;
-        text.send(ShowText::new(GREETINGS.into()
-        ).with_max_lines(2));
+        text.send(ShowText::new(GREETINGS.into()).with_max_lines(2));
     }
 }
