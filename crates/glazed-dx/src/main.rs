@@ -1,7 +1,7 @@
 mod anim;
 mod state;
 mod util;
-mod audio;
+mod pkmn;
 mod text;
 mod controls;
 mod scenes;
@@ -14,7 +14,7 @@ use bevy::input::system::exit_on_esc_system;
 use bevy_kira_audio::AudioPlugin;
 use bevy_tweening::TweeningPlugin;
 use crate::anim::GlazedAnimator;
-use crate::audio::Cry;
+use crate::pkmn::Cry;
 use crate::controls::Actions;
 use crate::scenes::intro::Title;
 use crate::scenes::lecture::Lecture;

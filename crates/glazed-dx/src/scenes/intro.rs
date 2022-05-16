@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 use glazed_data::species::Species;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
-use crate::audio::PlayCry;
+use crate::pkmn::PlayCry;
 use crate::controls::{Actions, PlayerControls};
 use crate::GameState;
 use crate::state::{SaveGameState, Save};
