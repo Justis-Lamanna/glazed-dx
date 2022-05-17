@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 use serde::{Deserialize, Deserializer};
 use bevy::reflect::TypeUuid;
+use glazed_data::species::Species;
 use crate::controls::Actions;
 use crate::PlayerData;
 use crate::util::RootRng;
@@ -17,7 +18,9 @@ pub struct GlobalOptions {
     #[serde(default)]
     pub gamepad_controls: Controls<GamepadButtonType>,
     #[serde(default)]
-    pub seed: Option<String>
+    pub seed: Option<String>,
+    #[serde(default)]
+    pub intro_pokemon: Option<Species>
 }
 impl GlobalOptions {
     pub fn load(mut commands: Commands) {

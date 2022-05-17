@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 use bevy::prelude::*;
 use bevy::ecs::system::SystemParam;
-use bevy_kira_audio::{Audio, AudioChannel, InstanceHandle};
+use bevy_kira_audio::{Audio, AudioChannel, InstanceHandle, PlaybackState};
 use glazed_data::pokemon::{Gender, Pokemon};
 
 use glazed_data::species::{ForcesOfNatureForm, KyuremForm, ShayminForm, Species, SpeciesDiscriminants};
@@ -12,7 +12,8 @@ pub struct Cry<'w, 's> {
     audio: Res<'w, Audio>,
     assets: Res<'w, AssetServer>,
     options: Res<'w, GlobalOptions>,
-    commands: Commands<'w, 's>
+    commands: Commands<'w, 's>,
+    handle: Option<Res<'w, CryHandle>>
 }
 
 pub struct CryHandle(InstanceHandle);
@@ -52,6 +53,15 @@ impl<'w, 's> Cry<'w, 's> {
         );
 
         self.commands.insert_resource(CryHandle(h))
+    }
+
+    pub fn is_cry_complete(&self) -> bool {
+        if let Some(a) = &self.handle {
+            let state = self.audio.state(a.0.clone());
+            matches!(state, PlaybackState::Stopped)
+        } else {
+            true
+        }
     }
 }
 
