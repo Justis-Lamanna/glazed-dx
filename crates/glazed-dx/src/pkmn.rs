@@ -1,4 +1,3 @@
-use std::marker::PhantomData;
 use bevy::prelude::*;
 use bevy::ecs::system::SystemParam;
 use bevy_kira_audio::{Audio, AudioChannel, InstanceHandle, PlaybackState};
@@ -90,6 +89,7 @@ impl From<Species> for SpriteRequest {
 }
 
 #[derive(SystemParam)]
+#[allow(dead_code)]
 pub struct PokemonSprite<'w, 's> {
     asset_server: Res<'w, AssetServer>,
     marker: Query<'w, 's, ()>
@@ -108,10 +108,10 @@ impl<'w, 's> PokemonSprite<'w, 's> {
         self.get_battle_sprite(request.species, request.gender, request.shiny, true)
     }
 
-    pub fn get_back_sprite<T: Into<SpriteRequest>>(&self, request: T) -> Handle<Image> {
-        let request = request.into();
-        self.get_battle_sprite(request.species, request.gender, request.shiny, false)
-    }
+    // pub fn get_back_sprite<T: Into<SpriteRequest>>(&self, request: T) -> Handle<Image> {
+    //     let request = request.into();
+    //     self.get_battle_sprite(request.species, request.gender, request.shiny, false)
+    // }
 
     fn get_battle_sprite(&self, species: Species, _gender: Gender, shiny: bool, front: bool) -> Handle<Image> {
         let species_path: &str = match species {

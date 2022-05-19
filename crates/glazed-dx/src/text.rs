@@ -3,7 +3,7 @@ use glyph_brush_layout::{ab_glyph::{FontRef, FontArc}, FontId};
 use iyes_loopless::prelude::*;
 
 use unicode_segmentation::UnicodeSegmentation;
-use std::{ops::Range, time::Duration};
+use std::ops::Range;
 
 use crate::{controls::PlayerControls, SCREEN_WIDTH, util::despawn};
 use crate::{Actions, UI};

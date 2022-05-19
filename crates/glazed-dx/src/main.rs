@@ -56,13 +56,12 @@ fn main() {
 
         // Splash Screen
         .add_loopless_state(GameState::Splash)
-        .add_plugin(ProgressPlugin::new(GameState::Splash).continue_to(GameState::Title))
-        .add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Splash)
-                .with_system(init_load.track_progress())
-                .into()
+        .add_plugin(
+            ProgressPlugin::new(GameState::Splash)
+            .continue_to(GameState::Title)
+            .track_assets()
         )
+        .add_enter_system(GameState::Splash, init_load)
 
         // Other states go here
         .add_plugin(Title)
@@ -107,6 +106,8 @@ fn setup(mut commands: Commands) {
     .insert(UI);
 }
 
-fn init_load() -> Progress {
-    true.into()
+fn init_load(ass: Res<AssetServer>, mut loading: ResMut<AssetsLoading>) {
+    info!("Loading important assets");
+    let font: Handle<Font> = ass.load(text::FONT);
+    loading.add(font);
 }
