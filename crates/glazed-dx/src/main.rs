@@ -6,6 +6,8 @@ mod text;
 mod controls;
 mod scenes;
 mod actions;
+mod locale;
+mod player;
 
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
@@ -14,6 +16,8 @@ use leafwing_input_manager::prelude::*;
 use bevy::input::system::exit_on_esc_system;
 use bevy_kira_audio::AudioPlugin;
 use bevy_tweening::TweeningPlugin;
+use locale::{FluentData, Fluent};
+use player::Player;
 use crate::anim::GlazedAnimator;
 use crate::pkmn::Cry;
 use crate::controls::Actions;
@@ -40,6 +44,9 @@ fn main() {
             ..Default::default()
         })
         .insert_resource(ClearColor(Color::BLACK))
+        .insert_resource(Player {
+            name: "Milo Marten".into(),
+        })
         .add_plugins(DefaultPlugins)
         .add_plugin(GlazedAnimator)
         .add_plugin(TweeningPlugin)
@@ -53,6 +60,7 @@ fn main() {
         .add_plugin(TransitionPlugin)
         .add_plugin(TextPlugin)
         .add_plugin(actions::ActionsPlugin)
+        .add_plugin(locale::TranslationPlugin::default())
 
         // Splash Screen
         .add_loopless_state(GameState::Splash)
@@ -62,6 +70,7 @@ fn main() {
             .track_assets()
         )
         .add_enter_system(GameState::Splash, init_load)
+        .add_enter_system(GameState::Title, test_translation)
 
         // Other states go here
         .add_plugin(Title)
@@ -106,8 +115,17 @@ fn setup(mut commands: Commands) {
     .insert(UI);
 }
 
-fn init_load(ass: Res<AssetServer>, mut loading: ResMut<AssetsLoading>) {
+fn init_load(ass: Res<AssetServer>, locales: Res<FluentData>, mut loading: ResMut<AssetsLoading>) {
     info!("Loading important assets");
     let font: Handle<Font> = ass.load(text::FONT);
     loading.add(font);
+
+    for handle in locales.get_handles() {
+        loading.add(handle);
+    }
+}
+
+fn test_translation(fluent: Fluent) {
+    let text = fluent.translate("hello-world").unwrap();
+    info!("{}", text);
 }

@@ -4,8 +4,10 @@ use leafwing_input_manager::prelude::*;
 use serde::Deserialize;
 use bevy::reflect::TypeUuid;
 use glazed_data::species::Species;
+use unic_langid::LanguageIdentifier;
 use crate::controls::Actions;
 use crate::PlayerData;
+use crate::locale::Locale;
 use crate::util::RootRng;
 
 #[derive(Deserialize, Default, TypeUuid, Debug)]
@@ -20,7 +22,9 @@ pub struct GlobalOptions {
     #[serde(default)]
     pub seed: Option<String>,
     #[serde(default)]
-    pub intro_pokemon: Option<Species>
+    pub intro_pokemon: Option<Species>,
+    #[serde(default)]
+    pub language: Option<String>
 }
 impl GlobalOptions {
     pub fn load(mut commands: Commands) {
@@ -62,6 +66,17 @@ impl GlobalOptions {
         // Want a new seed? True randomness is dumb anyway.
         commands.insert_resource(go.seed.as_ref().map(|s| RootRng::seed(s))
             .unwrap_or_default());
+
+        // Allow the users to specify their own language
+        match &go.language {
+            Some(l) => {
+                match l.parse::<LanguageIdentifier>() {
+                    Ok(id) => commands.insert_resource(Locale(id)),
+                    Err(error) => error!("Error parsing language: {}. Using defaults", error)
+                }
+            }
+            None => {}
+        }
 
         commands.insert_resource(go);
     }

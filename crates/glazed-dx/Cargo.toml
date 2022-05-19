@@ -31,6 +31,11 @@ unicode-segmentation = "1.9.0"
 rand = "0.8.5"
 rand_xoshiro = "0.6.0"
 
+unic-langid = { version = "0.9.0", features = ["macros"] }
+fluent = "0.16.0"
+fluent-langneg = "0.13.0"
+anyhow = "1.0.57"
+
 glyph_brush_layout = "0.2.3"
 iyes_loopless = "0.5.1"
 bevy_kira_audio = "0.9.0"
