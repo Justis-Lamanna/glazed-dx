@@ -8,7 +8,7 @@ use rand::Rng as o;
 
 use glazed_data::species::Species;
 
-use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::TextBoxOptions, SCREEN_WIDTH, GlobalOptions};
+use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::{TextBoxOptions, TextSourceExt}, SCREEN_WIDTH, GlobalOptions};
 use crate::actions::audio::PlayCry;
 use crate::actions::delay::WaitAction;
 use crate::actions::graphics::{ChangeFrame, ShowSprite, TweenTranslate};
@@ -17,9 +17,9 @@ use crate::text::{EndOfText, TextBoxSystem};
 use crate::actions::text::ShowTextAction;
 
 const INTRO_POKEMON: Species = Species::Cyndaquil;
-const GREETINGS: &'static str = "Greetings, and welcome to the world of Pokémon!\nMy name is Professor Willow. Some people happen to call me the Pokémon Professor. I study Pokémon for a living! With my research, we can learn all about these mysterious creatures.";
-const GREETINGS_2: &'static str = "This little Pokémon, for example, is a Cyndaquil. There are hundreds of other Pokémon out there, all different than the next. That's what captivates old-timers like me to study them, and youngsters like yourself to battle with them.";
-const GREETINGS_3: &'static str = "While we're on the topic, please tell me a little about yourself. Don't be shy!";
+const GREETINGS: &'static str = "intro-a";
+const GREETINGS_2: &'static str = "intro-b";
+const GREETINGS_3: &'static str = "intro-c";
 
 #[derive(Component)]
 pub struct LectureAsset;
@@ -176,7 +176,7 @@ fn display_welcome_text(mut commands: Commands, opts: Res<GlobalOptions>) {
 
     let timeline = commands.spawn_bundle(ActionsBundle::default()).id();
     commands.action(timeline)
-        .add(ShowTextAction(TextBoxOptions::new(GREETINGS.into()).with_max_lines(2)))
+        .add(ShowTextAction(TextBoxOptions::new(GREETINGS).with_max_lines(2)))
         .add(WaitAction(Duration::from_millis(200)))
         .add(TweenTranslate::<Professor>::new(
             Vec3::new(-8.0, 16.0, 20.0),
@@ -188,7 +188,7 @@ fn display_welcome_text(mut commands: Commands, opts: Res<GlobalOptions>) {
         .add(ShowSprite::<DemoPokemon>::new(true))
         .add(PlayCry(opts.intro_pokemon.unwrap_or(INTRO_POKEMON)))
         .add(WaitAction(Duration::from_millis(500)))
-        .add(ShowTextAction(TextBoxOptions::new(GREETINGS_2.into()).with_max_lines(2)))
+        .add(ShowTextAction(TextBoxOptions::new(GREETINGS_2).with_max_lines(2)))
         .add(WaitAction(Duration::from_millis(500)))
         .add(ShowSprite::<DemoPokemon>::new(false))
         .add(WaitAction(Duration::from_millis(500)))
@@ -197,6 +197,6 @@ fn display_welcome_text(mut commands: Commands, opts: Res<GlobalOptions>) {
             Vec3::new(-64.0, 16.0, 20.0),
             Vec3::new(-8.0, 16.0, 20.0),
             Duration::from_secs(1)))
-        .add(ShowTextAction(TextBoxOptions::new(GREETINGS_3.into()).with_max_lines(2)))
+        .add(ShowTextAction(TextBoxOptions::new(GREETINGS_3).with_max_lines(2)))
     ;
 }

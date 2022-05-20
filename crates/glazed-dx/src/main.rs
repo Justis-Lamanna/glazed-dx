@@ -16,7 +16,7 @@ use leafwing_input_manager::prelude::*;
 use bevy::input::system::exit_on_esc_system;
 use bevy_kira_audio::AudioPlugin;
 use bevy_tweening::TweeningPlugin;
-use locale::{FluentData, Fluent};
+use locale::FluentData;
 use player::Player;
 use crate::anim::GlazedAnimator;
 use crate::pkmn::Cry;
@@ -70,7 +70,6 @@ fn main() {
             .track_assets()
         )
         .add_enter_system(GameState::Splash, init_load)
-        .add_enter_system(GameState::Title, test_translation)
 
         // Other states go here
         .add_plugin(Title)
@@ -123,9 +122,4 @@ fn init_load(ass: Res<AssetServer>, locales: Res<FluentData>, mut loading: ResMu
     for handle in locales.get_handles() {
         loading.add(handle);
     }
-}
-
-fn test_translation(fluent: Fluent) {
-    let text = fluent.translate("hello-world").unwrap();
-    info!("{}", text);
 }

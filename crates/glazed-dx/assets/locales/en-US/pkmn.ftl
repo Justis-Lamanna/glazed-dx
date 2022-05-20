@@ -1,1 +1,1 @@
-hello-world = Hello, { $player }!
+bulbasaur-species = Bulbasaur

@@ -16,8 +16,21 @@ use fluent_langneg::NegotiationStrategy;
 
 use crate::player::Player;
 
+/// Plugin to initialize Translation data.
+/// This will give Bevy the ability to read Fluent files (.ftl),
+/// and initialize Fluent files on startup. 
+/// 
+/// Fluent files should be present in the locales/<locale code> directory
+/// wherever you keep your assets. There can be as many .ftl files in this
+/// directory, but no subdirectories or other files (yet).
+/// 
+/// Translations from a more specific locale will "override" those of a more
+/// general locale. Conversely, if a more specific locale does not have the provided
+/// message key, it will "fall back" to less general locales. This is done as intelligently
+/// as possible, using the English translations if no other locales have it.
 #[derive(Default)]
 pub struct TranslationPlugin {
+    /// The default language to use. If absent, English is used.
     pub default_lang: Option<LanguageIdentifier>
 }
 impl Plugin for TranslationPlugin {
@@ -36,6 +49,8 @@ impl Plugin for TranslationPlugin {
     }
 }
 
+/// Scan the locales/ directory for Fluent files, and compile their handles
+/// into a single resource (FluentData)
 fn detect_and_load_fluent_files(mut commands: Commands, assets: Res<AssetServer>) {
     let io = assets.asset_io();
     let locales_root = Path::new("locales");
@@ -80,17 +95,21 @@ fn detect_and_load_fluent_files(mut commands: Commands, assets: Res<AssetServer>
     }
 }
 
+/// A resource which holds all supported languages, and all the handles for each translation
+/// file.
 #[derive(Default, Debug)]
 pub struct FluentData {
     langs: Vec<LanguageIdentifier>,
     files: HashMap<LanguageIdentifier, Vec<Handle<FluentResourceWrapper>>>
 }
 impl FluentData {
+    /// Add the resources to support a language
     pub fn add_resources(&mut self, lang: LanguageIdentifier, files: Vec<Handle<FluentResourceWrapper>>) {
         self.langs.push(lang.clone());
         self.files.insert(lang, files);
     }
 
+    /// Get handles for all Fluent files. Used for preloading
     pub fn get_handles(&self) -> Vec<Handle<FluentResourceWrapper>> {
         self.files.values()
             .flat_map(|v| v.iter())
@@ -98,10 +117,12 @@ impl FluentData {
             .collect::<Vec<_>>()
     }
 
+    /// Get all the supported locales
     pub fn get_locales(&self) -> &Vec<LanguageIdentifier> {
         &self.langs
     }
 
+    /// Get handles for all Fluent files of a specific locale.
     pub fn get_handles_for_locale(&self, locale: &LanguageIdentifier) -> Vec<Handle<FluentResourceWrapper>> {
         match self.files.get(locale) {
             Some(handles) => handles.clone(),
@@ -110,8 +131,18 @@ impl FluentData {
     }
 }
 
+/// A resource which holds the current player's locale.
 pub struct Locale(pub LanguageIdentifier);
 
+/// The Fluent orchestrator
+/// This performs all the work to do a translation.
+/// More specifically, this does the following:
+/// 1. Get the current locale via the Locale resource
+/// 2. Calculate the fallback path for that locale
+/// 3. Resolve all translation files for all locales in the fallback path
+/// 4. Search for the Fluent expression across all files, respecting the fallback path
+/// 5. Inject specific resources (i.e. Player name) as arguments into the expression
+/// 6. Resolve the expression into a string.
 #[derive(SystemParam)]
 pub struct Fluent<'w, 's> {
     locale: Res<'w, Locale>,
@@ -122,6 +153,7 @@ pub struct Fluent<'w, 's> {
     marker: Query<'w, 's, ()>
 }
 impl<'w, 's> Fluent<'w, 's> {
+    /// Retrieve a FluentBundles object, which represents the fallback order
     fn get_bundles(&self) -> Option<FluentBundles> {
         let en = langid!("en-US");
         let locale = &self.locale.0;
@@ -153,12 +185,20 @@ impl<'w, 's> Fluent<'w, 's> {
         Some(FluentBundles { bundles })
     }
 
+    /// Create the FluentArgs object from other resources
     fn build_fluent_args(&self) -> Option<FluentArgs> {
         let mut args = FluentArgs::default();
         args.set("player", self.player.name.as_str());
         Some(args)
     }
 
+    /// The magic method which resolves a key into a string.
+    /// This method returns None if no bundles in the fallback chain have the provided key.
+    /// One day, I may make it so None to allow for more lazy loading.
+    /// Otherwise, the fully translated string is returned.
+    /// 
+    /// If there is a parsing error, the errors are printed to console, but otherwise
+    /// do not affect what is returned.
     pub fn translate(&self, id: &str) -> Option<String> {
         let bundles = self.get_bundles()?;
         let (bundle, message) = bundles.get_bundle_for_id(id)?;
@@ -182,10 +222,12 @@ impl<'w, 's> Fluent<'w, 's> {
     }
 }
 
-pub struct FluentBundles<'a> {
+/// Helper component to search a list of FluentBundles for the Bundle with the specified key.
+struct FluentBundles<'a> {
     bundles: Vec<FluentBundle<&'a FluentResource>>
 }
 impl<'a> FluentBundles<'a> {
+    /// Get the bundle and message for a specific ID, if one is found.
     pub fn get_bundle_for_id(&self, id: &str) -> Option<(&FluentBundle<&FluentResource>, FluentMessage)> {
         for bundle in &self.bundles {
             if let Some(m) = bundle.get_message(id) {
@@ -196,10 +238,12 @@ impl<'a> FluentBundles<'a> {
     }
 }
 
+/// A newtype which allows for a FluentResource to be read as an asset.
 #[derive(Deref, DerefMut, TypeUuid)]
 #[uuid = "b3116e5c-952e-4771-bec6-8fee9ad49604"]
 pub struct FluentResourceWrapper(FluentResource);
 
+/// A newtype which allows for compatibility between anyhow and Fluent's error message
 #[derive(Default, Debug)]
 struct FluentErrorWrapper;
 impl fmt::Display for FluentErrorWrapper {
@@ -209,6 +253,8 @@ impl fmt::Display for FluentErrorWrapper {
 }
 impl Error for FluentErrorWrapper {}
 
+/// An assetloader which parses a file into a Fluent Resource.
+/// Failure occurs if the file is not in UTF-8, or could not be parsed into a Resource.
 #[derive(Default)]
 pub struct FluentFileLoader;
 impl AssetLoader for FluentFileLoader {

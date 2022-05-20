@@ -5,7 +5,7 @@ use iyes_loopless::prelude::*;
 use unicode_segmentation::UnicodeSegmentation;
 use std::ops::Range;
 
-use crate::{controls::PlayerControls, SCREEN_WIDTH, util::despawn};
+use crate::{controls::PlayerControls, SCREEN_WIDTH, util::despawn, locale::Fluent};
 use crate::{Actions, UI};
 
 const LEFT_MARGIN: f32 = 8.0;
@@ -47,16 +47,40 @@ impl Default for EndOfTextAction {
 }
 
 #[derive(Debug, Clone)]
+pub enum TextSource {
+    Raw(String),
+    Keyed(String)
+}
+impl<T: ToString> From<T> for TextSource {
+    fn from(s: T) -> Self {
+        s.key()
+    }
+}
+
+pub trait TextSourceExt {
+    fn key(self) -> TextSource;
+    fn raw(self) -> TextSource;
+}
+impl<T: ToString> TextSourceExt for T {
+    fn key(self) -> TextSource {
+        TextSource::Keyed(self.to_string())
+    }
+    fn raw(self) -> TextSource {
+        TextSource::Raw(self.to_string())
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct TextBoxOptions {
-    pub string: String,
+    pub string: TextSource,
     pub width: f32,
     pub lines: usize,
     pub end_of_text_action: EndOfTextAction
 }
 impl TextBoxOptions {
-    pub fn new(string: String) -> Self {
+    pub fn new<S: Into<TextSource>>(string: S) -> Self {
         Self {
-            string,
+            string: string.into(),
             width: SCREEN_WIDTH,
             lines: 0,
             end_of_text_action: EndOfTextAction::default(),
@@ -81,7 +105,7 @@ impl Default for TextBoxOptions {
 impl From<String> for TextBoxOptions {
     fn from(s: String) -> Self {
         TextBoxOptions {
-            string: s,
+            string: s.into(),
             ..default()
         }
     }
@@ -89,7 +113,7 @@ impl From<String> for TextBoxOptions {
 impl From<&str> for TextBoxOptions {
     fn from(s: &str) -> Self {
         TextBoxOptions {
-            string: s.to_string(),
+            string: s.into(),
             ..default()
         }
     }
@@ -140,10 +164,10 @@ pub struct TextBoxState {
     width: f32
 }
 impl TextBoxState {
-    pub fn from(st: &TextBoxOptions, font: Handle<Font>) -> TextBoxState {
-        let rt = Formatter::parse_to_graphemes(st.string.clone());
+    pub fn from(string: String, options: &TextBoxOptions, font: Handle<Font>) -> TextBoxState {
+        let rt = Formatter::parse_to_graphemes(string);
         let lines = rt.to_box(RichTextOptions {
-            box_width: st.width - LEFT_MARGIN - RIGHT_MARGIN,
+            box_width: options.width - LEFT_MARGIN - RIGHT_MARGIN,
             font,
             font_size: 16.0,
             default_color: Color::WHITE,
@@ -153,8 +177,8 @@ impl TextBoxState {
             lines,
             current_line: 0,
             current_page: 0,
-            lines_per_page: st.lines,
-            width: st.width
+            lines_per_page: options.lines,
+            width: options.width
         }
     }
 
@@ -247,19 +271,24 @@ impl TextBoxState {
 pub struct TextBoxSystem<'w, 's> {
     commands: Commands<'w, 's>,
     assets: Res<'w, AssetServer>,
-    query: Query<'w, 's, Entity, With<UI>>
+    query: Query<'w, 's, Entity, With<UI>>,
+    fluent: Fluent<'w, 's>
 }
 impl<'w, 's> TextBoxSystem<'w, 's> {
     pub fn show<T: Into<TextBoxOptions>>(&mut self, text: T) {
-        let text = text.into();
-        let content = TextBoxState::from(&text, self.assets.load(FONT));
+        let options = text.into();
+        let text = match &options.string {
+            TextSource::Keyed(s) => self.fluent.translate(s.as_str()).unwrap(),
+            TextSource::Raw(s) => s.clone()
+        };
+        let content = TextBoxState::from(text, &options, self.assets.load(FONT));
         self.commands.insert_resource(NextState(TextState::Scrolling));
 
         self.commands
             .entity(self.query.single())
             .with_children(|p| {
                 p.spawn_bundle(content.create_frame_node())
-                    .insert(TextBox(text.end_of_text_action))
+                    .insert(TextBox(options.end_of_text_action))
                     .with_children(|p| {
                         p.spawn_bundle(TextBundle {
                             style: Style {
@@ -269,7 +298,7 @@ impl<'w, 's> TextBoxSystem<'w, 's> {
                                     top: Val::Px(TOP_MARGIN),
                                     bottom: Val::Px(BOTTOM_MARGIN)
                                 },
-                                max_size: Size::new(Val::Px(text.width), Val::Auto),
+                                max_size: Size::new(Val::Px(options.width), Val::Auto),
                                 ..default()
                             },
                             text: Text { sections: vec![], alignment: default() },
