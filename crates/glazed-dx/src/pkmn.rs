@@ -1,9 +1,11 @@
+use std::ascii::AsciiExt;
+
 use bevy::prelude::*;
 use bevy::ecs::system::SystemParam;
 use bevy_kira_audio::{Audio, AudioChannel, InstanceHandle, PlaybackState};
 use glazed_data::pokemon::{Gender, Pokemon};
 
-use glazed_data::species::{ForcesOfNatureForm, KyuremForm, ShayminForm, Species, SpeciesDiscriminants};
+use glazed_data::species::{ForcesOfNatureForm, KyuremForm, ShayminForm, Species, SpeciesDiscriminants, UnownForm, CastformForm, DeoxysForm, BurmyWormadamForm, CherrimForm, ShellosGastrodonForm, RotomForm, BasculinForm, DarmanitanForm, KeldeoForm, MeloettaForm, GenesectForm};
 use crate::state::GlobalOptions;
 
 #[derive(SystemParam)]
@@ -113,10 +115,100 @@ impl<'w, 's> PokemonSprite<'w, 's> {
     //     self.get_battle_sprite(request.species, request.gender, request.shiny, false)
     // }
 
-    fn get_battle_sprite(&self, species: Species, _gender: Gender, shiny: bool, front: bool) -> Handle<Image> {
-        let species_path: &str = match species {
+    fn get_battle_sprite(&self, species: Species, gender: Gender, shiny: bool, front: bool) -> Handle<Image> {
+        let species_path: String = match species {
+            // Forms
+            Species::Unown(letter) => {
+                match letter {
+                    UnownForm::QuestionMark => "unown-qm".into(),
+                    UnownForm::ExclamationMark => "unown-em".into(),
+                    l => {
+                        let l: &str = l.into();
+                        format!("unown-{}", l.to_ascii_lowercase())
+                    }
+                }
+            },
+            Species::Castform(CastformForm::Sunny) => "castform-sunny".into(),
+            Species::Castform(CastformForm::Rainy) => "castform-rainy".into(),
+            Species::Castform(CastformForm::Snowy) => "castform-snowy".into(),
+            Species::Deoxys(DeoxysForm::Attack) => "deoxys-attack".into(),
+            Species::Deoxys(DeoxysForm::Defense) => "deoxys-defense".into(),
+            Species::Deoxys(DeoxysForm::Speed) => "deoxys-speed".into(),
+            Species::Burmy(BurmyWormadamForm::Plant) => "burmy-plant".into(),
+            Species::Burmy(BurmyWormadamForm::Sandy) => "burmy-sandy".into(),
+            Species::Burmy(BurmyWormadamForm::Trash) => "burmy-trash".into(),
+            Species::Wormadam(BurmyWormadamForm::Plant) => "wormadam-plant".into(),
+            Species::Wormadam(BurmyWormadamForm::Sandy) => "wormadam-sandy".into(),
+            Species::Wormadam(BurmyWormadamForm::Trash) => "wormadam-trash".into(),
+            Species::Cherrim(CherrimForm::Sunshine) => "cherrim-sunshine".into(),
+            Species::Shellos(ShellosGastrodonForm::EastSea) => "shellos-east".into(),
+            Species::Shellos(ShellosGastrodonForm::WestSea) => "shellos-west".into(),
+            Species::Gastrodon(ShellosGastrodonForm::EastSea) => "gastrodon-east".into(),
+            Species::Gastrodon(ShellosGastrodonForm::WestSea) => "gastrodon-west".into(),
+            Species::Rotom(RotomForm::Heat) => "rotom-heat".into(),
+            Species::Rotom(RotomForm::Wash) => "rotom-wash".into(),
+            Species::Rotom(RotomForm::Frost) => "rotom-frost".into(),
+            Species::Rotom(RotomForm::Fan) => "rotom-fan".into(),
+            Species::Rotom(RotomForm::Mow) => "rotom-mow".into(),
+            Species::Shaymin(ShayminForm::Sky) => "shaymin-sky".into(),
+            Species::Arceus(t) => {
+                let t: &str = t.into();
+                format!("arceus-{}", t.to_ascii_lowercase())
+            },
+            Species::Basculin(BasculinForm::BlueStriped) => "basculin-bluestriped".into(),
+            Species::Darmanitan(DarmanitanForm::Zen) => "darmanitan-zen".into(),
+            Species::Deerling(season) => {
+                let season: &str = season.into();
+                format!("deerling-{}", season.to_ascii_lowercase())
+            },
+            Species::Sawsbuck(season) => {
+                let season: &str = season.into();
+                format!("sawsbuck-{}", season.to_ascii_lowercase())
+            },
+            Species::Tornadus(ForcesOfNatureForm::Therian) => "tornadus-therian".into(),
+            Species::Thundurus(ForcesOfNatureForm::Therian) => "thundurus-therian".into(),
+            Species::Landorus(ForcesOfNatureForm::Therian) => "landorus-therian".into(),
+            Species::Kyurem(KyuremForm::Black) => "kyurem-black".into(),
+            Species::Kyurem(KyuremForm::White) => "kyurem-white".into(),
+            Species::Keldeo(KeldeoForm::Resolute) => "keldeo-resolute".into(),
+            Species::Meloetta(MeloettaForm::Pirouette) => "meloetta-pirouette".into(),
+            Species::Genesect(GenesectForm::Burn) => "genesect-burn".into(),
+            Species::Genesect(GenesectForm::Douse) => "genesect-douse".into(),
+            Species::Genesect(GenesectForm::Chill) => "genesect-chill".into(),
+            Species::Genesect(GenesectForm::Shock) => "genesect-shock".into(),
+            // Female variants
+            Species::Venusaur | Species::Butterfree | Species::Rattata | Species::Raticate |
+            Species::Pikachu | Species::Raichu | Species::Zubat | Species::Golbat |
+            Species::Gloom | Species::Vileplume | Species::Kadabra | Species::Alakazam |
+            Species::Doduo | Species::Dodrio | Species::Hypno | Species::Rhyhorn |
+            Species::Rhydon | Species::Goldeen | Species::Seaking | Species::Scyther |
+            Species::Magikarp | Species::Gyarados | Species::Meganium | Species::Ledyba |
+            Species::Ledian | Species::Xatu | Species::Sudowoodo | Species::Politoed |
+            Species::Aipom | Species::Wooper | Species::Quagsire | Species::Murkrow |
+            Species::Wobbuffet | Species::Girafarig | Species::Gligar | Species::Steelix |
+            Species::Scizor | Species::Heracross | Species::Sneasel | Species::Ursaring |
+            Species::Piloswine | Species::Octillery | Species::Houndoom | Species::Donphan |
+            Species::Torchic | Species::Combusken | Species::Blaziken | Species::Beautifly |
+            Species::Dustox | Species::Ludicolo | Species::Nuzleaf | Species::Shiftry |
+            Species::Meditite | Species::Medicham | Species::Roselia | Species::Gulpin |
+            Species::Swalot | Species::Numel | Species::Camerupt | Species::Cacturne |
+            Species::Milotic | Species::Relicanth | Species::Starly | Species::Staravia |
+            Species::Staraptor | Species::Bidoof | Species::Bibarel | Species::Kricketot |
+            Species::Kricketune | Species::Shinx | Species::Luxio | Species::Luxray |
+            Species::Roserade | Species::Combee | Species::Pachirisu | Species::Buizel |
+            Species::Floatzel | Species::Ambipom | Species::Gible | Species::Gabite |
+            Species::Garchomp | Species::Hippopotas | Species::Hippowdon | Species::Croagunk |
+            Species::Toxicroak | Species::Finneon | Species::Lumineon | Species::Snover |
+            Species::Abomasnow | Species::Weavile | Species::Rhyperior | Species::Tangrowth |
+            Species::Mamoswine | Species::Unfezant | Species::Frillish | Species::Jellicent
+            if gender == Gender::Female => {
+                let raw: SpeciesDiscriminants = species.into();
+                let raw: &str  = raw.into();
+                format!("{}-f", raw)
+            }
             s => {
                 let raw: SpeciesDiscriminants = s.into();
+                let raw: &str = raw.into();
                 raw.into()
             }
         };

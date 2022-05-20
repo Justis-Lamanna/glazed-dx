@@ -2,8 +2,10 @@ use std::ops::Range;
 use serde::{Deserialize, Serialize};
 use chrono::{Datelike, Local, Timelike, Weekday};
 
+use strum_macros::IntoStaticStr;
+
 /// Represents the season in the game
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash, IntoStaticStr)]
 pub enum Season {
     Spring, Summer, Autumn, Winter
 }
