@@ -1,4 +1,5 @@
 use core::fmt;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
@@ -9,7 +10,7 @@ use bevy::reflect::TypeUuid;
 use bevy::{prelude::*, asset::LoadedAsset};
 use bevy::asset::AssetLoader;
 
-use fluent::{FluentBundle, FluentResource, FluentMessage, FluentArgs};
+use fluent::{FluentBundle, FluentResource, FluentMessage, FluentArgs, FluentValue};
 use unic_langid::{LanguageIdentifier, langid};
 use fluent_langneg::negotiate_languages;
 use fluent_langneg::NegotiationStrategy;
@@ -39,6 +40,7 @@ impl Plugin for TranslationPlugin {
             .add_asset::<FluentResourceWrapper>()
             .init_asset_loader::<FluentFileLoader>()
             .add_startup_system(detect_and_load_fluent_files)
+            .insert_resource(FluentParams::default())
         ;
 
         let default_lang = match &self.default_lang {
@@ -134,6 +136,24 @@ impl FluentData {
 /// A resource which holds the current player's locale.
 pub struct Locale(pub LanguageIdentifier);
 
+/// A resource which contains dynamic parameters for Fluent translations
+#[derive(Default, Debug, Deref, DerefMut)]
+pub struct FluentParams {
+    params: HashMap<String, Param>
+}
+
+#[derive(Debug)]
+pub enum Param {
+    PString(String)
+}
+impl<'a> From<&Param> for FluentValue<'a> {
+    fn from(p: &Param) -> Self {
+        match p {
+            Param::PString(s) => s.clone().into()
+        }
+    }
+}
+
 /// The Fluent orchestrator
 /// This performs all the work to do a translation.
 /// More specifically, this does the following:
@@ -149,6 +169,7 @@ pub struct Fluent<'w, 's> {
     data: Res<'w, FluentData>,
     loader: Res<'w, Assets<FluentResourceWrapper>>,
     player: Res<'w, Player>,
+    params: ResMut<'w, FluentParams>,
     #[allow(dead_code)]
     marker: Query<'w, 's, ()>
 }
@@ -170,6 +191,8 @@ impl<'w, 's> Fluent<'w, 's> {
             let mut bundle = 
                 FluentBundle::new(vec![locale.clone()]);
 
+            bundle.set_use_isolating(false);
+
             let handles = self.data.get_handles_for_locale(locale);
 
             for handle in handles {
@@ -189,6 +212,12 @@ impl<'w, 's> Fluent<'w, 's> {
     fn build_fluent_args(&self) -> Option<FluentArgs> {
         let mut args = FluentArgs::default();
         args.set("player", self.player.name.as_str());
+
+        for (key, value) in self.params.params.iter() {
+            args.set(key, FluentValue::from(value))
+        }
+
+        println!("{:?}", args);
         Some(args)
     }
 
@@ -219,6 +248,20 @@ impl<'w, 's> Fluent<'w, 's> {
         }
 
         Some(cow.to_string())
+    }
+
+    /// Add a string to the parameter buffer.
+    /// Implementations for other specific items (for example, Species name)
+    /// are done in their respective classes.
+    pub fn buffer_string<T: ToString, U: ToString>(&mut self, key: T, value: U) {
+        let key = key.to_string();
+        let value = value.to_string();
+        self.params.params.insert(key, Param::PString(value));
+    }
+
+    /// Scrub the entire buffer
+    pub fn clear_buffer(&mut self) {
+        self.params.params.clear();
     }
 }
 
@@ -266,7 +309,10 @@ impl AssetLoader for FluentFileLoader {
         Box::pin(async move {
             let content = str::from_utf8(bytes)?;
             let resource = FluentResource::try_new(content.into())
-                .map_err(|_| FluentErrorWrapper)?;
+                .map_err(|(_, e)| {
+                    error!("{:?}", e);
+                    FluentErrorWrapper
+                })?;
             let resource = FluentResourceWrapper(resource);
             load_context.set_default_asset(LoadedAsset::new(resource));
             Ok(())

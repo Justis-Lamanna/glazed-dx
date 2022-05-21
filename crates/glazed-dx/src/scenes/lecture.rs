@@ -15,8 +15,9 @@ use crate::actions::graphics::{ChangeFrame, ShowSprite, TweenTranslate};
 use crate::pkmn::{PokemonSprite, SpriteRequest};
 use crate::text::{EndOfText, TextBoxSystem};
 use crate::actions::text::ShowTextAction;
+use crate::locale::Fluent;
 
-const INTRO_POKEMON: Species = Species::Cyndaquil;
+const INTRO_POKEMON: Species = Species::Buizel;
 const GREETINGS: &'static str = "intro-a";
 const GREETINGS_2: &'static str = "intro-b";
 const GREETINGS_3: &'static str = "intro-c";
@@ -171,10 +172,13 @@ fn despawn_complete_pokeballs(mut commands: Commands, query: Query<(Entity, &Ani
     }
 }
 
-fn display_welcome_text(mut commands: Commands, opts: Res<GlobalOptions>) {
+fn display_welcome_text(mut commands: Commands, opts: Res<GlobalOptions>, mut fluent: Fluent) {
     commands.insert_resource(NextState(LectureState::Introduction));
 
     let timeline = commands.spawn_bundle(ActionsBundle::default()).id();
+    let intro_pokemon = opts.intro_pokemon.unwrap_or(INTRO_POKEMON);
+    fluent.buffer_species_name("intro-pokemon", intro_pokemon);
+
     commands.action(timeline)
         .add(ShowTextAction(TextBoxOptions::new(GREETINGS).with_max_lines(2)))
         .add(WaitAction(Duration::from_millis(200)))
@@ -186,7 +190,7 @@ fn display_welcome_text(mut commands: Commands, opts: Res<GlobalOptions>) {
         .add(ChangeFrame::<Professor>::new(1))
         .add(WaitAction(Duration::from_secs(1)))
         .add(ShowSprite::<DemoPokemon>::new(true))
-        .add(PlayCry(opts.intro_pokemon.unwrap_or(INTRO_POKEMON)))
+        .add(PlayCry(intro_pokemon))
         .add(WaitAction(Duration::from_millis(500)))
         .add(ShowTextAction(TextBoxOptions::new(GREETINGS_2).with_max_lines(2)))
         .add(WaitAction(Duration::from_millis(500)))

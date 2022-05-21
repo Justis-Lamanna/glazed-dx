@@ -6,6 +6,7 @@ use bevy_kira_audio::{Audio, AudioChannel, InstanceHandle, PlaybackState};
 use glazed_data::pokemon::{Gender, Pokemon};
 
 use glazed_data::species::{ForcesOfNatureForm, KyuremForm, ShayminForm, Species, SpeciesDiscriminants, UnownForm, CastformForm, DeoxysForm, BurmyWormadamForm, CherrimForm, ShellosGastrodonForm, RotomForm, BasculinForm, DarmanitanForm, KeldeoForm, MeloettaForm, GenesectForm};
+use crate::locale::Fluent;
 use crate::state::GlobalOptions;
 
 #[derive(SystemParam)]
@@ -16,9 +17,7 @@ pub struct Cry<'w, 's> {
     commands: Commands<'w, 's>,
     handle: Option<Res<'w, CryHandle>>
 }
-
 pub struct CryHandle(InstanceHandle);
-
 impl<'w, 's> Cry<'w, 's> {
     const BASE: &'static str = "pkmn/cries";
     const SUFFIX: &'static str = "ogg";
@@ -91,12 +90,11 @@ impl From<Species> for SpriteRequest {
 }
 
 #[derive(SystemParam)]
-#[allow(dead_code)]
 pub struct PokemonSprite<'w, 's> {
     asset_server: Res<'w, AssetServer>,
+    #[allow(dead_code)]
     marker: Query<'w, 's, ()>
 }
-
 impl<'w, 's> PokemonSprite<'w, 's> {
     const BASE: &'static str = "pkmn/battle";
     const FRONT: &'static str = "front";
@@ -226,5 +224,25 @@ impl<'w, 's> PokemonSprite<'w, 's> {
         let path = format!("{}/{}/{}/{}.{}", Self::BASE, front_path, shiny_path, species_path, Self::SUFFIX);
 
         self.asset_server.load(path.as_str())
+    }
+}
+
+impl<'w, 's> Fluent<'w, 's> {
+    /// Get the translated version of a Pokemon's name
+    /// Form is completely disregarded; A Deoxys(Attack) and Deoxys(Defense) both return
+    /// "Deoxys" in English.
+    pub fn get_pokemon_species_name(&self, species: Species) -> String {
+        let species: SpeciesDiscriminants = species.into();
+        let species: &str = species.into();
+        let species_key = format!("{}-species", species.to_ascii_lowercase());
+
+        self.translate(species_key.as_str())
+            .expect(species_key.as_str())
+    }
+
+    /// Retrieve the Pokemon's species name, and put it in the buffer.
+    pub fn buffer_species_name<K: ToString>(&mut self, key: K, species: Species) {
+        let name = self.get_pokemon_species_name(species);
+        self.buffer_string(key, name);
     }
 }

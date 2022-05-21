@@ -281,6 +281,7 @@ impl<'w, 's> TextBoxSystem<'w, 's> {
             TextSource::Keyed(s) => self.fluent.translate(s.as_str()).unwrap(),
             TextSource::Raw(s) => s.clone()
         };
+        info!("{}", text);
         let content = TextBoxState::from(text, &options, self.assets.load(FONT));
         self.commands.insert_resource(NextState(TextState::Scrolling));
 
