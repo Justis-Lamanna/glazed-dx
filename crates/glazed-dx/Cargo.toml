@@ -45,4 +45,3 @@ bevy-sequential-actions = "0.2.0"
 
 glazed_core = { path = "../glazed-core" }
 glazed_data = { path = "../glazed-data" }
-glazed_battle = { path = "../glazed-battle" }

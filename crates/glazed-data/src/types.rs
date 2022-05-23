@@ -3,6 +3,7 @@ use std::ops::Mul;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde::de::Error;
 use strum_macros::{EnumIter, IntoStaticStr};
+use crate::core::OneOrTwo;
 
 /// Represents the Type of a Pokemon
 #[derive(Debug, Copy, Clone, PartialEq, EnumIter, Serialize, Deserialize, Eq, Hash, IntoStaticStr)]
@@ -256,30 +257,11 @@ impl Mul for Effectiveness {
     }
 }
 
-/// Represents the type(s) for a Pokemon
-#[derive(Debug, Clone, Copy)]
-pub enum PokemonType {
-    Single(Type),
-    Double(Type, Type)
-}
-impl<'de> Deserialize<'de> for PokemonType {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
-        let mut s = Vec::<Type>::deserialize(deserializer)?;
-        if s.len() == 1 {
-            Ok(Self::Single(s.pop().unwrap()))
-        } else if s.len() == 2 {
-            Ok(Self::Double(s.pop().unwrap(), s.pop().unwrap()))
-        } else {
-            Err(D::Error::invalid_length(s.len(), &"One or two types only"))
-        }
-    }
-}
-
-impl PokemonType {
+impl OneOrTwo<Type> {
     pub fn defending_against(&self, attack_type: &Type) -> Effectiveness {
         match self {
-            PokemonType::Single(t) => attack_type.attacking(t),
-            PokemonType::Double(t1, t2) => attack_type.attacking(t1) * attack_type.attacking(t2)
+            OneOrTwo::One(t) => attack_type.attacking(t),
+            OneOrTwo::Two(t1, t2) => attack_type.attacking(t1) * attack_type.attacking(t2)
         }
     }
 
@@ -292,15 +274,15 @@ impl PokemonType {
         };
 
         match self {
-            PokemonType::Single(t) => attacking(t),
-            PokemonType::Double(t1, t2) => attacking(t1) * attacking(t2)
+            OneOrTwo::One(t) => attacking(t),
+            OneOrTwo::Two(t1, t2) => attacking(t1) * attacking(t2)
         }
     }
 
     pub fn is_stab(&self, attack_type: &Type) -> bool {
         match self {
-            PokemonType::Single(t) => t == attack_type,
-            PokemonType::Double(t1, t2) => t1 == attack_type || t2 == attack_type
+            OneOrTwo::One(t) => t == attack_type,
+            OneOrTwo::Two(t1, t2) => t1 == attack_type || t2 == attack_type
         }
     }
 

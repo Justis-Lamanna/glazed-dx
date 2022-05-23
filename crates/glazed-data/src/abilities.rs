@@ -180,31 +180,3 @@ impl Ability {
         }
     }
 }
-
-/// Represents the ability(s) for a Pokemon
-#[derive(Debug, Copy, Clone)]
-pub enum PokemonAbility {
-    One(Ability),
-    Two(Ability, Ability)
-}
-impl Serialize for PokemonAbility {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        match self {
-            PokemonAbility::One(a) => vec![*a].serialize(serializer),
-            PokemonAbility::Two(a, b) => vec![*a, *b].serialize(serializer)
-        }
-    }
-}
-impl<'de> Deserialize<'de> for PokemonAbility {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
-        let mut s = Vec::<Ability>::deserialize(deserializer)?;
-        if s.len() == 1 {
-            Ok(Self::One(s.pop().unwrap()))
-        } else if s.len() == 2 {
-            Ok(Self::Two(s.pop().unwrap(), s.pop().unwrap()))
-        } else {
-            use serde::de::Error;
-            Err(D::Error::invalid_length(s.len(), &"One or two types only"))
-        }
-    }
-}

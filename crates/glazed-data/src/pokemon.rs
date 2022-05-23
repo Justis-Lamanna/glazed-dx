@@ -5,14 +5,14 @@ use rand::prelude::Distribution;
 use rand::Rng;
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::abilities::{Ability, PokemonAbility};
+use crate::abilities::Ability;
 use crate::attack::{Move, MoveData};
-use crate::core::{Player};
+use crate::core::{OneOrTwo, Player};
 use crate::item::{Item, Pokeball};
 use crate::locations::{Location, GlazedLocation};
 use crate::lookups::Lookup;
 use crate::species::Species;
-use crate::types::{PokemonType, Type};
+use crate::types::Type;
 
 pub const SHININESS_CHANCE: u16 = 16;
 
@@ -189,8 +189,8 @@ impl Stat {
 #[derive(Debug, Deserialize)]
 pub struct SpeciesData {
     #[serde(rename = "type")]
-    pub _type: PokemonType,
-    pub ability: PokemonAbility,
+    pub _type: OneOrTwo<Type>,
+    pub ability: OneOrTwo<Ability>,
     pub hidden_ability: Option<Ability>,
     pub gender_ratio: GenderRatio,
     pub catch_rate: u8,
@@ -612,17 +612,17 @@ impl Pokemon {
         match self.ability {
             AbilitySlot::SlotOne => {
                 match &data.ability {
-                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => *a
+                    OneOrTwo::One(a) | OneOrTwo::Two(a, _) => *a
                 }
             },
             AbilitySlot::SlotTwo => {
                 match &data.ability {
-                    PokemonAbility::One(a) | PokemonAbility::Two(_, a) => *a
+                    OneOrTwo::One(a) | OneOrTwo::Two(_, a) => *a
                 }
             },
             AbilitySlot::Hidden => match &data.hidden_ability {
                 None => match &data.ability {
-                    PokemonAbility::One(a) | PokemonAbility::Two(a, _) => *a
+                    OneOrTwo::One(a) | OneOrTwo::Two(a, _) => *a
                 },
                 Some(a) => *a
             }
