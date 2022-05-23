@@ -8,7 +8,6 @@ use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
 
 use crate::item::{EvolutionStone, Item};
-use crate::lookups::Lookup;
 use crate::types::Type;
 
 /// Represents an Attack a Pokemon can have
@@ -574,119 +573,6 @@ pub enum Move {
     FusionFlare,
     FusionBolt
 }
-impl Distribution<Move> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Move {
-        let idx = rng.gen_range(0usize..Move::COUNT);
-        Move::iter().nth(idx).unwrap()
-    }
-}
-impl Move {
-    /// Retrieve a random Move for Metronome. Will not return certain blacklisted moves.
-    pub fn metronome() -> Move {
-        loop {
-            let attack = rand::thread_rng().gen::<Move>();
-            match attack {
-                Move::AfterYou | Move::Assist | Move::Bestow | Move::Chatter | Move::Copycat |
-                Move::Counter | Move::Covet | Move::DestinyBond | Move::Detect | Move::Endure |
-                Move::Feint | Move::FocusPunch | Move::FollowMe | Move::FreezeShock | Move::HelpingHand |
-                Move::IceBurn | Move::MeFirst | Move::Mimic | Move::MirrorCoat | Move::MirrorMove |
-                Move::NaturePower | Move::Protect | Move::Sketch | Move::SleepTalk | Move::Snatch |
-                Move::Snore | Move::Switcheroo | Move::Thief | Move::Transform |
-                Move::Trick | Move::VCreate | Move::WideGuard => {},
-                m => return m
-            }
-        }
-    }
-
-    /// If true, this Move can be used while frozen, and will remove the Frozen condition.
-    pub fn can_thaw_user(&self) -> bool {
-        match self {
-            Move::FlameWheel | Move::FlareBlitz | Move::FusionFlare | Move::SacredFire | Move::Scald => true,
-            _ => false
-        }
-    }
-
-    /// If true, this Move can only be used when the user is asleep.
-    pub fn can_only_be_used_while_sleeping(&self) -> bool {
-        match self {
-            Move::SleepTalk | Move::Snore => true,
-            _ => false
-        }
-    }
-
-    /// If true, this Move can only be used when the *target* is asleep.
-    pub fn can_only_be_used_on_sleeping_target(&self) -> bool {
-        match self {
-            Move::DreamEater | Move::Nightmare => true,
-            _ => false
-        }
-    }
-
-    /// If true, this attack can be learned via Mimic
-    pub fn can_be_mimicked(&self) -> bool {
-        match self {
-            Move::Sketch | Move::Transform | Move::Metronome => false,
-            _ => true
-        }
-    }
-
-    /// If true, this attack can be learned via Sketch
-    pub fn can_be_sketched(&self) -> bool {
-        match self {
-            Move::MirrorMove | Move::SleepTalk | Move::Sketch => false,
-            _ => true
-        }
-    }
-
-    /// If true, this attack can be called by Sleep Talk
-    pub fn can_be_sleep_talked(&self) -> bool {
-        match self {
-            Move::Assist | Move::Bide | Move::Bounce | Move::Copycat | Move::Dig |
-            Move::Dive | Move::FreezeShock | Move::Fly | Move::FocusPunch | Move::IceBurn |
-            Move::MeFirst | Move::Metronome | Move::MirrorMove | Move::Mimic | Move::RazorWind |
-            Move::ShadowForce | Move::Sketch | Move::SkullBash | Move::SkyAttack | Move::SkyDrop |
-            Move::SolarBeam | Move::Uproar | Move::SleepTalk => false,
-            _ => true
-        }
-    }
-
-    /// If true, this attack can be the subject of an encore
-    pub fn can_be_encored(&self) -> bool {
-        match self {
-            Move::Transform | Move::Mimic | Move::Sketch | Move::MirrorMove | Move::SleepTalk | Move::Encore => false,
-            _ => true
-        }
-    }
-
-    /// If true, this Move does double damage on a target that has used Minimize
-    pub fn double_damage_on_minimized_target(&self) -> bool {
-        match self {
-            Move::BodySlam | Move::Stomp | Move::DragonRush | Move::ShadowForce | Move::Steamroller | Move::HeatCrash | Move::HeavySlam => true,
-            _ => false
-        }
-    }
-
-    /// If true, this move increments the protection counter. If false, this move resets the protection counter to 0.
-    pub fn is_protection_move(&self) -> bool {
-        match self {
-            Move::Protect | Move::Detect | Move::Endure | Move::QuickGuard | Move::WideGuard => true,
-            _ => false
-        }
-    }
-
-    /// If true, this attack can bypass Protect/Detect
-    pub fn bypasses_protect(&self) -> bool {
-        match MoveData::lookup(&self).target {
-            Target::User | Target::UserAndAlly | Target::All => true,
-            _ => match self {
-                Move::Acupressure | Move::Conversion2 | Move::Curse | Move::DoomDesire | Move::Feint |
-                Move::FutureSight | Move::PerishSong | Move::PsychUp | Move::RolePlay | Move::ShadowForce |
-                Move::Sketch | Move::Transform | Move::Spikes | Move::ToxicSpikes | Move::StealthRock => true,
-                _ => false
-            }
-        }
-    }
-}
 
 /// Represents the Accuracy of a move
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
@@ -990,70 +876,9 @@ impl Item {
             Item::SplashPlate | Item::SpookyPlate | Item::StonePlate | Item::ToxicPlate | Item::ZapPlate => 90,
             Item::HardStone => 100,
             Item::IronBall => 130,
-            Item::TM(tm) => tm.get_move().get_power().unwrap_or(10),
-            Item::HM(hm) => hm.get_move().get_power().unwrap_or(10),
+            Item::TM(tm) => 10,
+            Item::HM(hm) => 10,
             _ => 30
-        }
-    }
-}
-
-//region MoveConstants
-impl Move {
-    pub fn is_sound_based(&self) -> bool {
-        match self {
-            Move::BugBuzz | Move::Chatter | Move::EchoedVoice | Move::GrassWhistle | Move::Growl |
-                Move::HealBell | Move::Howl | Move::HyperVoice | Move::MetalSound | Move::PerishSong |
-                Move::RelicSong | Move::Roar | Move::Round | Move::Screech | Move::Sing | Move::Snarl |
-                Move::Snore | Move::Supersonic | Move::Uproar => true,
-            _ => false
-        }
-    }
-
-    pub fn is_contact(&self) -> bool {
-        let data = MoveData::lookup(&self);
-        match data.damage_type {
-            DamageType::Physical => match self {
-                Move::AttackOrder | Move::Barrage | Move::BeatUp | Move::BoneRush | Move::Bonemerang |
-                Move::Bulldoze | Move::BulletSeed | Move::Earthquake | Move::EggBomb | Move::Explosion |
-                Move::Feint | Move::Fissure | Move::Fling | Move::FreezeShock | Move::FusionBolt |
-                Move::GunkShot | Move::IceShard | Move::IcicleCrash | Move::IcicleSpear | Move::MagnetBomb |
-                Move::Magnitude | Move::MetalBurst | Move::NaturalGift | Move::PayDay | Move::PinMissile |
-                Move::PoisonSting | Move::Present | Move::PsychoCut | Move::RazorLeaf | Move::RockBlast |
-                Move::RockSlide | Move::RockThrow | Move::RockTomb | Move::RockWrecker | Move::SacredFire |
-                Move::SandTomb | Move::SecretPower | Move::SeedBomb | Move::SelfDestruct | Move::SkyAttack |
-                Move::SmackDown | Move::SpikeCannon | Move::StoneEdge | Move::Twineedle => false,
-                _ => true
-            },
-            DamageType::Special => match self {
-                Move::PetalDance | Move::TrumpCard | Move::WringOut | Move::GrassKnot => true,
-                _ => false
-            },
-            DamageType::Status => false
-        }
-    }
-
-    pub fn is_powder(&self) -> bool {
-        match self {
-            Move::CottonSpore | Move::PoisonPowder | Move::RagePowder | Move::SleepPowder | Move::Spore | Move::StunSpore => true,
-            _ => false
-        }
-    }
-
-    pub fn is_trapping(&self) -> bool {
-        match self {
-            Move::Block | Move::Ingrain | Move::MeanLook | Move::SpiderWeb => true,
-            _ => false
-        }
-    }
-
-    pub fn bypasses_substitute(&self) -> bool {
-        self.is_sound_based()
-    }
-
-    pub fn get_power(&self) -> Option<u8> {
-        match MoveData::lookup(&self).power {
-            Power::Base(a) => Some(a),
-            _ => None
         }
     }
 }

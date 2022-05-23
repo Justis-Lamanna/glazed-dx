@@ -5,7 +5,6 @@ This project is a combination of four inner projects. More detail can be found i
 
 * [glazed-core](crates/glazed-core) - Pending deprecation.
 * [glazed-data](crates/glazed-data) - Contains enums and data structures for Pokemon-related items, such as Species.
-* [glazed-battle](crates/glazed-battle) - Pending deprecation.
 * [glazed-dx](crates/glazed-dx) - Contains the data and logic for running the game.
 
 ## Running the Game

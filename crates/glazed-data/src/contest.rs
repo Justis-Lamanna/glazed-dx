@@ -4,7 +4,6 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::item::Berry;
-use crate::lookups::Lookup;
 use crate::pokemon::{Nature, Pokemon, PokemonContestStats};
 
 #[derive(Debug, Copy, Clone, Deserialize)]
@@ -148,73 +147,6 @@ impl Pokeblock {
             }
         }
         block
-    }
-
-    /// Create a Pokeblock from Berry Blending
-    pub fn blend(berries: Vec<Berry>, max_rpm: f64) -> Pokeblock {
-        if Self::check_black_pokeblock(&berries) {
-            return Self::create_black_pokeblock();
-        }
-
-        let mux = (max_rpm / 333f64) + 1f64;
-
-        let data = berries
-            .iter()
-            .map(|item| BerryPokeblockData::lookup(item))
-            .collect::<Vec<&BerryPokeblockData>>();
-
-        let feel = data.iter()
-            .map(|d| usize::from(d.smoothness))
-            .sum::<usize>();
-        let feel = ((feel / berries.len()) - berries.len()) as u8;
-
-        // 1. Sum all flavors
-        let (spicy, dry, sweet, bitter, sour) = data.iter()
-            .map(|data| {
-                let BerryPokeblockData { spicy, dry, sweet, bitter, sour, .. } = data;
-                (*spicy, *dry, *sweet, *bitter, *sour)
-            })
-            .reduce(|a, b| {
-                (a.0+b.0, a.1+b.1, a.2+b.2, a.3+b.3, a.4+b.4)
-            })
-            .unwrap_or((0, 0, 0, 0, 0));
-
-        // 2. Multiply by 10,
-        // subtract 1 to each flavor for every negative flavor,
-        // set all negatives to 0,
-        // multiply by mux.
-        let mut negative_ctr = 0;
-        if spicy < 0 { negative_ctr += 1}
-        if dry < 0 { negative_ctr += 1}
-        if sweet < 0 { negative_ctr += 1}
-        if bitter < 0 { negative_ctr += 1}
-        if sour < 0 { negative_ctr += 1}
-
-        let (spicy, dry, sweet, bitter, sour) = (
-            Self::normalize(spicy, negative_ctr, mux),
-            Self::normalize(dry, negative_ctr, mux),
-            Self::normalize(sweet, negative_ctr, mux),
-            Self::normalize(bitter, negative_ctr, mux),
-            Self::normalize(sour, negative_ctr, mux)
-        );
-
-        // Calculate Color and Level
-        let (color, level) = Self::determine_color_and_level(spicy, dry, sweet, bitter, sour);
-
-        if let PokeblockColor::Black = color {
-            Self::create_black_pokeblock()
-        } else {
-            Pokeblock {
-                spicy,
-                dry,
-                sweet,
-                bitter,
-                sour,
-                level,
-                feel,
-                color
-            }
-        }
     }
 
     fn determine_color_and_level(spicy: u8, dry: u8, sweet: u8, bitter: u8, sour: u8) -> (PokeblockColor, u8) {

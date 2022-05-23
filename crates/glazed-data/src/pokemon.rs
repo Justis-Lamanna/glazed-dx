@@ -9,8 +9,7 @@ use crate::abilities::Ability;
 use crate::attack::{Move, MoveData};
 use crate::core::{OneOrTwo, Player};
 use crate::item::{Item, Pokeball};
-use crate::locations::{Location, GlazedLocation};
-use crate::lookups::Lookup;
+use crate::locations::Location;
 use crate::species::Species;
 use crate::types::Type;
 
@@ -345,15 +344,6 @@ pub struct MoveSlot {
     pub pp: u8,
     pp_bonus: u8
 }
-impl From<Move> for MoveSlot {
-    fn from(m: Move) -> Self {
-        MoveSlot {
-            attack: m,
-            pp: MoveData::lookup(&m).pp,
-            pp_bonus: 0
-        }
-    }
-}
 impl MoveSlot {
     pub fn copy_for_transform(&self) -> Self {
         MoveSlot {
@@ -543,90 +533,9 @@ impl Distribution<Nature> for Standard {
 }
 
 impl Pokemon {
-    fn determine_moves_by_level(species_data: &SpeciesData, level: u8) -> Vec<MoveSlot> {
-        let mut moveset = vec![];
-        for (lvl, moves_at_level) in &species_data.level_up_moves {
-            if *lvl > level {
-                break
-            } else {
-                for m in moves_at_level {
-                    if !moveset.contains(m) {
-                        moveset.push(*m);
-                        if moveset.len() > 4 {
-                            moveset.remove(0);
-                        }
-                    }
-                }
-            }
-        }
-        assert!(moveset.len() <= 4);
-
-        let mut movepool = vec![];
-        for ms in moveset {
-            movepool.push(MoveSlot {
-                attack: ms,
-                pp: MoveData::lookup(&ms).pp,
-                pp_bonus: 0
-            })
-        }
-        movepool
-    }
-
-    /// Recalculate the level + stats of this Pokemon
-    pub fn recalculate_stats(&mut self) {
-        let species_data = SpeciesData::lookup(&self.species);
-        let level = species_data.level_rate.level_for_experience(self.experience);
-        match self.species {
-            Species::Shedinja => self.hp.value = 1,
-            _ => self.hp.recalculate_hp(species_data.stats.0.base_stat, level)
-        }
-        self.attack.recalculate(species_data.stats.1.base_stat, level, &self.nature.get_attack_boost());
-        self.defense.recalculate(species_data.stats.2.base_stat, level, &self.nature.get_defense_boost());
-        self.special_attack.recalculate(species_data.stats.3.base_stat, level, &self.nature.get_special_attack_boost());
-        self.special_defense.recalculate(species_data.stats.4.base_stat, level, &self.nature.get_special_defense_boost());
-        self.speed.recalculate(species_data.stats.5.base_stat, level, &self.nature.get_speed_boost());
-
-        if self.current_hp > self.hp.value {
-            self.current_hp = self.hp.value;
-        }
-
-        self.level = level;
-    }
-
     /// Restore this Pokemon to its max HP
     pub fn heal(&mut self) {
         self.current_hp = self.hp.value;
-    }
-
-    /// Get the actual ability of this Pokemon
-    /// Rules:
-    /// If pokemon has SlotOne, return the first standard ability
-    /// If pokemon has SlotTwo:
-    ///     If pokemon has only one standard ability, return it
-    ///     If pokemon has two standard abilities, returns the second standard ability
-    /// If pokemon has Hidden:
-    ///     If pokemon has a hidden ability, return it
-    ///     If pokemon has no hidden ability, return the first standard ability
-    pub fn get_ability(&self) -> Ability {
-        let data = SpeciesData::lookup(&self.species);
-        match self.ability {
-            AbilitySlot::SlotOne => {
-                match &data.ability {
-                    OneOrTwo::One(a) | OneOrTwo::Two(a, _) => *a
-                }
-            },
-            AbilitySlot::SlotTwo => {
-                match &data.ability {
-                    OneOrTwo::One(a) | OneOrTwo::Two(_, a) => *a
-                }
-            },
-            AbilitySlot::Hidden => match &data.hidden_ability {
-                None => match &data.ability {
-                    OneOrTwo::One(a) | OneOrTwo::Two(a, _) => *a
-                },
-                Some(a) => *a
-            }
-        }
     }
 
     pub fn get_hidden_power_type(&self) -> Type {
@@ -1034,73 +943,5 @@ impl PokemonTemplate {
                 if male { Gender::Male } else { Gender::Female }
             }
         }
-    }
-}
-impl From<PokemonTemplate> for Pokemon {
-    fn from(template: PokemonTemplate) -> Self {
-        let data = SpeciesData::lookup(&template.species);
-        let (hp, atk, def, spa, spd, spe)
-            = PokemonTemplate::create_stats(template.ivs, template.evs);
-        let (trainer_id, secret_id, name) = match template.original_trainer {
-            Some(TemplateTrainer { trainer_id, secret_id, name }) => (trainer_id, secret_id, name),
-            None => (rand::thread_rng().gen(), rand::thread_rng().gen(), "Trainer".to_string())
-        };
-        let mut moves = Pokemon::determine_moves_by_level(data, template.level);
-        let mut moves = moves.drain(..);
-        let mut p = Pokemon {
-            species: template.species,
-            gender: template.gender.unwrap_or_else(|| PokemonTemplate::create_gender(data.gender_ratio)),
-            egg: template.level == 0,
-            level_met: template.level_met.unwrap_or(template.level),
-            nature: template.nature.unwrap_or_else(|| rand::thread_rng().gen()),
-            ability: template.ability.unwrap_or_else(|| rand::thread_rng().gen()),
-            poke_ball: template.poke_ball.unwrap_or(Pokeball::PokeBall),
-            held_item: template.held_item,
-            move_1: match template.move_1 {
-                MoveTemplate::HardCoded(m) => Some(MoveSlot::from(m)),
-                MoveTemplate::NaturalMove => moves.next(),
-                MoveTemplate::None => None
-            },
-            move_2: match template.move_2 {
-                MoveTemplate::HardCoded(m) => Some(MoveSlot::from(m)),
-                MoveTemplate::NaturalMove => moves.next(),
-                MoveTemplate::None => None
-            },
-            move_3: match template.move_3 {
-                MoveTemplate::HardCoded(m) => Some(MoveSlot::from(m)),
-                MoveTemplate::NaturalMove => moves.next(),
-                MoveTemplate::None => None
-            },
-            move_4: match template.move_4 {
-                MoveTemplate::HardCoded(m) => Some(MoveSlot::from(m)),
-                MoveTemplate::NaturalMove => moves.next(),
-                MoveTemplate::None => None
-            },
-            experience: data.level_rate.experience_for_level(template.level),
-            personality: template.personality.unwrap_or_else(|| rand::thread_rng().gen()),
-            friendship: template.friendship.unwrap_or(data.base_friendship),
-            original_trainer_id: trainer_id,
-            original_trainer_secret_id: secret_id,
-            original_trainer_name: name,
-            nickname: template.nickname,
-            level: template.level,
-            markings: template.markings,
-            status: template.status.unwrap_or_default(),
-            pokerus: template.pokerus.unwrap_or_else(|| PokemonPokerusStatus::None),
-            contest: template.contest.unwrap_or_default(),
-            fateful_encounter: template.fateful_encounter,
-            current_hp: 0,
-            hp,
-            attack: atk,
-            defense: def,
-            special_attack: spa,
-            special_defense: spd,
-            speed: spe,
-            date_caught: template.date_caught.unwrap_or_else(|| chrono::Local::now().timestamp()),
-            location_caught: template.location_caught.unwrap_or_else(GlazedLocation::current_location)
-        };
-        p.recalculate_stats();
-        p.heal();
-        p
     }
 }

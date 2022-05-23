@@ -6,7 +6,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use strum_macros::{EnumDiscriminants, IntoStaticStr};
 
-use crate::time::{GlazedTime, Season};
+use crate::time::Season;
 use crate::types::Type;
 
 //region Pokemon Species Enums
@@ -832,30 +832,4 @@ pub enum GenesectForm {
 }
 impl Default for GenesectForm {
     fn default() -> Self { GenesectForm::Normal }
-}
-
-/// Specific flavors of Species Generation based on some form of internal context
-#[derive(Debug, Serialize, Deserialize)]
-pub enum SpeciesGenerator {
-    /// Generates an Unown of a random flavor, evenly distributed
-    RandomUnown,
-    /// Generates a Deerling corresponding to the current season
-    SeasonalDeerling,
-    /// Generates a Sawsbuck corresponding to the current season
-    SeasonalSawsbuck,
-    /// Generates a random species, evenly distributed
-    Random(Vec<Species>)
-}
-impl Into<Species> for SpeciesGenerator {
-    fn into(self) -> Species {
-        match self {
-            SpeciesGenerator::RandomUnown => Species::Unown(rand::thread_rng().gen()),
-            SpeciesGenerator::Random(choices) => {
-                let idx = rand::thread_rng().gen_range(0..choices.len());
-                choices[idx]
-            }
-            SpeciesGenerator::SeasonalDeerling => Species::Deerling(GlazedTime::get_season()),
-            SpeciesGenerator::SeasonalSawsbuck => Species::Sawsbuck(GlazedTime::get_season()),
-        }
-    }
 }
