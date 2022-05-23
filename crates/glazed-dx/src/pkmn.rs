@@ -1,13 +1,65 @@
-use std::ascii::AsciiExt;
+use serde::Deserialize;
 
 use bevy::prelude::*;
 use bevy::ecs::system::SystemParam;
 use bevy_kira_audio::{Audio, AudioChannel, InstanceHandle, PlaybackState};
-use glazed_data::pokemon::{Gender, Pokemon};
+use bevy::reflect::TypeUuid;
+use bevy::utils::HashMap;
+
+use glazed_data::pokemon::{Gender, Pokemon, SpeciesData};
 
 use glazed_data::species::{ForcesOfNatureForm, KyuremForm, ShayminForm, Species, SpeciesDiscriminants, UnownForm, CastformForm, DeoxysForm, BurmyWormadamForm, CherrimForm, ShellosGastrodonForm, RotomForm, BasculinForm, DarmanitanForm, KeldeoForm, MeloettaForm, GenesectForm};
 use crate::locale::Fluent;
 use crate::state::GlobalOptions;
+use crate::util::YamlLoader;
+
+pub struct PkmnPlugin;
+impl Plugin for PkmnPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_asset_loader(YamlLoader::<SpeciesDataMapping, SpeciesDataLookup>::new("pkmn"))
+            .add_asset::<SpeciesDataLookup>()
+        ;
+    }
+}
+
+#[derive(Deserialize)]
+pub struct SpeciesDataMapping {
+    id: Species,
+    data: SpeciesData
+}
+
+#[derive(TypeUuid, Deref, DerefMut)]
+#[uuid = "22f5c97d-2715-49c3-a7f8-18fdbc76060f"]
+pub struct SpeciesDataLookup(HashMap<Species, SpeciesData>);
+impl From<Vec<SpeciesDataMapping>> for SpeciesDataLookup {
+    fn from(vec: Vec<SpeciesDataMapping>) -> Self {
+        let d = vec.into_iter()
+            .map(|p| (p.id, p.data))
+            .collect::<HashMap<Species, SpeciesData>>();
+        SpeciesDataLookup(d)
+    }
+}
+
+/// Hold all Lookup files
+pub struct PokemonDataFiles {
+    pub species_data: Handle<SpeciesDataLookup>
+}
+
+#[derive(SystemParam)]
+pub struct PokemonLookup<'w, 's> {
+    handles: Res<'w, PokemonDataFiles>,
+    assets: Res<'w, Assets<SpeciesDataLookup>>,
+    commands: Commands<'w, 's>,
+}
+impl <'w, 's> PokemonLookup<'w, 's> {
+    pub fn lookup(&self, pkmn: Species) -> Option<&SpeciesData> {
+        let handle = &self.handles.species_data;
+        let asset = self.assets.get(handle);
+
+        asset.and_then(|l| l.0.get(&pkmn))
+    }
+}
 
 #[derive(SystemParam)]
 pub struct Cry<'w, 's> {
@@ -246,3 +298,4 @@ impl<'w, 's> Fluent<'w, 's> {
         self.buffer_string(key, name);
     }
 }
+

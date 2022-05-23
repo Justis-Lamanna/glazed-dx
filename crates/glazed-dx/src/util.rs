@@ -7,10 +7,51 @@ use rand_xoshiro::Xoshiro256StarStar;
 use std::collections::hash_map::DefaultHasher;
 use std::time::Duration;
 use std::hash::{Hash, Hasher};
+use std::marker::PhantomData;
+use anyhow::Error;
+use bevy::asset::{Asset, AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
+use bevy::reflect::TypeUuid;
+use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use crate::UI;
 
+/// A system which despawns everything marked with a specific component.
+/// To use, add the following as a system: `despawn::<{marker component}>`.
 pub fn despawn<T: Component>(mut commands: Commands, marked: Query<Entity, With<T>>) {
     marked.for_each(|e| commands.entity(e).despawn_recursive())
+}
+
+/// An asset loader which loads yaml with different extensions.
+pub struct YamlLoader<RAW, OUT: From<Vec<RAW>>> {
+    extension: [&'static str; 1],
+    _m1: PhantomData<RAW>,
+    _m2: PhantomData<OUT>
+}
+impl<RAW, OUT: From<Vec<RAW>>> YamlLoader<RAW, OUT> {
+    pub fn new(extension: &'static str) -> Self {
+        Self {
+            extension: [extension],
+            _m1: PhantomData,
+            _m2: PhantomData
+        }
+    }
+}
+impl<RAW, OUT> AssetLoader for YamlLoader<RAW, OUT> where
+    RAW: DeserializeOwned + Send + Sync + 'static,
+    OUT: Asset + From<Vec<RAW>>
+{
+    fn load<'a>(&'a self, bytes: &'a [u8], load_context: &'a mut LoadContext) -> BoxedFuture<'a, anyhow::Result<(), Error>> {
+        Box::pin(async move {
+            let content: Vec<RAW> = serde_yaml::from_slice(bytes)?;
+            let content = OUT::from(content);
+            load_context.set_default_asset(LoadedAsset::new(content));
+            Ok(())
+        })
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &self.extension
+    }
 }
 
 #[derive(Copy, Clone, Debug)]

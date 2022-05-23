@@ -16,10 +16,11 @@ use leafwing_input_manager::prelude::*;
 use bevy::input::system::exit_on_esc_system;
 use bevy_kira_audio::AudioPlugin;
 use bevy_tweening::TweeningPlugin;
+use glazed_data::species::Species;
 use locale::FluentData;
 use player::Player;
 use crate::anim::GlazedAnimator;
-use crate::pkmn::Cry;
+use crate::pkmn::{Cry, PkmnPlugin, PokemonDataFiles, PokemonLookup};
 use crate::controls::Actions;
 use crate::scenes::intro::Title;
 use crate::scenes::lecture::Lecture;
@@ -57,6 +58,7 @@ fn main() {
         .add_system(exit_on_esc_system)
 
         // Random Plugins
+        .add_plugin(PkmnPlugin)
         .add_plugin(TransitionPlugin)
         .add_plugin(TextPlugin)
         .add_plugin(actions::ActionsPlugin)
@@ -70,6 +72,7 @@ fn main() {
             .track_assets()
         )
         .add_enter_system(GameState::Splash, init_load)
+        .add_enter_system(GameState::Title, test)
 
         // Other states go here
         .add_plugin(Title)
@@ -114,7 +117,7 @@ fn setup(mut commands: Commands) {
     .insert(UI);
 }
 
-fn init_load(ass: Res<AssetServer>, locales: Res<FluentData>, mut loading: ResMut<AssetsLoading>) {
+fn init_load(mut commands: Commands, ass: Res<AssetServer>, locales: Res<FluentData>, mut loading: ResMut<AssetsLoading>) {
     info!("Loading important assets");
     let font: Handle<Font> = ass.load(text::FONT);
     loading.add(font);
@@ -122,4 +125,16 @@ fn init_load(ass: Res<AssetServer>, locales: Res<FluentData>, mut loading: ResMu
     for handle in locales.get_handles() {
         loading.add(handle);
     }
+
+    let species_data = ass.load("pkmn/data.pkmn");
+    loading.add(species_data.clone());
+
+    commands.insert_resource(PokemonDataFiles {
+        species_data
+    });
+}
+
+fn test(pkmn: PokemonLookup) {
+    let d = pkmn.lookup(Species::Buizel).unwrap();
+    info!("{:#?}", d);
 }

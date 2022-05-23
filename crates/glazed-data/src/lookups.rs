@@ -25,10 +25,6 @@ struct YamlFriendlySpeciesData<DATA> {
     data: DATA
 }
 
-pub fn test() {
-
-}
-
 lazy_static! {
     pub static ref SPECIES_DATA: HashMap<Species, SpeciesData> = {
         resource_str!("resources/pokemon/speciesdata.yml", |yml: &str| {
