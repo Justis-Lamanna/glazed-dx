@@ -1,18 +1,19 @@
 use bevy::prelude::*;
+use bevy::asset::{Asset, AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
 use bevy_tweening::{Animator, component_animator_system, Lens};
 use iyes_loopless::prelude::*;
 use iyes_loopless::state::CurrentState;
+
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256StarStar;
+
 use std::collections::hash_map::DefaultHasher;
 use std::time::Duration;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use anyhow::Error;
-use bevy::asset::{Asset, AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
-use bevy::reflect::TypeUuid;
+
 use serde::de::DeserializeOwned;
-use serde::Deserialize;
 use crate::UI;
 
 /// A system which despawns everything marked with a specific component.
@@ -168,7 +169,6 @@ fn init_fade_in(mut cmds: Commands, res: Option<Res<Transition>>, mut ui: Query<
         FadeType::Gentle(TriggerFade{start, end, duration}) => {
             info!("Gentle fade in: {:?} => {:?} ({:?})", start, end, duration.as_millis());
             use bevy_tweening::*;
-            use bevy_tweening::lens::SpriteColorLens;
             let fade = Tween::new(
                 EaseFunction::QuadraticInOut,
                 bevy_tweening::TweeningType::Once,
@@ -216,7 +216,6 @@ fn init_fade_out(mut cmds: Commands, res: Option<Res<Transition>>, mut existing:
         FadeType::Gentle(TriggerFade{start, end, duration}) => {
             info!("Gentle fade out: {:?} => {:?} ({:?})", start, end, duration.as_millis());
             use bevy_tweening::*;
-            use bevy_tweening::lens::SpriteColorLens;
             let fade = Tween::new(
                 EaseFunction::QuadraticInOut,
                 bevy_tweening::TweeningType::Once,
@@ -241,7 +240,7 @@ fn should_monitor_fade_out(res: Option<Res<Transition>>) -> bool {
 }
 
 fn monitor_fade_out(mut cmds: Commands, query: Query<(Entity, &Animator<UiColor>), With<UI>>) {
-    if let Some((entity, a)) = query.iter().last() {
+    if let Some((_, a)) = query.iter().last() {
         if a.progress() >= 1.0 {
             cmds.insert_resource(NextState(TransitionState::None));
         }

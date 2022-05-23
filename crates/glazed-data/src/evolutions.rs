@@ -2,19 +2,13 @@
 
 use serde::Deserialize;
 
-use crate::attack::{Move, MoveData};
+use crate::attack::Move;
 use crate::contest::Condition;
-use crate::core::Player;
 use crate::time::TimeOfDay;
 use crate::item::{EvolutionStone, Item};
-use crate::pokemon::{Gender, Pokemon};
+use crate::pokemon::Gender;
 use crate::species::Species;
 use crate::types::Type;
-
-const MIN_CONDITION_TO_EVOLVE: u8 = 170;
-const MIN_FRIENDSHIP_TO_EVOLVE: u8 = 220;
-const HIDDEN_ABILITY_PASS_PROBABILITY: f64 = 0.6;
-const REGULAR_ABILITY_PASS_PROBABILITY: f64 = 0.8;
 
 /// Represents evolution + breeding data for a species
 /// Breeding rules:

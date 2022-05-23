@@ -1,7 +1,5 @@
 #![allow(non_upper_case_globals)]
 
-use std::collections::HashSet;
-
 use serde::{Deserialize, Serialize};
 use strum_macros::{EnumDiscriminants, EnumIter};
 

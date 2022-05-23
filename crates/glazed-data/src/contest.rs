@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -113,16 +111,6 @@ pub struct Pokeblock {
     pub color: PokeblockColor
 }
 impl Pokeblock {
-    fn check_black_pokeblock(berries: &Vec<Berry>) -> bool {
-        let mut seen = HashSet::new();
-        for berry in berries {
-            if !seen.insert(berry) {
-                return false
-            }
-        }
-        true
-    }
-
     /// Generate a black Pokeblock
     pub fn create_black_pokeblock() -> Pokeblock {
         let mut block = Pokeblock {
@@ -147,96 +135,6 @@ impl Pokeblock {
             }
         }
         block
-    }
-
-    fn determine_color_and_level(spicy: u8, dry: u8, sweet: u8, bitter: u8, sour: u8) -> (PokeblockColor, u8) {
-        // Color depends on the # of flavors, and the highest flavor.
-        // Level == highest_strength_value
-        let mut flavor_counter = 0;
-        let mut highest_strength = None;
-        let mut highest_strength_value = 0;
-
-        if spicy > 0 {
-            flavor_counter += 1;
-            if spicy > highest_strength_value {
-                highest_strength_value = spicy;
-                highest_strength = Some(BerryFlavor::Spicy);
-            }
-        }
-
-        if dry > 0 {
-            flavor_counter += 1;
-            if dry > highest_strength_value {
-                highest_strength_value = dry;
-                highest_strength = Some(BerryFlavor::Dry);
-            }
-        }
-
-        if sweet > 0 {
-            flavor_counter += 1;
-            if sweet > highest_strength_value {
-                highest_strength_value = sweet;
-                highest_strength = Some(BerryFlavor::Sweet);
-            }
-        }
-
-        if bitter > 0 {
-            flavor_counter += 1;
-            if bitter > highest_strength_value {
-                highest_strength_value = bitter;
-                highest_strength = Some(BerryFlavor::Bitter);
-            }
-        }
-
-        if sour > 0 {
-            flavor_counter += 1;
-            if sour > highest_strength_value {
-                highest_strength_value = sour;
-                highest_strength = Some(BerryFlavor::Sour);
-            }
-        }
-
-        let color = match flavor_counter {
-            0 => PokeblockColor::Black,
-            1 => {
-                if highest_strength_value <= 50 {
-                    match highest_strength.unwrap() {
-                        BerryFlavor::Spicy => PokeblockColor::Red,
-                        BerryFlavor::Dry => PokeblockColor::Blue,
-                        BerryFlavor::Sweet => PokeblockColor::Pink,
-                        BerryFlavor::Bitter => PokeblockColor::Green,
-                        BerryFlavor::Sour => PokeblockColor::Yellow
-                    }
-                } else {
-                    PokeblockColor::Gold
-                }
-            },
-            2 => {
-                if highest_strength_value <= 50 {
-                    match highest_strength.unwrap() {
-                        BerryFlavor::Spicy => PokeblockColor::Purple,
-                        BerryFlavor::Dry => PokeblockColor::Indigo,
-                        BerryFlavor::Sweet => PokeblockColor::Brown,
-                        BerryFlavor::Bitter => PokeblockColor::LightBlue,
-                        BerryFlavor::Sour => PokeblockColor::Olive
-                    }
-                } else {
-                    PokeblockColor::Gold
-                }
-            },
-            3 => PokeblockColor::Gray,
-            _ => PokeblockColor::White
-        };
-        return (color, highest_strength_value)
-    }
-
-    fn normalize(value: i8, counter: i8, mux: f64) -> u8 {
-        let value = (value * 10) - counter;
-        if value < 0 {
-            0
-        } else {
-            (mux * f64::from(value)) as u8
-        }
     }
 
     /// Determine how happy a Pokemon of a given Nature will be while eating this Pokeblock.

@@ -1,5 +1,4 @@
 use core::fmt;
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;

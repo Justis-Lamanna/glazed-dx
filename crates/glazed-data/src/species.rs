@@ -3,14 +3,14 @@
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use strum_macros::{EnumDiscriminants, IntoStaticStr};
 
 use crate::time::Season;
 use crate::types::Type;
 
 //region Pokemon Species Enums
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash, EnumDiscriminants)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash, EnumDiscriminants)]
 #[strum_discriminants(derive(IntoStaticStr))]
 pub enum Species {
     Bulbasaur,
@@ -669,7 +669,7 @@ impl Default for Species {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash, IntoStaticStr)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash, IntoStaticStr)]
 pub enum UnownForm {
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
     ExclamationMark,
@@ -711,7 +711,7 @@ impl Distribution<UnownForm> for Standard {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum CastformForm {
     Normal, Sunny, Rainy, Snowy
 }
@@ -719,7 +719,7 @@ impl Default for CastformForm {
     fn default() -> Self { CastformForm::Normal }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum DeoxysForm {
     Normal, Attack, Defense, Speed
 }
@@ -727,7 +727,7 @@ impl Default for DeoxysForm {
     fn default() -> Self { DeoxysForm::Normal }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum BurmyWormadamForm {
     Plant, Sandy, Trash
 }
@@ -735,7 +735,7 @@ impl Default for BurmyWormadamForm {
     fn default() -> Self { BurmyWormadamForm::Plant }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum CherrimForm {
     Overcast, Sunshine
 }
@@ -743,12 +743,12 @@ impl Default for CherrimForm {
     fn default() -> Self { CherrimForm::Overcast }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum ShellosGastrodonForm {
     WestSea, EastSea
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum RotomForm {
     Normal, Heat, Wash, Frost, Fan, Mow
 }
@@ -756,7 +756,7 @@ impl Default for RotomForm {
     fn default() -> Self { RotomForm::Normal }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum GiratinaForm {
     Altered, Origin
 }
@@ -764,7 +764,7 @@ impl Default for GiratinaForm {
     fn default() -> Self { GiratinaForm::Altered }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum ShayminForm {
     Land, Sky
 }
@@ -772,7 +772,7 @@ impl Default for ShayminForm {
     fn default() -> Self { ShayminForm::Sky }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum BasculinForm {
     RedStriped, BlueStriped
 }
@@ -786,7 +786,7 @@ impl Distribution<BasculinForm> for Standard {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum DarmanitanForm {
     Standard, Zen
 }
@@ -794,7 +794,7 @@ impl Default for DarmanitanForm {
     fn default() -> Self { DarmanitanForm::Standard }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum ForcesOfNatureForm {
     Incarnate, Therian
 }
@@ -802,7 +802,7 @@ impl Default for ForcesOfNatureForm {
     fn default() -> Self { ForcesOfNatureForm::Incarnate }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum KyuremForm {
     Normal, White, Black
 }
@@ -810,7 +810,7 @@ impl Default for KyuremForm {
     fn default() -> Self { KyuremForm::Normal }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum KeldeoForm {
     Ordinary, Resolute
 }
@@ -818,7 +818,7 @@ impl Default for KeldeoForm {
     fn default() -> Self { KeldeoForm::Ordinary }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum MeloettaForm {
     Aria, Pirouette
 }
@@ -826,7 +826,7 @@ impl Default for MeloettaForm {
     fn default() -> Self { MeloettaForm::Aria }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Eq, Hash)]
 pub enum GenesectForm {
     Normal, Shock, Burn, Chill, Douse
 }

@@ -50,7 +50,8 @@ pub struct PokemonDataFiles {
 pub struct PokemonLookup<'w, 's> {
     handles: Res<'w, PokemonDataFiles>,
     assets: Res<'w, Assets<SpeciesDataLookup>>,
-    commands: Commands<'w, 's>,
+    #[allow(dead_code)]
+    marker: Commands<'w, 's>,
 }
 impl <'w, 's> PokemonLookup<'w, 's> {
     pub fn lookup(&self, pkmn: Species) -> Option<&SpeciesData> {

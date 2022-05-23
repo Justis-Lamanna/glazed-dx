@@ -51,7 +51,6 @@ pub mod delay {
 
 pub mod text {
     use bevy::prelude::*;
-    use bevy::ecs::system::SystemState;
     use bevy_sequential_actions::*;
     use crate::{Commands, Entity, World};
     use crate::text::{EndOfText, TextBoxOptions, TextBoxSystem};

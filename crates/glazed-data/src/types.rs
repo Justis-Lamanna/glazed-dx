@@ -1,12 +1,11 @@
 use std::ops::Mul;
 
-use serde::{Deserialize, Deserializer, Serialize};
-use serde::de::Error;
+use serde::Deserialize;
 use strum_macros::{EnumIter, IntoStaticStr};
 use crate::core::OneOrTwo;
 
 /// Represents the Type of a Pokemon
-#[derive(Debug, Copy, Clone, PartialEq, EnumIter, Serialize, Deserialize, Eq, Hash, IntoStaticStr)]
+#[derive(Debug, Copy, Clone, PartialEq, EnumIter, Deserialize, Eq, Hash, IntoStaticStr)]
 pub enum Type {
     Normal,
     Fighting,

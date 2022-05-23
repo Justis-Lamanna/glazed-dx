@@ -1,13 +1,9 @@
 #![allow(non_upper_case_globals)]
 
-use rand::distributions::Standard;
-use rand::prelude::Distribution;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
-use strum::{EnumCount, IntoEnumIterator};
+use strum::EnumCount;
 use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
 
-use crate::item::{EvolutionStone, Item};
 use crate::types::Type;
 
 /// Represents an Attack a Pokemon can have
@@ -747,18 +743,18 @@ pub enum Effect {
     Custom
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Deserialize)]
 pub enum EffectPredicate {
     Sunny
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Deserialize)]
 pub enum PoisonType {
     Poison,
     BadlyPoisoned
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Deserialize)]
 pub enum ScreenType {
     LightScreen,
     Reflect
@@ -790,60 +786,6 @@ pub struct MoveData {
     #[serde(default)]
     pub effects: Vec<Effect>
 }
-impl MoveData {
-    pub fn is_no_power_move(&self) -> bool {
-        if let Power::None = self.power {
-            true
-        } else {
-            false
-        }
-    }
-
-    pub fn is_charging_move(&self) -> bool {
-        if let Power::BaseWithCharge(_, _) = self.power {
-            true
-        } else {
-            false
-        }
-    }
-
-    pub fn is_rage(&self) -> bool {
-        self.effects.iter()
-            .any(|e| {
-                if let Effect::Rage = e {
-                    true
-                } else {
-                    false
-                }
-            })
-    }
-
-    /// Check whether this attack is affected by Kings Rock or Razor Fang
-    /// All damage-dealing attacks which don't already cause flinching are affected.
-    pub fn is_affected_by_flinch_items(&self) -> bool {
-        if let Power::None = self.power {
-            false
-        } else {
-            self.effects.iter().all(|e| {
-                if let Effect::Flinch(_) = e {
-                    false
-                } else {
-                    true
-                }
-            })
-        }
-    }
-
-    /// Check whether this attack is affected by Serene Grace
-    /// All damage-dealing attacks with secondary effects are affected.
-    pub fn is_affected_by_serene_grace(&self) -> bool {
-        if let Power::None = self.power {
-            false
-        } else {
-            self.effects.len() > 0
-        }
-    }
-}
 
 #[derive(Debug, Copy, Clone, Deserialize)]
 pub enum SemiInvulnerableLocation {
@@ -851,34 +793,4 @@ pub enum SemiInvulnerableLocation {
     Underwater,
     InAir,
     Vanished
-}
-
-impl Item {
-    pub fn fling_power(&self) -> u8 {
-        match self {
-            Item::Berry(_) | Item::RedScarf | Item::YellowScarf | Item::PinkScarf | Item::GreenScarf | Item::BlueScarf |
-            Item::ChoiceBand | Item::ChoiceScarf | Item::ChoiceSpecs | Item::LaggingTail | Item::Leftovers | Item::MentalHerb |
-            Item::MetalPowder | Item::QuickPowder | Item::ReaperCloth | Item::RingTarget |
-            Item::SilkScarf | Item::SilverPowder | Item::SoftSand | Item::SootheBell | Item::WideLens | Item::BrightPowder | Item::ZoomLens => 10,
-            Item::Eviolite | Item::LuckyPunch => 40,
-            Item::DubiousDisk | Item::SharpBeak => 50,
-            Item::AdamantOrb | Item::GriseousOrb | Item::Leek | Item::LustrousOrb | Item::MachoBrace | Item::RockyHelmet => 60,
-            Item::ShockDrive | Item::BurnDrive | Item::ChillDrive | Item::DouseDrive |
-            Item::PowerAnklet | Item::PowerBand | Item::PowerBelt | Item::PowerBracer | Item::PowerLens | Item::PowerWeight |
-            Item::DragonFang | Item::PoisonBarb => 70,
-            Item::AssaultVest | Item::Stone(EvolutionStone::DawnStone) | Item::Stone(EvolutionStone::DuskStone) | Item::Electirizer |
-            Item::Magmarizer | Item::OvalStone | Item::Protector |
-            Item::RazorClaw | Item::Stone(EvolutionStone::ShinyStone) | Item::StickyBarb | Item::WeaknessPolicy => 80,
-            Item::DeepSeaTooth | Item::GripClaw | Item::ThickClub |
-            Item::DracoPlate | Item::DreadPlate | Item::EarthPlate | Item::FistPlate |
-            Item::FlamePlate | Item::IciclePlate | Item::InsectPlate | Item::IronPlate |
-            Item::MeadowPlate | Item::MindPlate | Item::PixiePlate | Item::SkyPlate |
-            Item::SplashPlate | Item::SpookyPlate | Item::StonePlate | Item::ToxicPlate | Item::ZapPlate => 90,
-            Item::HardStone => 100,
-            Item::IronBall => 130,
-            Item::TM(tm) => 10,
-            Item::HM(hm) => 10,
-            _ => 30
-        }
-    }
 }

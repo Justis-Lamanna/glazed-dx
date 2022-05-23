@@ -21,7 +21,7 @@ features = [
 
 [dependencies.iyes_progress]
 version = "0.3.0"
-default-feature = false
+default-features = false
 features = ["iyes_loopless", "assets"]
 
 [dependencies]

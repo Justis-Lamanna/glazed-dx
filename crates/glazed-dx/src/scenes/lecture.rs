@@ -2,18 +2,17 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 use bevy_sequential_actions::*;
-use bevy_tweening::{Tween, EaseFunction, lens::{TransformPositionLens, SpriteColorLens, TransformRotateZLens}, Animator, Sequence, Delay, EaseMethod, Tracks};
+use bevy_tweening::{Tween, EaseFunction, lens::{TransformPositionLens, SpriteColorLens, TransformRotateZLens}, Animator, Delay, EaseMethod, Tracks};
 use iyes_loopless::prelude::*;
 use rand::Rng as o;
 
 use glazed_data::species::Species;
 
-use crate::{App, GameState, Plugin, util::{despawn, Rng, TransitionState, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::{TextBoxOptions, TextSourceExt}, SCREEN_WIDTH, GlobalOptions};
+use crate::{App, GameState, Plugin, util::{despawn, Rng, in_transition}, LEFT_EDGE, TOP_EDGE, RIGHT_EDGE, BOTTOM_EDGE, text::TextBoxOptions, GlobalOptions};
 use crate::actions::audio::PlayCry;
 use crate::actions::delay::WaitAction;
 use crate::actions::graphics::{ChangeFrame, ShowSprite, TweenTranslate};
-use crate::pkmn::{PokemonSprite, SpriteRequest};
-use crate::text::{EndOfText, TextBoxSystem};
+use crate::pkmn::PokemonSprite;
 use crate::actions::text::ShowTextAction;
 use crate::locale::Fluent;
 
@@ -33,9 +32,8 @@ pub struct DemoPokemon;
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum LectureState {
-    Opening,
-    Introduction,
-    ShowPokemon
+    Fading,
+    Introduction
 }
 #[derive(Component, Deref, DerefMut)]
 pub struct PokeballTimer(Timer);
@@ -49,7 +47,7 @@ pub struct Lecture;
 impl Plugin for Lecture {
     fn build(&self, app: &mut App) {
         app
-            .add_loopless_state(LectureState::Opening)
+            .add_loopless_state(LectureState::Fading)
             .add_enter_system(GameState::ProfessorLecture, setup)
             .add_exit_system(GameState::ProfessorLecture, despawn::<LectureAsset>)
             .add_system_set(
@@ -62,7 +60,7 @@ impl Plugin for Lecture {
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(GameState::ProfessorLecture)
-                    .run_in_state(LectureState::Opening)
+                    .run_in_state(LectureState::Fading)
                     .run_if_not(in_transition)
                     .with_system(display_welcome_text)
                     .into()

@@ -316,7 +316,7 @@ impl TextPlugin {
                     mut query: Query<(&Parent, &mut Text, &mut TextBoxState)>,
                     mut p_query: Query<&mut Style, With<TextBox>>
     ) {
-        for (parent, mut text, mut content) in query.iter_mut() {
+        for (parent, mut text, content) in query.iter_mut() {
             let sections = content.get_current_page_range()
                 .filter_map(|idx| content.get_current_page().lines.get(idx))
                 .flat_map(|section| section.content.iter())

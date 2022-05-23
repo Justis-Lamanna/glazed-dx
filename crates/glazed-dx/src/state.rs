@@ -97,13 +97,6 @@ pub struct Volume {
     sfx: f32
 }
 impl Volume {
-    // pub fn get_raw_music_volume(&self) -> f32 { self.music }
-    // pub fn get_raw_sfx_volume(&self) -> f32 { self.sfx }
-    // pub fn set_master_volume(&mut self, val: f32) { self.master = val }
-    // pub fn set_raw_music_volume(&mut self, val: f32) { self.music = val }
-    // pub fn set_raw_sfx_volume(&mut self, val: f32) { self.sfx = val }
-
-    // pub fn get_master_volume(&self) -> f32 { self.master.clamp(0.0, 1.0) }
     pub fn get_music_volume(&self) -> f32 { (self.master * self.music).clamp(0.0, 1.0) }
     pub fn get_sfx_volume(&self) -> f32 { (self.master * self.sfx).clamp(0.0, 1.0) }
 }

@@ -6,8 +6,8 @@ use rand::Rng;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::abilities::Ability;
-use crate::attack::{Move, MoveData};
-use crate::core::{OneOrTwo, Player};
+use crate::attack::Move;
+use crate::core::OneOrTwo;
 use crate::item::{Item, Pokeball};
 use crate::locations::Location;
 use crate::species::Species;
@@ -215,7 +215,7 @@ impl SpeciesData {
 }
 
 /// Represents an individual member of a Pokemon species
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Pokemon {
     pub species: Species,
     pub gender: Gender,
@@ -764,16 +764,6 @@ impl PokemonTemplate {
             level,
             ..Default::default()
         }
-    }
-
-    /// Set the trainer to be a specific player
-    pub fn trainer(mut self, trainer: &Player) -> PokemonTemplate {
-        self.original_trainer = Some(TemplateTrainer {
-            trainer_id: trainer.trainer_id,
-            secret_id: trainer.secret_id,
-            name: trainer.name.clone()
-        });
-        self
     }
 
     /// Force this Pokemon to be shiny
