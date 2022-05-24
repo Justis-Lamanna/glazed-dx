@@ -1,9 +1,8 @@
 # Pokemon Glazed DX
 A complete rewrite of Pokemon Glazed in the Rust language.
 
-This project is a combination of four inner projects. More detail can be found in their respective crates:
+This project is a combination of two inner projects. More detail can be found in their respective crates:
 
-* [glazed-core](crates/glazed-core) - Pending deprecation.
 * [glazed-data](crates/glazed-data) - Contains enums and data structures for Pokemon-related items, such as Species.
 * [glazed-dx](crates/glazed-dx) - Contains the data and logic for running the game.
 

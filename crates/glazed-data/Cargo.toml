@@ -16,4 +16,3 @@ flags = "0.1.5" # Ribbon flags in a convenient package
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8" # Parsing files into appropriate data-structures
 lazy_static = "1.4.0" # Holding the parsed data structures
-glazed_core = { path = "../glazed-core" }
