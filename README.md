@@ -7,10 +7,8 @@ This project is a combination of two inner projects. More detail can be found in
 * [glazed-dx](crates/glazed-dx) - Contains the data and logic for running the game.
 
 ## Running the Game
-To run the game, simply run `cargo run --package glazed_dx --bin glazed_dx` from the root. A
-(possibly empty) `saves/` directory should be present at the root, although this will not 
-be necessary in later releases. Some assets are also zipped, and will need to be unpacked
-before first run.
+To run the game, simply run `cargo run --package glazed_dx --bin glazed_dx` from the root.
+No other files are required.
 
 ## Configuring the Game
 Various aspects of the game can be configured via `options.yml`, including control schemes,
