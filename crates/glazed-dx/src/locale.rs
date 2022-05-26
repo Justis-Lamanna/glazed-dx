@@ -14,7 +14,7 @@ use unic_langid::{LanguageIdentifier, langid};
 use fluent_langneg::negotiate_languages;
 use fluent_langneg::NegotiationStrategy;
 
-use crate::player::Player;
+use crate::player::{Player, MAX_POKEMON_IN_PARTY};
 
 /// Plugin to initialize Translation data.
 /// This will give Bevy the ability to read Fluent files (.ftl),
@@ -167,7 +167,6 @@ pub struct Fluent<'w, 's> {
     locale: Res<'w, Locale>,
     data: Res<'w, FluentData>,
     loader: Res<'w, Assets<FluentResourceWrapper>>,
-    player: Res<'w, Player>,
     params: ResMut<'w, FluentParams>,
     #[allow(dead_code)]
     marker: Query<'w, 's, ()>
@@ -210,7 +209,6 @@ impl<'w, 's> Fluent<'w, 's> {
     /// Create the FluentArgs object from other resources
     fn build_fluent_args(&self) -> Option<FluentArgs> {
         let mut args = FluentArgs::default();
-        args.set("player", self.player.name.as_str());
 
         for (key, value) in self.params.params.iter() {
             args.set(key, FluentValue::from(value))
@@ -238,6 +236,29 @@ impl<'w, 's> Fluent<'w, 's> {
         let cow = bundle.format_pattern(
             message, 
             args.as_ref(),
+            &mut errors);
+
+        if errors.len() > 0 {
+            for error in errors {
+                warn!("Parsing error for id {}: {}", id, error);
+            }
+        }
+
+        Some(cow.to_string())
+    }
+
+    pub fn translate_with_arg<'a, T: Into<FluentValue<'a>>>(&self, id: &str, arg_key: &'a str, arg: T) -> Option<String> {
+        let bundles = self.get_bundles()?;
+        let (bundle, message) = bundles.get_bundle_for_id(id)?;
+        let message = message.value()?;
+        let mut errors = Vec::new();
+
+        let mut args = FluentArgs::new();
+        args.set(arg_key, arg);
+
+        let cow = bundle.format_pattern(
+            message, 
+            Some(&args),
             &mut errors);
 
         if errors.len() > 0 {

@@ -10,17 +10,18 @@ mod locale;
 mod player;
 
 use bevy::prelude::*;
+use glazed_data::pokemon::{PokemonTemplate, Pokemon};
+use glazed_data::species::Species;
 use iyes_loopless::prelude::*;
 use iyes_progress::prelude::*;
 use leafwing_input_manager::prelude::*;
 use bevy::input::system::exit_on_esc_system;
 use bevy_kira_audio::AudioPlugin;
 use bevy_tweening::TweeningPlugin;
-use glazed_data::species::Species;
 use locale::FluentData;
-use player::Player;
+use player::{Player, PlayerService};
 use crate::anim::GlazedAnimator;
-use crate::pkmn::{Cry, PkmnPlugin, PokemonDataFiles, PokemonLookup};
+use crate::pkmn::{Cry, PkmnPlugin, PokemonDataFiles};
 use crate::controls::Actions;
 use crate::scenes::intro::Title;
 use crate::scenes::lecture::Lecture;
@@ -47,6 +48,7 @@ fn main() {
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(Player {
             name: "Milo Marten".into(),
+            ..default()
         })
         .add_plugins(DefaultPlugins)
         .add_plugin(GlazedAnimator)
@@ -134,7 +136,6 @@ fn init_load(mut commands: Commands, ass: Res<AssetServer>, locales: Res<FluentD
     });
 }
 
-fn test(pkmn: PokemonLookup) {
-    let d = pkmn.lookup(Species::Buizel).unwrap();
-    info!("{:#?}", d);
+fn test(player: PlayerService) {
+    
 }
