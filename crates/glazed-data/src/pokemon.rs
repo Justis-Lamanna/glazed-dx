@@ -250,7 +250,7 @@ pub struct Pokemon {
     pub original_trainer_name: String,
     pub nickname: Option<String>,
     pub level: u8,
-    pub markings: [bool; 6],
+    pub markings: Markings,
     pub status: PokemonStatusCondition,
     pub pokerus: PokemonPokerusStatus,
     pub current_hp: u16,
@@ -276,6 +276,23 @@ pub struct PokemonContestStats {
     pub toughness: u8,
     pub feel: u8,
     pub ribbons: Ribbons
+}
+
+bitflags::bitflags! {
+    #[derive(Serialize, Deserialize)]
+    pub struct Markings: u8 {
+        const CIRCLE    = 0b00000001;
+        const TRIANGLE  = 0b00000010;
+        const SQUARE    = 0b00000100;
+        const HEART     = 0b00001000;
+        const STAR      = 0b00010000;
+        const DIAMOND   = 0b00100000;
+    }
+}
+impl Default for Markings {
+    fn default() -> Self {
+        Markings::empty()
+    }
 }
 
 bitflags::bitflags! {
@@ -720,7 +737,7 @@ pub struct PokemonTemplate {
     pub original_trainer: Option<TemplateTrainer>,
     pub nickname: Option<String>,
     pub level: u8,
-    pub markings: [bool; 6],
+    pub markings: Markings,
     pub status: Option<PokemonStatusCondition>,
     pub pokerus: Option<PokemonPokerusStatus>,
     pub current_hp: Option<u16>,
