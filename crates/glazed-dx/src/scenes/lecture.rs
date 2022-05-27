@@ -12,7 +12,7 @@ use crate::{App, GameState, Plugin, util::{despawn, Rng, in_transition}, LEFT_ED
 use crate::actions::audio::PlayCry;
 use crate::actions::delay::WaitAction;
 use crate::actions::graphics::{ChangeFrame, ShowSprite, TweenTranslate};
-use crate::pkmn::PokemonSprite;
+use crate::pkmn::PokemonSpriteService;
 use crate::actions::text::ShowTextAction;
 use crate::locale::Fluent;
 
@@ -70,7 +70,7 @@ impl Plugin for Lecture {
 }
 
 fn setup(mut commands: Commands, assets: Res<AssetServer>, mut textures: ResMut<Assets<TextureAtlas>>,
-         ps: PokemonSprite, options: Res<GlobalOptions>) {
+         ps: PokemonSpriteService, options: Res<GlobalOptions>) {
     commands.spawn_bundle(SpriteBundle {
         texture: assets.load("lecture/background.png"),
         ..default()

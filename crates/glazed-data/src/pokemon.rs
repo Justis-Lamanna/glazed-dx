@@ -212,6 +212,19 @@ impl SpeciesData {
         }
         set
     }
+
+    /// Get a list of all moves this Pokemon can know at the specified level.
+    /// The order of the list is from latest learned to earliest. As an example
+    /// if this method was called with 40, a level 35 move would show up before a level
+    /// 25 move.
+    pub fn get_knowable_moves_for_level(&self, level: u8) -> Vec<Move> {
+        (0..=level)
+            .rev()
+            .flat_map(|level| self.level_up_moves.get(&level))
+            .flatten()
+            .copied()
+            .collect()
+    }
 }
 
 /// Represents an individual member of a Pokemon species
@@ -342,7 +355,7 @@ impl PokemonStatusCondition {
 pub struct MoveSlot {
     pub attack: Move,
     pub pp: u8,
-    pp_bonus: u8
+    pub pp_bonus: u8
 }
 impl MoveSlot {
     pub fn copy_for_transform(&self) -> Self {
@@ -367,7 +380,7 @@ pub struct StatSlot {
 }
 impl StatSlot {
     /// Create a StatSlot for the HP of a Pokemon
-    fn hp(base: u8, level: u8, iv: u8, ev: u8) -> StatSlot {
+    pub fn hp(base: u8, level: u8, iv: u8, ev: u8) -> StatSlot {
         let calculation = (2u32 * u32::from(base)) + u32::from(iv) + (u32::from(ev) / 4u32);
         let calculation = calculation * u32::from(level);
         let calculation = calculation / 100;
@@ -380,13 +393,13 @@ impl StatSlot {
     }
 
     /// Recalculate (in-place) the HP of this Pokemon
-    fn recalculate_hp(&mut self, base: u8, level: u8) {
+    pub fn recalculate_hp(&mut self, base: u8, level: u8) {
         let recalc = StatSlot::hp(base, level, self.iv, self.ev);
         self.value = recalc.value;
     }
 
     /// Create a StatSlot for this Pokemon
-    fn stat(base: u8, level: u8, iv: u8, ev: u8, boost: &NatureBoost) -> StatSlot {
+    pub fn stat(base: u8, level: u8, iv: u8, ev: u8, boost: NatureBoost) -> StatSlot {
         let calculation = (2u32 * u32::from(base)) + u32::from(iv) + (u32::from(ev) / 4u32);
         let calculation = calculation * u32::from(level);
         let calculation = calculation / 100;
@@ -404,7 +417,7 @@ impl StatSlot {
     }
 
     /// Recalculate (in-place) the stat of this Pokemon
-    fn recalculate(&mut self, base: u8, level: u8, boost: &NatureBoost) {
+    fn recalculate(&mut self, base: u8, level: u8, boost: NatureBoost) {
         let recalc = StatSlot::stat(base, level, self.iv, self.ev, boost);
         self.value = recalc.value;
     }
@@ -447,6 +460,7 @@ pub enum Nature {
 }
 
 /// The result of checking if a stat is boosted by this nature
+#[derive(Copy, Clone, Debug)]
 pub enum NatureBoost {
     Increased,
     Decreased,
@@ -673,6 +687,9 @@ impl Pokemon {
     }
 }
 
+/// Represents the three important pieces of trainer data in a Pokemon.
+/// Typically all three of these are set, or all unset, so it is logical to
+/// have them in a separate class.
 #[derive(Debug)]
 pub struct TemplateTrainer {
     pub trainer_id: u16,
@@ -680,9 +697,14 @@ pub struct TemplateTrainer {
     pub name: String
 }
 
+/// A template which allows for generating Pokemon with suitable defaults.
+/// All fields are optional; the default is a Bulbasaur egg. Typically, a species
+/// will be specified, as well as a level for non-eggs. 
+/// 
+/// In addition, some fields allow for more dynamic or user-friendly generation.
 #[derive(Debug, Default)]
 pub struct PokemonTemplate {
-    pub species: Species,
+    pub species: SpeciesTemplate,
     pub gender: Option<Gender>,
     pub level_met: Option<u8>,
     pub nature: Option<Nature>,
@@ -707,13 +729,18 @@ pub struct PokemonTemplate {
     pub contest: Option<PokemonContestStats>,
     pub fateful_encounter: bool,
     pub date_caught: Option<i64>,
-    pub location_caught: Option<Location>
+    pub location_caught: Option<Location>,
+    pub force_shiny: bool
 }
 
+/// A template which allows for specifying moves
 #[derive(Debug)]
 pub enum MoveTemplate {
+    /// Forces this move to be present in this slot.
     HardCoded(Move),
+    /// Retrieves the next move in the move pool this Pokemon can learn naturally, and use it.
     NaturalMove,
+    /// Force no move in this slot.
     None
 }
 impl Default for MoveTemplate {
@@ -722,11 +749,16 @@ impl Default for MoveTemplate {
     }
 }
 
+/// A template which allows for specifying IVs
 #[derive(Debug)]
 pub enum IVTemplate {
+    /// IVs are randomly generated
     Random,
+    /// Set all IVs to specific values
     HardCoded(u8, u8, u8, u8, u8, u8),
+    /// Set all IVs to one specific value
     All(u8),
+    /// Selects three stats at random, and assigns max IVs to those. Remainder are random.
     Rare
 }
 impl Default for IVTemplate {
@@ -735,9 +767,12 @@ impl Default for IVTemplate {
     }
 }
 
+/// A template which allows for specifying EVs
 #[derive(Debug)]
 pub enum EVTemplate {
+    /// Set all stats individually to a specific value
     HardCoded(u8, u8, u8, u8, u8, u8),
+    /// Set all stats to the same value
     All(u8)
 }
 impl Default for EVTemplate {
@@ -746,19 +781,38 @@ impl Default for EVTemplate {
     }
 }
 
+/// A template which allows for dynamic species generation
+#[derive(Debug)]
+pub enum SpeciesTemplate {
+    /// No dynamic generation
+    HardCoded(Species),
+    /// Generates a random Unown, evenly distributed between all varieties
+    RandomUnown
+}
+impl Default for SpeciesTemplate {
+    fn default() -> Self {
+        Self::HardCoded(Species::default())
+    }
+}
+impl From<Species> for SpeciesTemplate {
+    fn from(s: Species) -> Self {
+        Self::HardCoded(s)
+    }
+}
+
 /// A template which can be used to create individual Pokemon
 /// Use as few or as many fields as necessary. Any unused are given
 /// suitable defaults, or are randomly generated.
 /// At minimum, only a species is required (an egg will be generated).
 impl PokemonTemplate {
-    pub fn egg<S: Into<Species>>(species: S) -> PokemonTemplate {
+    pub fn egg<S: Into<SpeciesTemplate>>(species: S) -> PokemonTemplate {
         PokemonTemplate {
             species: species.into(),
             ..Default::default()
         }
     }
 
-    pub fn pokemon<S: Into<Species>>(species: S, level: u8) -> PokemonTemplate {
+    pub fn pokemon<S: Into<SpeciesTemplate>>(species: S, level: u8) -> PokemonTemplate {
         PokemonTemplate {
             species: species.into(),
             level,
@@ -766,34 +820,9 @@ impl PokemonTemplate {
         }
     }
 
-    /// Force this Pokemon to be shiny
-    /// This is done by setting the Personality value to a specific value based on the original
-    /// trainer values. If there are no original trainer values, the player's will be used
-    /// This algorithm is relatively naive, but works as follows:
-    /// 1. Generate a random 16 bit value. This will be the high bytes of the personality value
-    /// 2. Calculate trainer_id xor secret_id xor value from step 1. This will be the low bytes of the personality value
-    /// Eventually I may tweak this to offer some further variance.
-    ///
-    /// Note that, if you change the trainer or personality values after this, the Pokemon will
-    /// lose its shininess.
+    /// Force this Pokemon to be shiny.
     pub fn shiny(mut self) -> PokemonTemplate {
-        // trainer ID xor secret ID xor personality hb xor personality lb < 16
-        let (trainer_id, secret_id) = match self.original_trainer {
-            Some(TemplateTrainer { trainer_id, secret_id, ..}) => (trainer_id, secret_id),
-            None => panic!()
-        };
-
-        // The simplest way to generate a Pokemon is to create a personality value which, when
-        // the first half is xor'ed with the second, is equal to trainer_portion. This will cause the
-        // full expression to equal 0, which matches as a shiny
-        let personality_hb = rand::thread_rng().gen::<u16>();
-        let personality_lb = trainer_id ^ secret_id ^ personality_hb;
-
-        let personality_hb = personality_hb as u32;
-        let personality_lb = personality_lb as u32;
-
-        self.personality = Some((personality_hb << 16) | personality_lb);
-
+        self.force_shiny = true;
         self
     }
 
@@ -874,64 +903,5 @@ impl PokemonTemplate {
     pub fn custom<F: Fn(&mut PokemonTemplate)>(mut self, func: F) -> Self {
         func(&mut self);
         self
-    }
-
-    fn create_stats(ivs: IVTemplate, evs: EVTemplate) -> (StatSlot, StatSlot, StatSlot, StatSlot, StatSlot, StatSlot) {
-        let ivs = match ivs {
-            IVTemplate::Random => [
-                rand::thread_rng().gen_range(0..=31),
-                rand::thread_rng().gen_range(0..=31),
-                rand::thread_rng().gen_range(0..=31),
-                rand::thread_rng().gen_range(0..=31),
-                rand::thread_rng().gen_range(0..=31),
-                rand::thread_rng().gen_range(0..=31)
-            ],
-            IVTemplate::HardCoded(hp, atk, def, spa, spd, spe) => [hp, atk, def, spa, spd, spe],
-            IVTemplate::All(val) => [val; 6],
-            IVTemplate::Rare => {
-                let mut lucky_slots = [false; 6];
-                let mut counter = 0;
-                while counter < 3 {
-                    let slot = rand::thread_rng().gen_range(0..6);
-                    if !lucky_slots[slot] {
-                        lucky_slots[slot] = true;
-                        counter += 1;
-                    }
-                }
-                let mut stats = [0u8; 6];
-                for (idx, slot) in stats.iter_mut().enumerate() {
-                    if lucky_slots[idx] {
-                        *slot = 31u8;
-                    } else {
-                        *slot = rand::thread_rng().gen_range(0u8..=31u8);
-                    }
-                }
-                stats
-            }
-        };
-        let evs = match evs {
-            EVTemplate::HardCoded(a, b, c, d, e, f) => [a, b, c, d, e, f],
-            EVTemplate::All(v) => [v; 6]
-        };
-        (
-            StatSlot {value: 0, iv: ivs[0], ev: evs[0] },
-            StatSlot {value: 0, iv: ivs[1], ev: evs[1] },
-            StatSlot {value: 0, iv: ivs[2], ev: evs[2] },
-            StatSlot {value: 0, iv: ivs[3], ev: evs[3] },
-            StatSlot {value: 0, iv: ivs[4], ev: evs[4] },
-            StatSlot {value: 0, iv: ivs[5], ev: evs[5] }
-        )
-    }
-
-    fn create_gender(ratio: GenderRatio) -> Gender {
-        match ratio {
-            GenderRatio::None | GenderRatio::Proportion(0, 0) => Gender::None,
-            GenderRatio::Proportion(0, _) => Gender::Female,
-            GenderRatio::Proportion(_, 0) => Gender::Male,
-            GenderRatio::Proportion(m, f) => {
-                let male = rand::thread_rng().gen_bool(f64::from(m) / f64::from(m + f));
-                if male { Gender::Male } else { Gender::Female }
-            }
-        }
     }
 }

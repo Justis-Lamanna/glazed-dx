@@ -222,7 +222,7 @@ pub mod audio {
     use bevy::prelude::*;
     use bevy_sequential_actions::*;
     use glazed_data::species::Species;
-    use crate::Cry;
+    use crate::CryService;
 
     pub struct PlayCry(pub Species);
     #[derive(Component)]
@@ -231,7 +231,7 @@ pub mod audio {
     impl Action for PlayCry {
         fn start(&mut self, entity: Entity, world: &mut World, _commands: &mut ActionCommands) {
             info!("Starting PlayCry");
-            let mut audio: SystemState<(Cry)> = SystemState::new(world);
+            let mut audio: SystemState<(CryService)> = SystemState::new(world);
             let mut audio = audio.get_mut(world);
             audio.play_cry(self.0);
 
@@ -247,7 +247,7 @@ pub mod audio {
         }
     }
 
-    pub fn run_cry_check(mut commands: Commands, cry: Cry, query: Query<Entity, With<WaitForCry>>) {
+    pub fn run_cry_check(mut commands: Commands, cry: CryService, query: Query<Entity, With<WaitForCry>>) {
         if cry.is_cry_complete() {
             for entity in query.iter() {
                 info!("PlayCry complete, advancing");

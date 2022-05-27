@@ -1,3 +1,8 @@
+use glazed_data::abilities::Ability;
+use glazed_data::attack::Move;
+use glazed_data::core::OneOrTwo;
+use glazed_data::locations::Location;
+use rand::Rng as o;
 use serde::Deserialize;
 
 use bevy::prelude::*;
@@ -6,12 +11,13 @@ use bevy_kira_audio::{Audio, AudioChannel, InstanceHandle, PlaybackState};
 use bevy::reflect::TypeUuid;
 use bevy::utils::HashMap;
 
-use glazed_data::pokemon::{Gender, Pokemon, SpeciesData};
+use glazed_data::pokemon::{Gender, Pokemon, SpeciesData, PokemonTemplate, GenderRatio, AbilitySlot, MoveTemplate, MoveSlot, PokemonPokerusStatus, StatSlot, NatureBoost, IVTemplate, EVTemplate, Nature, SpeciesTemplate};
 
 use glazed_data::species::{ForcesOfNatureForm, KyuremForm, ShayminForm, Species, SpeciesDiscriminants, UnownForm, CastformForm, DeoxysForm, BurmyWormadamForm, CherrimForm, ShellosGastrodonForm, RotomForm, BasculinForm, DarmanitanForm, KeldeoForm, MeloettaForm, GenesectForm};
 use crate::locale::Fluent;
+use crate::player::{Player, PlayerService};
 use crate::state::GlobalOptions;
-use crate::util::YamlLoader;
+use crate::util::{YamlLoader, Rng};
 
 pub struct PkmnPlugin;
 impl Plugin for PkmnPlugin {
@@ -47,13 +53,13 @@ pub struct PokemonDataFiles {
 }
 
 #[derive(SystemParam)]
-pub struct PokemonLookup<'w, 's> {
+pub struct PokemonLookupService<'w, 's> {
     handles: Res<'w, PokemonDataFiles>,
     assets: Res<'w, Assets<SpeciesDataLookup>>,
     #[allow(dead_code)]
     marker: Commands<'w, 's>,
 }
-impl <'w, 's> PokemonLookup<'w, 's> {
+impl <'w, 's> PokemonLookupService<'w, 's> {
     pub fn lookup(&self, pkmn: Species) -> Option<&SpeciesData> {
         let handle = &self.handles.species_data;
         let asset = self.assets.get(handle);
@@ -63,7 +69,7 @@ impl <'w, 's> PokemonLookup<'w, 's> {
 }
 
 #[derive(SystemParam)]
-pub struct Cry<'w, 's> {
+pub struct CryService<'w, 's> {
     audio: Res<'w, Audio>,
     assets: Res<'w, AssetServer>,
     options: Res<'w, GlobalOptions>,
@@ -71,7 +77,7 @@ pub struct Cry<'w, 's> {
     handle: Option<Res<'w, CryHandle>>
 }
 pub struct CryHandle(InstanceHandle);
-impl<'w, 's> Cry<'w, 's> {
+impl<'w, 's> CryService<'w, 's> {
     const BASE: &'static str = "pkmn/cries";
     const SUFFIX: &'static str = "ogg";
 
@@ -93,7 +99,7 @@ impl<'w, 's> Cry<'w, 's> {
             }
         };
 
-        return format!("{}/{}.{}", Cry::BASE, raw, Cry::SUFFIX);
+        return format!("{}/{}.{}", CryService::BASE, raw, CryService::SUFFIX);
     }
 
     pub fn play_cry(&mut self, species: Species) {
@@ -101,7 +107,7 @@ impl<'w, 's> Cry<'w, 's> {
         self.audio.stop_channel(&channel);
         self.audio.set_volume_in_channel(self.options.volume.get_sfx_volume(), &channel);
         let h = self.audio.play_in_channel(
-            self.assets.load(Cry::get_cry_file(species).as_str()),
+            self.assets.load(CryService::get_cry_file(species).as_str()),
             &channel
         );
 
@@ -143,12 +149,12 @@ impl From<Species> for SpriteRequest {
 }
 
 #[derive(SystemParam)]
-pub struct PokemonSprite<'w, 's> {
+pub struct PokemonSpriteService<'w, 's> {
     asset_server: Res<'w, AssetServer>,
     #[allow(dead_code)]
     marker: Query<'w, 's, ()>
 }
-impl<'w, 's> PokemonSprite<'w, 's> {
+impl<'w, 's> PokemonSpriteService<'w, 's> {
     const BASE: &'static str = "pkmn/battle";
     const FRONT: &'static str = "front";
     const BACK: &'static str = "front";
@@ -300,3 +306,185 @@ impl<'w, 's> Fluent<'w, 's> {
     }
 }
 
+impl<'w, 's> PlayerService<'w, 's> {
+    pub fn resolve_pokemon_template(&self, template: PokemonTemplate, rng: &mut Rng) -> Pokemon {
+        let species = self.create_species(template.species, rng);
+
+        // We will use this data a lot.
+        let data = self.pkmn_lookup.lookup(species)
+            .expect("Missing Pokemon Species data");
+
+        // Calculate the movepool.
+        let mut available_pool = data.get_knowable_moves_for_level(template.level).into_iter();
+        let mut final_moves = Vec::new();
+        Self::resolve_move_template(template.move_1, &mut final_moves, &mut available_pool);
+        Self::resolve_move_template(template.move_2, &mut final_moves, &mut available_pool);
+        Self::resolve_move_template(template.move_3, &mut final_moves, &mut available_pool);
+        Self::resolve_move_template(template.move_4, &mut final_moves, &mut available_pool);
+        let mut final_moves = final_moves.into_iter()
+            .map(|m| MoveSlot {
+                attack: m,
+                pp: 5, // <- Look this up
+                pp_bonus: 0,
+            });
+
+        // Use the player's data if none is provided otherwise.
+        let (trainer_id, trainer_secret, trainer_name) = template.original_trainer
+            .map(|t| (t.trainer_id, t.secret_id, t.name))
+            .unwrap_or((self.player.trainer_id, self.player.secret_id, self.player.name.clone()));
+
+        // Calculate nature now, so we can calculate stats in the next step.
+        let nature = template.nature.unwrap_or(rng.gen());
+        // Calculate stats
+        let (hp, atk, def, spa, spd, spe) 
+            = Self::create_stats(data, template.level, nature, template.ivs, template.evs, rng);
+
+        // Calculate personality value, taking a force shiny into account.
+        let personality = match template.personality {
+            Some(p) => p,
+            None if template.force_shiny => {
+                // The simplest way to generate a Pokemon is to create a personality value which, when
+                // the first half is xor'ed with the second, is equal to trainer_portion. This will cause the
+                // full expression to equal 0, which matches as a shiny
+                let personality_hb = rng.gen::<u16>();
+                let personality_lb = trainer_id ^ trainer_secret ^ personality_hb;
+
+                let personality_hb = personality_hb as u32;
+                let personality_lb = personality_lb as u32;
+
+                (personality_hb << 16) | personality_lb
+            }
+            _ => rng.gen()
+        };
+
+        // Construct the entire Pokemon finally
+        Pokemon {
+            species: species,
+            gender: template.gender.unwrap_or(self.create_gender(data, rng)),
+            egg: template.level == 0,
+            level_met: template.level_met.unwrap_or(template.level),
+            nature,
+            ability: template.ability.unwrap_or(rng.gen()),
+            poke_ball: template.poke_ball.unwrap_or(glazed_data::item::Pokeball::PokeBall),
+            held_item: template.held_item,
+            move_1: final_moves.next(),
+            move_2: final_moves.next(),
+            move_3: final_moves.next(),
+            move_4: final_moves.next(),
+            experience: data.level_rate.experience_for_level(template.level),
+            personality,
+            friendship: template.friendship.unwrap_or(data.base_friendship),
+            original_trainer_id: trainer_id,
+            original_trainer_secret_id: trainer_secret,
+            original_trainer_name: trainer_name,
+            nickname: template.nickname,
+            level: template.level,
+            markings: template.markings,
+            status: template.status.unwrap_or_default(),
+            pokerus: template.pokerus.unwrap_or(PokemonPokerusStatus::None),
+            current_hp: hp.value,
+            hp,
+            attack: atk,
+            defense: def,
+            special_attack: spa,
+            special_defense: spd,
+            speed: spe,
+            contest: template.contest.unwrap_or_default(),
+            fateful_encounter: template.fateful_encounter,
+            date_caught: template.date_caught.unwrap_or(0), // <- Insert Timestamp
+            location_caught: template.location_caught.unwrap_or(Location::FarawayPlace), // <- Retrieve actual location
+        }
+    }
+
+    fn create_species(&self, t: SpeciesTemplate, rng: &mut Rng) -> Species {
+        match t {
+            SpeciesTemplate::HardCoded(s) => s,
+            SpeciesTemplate::RandomUnown => Species::Unown(rng.gen())
+        }
+    }
+
+    // Construct a random gender this Pokemon can be.
+    fn create_gender(&self, data: &SpeciesData, rng: &mut Rng) -> Gender {
+        match data.gender_ratio {
+            GenderRatio::None | GenderRatio::Proportion(0, 0) => Gender::None,
+            GenderRatio::Proportion(0, _) => Gender::Female,
+            GenderRatio::Proportion(_, 0) => Gender::Male,
+            GenderRatio::Proportion(m, f) => {
+                let ratio = (m as f64) / ((m + f) as f64);
+                if rng.gen_bool(ratio) { Gender::Male } else { Gender::Female }
+            }
+        }
+    }
+
+    // Calculate the move for the given move template.
+    // If the move is hard-coded, it is immediately added, provided the Pokemon does not already have it.
+    // If the move is natural, the next non-known level-up move is added. Does nothing if there are no other moves
+    // No move does nothing.
+    fn resolve_move_template<T: Iterator<Item = Move>>(template: MoveTemplate, final_moves: &mut Vec<Move>, available_pool: &mut T) {
+        match template {
+            MoveTemplate::HardCoded(m) => {
+                if !final_moves.contains(&m) {
+                    final_moves.push(m);
+                }
+            }
+            MoveTemplate::NaturalMove => {
+                while let Some(m) = available_pool.next() {
+                    if !final_moves.contains(&m) {
+                        final_moves.push(m);
+                        break;
+                    }
+                }
+            }
+            MoveTemplate::None => {}
+        }
+    }
+
+    /// Calculate the stat block of a Pokemon.
+    /// Also resolves IV and EV templates. 
+    fn create_stats(data: &SpeciesData, level: u8, nature: Nature, ivs: IVTemplate, evs: EVTemplate, rng: &mut Rng) -> (StatSlot, StatSlot, StatSlot, StatSlot, StatSlot, StatSlot) {
+        let ivs = match ivs {
+            IVTemplate::Random => [
+                rng.gen_range(0..=31),
+                rng.gen_range(0..=31),
+                rng.gen_range(0..=31),
+                rng.gen_range(0..=31),
+                rng.gen_range(0..=31),
+                rng.gen_range(0..=31)
+            ],
+            IVTemplate::HardCoded(hp, atk, def, spa, spd, spe) => [hp, atk, def, spa, spd, spe],
+            IVTemplate::All(val) => [val; 6],
+            IVTemplate::Rare => {
+                let mut lucky_slots = [false; 6];
+                let mut counter = 0;
+                while counter < 3 {
+                    let slot = rng.gen_range(0..6);
+                    if !lucky_slots[slot] {
+                        lucky_slots[slot] = true;
+                        counter += 1;
+                    }
+                }
+                let mut stats = [0u8; 6];
+                for (idx, slot) in stats.iter_mut().enumerate() {
+                    if lucky_slots[idx] {
+                        *slot = 31u8;
+                    } else {
+                        *slot = rng.gen_range(0u8..=31u8);
+                    }
+                }
+                stats
+            }
+        };
+        let evs = match evs {
+            EVTemplate::HardCoded(a, b, c, d, e, f) => [a, b, c, d, e, f],
+            EVTemplate::All(v) => [v; 6]
+        };
+        (
+            StatSlot::hp(data.stats.0.base_stat, level, ivs[0], evs[0]),
+            StatSlot::stat(data.stats.1.base_stat, level, ivs[1], evs[1], nature.get_attack_boost()),
+            StatSlot::stat(data.stats.2.base_stat, level, ivs[2], evs[2], nature.get_defense_boost()),
+            StatSlot::stat(data.stats.3.base_stat, level, ivs[3], evs[3], nature.get_special_attack_boost()),
+            StatSlot::stat(data.stats.4.base_stat, level, ivs[4], evs[4], nature.get_special_defense_boost()),
+            StatSlot::stat(data.stats.5.base_stat, level, ivs[5], evs[5], nature.get_speed_boost()),
+        )
+    }
+}

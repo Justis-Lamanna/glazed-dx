@@ -10,7 +10,7 @@ mod locale;
 mod player;
 
 use bevy::prelude::*;
-use glazed_data::pokemon::{PokemonTemplate, Pokemon};
+use glazed_data::pokemon::PokemonTemplate;
 use glazed_data::species::Species;
 use iyes_loopless::prelude::*;
 use iyes_progress::prelude::*;
@@ -19,9 +19,10 @@ use bevy::input::system::exit_on_esc_system;
 use bevy_kira_audio::AudioPlugin;
 use bevy_tweening::TweeningPlugin;
 use locale::FluentData;
-use player::{Player, PlayerService};
+use player::{Player, PlayerService, Boxes};
+use util::Rng;
 use crate::anim::GlazedAnimator;
-use crate::pkmn::{Cry, PkmnPlugin, PokemonDataFiles};
+use crate::pkmn::{CryService, PkmnPlugin, PokemonDataFiles};
 use crate::controls::Actions;
 use crate::scenes::intro::Title;
 use crate::scenes::lecture::Lecture;
@@ -46,10 +47,8 @@ fn main() {
             ..Default::default()
         })
         .insert_resource(ClearColor(Color::BLACK))
-        .insert_resource(Player {
-            name: "Milo Marten".into(),
-            ..default()
-        })
+        .init_resource::<Player>()
+        .init_resource::<Boxes>()
         .add_plugins(DefaultPlugins)
         .add_plugin(GlazedAnimator)
         .add_plugin(TweeningPlugin)
@@ -136,6 +135,11 @@ fn init_load(mut commands: Commands, ass: Res<AssetServer>, locales: Res<FluentD
     });
 }
 
-fn test(player: PlayerService) {
-    
+fn test(mut player: PlayerService, mut rng: Local<Rng>) {
+    player.init_player("Milo Marten".to_string());
+
+    let template = PokemonTemplate::pokemon(Species::Buizel, 10);
+    let p = player.resolve_pokemon_template(template, &mut rng);
+    info!("{:#?}", p);
+    player.add_pokemon(p);
 }

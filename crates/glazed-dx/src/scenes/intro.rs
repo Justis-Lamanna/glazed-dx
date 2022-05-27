@@ -4,7 +4,7 @@ use iyes_loopless::prelude::*;
 use glazed_data::species::Species;
 use crate::anim::{SSAnimationBuilder, AnimationStep};
 use crate::controls::{Actions, PlayerControls};
-use crate::{Cry, GameState};
+use crate::{CryService, GameState};
 use crate::state::{SaveGameState, Save};
 use crate::util::{despawn, in_transition, Transition, TransitionState};
 
@@ -263,7 +263,7 @@ fn init_titlescreen(mut commands: Commands, asset_server: Res<AssetServer>, mut 
 }
 
 fn proceed_on_enter(mut commands: Commands, keys: PlayerControls,
-                    mut writer: EventWriter<Transition>, mut cry: Cry) {
+                    mut writer: EventWriter<Transition>, mut cry: CryService) {
     let keys = keys.iter().next();
     if let Some(keys) = keys {
         if keys.just_pressed(Actions::Accept) {
